@@ -1,0 +1,18 @@
+ATLAS KARST ASCII v0.11h
+Animations légères et routes cohérentes
+
+Cette version repart de la v0.11g.
+
+CHANGEMENTS
+- Réintroduction d'une animation visible pour l'eau, les forêts, les prairies et les champs.
+- Aucun Canvas animé et aucun timer par cellule : une seule phase globale change toutes les 1,2 seconde.
+- Les textures géographiques statiques restent présentes sous l'animation.
+- L'animation se suspend pendant le glissement et le pinch, et respecte « réduire les animations ».
+- Les routes OSM restent toujours larges d'une seule cellule.
+- Autoroutes, axes principaux, routes secondaires et chemins sont distingués par le glyphe et la teinte selon le zoom, pas par une largeur artificielle.
+
+CONTRÔLE
+L'option « Animations naturelles légères » se trouve dans le panneau Couches.
+
+NOTE
+Le comportement réel et la fluidité doivent être validés dans le navigateur et sur le smartphone utilisés au quotidien.

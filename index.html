@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.11g · textures terrain légères</title>
+<title>Atlas Karst ASCII v0.11h · animations légères et routes cohérentes</title>
 <style>
 :root{
   color-scheme:dark;
@@ -226,28 +226,48 @@ body.explorer-mode #map{cursor:var(--atlas-crosshair)}
 @keyframes hintPulse{0%,100%{opacity:.42}50%{opacity:1}}
 
 .cell{display:inline;white-space:pre}
-/* Textures naturelles sans boucle d’animation.
-   Les glyphes et leurs teintes sont calculés une seule fois au rendu : aucune
-   vague Canvas, aucun timer, aucun repeint permanent sur mobile. */
+/* Animations naturelles légères.
+   Une seule phase globale change à faible cadence. Les cellules ne possèdent
+   ni timer individuel ni Canvas animé : elles changent simplement de teinte
+   par bandes géographiques, ce qui produit un mouvement visible et économique. */
 #map{position:relative;z-index:1}
 #terrainAmbientCanvas{display:none!important}
-.cell.terrain-texture{animation:none!important;text-shadow:none!important;filter:none!important}
-.cell.terrain-water.terrain-v0{color:#83dcff;font-weight:900}
-.cell.terrain-water.terrain-v1{color:#4fbce7;font-weight:800}
-.cell.terrain-water.terrain-v2{color:#a5e8ff;font-weight:900}
-.cell.terrain-water.terrain-v3{color:#62c9ef;font-weight:800}
-.cell.terrain-forest.terrain-v0{color:#69b77f;font-weight:900}
-.cell.terrain-forest.terrain-v1{color:#4f9467;font-weight:800}
-.cell.terrain-forest.terrain-v2{color:#7ac88d;font-weight:900}
-.cell.terrain-forest.terrain-v3{color:#5ba472;font-weight:700}
-.cell.terrain-meadow.terrain-v0{color:#a6cf8f;font-weight:800}
-.cell.terrain-meadow.terrain-v1{color:#7daa76;font-weight:700}
-.cell.terrain-meadow.terrain-v2{color:#b7d99f;font-weight:800}
-.cell.terrain-meadow.terrain-v3{color:#8dbb80;font-weight:700}
-.cell.terrain-field.terrain-v0{color:#a9a86c;font-weight:700}
-.cell.terrain-field.terrain-v1{color:#7f9567;font-weight:700}
-.cell.terrain-field.terrain-v2{color:#c1b978;font-weight:800}
-.cell.terrain-field.terrain-v3{color:#919b65;font-weight:700}
+.cell.terrain-texture{animation:none!important;filter:none!important;transition:none!important;text-shadow:none!important}
+.cell.terrain-water.terrain-v0{color:#74d5f5;font-weight:900}
+.cell.terrain-water.terrain-v1{color:#42add4;font-weight:800}
+.cell.terrain-water.terrain-v2{color:#8adcf6;font-weight:900}
+.cell.terrain-water.terrain-v3{color:#56bddf;font-weight:800}
+.cell.terrain-forest.terrain-v0{color:#63ad78;font-weight:900}
+.cell.terrain-forest.terrain-v1{color:#43855c;font-weight:800}
+.cell.terrain-forest.terrain-v2{color:#74bd85;font-weight:900}
+.cell.terrain-forest.terrain-v3{color:#529568;font-weight:700}
+.cell.terrain-meadow.terrain-v0{color:#9bc386;font-weight:800}
+.cell.terrain-meadow.terrain-v1{color:#709b68;font-weight:700}
+.cell.terrain-meadow.terrain-v2{color:#afd497;font-weight:800}
+.cell.terrain-meadow.terrain-v3{color:#82ab74;font-weight:700}
+.cell.terrain-field.terrain-v0{color:#a39f61;font-weight:700}
+.cell.terrain-field.terrain-v1{color:#78895d;font-weight:700}
+.cell.terrain-field.terrain-v2{color:#bab16e;font-weight:800}
+.cell.terrain-field.terrain-v3{color:#898f5c;font-weight:700}
+/* Une crête se déplace d’un groupe à l’autre. La végétation change moins fort
+   que l’eau, mais assez pour que le mouvement reste perceptible. */
+#map.terrain-phase-0 .terrain-water.terrain-v0,
+#map.terrain-phase-1 .terrain-water.terrain-v1,
+#map.terrain-phase-2 .terrain-water.terrain-v2,
+#map.terrain-phase-3 .terrain-water.terrain-v3{color:#e1faff}
+#map.terrain-phase-0 .terrain-forest.terrain-v0,
+#map.terrain-phase-1 .terrain-forest.terrain-v1,
+#map.terrain-phase-2 .terrain-forest.terrain-v2,
+#map.terrain-phase-3 .terrain-forest.terrain-v3{color:#8bd09a}
+#map.terrain-phase-0 .terrain-meadow.terrain-v2,
+#map.terrain-phase-1 .terrain-meadow.terrain-v3,
+#map.terrain-phase-2 .terrain-meadow.terrain-v0,
+#map.terrain-phase-3 .terrain-meadow.terrain-v1{color:#c2e4aa}
+#map.terrain-phase-0 .terrain-field.terrain-v1,
+#map.terrain-phase-1 .terrain-field.terrain-v2,
+#map.terrain-phase-2 .terrain-field.terrain-v3,
+#map.terrain-phase-3 .terrain-field.terrain-v0{color:#d0c77e}
+.c-road-far{font-weight:600;color:#c4b27e}
 @keyframes selectedBreath{0%,100%{box-shadow:inset 0 0 0 rgba(255,223,125,0)}50%{box-shadow:inset 0 0 8px rgba(255,223,125,.42)}}
 .cell.selected{animation:selectedBreath 1.7s ease-in-out infinite}
 .depth-transition{position:absolute;inset:0;z-index:11;pointer-events:none;overflow:hidden;border-radius:12px}
@@ -488,7 +508,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
     <label class="switch"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée</label>
     <label class="switch"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
     <label class="switch"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
-    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Textures naturelles légères : eau, forêt, prairies et champs</label>
+    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Animations naturelles légères : eau, forêt, prairies et champs</label>
     <label class="switch">Scénario
       <select id="scenario">
         <option value="prudent">prudent</option>
@@ -3915,11 +3935,27 @@ function renderSurface(g){
         lineDraw(g,pts,"|","c-contour",6,osmFeatureInfo(f,"escarpement"),1);
       }
       else if(t.highway){
-        const major=["motorway","trunk","primary","secondary"].includes(t.highway);
+        const motorway=["motorway","motorway_link","trunk","trunk_link"].includes(t.highway);
+        const arterial=["primary","primary_link","secondary","secondary_link"].includes(t.highway);
+        const major=motorway||arterial;
         const path=["track","path","footway","cycleway","bridleway","steps"].includes(t.highway);
         if(path&&!detail.paths)continue;
         if(!major&&!path&&!detail.minorRoads)continue;
-        lineDraw(g,pts,major?"═":path?"·":"─",major?"c-road-major":path?"c-path":"c-road",major?8:path?5:7,osmFeatureInfo(f,`voie ${t.highway}`),major&&state.zoomIndex>=2?2:1);
+        /* Une route reste toujours un trait d’une cellule. À grande échelle, la
+           hiérarchie est portée par le glyphe et la teinte, jamais par une largeur
+           de trois cellules qui transformerait une départementale en ruban géant. */
+        let roadGlyph="─",roadClass="c-road",roadPriority=7;
+        if(path){roadGlyph="·";roadClass="c-path";roadPriority=5}
+        else if(motorway){
+          roadGlyph=state.zoomIndex>=4?"═":state.zoomIndex>=2?"━":"─";
+          roadClass=state.zoomIndex<=1?"c-road-major c-road-far":"c-road-major";
+          roadPriority=8;
+        }else if(arterial){
+          roadGlyph=state.zoomIndex>=3?"━":"─";
+          roadClass=state.zoomIndex===0?"c-road c-road-far":"c-road-major";
+          roadPriority=8;
+        }
+        lineDraw(g,pts,roadGlyph,roadClass,roadPriority,osmFeatureInfo(f,`voie ${t.highway}`),1);
       }
     }
     softenVegetationNearBuilt(g);
@@ -4391,6 +4427,8 @@ function terrainTexture(cell,x,y,extent){
   }
   return {type,variant,ch};
 }
+const TERRAIN_PHASE_CLASSES=["terrain-phase-0","terrain-phase-1","terrain-phase-2","terrain-phase-3"];
+let ambientPhase=0,ambientPhaseTimer=0;
 function clearAmbientCanvas(){
   const canvas=els.terrainAmbientCanvas;if(!canvas)return;
   const ctx=canvas.getContext?.("2d");ctx?.clearRect(0,0,canvas.width||0,canvas.height||0);
@@ -4398,9 +4436,27 @@ function clearAmbientCanvas(){
 function sizeAmbientCanvas(){return false}
 function buildAmbientMasks(){return false}
 function drawAmbientCanvas(){clearAmbientCanvas()}
-function refreshAmbientTerrain(){clearAmbientCanvas()}
-function stopAmbientFrameLoop(){clearAmbientCanvas()}
-function scheduleAmbientFrameLoop(){clearAmbientCanvas()}
+function applyAmbientPhase(){
+  if(!els.map)return;
+  els.map.classList.remove(...TERRAIN_PHASE_CLASSES);
+  if(ambientAllowed()&&currentDepth()===0)els.map.classList.add(TERRAIN_PHASE_CLASSES[ambientPhase]);
+}
+function refreshAmbientTerrain(){applyAmbientPhase();scheduleAmbientFrameLoop()}
+function stopAmbientFrameLoop(){
+  if(ambientPhaseTimer){clearInterval(ambientPhaseTimer);ambientPhaseTimer=0}
+  els.map?.classList.remove(...TERRAIN_PHASE_CLASSES);
+  clearAmbientCanvas();
+}
+function scheduleAmbientFrameLoop(){
+  if(ambientPhaseTimer){clearInterval(ambientPhaseTimer);ambientPhaseTimer=0}
+  applyAmbientPhase();
+  if(!ambientAllowed()||currentDepth()!==0||document.hidden)return;
+  ambientPhaseTimer=setInterval(()=>{
+    if(document.hidden||els.map?.classList.contains("dragging")||els.map?.classList.contains("pinching"))return;
+    ambientPhase=(ambientPhase+1)%TERRAIN_PHASE_CLASSES.length;
+    applyAmbientPhase();
+  },1200);
+}
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
   clearTimeout(depthTransitionTimer);
