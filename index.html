@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.11i · sols calmes et points d’intérêt sonores</title>
+<title>Atlas Karst ASCII v0.12b · cadrage stable et effets centrés</title>
 <style>
 :root{
   color-scheme:dark;
@@ -204,9 +204,6 @@ select{width:100%}
 
 .mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .mode-switch button{min-height:42px}
-.explorer-panel{display:none}
-body.explorer-mode .explorer-panel{display:block}
-body.explorer-mode #map{cursor:var(--atlas-crosshair)}
 .c-avatar{color:#fff6a8;font-weight:900;text-shadow:0 0 8px rgba(255,246,168,.9)}
 .c-user-position{color:#fff7ad;font-weight:950;text-shadow:0 0 4px #00150c,0 0 10px rgba(255,244,139,.95);animation:userLocationPulse 1.9s ease-in-out infinite}
 .c-user-accuracy{color:#bdebd7;opacity:.62;text-shadow:0 0 5px rgba(121,226,171,.48)}
@@ -223,8 +220,6 @@ body.explorer-mode #map{cursor:var(--atlas-crosshair)}
 .carto-count{font-size:22px;color:var(--accent);font-weight:900}
 .file-input-hidden{display:none}
 .demo-notice{border-color:#725c2b;background:#211b0e;color:#ffe2a3}
-.c-explorer-hint{color:#f5d46f;font-weight:900;animation:hintPulse 1.7s ease-in-out infinite}
-.explorer-journal{display:grid;gap:5px;max-height:145px;overflow:auto;padding-right:3px}
 .journal-entry{padding:6px 7px;border-left:2px solid var(--accent);background:#101d16;font-size:10px;line-height:1.35}
 .journal-empty{font-size:10px;color:var(--muted)}
 @keyframes hintPulse{0%,100%{opacity:.42}50%{opacity:1}}
@@ -234,7 +229,6 @@ body.explorer-mode #map{cursor:var(--atlas-crosshair)}
    forêt, prairie et champ ont été supprimées afin de préserver la lisibilité
    et la fluidité, surtout sur mobile. */
 #map{position:relative;z-index:1}
-#terrainAmbientCanvas{display:none!important}
 .c-road-far{font-weight:600;color:#c4b27e}
 @keyframes selectedBreath{0%,100%{box-shadow:inset 0 0 0 rgba(255,223,125,0)}50%{box-shadow:inset 0 0 8px rgba(255,223,125,.42)}}
 .cell.selected{animation:selectedBreath 1.7s ease-in-out infinite}
@@ -398,8 +392,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   #mainAttribution{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-  #terrainAmbientCanvas{display:none!important}
-  .cell.selected,.depth-transition.active::before,.depth-transition.active::after,.card.card-awake>h2,.poi-fx,.c-user-position,.poi-selection-fx,.poi-selection-fx::before,.poi-selection-fx::after,.cell.poi-select-burst{animation:none!important}
+    .cell.selected,.depth-transition.active::before,.depth-transition.active::after,.card.card-awake>h2,.poi-fx,.c-user-position,.poi-selection-fx,.poi-selection-fx::before,.poi-selection-fx::after,.cell.poi-select-burst{animation:none!important}
 }
 @media(max-width:520px){
   main{padding:6px;--map-font-size:11px;--map-padding:12px}
@@ -407,6 +400,67 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   .north{left:7px;top:7px}
   .map-tip{left:7px;bottom:7px;max-width:calc(100% - 18px)}
 }
+
+/* Diagnostic intégré : invisible par défaut, activable avec ?debug ou Ctrl+Maj+D. */
+.debug-only{display:none!important}
+body.debug-mode .debug-only{display:flex!important}
+body.debug-mode section.debug-only{display:block!important}
+.debug-kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:7px 0}
+.debug-kpi{border:1px solid rgba(121,226,171,.22);border-radius:7px;padding:7px;background:rgba(3,10,7,.42)}
+.debug-kpi span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.08em}
+.debug-kpi strong{display:block;margin-top:3px;color:var(--accent);font-size:12px;overflow-wrap:anywhere}
+.debug-log{margin-top:7px;border:1px solid rgba(121,226,171,.18);border-radius:7px;background:#050b08;padding:7px;max-height:180px;overflow:auto;white-space:pre-wrap;font-size:9px;line-height:1.45;color:#bcd0c4}
+.debug-check{display:grid;grid-template-columns:18px 1fr;gap:5px;padding:3px 0;border-bottom:1px dotted rgba(121,226,171,.12)}
+.debug-check:last-child{border-bottom:0}.debug-check.ok b{color:#79e2ab}.debug-check.warn b{color:#f0c86c}.debug-check.bad b{color:#ff7e82}
+@media(max-width:520px){.debug-kpis{grid-template-columns:1fr}}
+
+
+/* V0.12b — feedback de point d’intérêt ancré à la cellule elle-même.
+   L’ancien calque absolu est masqué : il dépendait du scroll du viewport et
+   pouvait dériver après redimensionnement, zoom ou déplacement. */
+#poiSelectionFx{display:none!important}
+.cell.poi-hit-active{
+  --poi-hit:#ffe07d;--poi-rotate:0deg;
+  position:relative;z-index:22;display:inline-block;isolation:isolate;
+  animation:poiGlyphBurst .82s cubic-bezier(.16,.92,.2,1) both
+}
+.cell.poi-hit-active::before,.cell.poi-hit-active::after{
+  content:"";position:absolute;left:50%;top:50%;width:.82em;height:.82em;
+  box-sizing:border-box;border:2px solid var(--poi-hit);border-radius:50%;
+  transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.35);
+  transform-origin:center;pointer-events:none;opacity:0;z-index:-1;
+  filter:drop-shadow(0 0 6px var(--poi-hit))
+}
+.cell.poi-hit-active::before{animation:poiCellRing .9s cubic-bezier(.12,.86,.24,1) both}
+.cell.poi-hit-active::after{animation:poiCellEcho .9s .14s ease-out both}
+.cell.poi-hit-active[data-poi-kind="cavity"]{--poi-hit:#d89aff}
+.cell.poi-hit-active[data-poi-kind="bss"]{--poi-hit:#ffd866}
+.cell.poi-hit-active[data-poi-kind="bss"]::before,.cell.poi-hit-active[data-poi-kind="bss"]::after{border-style:dashed;border-radius:2px}
+.cell.poi-hit-active[data-poi-kind="heritage"]{--poi-hit:#ffe08a;--poi-rotate:45deg}
+.cell.poi-hit-active[data-poi-kind="heritage"]::before,.cell.poi-hit-active[data-poi-kind="heritage"]::after{border-radius:2px}
+.cell.poi-hit-active[data-poi-kind="memory"]{--poi-hit:#ffb6df}
+.cell.poi-hit-active[data-poi-kind="memory"]::before,.cell.poi-hit-active[data-poi-kind="memory"]::after{border-style:dotted}
+.cell.poi-hit-active[data-poi-kind="industrial"]{--poi-hit:#ffad72}
+.cell.poi-hit-active[data-poi-kind="industrial"]::before,.cell.poi-hit-active[data-poi-kind="industrial"]::after{border-style:dashed;border-radius:1px}
+.cell.poi-hit-active[data-poi-kind="natural"]{--poi-hit:#7ee1cb}
+.cell.poi-hit-active[data-poi-kind="natural"]::before,.cell.poi-hit-active[data-poi-kind="natural"]::after{border-radius:43% 57% 51% 49%}
+.cell.poi-hit-active[data-poi-kind="home"]{--poi-hit:#ff9aa6}
+.cell.poi-hit-active[data-poi-kind="home"]::before,.cell.poi-hit-active[data-poi-kind="home"]::after{border-radius:35%}
+.cell.poi-hit-active[data-poi-kind="location"]{--poi-hit:#fff48b}
+.cell.poi-hit-active[data-poi-kind="location"]::before,.cell.poi-hit-active[data-poi-kind="location"]::after{border-style:dashed}
+@keyframes poiCellRing{
+  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.32)}
+  15%{opacity:1}55%{opacity:.95}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(3.2)}
+}
+@keyframes poiCellEcho{
+  0%{opacity:.95;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.55)}
+  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(4.8)}
+}
+@media (prefers-reduced-motion:reduce){
+  .cell.poi-hit-active,.cell.poi-hit-active::before,.cell.poi-hit-active::after{animation:none!important}
+}
+
 </style>
 </head>
 <body data-depth-band="surface">
@@ -415,7 +469,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.11g</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12b</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -701,6 +755,25 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
     <div class="source-note" id="sourceNote" style="margin-top:8px">Les services en ligne sont facultatifs. Une copie ouverte en HTTPS peut synchroniser directement les sources ; une page locale <code>file://</code> peut être limitée par les politiques CORS de certains serveurs.</div>
   </section>
 
+  <section class="card debug-only" id="debugPanel">
+    <h2>Diagnostic</h2>
+    <div class="small">Activé par <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span>. Les mesures restent locales.</div>
+    <div class="debug-kpis">
+      <div class="debug-kpi"><span>Dernier rendu</span><strong id="debugRenderTime">—</strong></div>
+      <div class="debug-kpi"><span>Moyenne</span><strong id="debugRenderAverage">—</strong></div>
+      <div class="debug-kpi"><span>Grille</span><strong id="debugGrid">—</strong></div>
+      <div class="debug-kpi"><span>Points visibles</span><strong id="debugPoiCount">—</strong></div>
+      <div class="debug-kpi"><span>Cache local</span><strong id="debugStorage">—</strong></div>
+      <div class="debug-kpi"><span>Pointeur</span><strong id="debugPointer">—</strong></div>
+    </div>
+    <div class="grid2">
+      <button id="runSelfCheck" type="button">✓ lancer les contrôles</button>
+      <button id="exportDebugReport" type="button">⇩ exporter le rapport</button>
+    </div>
+    <div id="debugChecks" class="debug-log">Aucun contrôle lancé.</div>
+    <div id="debugErrors" class="debug-log" style="display:none"></div>
+  </section>
+
   <section class="card">
     <h2>Légende lisible</h2>
     <div class="legend-section" style="border-top:0;margin-top:0;padding-top:0">
@@ -768,6 +841,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
     <button id="sidebarToggle" class="toolbar-button sidebar-toggle" type="button" title="Afficher ou masquer le panneau">☰ panneau</button>
     <button id="infoToggle" class="toolbar-button info-toggle" type="button" title="Afficher ou masquer les informations">ⓘ infos</button>
     <button id="audioToggle" class="toolbar-button audio-toggle" type="button" aria-pressed="true" title="Activer ou couper les petits effets sonores">♪ sons</button>
+    <button id="debugToggle" class="toolbar-button debug-only" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
     <div class="badge">position <strong id="locationBadge">non localisée</strong></div>
     <div class="badge">échelle <strong id="zoomLabel">commune</strong></div>
     <div class="badge">niveau <strong id="depthLabel">surface</strong></div>
@@ -789,7 +863,6 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
       </div>
     </div>
     <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
-    <canvas id="terrainAmbientCanvas" aria-hidden="true"></canvas>
     <div class="depth-transition" id="depthTransition" aria-hidden="true"></div>
     <div class="poi-selection-fx" id="poiSelectionFx" aria-hidden="true"></div>
     <div class="selection-assist" id="selectionAssist" hidden aria-label="Ajuster précisément la cellule sélectionnée">
@@ -828,7 +901,120 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.11g";
+const APP_VERSION = "0.12b";
+let els={};
+const DEBUG_REQUESTED = URL_FLAGS.has("debug");
+const debugState={
+  enabled:DEBUG_REQUESTED,
+  renderCount:0,totalRenderMs:0,lastRenderMs:0,maxRenderMs:0,lastPoiCount:0,
+  lastPointer:"—",lastSelection:"—",lastReason:"initialisation",lastStorageScan:0,
+  storageBytes:0,storageKeys:0,errors:[],bootStarted:performance.now()
+};
+function debugFormatBytes(bytes){
+  if(!Number.isFinite(bytes)||bytes<=0)return "0 o";
+  const units=["o","Ko","Mo","Go"];let value=bytes,i=0;
+  while(value>=1024&&i<units.length-1){value/=1024;i++}
+  return `${value.toFixed(i?1:0)} ${units[i]}`;
+}
+function debugScanStorage(force=false){
+  if(!force&&performance.now()-debugState.lastStorageScan<1500)return;
+  debugState.lastStorageScan=performance.now();let bytes=0,keys=0;
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);if(!key||!key.startsWith("atlas-karst"))continue;
+      const value=localStorage.getItem(key)||"";bytes+=(key.length+value.length)*2;keys++;
+    }
+  }catch{}
+  debugState.storageBytes=bytes;debugState.storageKeys=keys;
+}
+function debugRecordError(kind,error){
+  const message=String(error?.message||error||"erreur inconnue");
+  debugState.errors.unshift({at:new Date().toLocaleTimeString("fr-FR"),kind,message});
+  debugState.errors=debugState.errors.slice(0,12);updateDebugPanel();
+}
+function setDebugEnabled(enabled){
+  debugState.enabled=!!enabled;document.body.classList.toggle("debug-mode",debugState.enabled);
+  if(els?.debugToggle){els.debugToggle.setAttribute("aria-pressed",String(debugState.enabled));els.debugToggle.textContent=debugState.enabled?"⚙ masquer":"⚙ diagnostic"}
+  if(debugState.enabled){updateDebugPanel(true);scheduleFrameFit()}
+}
+function debugStatusText(id){
+  const el=els?.[id];return el?`${el.textContent.trim()} [${el.className||"sans classe"}]`:"absent";
+}
+function updateDebugPanel(forceStorage=false){
+  if(!debugState.enabled||!els?.debugPanel)return;
+  debugScanStorage(forceStorage);
+  const average=debugState.renderCount?debugState.totalRenderMs/debugState.renderCount:0;
+  if(els.debugRenderTime)els.debugRenderTime.textContent=debugState.renderCount?`${debugState.lastRenderMs.toFixed(1)} ms · max ${debugState.maxRenderMs.toFixed(1)}`:"—";
+  if(els.debugRenderAverage)els.debugRenderAverage.textContent=debugState.renderCount?`${average.toFixed(1)} ms · ${debugState.renderCount} rendus`:"—";
+  if(els.debugGrid)els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m`;
+  if(els.debugPoiCount)els.debugPoiCount.textContent=String(debugState.lastPoiCount);
+  if(els.debugStorage)els.debugStorage.textContent=`${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`;
+  if(els.debugPointer)els.debugPointer.textContent=debugState.lastPointer||"—";
+  if(els.debugErrors){
+    els.debugErrors.style.display=debugState.errors.length?"block":"none";
+    els.debugErrors.textContent=debugState.errors.length?debugState.errors.map(e=>`${e.at} · ${e.kind} · ${e.message}`).join("\n"):"";
+  }
+}
+function debugCheckResult(name,ok,detail=""){
+  return {name,ok,detail,status:ok===true?"ok":ok===false?"bad":"warn"};
+}
+function runAtlasSelfCheck(){
+  const checks=[];
+  const ids=[...document.querySelectorAll("[id]")].map(el=>el.id);
+  const duplicates=ids.filter((id,i)=>ids.indexOf(id)!==i);
+  checks.push(debugCheckResult("Identifiants HTML uniques",duplicates.length===0,duplicates.length?duplicates.join(", "): `${ids.length} identifiants`));
+  const cellCount=els.map?.querySelectorAll(".cell").length||0;
+  checks.push(debugCheckResult("Nombre de cellules",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
+  checks.push(debugCheckResult("Centre géographique valide",Number.isFinite(state.center?.lat)&&Number.isFinite(state.center?.lon),`${state.center?.lat} / ${state.center?.lon}`));
+  checks.push(debugCheckResult("Grille en mémoire",!!state.lastGrid&&state.lastGrid.grid?.length===CONFIG.gridH,state.lastGrid?`${state.lastGrid.grid.length} lignes`:"absente"));
+  const expectedCorners=[[0,0],[CONFIG.gridW-1,0],[0,CONFIG.gridH-1],[CONFIG.gridW-1,CONFIG.gridH-1]];
+  let targetOk=true,targetDetails=[];
+  for(const [x,y] of expectedCorners){
+    const glyph=els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);if(!glyph){targetOk=false;targetDetails.push(`${x},${y}: absent`);continue}
+    const r=glyph.getBoundingClientRect(),pos=mapPositionFromClient(r.left+r.width/2,r.top+r.height/2);
+    const ok=pos&&pos.x===x&&pos.y===y;targetOk=targetOk&&ok;targetDetails.push(`${x},${y}:${pos?`${pos.x},${pos.y}`:"?"}`);
+  }
+  checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
+  checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
+  checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
+  checks.push(debugCheckResult("OSM",state.osm?.length?true:null,state.osm?.length?`${state.osm.length} objets`:debugStatusText("osmStatus")));
+  checks.push(debugCheckResult("Patrimoine",state.heritageItems?.length?true:null,state.heritageItems?.length?`${state.heritageItems.length} notices`:debugStatusText("heritageStatus")));
+  const html=checks.map(c=>`<div class="debug-check ${c.status}"><b>${c.status==="ok"?"✓":c.status==="bad"?"×":"!"}</b><span><strong>${esc(c.name)}</strong>${c.detail?`<br><span class="small">${esc(c.detail)}</span>`:""}</span></div>`).join("");
+  if(els.debugChecks)els.debugChecks.innerHTML=html;
+  updateDebugPanel(true);return checks;
+}
+function createDebugReport(){
+  debugScanStorage(true);
+  const average=debugState.renderCount?debugState.totalRenderMs/debugState.renderCount:0;
+  return [
+    `Atlas Karst ASCII ${APP_VERSION} — rapport diagnostic`,
+    `Date : ${new Date().toISOString()}`,
+    `URL : ${location.href}`,
+    `Navigateur : ${navigator.userAgent}`,
+    `Écran : ${screen.width} × ${screen.height} · viewport ${innerWidth} × ${innerHeight} · DPR ${devicePixelRatio}`,
+    `Contexte sécurisé : ${window.isSecureContext} · protocole ${location.protocol}`,
+    `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · profondeur ${currentDepth()} m`,
+    `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
+    `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
+    `Points d’intérêt visibles : ${debugState.lastPoiCount}`,
+    `Cache local Atlas : ${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`,
+    `OSM : ${debugStatusText("osmStatus")}`,
+    `Culture : ${debugStatusText("heritageStatus")}`,
+    `Cadastre : ${debugStatusText("cadastreStatus")}`,
+    `Cavités : ${debugStatusText("cavityStatus")}`,
+    `Relief : ${debugStatusText("elevationStatus")}`,
+    `Dernier pointeur : ${debugState.lastPointer}`,
+    `Dernière sélection : ${debugState.lastSelection}`,
+    `Erreurs : ${debugState.errors.length?debugState.errors.map(e=>`${e.at} ${e.kind}: ${e.message}`).join(" | "):"aucune capturée"}`
+  ].join("\n");
+}
+function exportDebugReport(){
+  const blob=new Blob([createDebugReport()],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`atlas-karst-${APP_VERSION}-diagnostic.txt`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+window.addEventListener("error",ev=>debugRecordError("JavaScript",ev.error||ev.message));
+window.addEventListener("unhandledrejection",ev=>debugRecordError("Promesse",ev.reason));
+
 const SNAPSHOT_DB_NAME = "atlas-karst-memory";
 const SNAPSHOT_DB_STORE = "snapshots";
 const SNAPSHOT_DB_KEY = "active";
@@ -844,7 +1030,6 @@ const EMBEDDED_SNAPSHOT = parseEmbeddedSnapshot();
 
 const HOUSE_ESTIMATE = {lat:45.5980539,lon:0.1471943}; // ancien repère de secours ; la V0.7 ajoute désormais une couche de repères patrimoniaux et anecdotiques
 const LORE_KEY = "atlas-karst-lore-v07";
-const EXPLORER_KEY = "atlas-karst-explorer-v08";
 const CARTOFRICHES_KEY = "atlas-karst-cartofriches-v09h";
 const HERITAGE_KEY = "atlas-karst-heritage-v010b";
 const CULTURE_API_PORTALS = [
@@ -910,8 +1095,6 @@ const CONFIG = {
   ],
   depths:[0,-3,-8,-14,-22,-35],
   cacheHours:168,
-  explorerRevealM:115,
-  explorerHintM:260
 };
 let HOUSE_WAS_SAVED=false;
 try{
@@ -934,12 +1117,9 @@ const OFFLINE_DEMO_POINTS = [
 ];
 
 const state = {
-  mode:"classic",
-  classicView:null,
   zoomIndex:1,
   depthIndex:0,
   center:{...CONFIG.house},
-  explorer:{lat:CONFIG.house.lat,lon:CONFIG.house.lon,discovery:true,discovered:new Set(),journal:[]},
   userLocation:null,
   locationLoading:false,
   centerOnLocation:true,
@@ -998,11 +1178,11 @@ const state = {
   load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",elevation:"pending"}
 };
 
-const els = Object.fromEntries([
+els = Object.fromEntries([
   "map","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
-  "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","terrainAmbientCanvas",
+  "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
@@ -1312,62 +1492,14 @@ function distanceMeters(a,b){
   return 6371000*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
 }
 
-function loadExplorerState(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(EXPLORER_KEY)||"null");
-    if(saved&&Number.isFinite(+saved.lat)&&Number.isFinite(+saved.lon)){
-      state.explorer.lat=+saved.lat;
-      state.explorer.lon=+saved.lon;
-      state.explorer.discovery=saved.discovery!==false;
-      state.explorer.discovered=new Set(Array.isArray(saved.discovered)?saved.discovered:[]);
-      state.explorer.journal=Array.isArray(saved.journal)?saved.journal.slice(0,12):[];
-    }
-  }catch{}
-}
-function saveExplorerState(){
-  try{
-    localStorage.setItem(EXPLORER_KEY,JSON.stringify({
-      lat:state.explorer.lat,lon:state.explorer.lon,discovery:state.explorer.discovery,
-      discovered:[...state.explorer.discovered],journal:state.explorer.journal.slice(0,12)
-    }));
-  }catch{}
-}
+// Compatibilité avec les anciens instantanés : l’ancien mode Explorateur a été
+// retiré de l’interface. Tous les repères documentés sont désormais visibles.
+function explorerMarkerState(){return "known"}
 function explorerFeatureId(feature,prefix="feature"){
-  const raw=feature?.id||feature?.record?.id||feature?.name||feature?.kind||`${prefix}:${feature?.lat||""}:${feature?.lon||""}`;
-  return `${prefix}:${raw}`;
+  return `${prefix}:${feature?.id||feature?.name||feature?.kind||"unknown"}`;
 }
-function explorerMarkDiscovered(feature,prefix="feature"){
-  const id=explorerFeatureId(feature,prefix);
-  if(state.explorer.discovered.has(id))return false;
-  state.explorer.discovered.add(id);
-  const label=feature?.name||feature?.kind||"Repère sans nom";
-  state.explorer.journal.unshift({id,label,when:new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})});
-  state.explorer.journal=state.explorer.journal.slice(0,12);
-  saveExplorerState();
-  return true;
-}
-function explorerMarkerState(feature,lat,lon,prefix="feature"){
-  if(state.mode!=="explorer"||!state.explorer.discovery)return "known";
-  const id=explorerFeatureId(feature,prefix);
-  if(state.explorer.discovered.has(id))return "known";
-  const d=distanceMeters(state.explorer,{lat,lon});
-  if(d<=CONFIG.explorerRevealM){
-    explorerMarkDiscovered(feature,prefix);
-    return "known";
-  }
-  if(d<=CONFIG.explorerHintM)return "hint";
-  return "hidden";
-}
-function renderExplorerJournal(){
-  if(!els.explorerJournal)return;
-  els.explorerCount.textContent=state.explorer.discovered.size;
-  els.explorerCoords.textContent=`${state.explorer.lat.toFixed(5)} / ${state.explorer.lon.toFixed(5)}`;
-  if(!state.explorer.journal.length){
-    els.explorerJournal.innerHTML='<div class="journal-empty">Aucune découverte pour le moment.</div>';
-    return;
-  }
-  els.explorerJournal.innerHTML=state.explorer.journal.map(e=>`<div class="journal-entry"><strong>${esc(e.when)}</strong> · ${esc(e.label)}</div>`).join("");
-}
+function explorerMarkDiscovered(){return false}
+function renderExplorerJournal(){}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
 function rad(v){return v*Math.PI/180}
 function kmPerLon(lat){return 111.32*Math.cos(rad(lat))}
@@ -4348,8 +4480,7 @@ function drawPossibleConnections(g){
   const candidates=state.cavities.filter(c=>{
     if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon)||!cavityType(c).includes("carri"))return false;
     if(!depthStrength(c,depth))return false;
-    if(state.mode!=="explorer"||!state.explorer.discovery)return true;
-    return state.explorer.discovered.has(explorerFeatureId(cavityInfo(c,cavityMarker(c)),"cavity"));
+    return true;
   });
   for(let i=0;i<candidates.length;i++)for(let j=i+1;j<candidates.length;j++){
     const a=candidates[i],b=candidates[j];
@@ -4395,26 +4526,6 @@ const AMBIENT_PREF_KEY="atlas-karst-ambient-motion-v1";
 const reducedMotionQuery=window.matchMedia?.("(prefers-reduced-motion: reduce)");
 let depthTransitionTimer=0;
 function ambientAllowed(){return !!state.ambientMotion&&!reducedMotionQuery?.matches}
-function terrainTexturesAllowed(){return false}
-function ambientTerrainType(){return ""}
-function terrainTexture(){return null}
-const TERRAIN_PHASE_CLASSES=[];
-let ambientPhaseTimer=0;
-function clearAmbientCanvas(){
-  const canvas=els.terrainAmbientCanvas;if(!canvas)return;
-  const ctx=canvas.getContext?.("2d");ctx?.clearRect(0,0,canvas.width||0,canvas.height||0);
-}
-function sizeAmbientCanvas(){return false}
-function buildAmbientMasks(){return false}
-function drawAmbientCanvas(){clearAmbientCanvas()}
-function applyAmbientPhase(){els.map?.classList.remove("terrain-phase-0","terrain-phase-1","terrain-phase-2","terrain-phase-3")}
-function refreshAmbientTerrain(){stopAmbientFrameLoop()}
-function stopAmbientFrameLoop(){
-  if(ambientPhaseTimer){clearInterval(ambientPhaseTimer);ambientPhaseTimer=0}
-  applyAmbientPhase();
-  clearAmbientCanvas();
-}
-function scheduleAmbientFrameLoop(){stopAmbientFrameLoop()}
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
   clearTimeout(depthTransitionTimer);
@@ -4443,8 +4554,18 @@ function poiEffectKind(cell){
   return "";
 }
 
-function render(){
+let scheduledRenderFrame=0,scheduledRenderReason="";
+function scheduleRender(reason="scheduled"){
+  scheduledRenderReason=reason;
+  if(scheduledRenderFrame)return;
+  scheduledRenderFrame=requestAnimationFrame(()=>{scheduledRenderFrame=0;const why=scheduledRenderReason;scheduledRenderReason="";render(why)});
+}
+function render(reason="direct"){
+  const renderStarted=performance.now();
+  if(debugState.enabled)debugState.lastReason=reason;
   if(!drag)clearPanPreview();
+  const responsiveMain=document.querySelector("main");
+  if(responsiveMain)applyResponsiveGridProfile(responsiveMain);
   const z=currentZoom(),depth=currentDepth(),extent=extentFor(),g=createGrid(extent);
   document.body.dataset.depthBand=depth===0?"surface":depth>=-5?"shallow":depth>=-15?"middle":"deep";
   if(depth===0){
@@ -4472,24 +4593,23 @@ function render(){
     selectedGrid={x:clamp(p.x,0,CONFIG.gridW-1),y:clamp(p.y,0,CONFIG.gridH-1)};
   }
   els.viewport.classList.toggle("selection-active",!!selectedGrid);
-  let out="";
+  let out="",visiblePoiCount=0;
   for(let y=0;y<CONFIG.gridH;y++){
     for(let x=0;x<CONFIG.gridW;x++){
       const c=g.grid[y][x], shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
       const selected=selectedGrid&&selectedGrid.x===x&&selectedGrid.y===y?" selected":"";
       const neighbor=selectedGrid&&!selected&&Math.abs(selectedGrid.x-x)<=1&&Math.abs(selectedGrid.y-y)<=1?" selection-neighbor":"";
       const attrs=`data-x="${x}" data-y="${y}"`;
-      const texture=terrainTexture(c,x,y,extent);
-      const textureClass=texture?` terrain-texture terrain-${texture.type} terrain-v${texture.variant}`:"";
-      const glyph=texture?.ch??c.ch;
+      const glyph=c.ch;
       const poiKind=poiEffectKind(c),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
+      if(poiKind)visiblePoiCount++;
       const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-      out+=`<span class="cell ${c.cls||""}${shade}${selected}${textureClass}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
+      out+=`<span class="cell ${c.cls||""}${shade}${selected}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
     }
     out+="\n";
   }
   els.map.innerHTML=out;
-  refreshAmbientTerrain(g);
+  if(pendingPoiFeedback)requestAnimationFrame(applyPendingPoiSelectionFeedback);
   updateSelectionAssist();
   scheduleOsmEnsure();
   if(els.locationBadge){
@@ -4511,13 +4631,18 @@ function render(){
   els.depthUp.disabled=state.depthIndex===0;els.depthDown.disabled=state.depthIndex===CONFIG.depths.length-1;
   els.mapDepthUp.disabled=state.depthIndex===0;els.mapDepthDown.disabled=state.depthIndex===CONFIG.depths.length-1;
   updateSnapshotUI();
+  const renderElapsed=performance.now()-renderStarted;
+  debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
+  debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
+  updateDebugPanel();
+  scheduleFrameFit();
 }
 
 function prepareSidebarCards(){
   const panelMeta={
-    "Mode d’utilisation":["navigation","◈"],"Explorateur":["navigation","☻"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
+    "Mode d’utilisation":["navigation","◈"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
     "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
-    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
+    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
   };
   const openByDefault=new Set([
     "Mode d’utilisation","Échelle géographique","Profondeur","Couches","Navigation géographique","Données"
@@ -4575,35 +4700,40 @@ function toggleSidebar(){
 }
 let frameFitTimer=0;
 let responsiveMapScale=1;
-let responsiveGridChanging=false;
 function responsiveGridProfile(main){
   const desktop=matchMedia("(min-width:941px)").matches;
   if(!desktop)return {w:120,h:64};
-  const largeScreen=window.innerHeight>=1160||window.innerWidth>=1900;
+  const largeScreen=window.innerHeight>=1100||window.innerWidth>=1850;
   if(!largeScreen)return {w:120,h:64};
-  const roomW=Math.max(640,main.clientWidth-34);
-  const roomH=Math.max(420,(els.viewport?.clientHeight||window.innerHeight*.72)-30);
-  const targetAspect=clamp(roomW/roomH,1.45,1.92);
-  const h=56;
-  // Un caractère monospace fait environ 0,61 fois sa hauteur. On adapte donc
-  // le nombre de colonnes, et non l’étirement CSS des glyphes.
-  const raw=Math.round((h*targetAspect/.61)/8)*8;
-  return {w:clamp(raw,144,176),h};
+
+  const roomW=Math.max(720,main.clientWidth-24);
+  const vr=els.viewport?.getBoundingClientRect();
+  const roomH=Math.max(360,vr?.height||Math.round(window.innerHeight*.62));
+  const rows=window.innerHeight>=1300?52:48;
+  const characterWidthRatio=.61;
+  const targetAspect=clamp(roomW/roomH,1.65,3.10);
+  let columns=Math.round((rows*targetAspect/characterWidthRatio)/8)*8;
+  columns=clamp(columns,160,264);
+
+  // Petite hystérésis pour éviter une oscillation de huit colonnes lorsque
+  // une barre de défilement apparaît ou disparaît.
+  if(CONFIG.gridW>=160&&CONFIG.gridH===rows&&Math.abs(columns-CONFIG.gridW)<16)columns=CONFIG.gridW;
+  return {w:columns,h:rows};
 }
 function applyResponsiveGridProfile(main){
   const next=responsiveGridProfile(main);
   if(next.w===CONFIG.gridW&&next.h===CONFIG.gridH)return false;
   CONFIG.gridW=next.w;CONFIG.gridH=next.h;
-    return true;
+  return true;
+}
+function setMapCssVariable(main,name,value){
+  if(main.style.getPropertyValue(name)!==value)main.style.setProperty(name,value);
 }
 function fitMapFrame(){
   const main=document.querySelector("main");
   if(!main||!els.map||!els.viewport)return;
-  if(!responsiveGridChanging&&applyResponsiveGridProfile(main)){
-    responsiveGridChanging=true;
-    requestAnimationFrame(()=>{
-      try{render()}finally{responsiveGridChanging=false;scheduleFrameFit()}
-    });
+  if(applyResponsiveGridProfile(main)){
+    scheduleRender("responsive-grid");
     return;
   }
 
@@ -4613,12 +4743,9 @@ function fitMapFrame(){
   const baseFont=compact?11:12;
   const basePadding=compact?12:17;
 
-  // Revenir d’abord à l’échelle de référence permet de mesurer la grille sans
-  // hériter du calcul précédent. Les écrans tactiles de bureau ne sont plus
-  // assimilés à des téléphones uniquement parce que maxTouchPoints > 0.
-  main.style.setProperty("--map-font-size",`${baseFont}px`);
-  main.style.setProperty("--map-padding",`${basePadding}px`);
-  main.style.setProperty("--map-frame-width",desktop?`${availableWidth}px`:"100%");
+  setMapCssVariable(main,"--map-font-size",`${baseFont}px`);
+  setMapCssVariable(main,"--map-padding",`${basePadding}px`);
+  setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
 
   const baseWidth=Math.max(1,els.map.scrollWidth);
   const baseHeight=Math.max(1,els.map.scrollHeight);
@@ -4626,33 +4753,30 @@ function fitMapFrame(){
   let scale=1;
 
   if(desktop){
-    const horizontalRoom=Math.max(320,availableWidth-34);
-    const verticalRoom=Math.max(260,viewportHeight-30);
-    // Remplir la fenêtre sans déformer la grille. Une légère tolérance
-    // verticale évite que la carte reste timide sur les écrans 1440p/4K ;
-    // le conteneur peut défiler si quelques lignes dépassent.
+    const horizontalRoom=Math.max(320,availableWidth-28);
+    const verticalRoom=Math.max(260,viewportHeight-24);
     const widthScale=horizontalRoom/baseWidth;
-    const heightScale=(verticalRoom/baseHeight)*1.08;
-    scale=clamp(Math.min(widthScale,heightScale),1,2.45);
+    const heightScale=verticalRoom/baseHeight;
+    // Le profil panoramique rapproche déjà les deux rapports. On privilégie
+    // légèrement la largeur, avec au maximum un petit débordement vertical.
+    scale=clamp(Math.min(widthScale,heightScale*1.10),1,2.45);
   }
 
   responsiveMapScale=scale;
-  main.style.setProperty("--map-font-size",`${(baseFont*scale).toFixed(2)}px`);
-  main.style.setProperty("--map-padding",`${Math.round(basePadding*Math.min(scale,1.45))}px`);
+  setMapCssVariable(main,"--map-font-size",`${(baseFont*scale).toFixed(2)}px`);
+  setMapCssVariable(main,"--map-padding",`${Math.round(basePadding*Math.min(scale,1.45))}px`);
 
   const finalWidth=Math.ceil(els.map.scrollWidth+2);
   const frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
-  main.style.setProperty("--map-frame-width",`${frameWidth}px`);
+  setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);
   els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
-
-    requestAnimationFrame(clearAmbientCanvas);
 }
 function scheduleFrameFit(){
   clearTimeout(frameFitTimer);
   frameFitTimer=setTimeout(()=>{
     frameFitTimer=0;
     requestAnimationFrame(fitMapFrame);
-  },30);
+  },34);
 }
 function mobileReadoutMode(){return matchMedia?.("(max-width:940px)")?.matches}
 function setReadoutSheetState(next){
@@ -4752,58 +4876,6 @@ function viewportZoomAnchor(){
 function setZoomFromViewport(i){
   const anchor=viewportZoomAnchor();
   setZoomIndex(i,anchor?.coord,anchor?{fx:anchor.fx,fy:anchor.fy}:null);
-}
-
-function setMode(mode){
-  closeSelectionAssist();
-  if(mode===state.mode)return;
-  retroAudio.play("panel");
-  if(mode==="explorer"){
-    state.classicView={zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,center:{...state.center}};
-    state.mode="explorer";
-    state.zoomIndex=OFFLINE_TEST?3:Math.max(2,state.zoomIndex);
-    state.depthIndex=0;
-    state.center=clampCenter({lat:state.explorer.lat,lon:state.explorer.lon},currentZoom());
-    state.selectedCell=null;
-  }else{
-    state.mode="classic";
-    if(state.classicView){
-      state.zoomIndex=state.classicView.zoomIndex;
-      state.depthIndex=state.classicView.depthIndex;
-      state.center=clampCenter({...state.classicView.center},CONFIG.zooms[state.zoomIndex]);
-    }
-  }
-  render();
-}
-function moveExplorer(dx,dy){
-  const z=currentZoom();
-  const latStep=(z.heightKm/111.32)/CONFIG.gridH;
-  const lonStep=(z.widthKm/kmPerLon(state.explorer.lat))/CONFIG.gridW;
-  const candidate={lat:state.explorer.lat+dy*latStep,lon:state.explorer.lon+dx*lonStep};
-  const e=largestExtent();
-  state.explorer.lat=clamp(candidate.lat,e.south,e.north);
-  state.explorer.lon=clamp(candidate.lon,e.west,e.east);
-  state.center=clampCenter({lat:state.explorer.lat,lon:state.explorer.lon},z);
-  saveExplorerState();
-  render();
-}
-function explorerReturnHome(){
-  state.explorer.lat=CONFIG.house.lat;
-  state.explorer.lon=CONFIG.house.lon;
-  state.center=clampCenter({lat:state.explorer.lat,lon:state.explorer.lon},currentZoom());
-  saveExplorerState();
-  render();
-}
-function examineExplorerCell(){
-  if(!state.lastGrid)return;
-  const p=coordToGrid(state.explorer.lat,state.explorer.lon,state.lastGrid.extent);
-  const x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
-  const cell=state.lastGrid.grid[y][x];
-  state.selectedCell={x,y,coord:{lat:state.explorer.lat,lon:state.explorer.lon},feature:cell.feature||null};
-  if(cell.feature)explorerMarkDiscovered(cell.feature,cell.feature.cavity?"cavity":cell.feature.lore?"lore":"examined");
-  playCellSelectionSound(cell);
-  render();
-  setReadoutContent(cellDescription(cell,x,y)+`<div class="small" style="margin-top:7px">L’explorateur examine la case sous ses pieds.</div>`,{title:cell.feature?.name||cell.feature?.kind||"Case explorée",sheet:"medium"});
 }
 
 
@@ -4921,7 +4993,9 @@ function mapPositionFromClient(clientX,clientY){
   }
   const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
   const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
-  return {coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
+  const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
+  if(debugState.enabled){debugState.lastPointer=`${x}, ${y} · ${result.coord.lat.toFixed(5)} / ${result.coord.lon.toFixed(5)}`;updateDebugPanel()}
+  return result;
 }
 function eventMapPosition(ev){
   if(!state.lastGrid)return null;
@@ -4998,21 +5072,39 @@ function poiSelectionKind(cell){
   if(["spring","sinkhole","cave_entrance"].includes(tags.natural)||cls.includes("c-doc")||cls.includes("c-demo")||cls.includes("c-explorer-hint"))return "natural";
   return "";
 }
+let pendingPoiFeedback=null,poiFeedbackTimer=0,poiFeedbackSerial=0;
+function applyPendingPoiSelectionFeedback(){
+  const pending=pendingPoiFeedback;
+  if(!pending||!els.map||!state.lastGrid)return;
+  const remaining=pending.expires-performance.now();
+  if(remaining<=0){pendingPoiFeedback=null;return}
+  const p=coordToGrid(pending.coord.lat,pending.coord.lon,state.lastGrid.extent);
+  const x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
+  const glyph=els.map.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+  if(!glyph)return;
+  els.map.querySelectorAll(".cell.poi-hit-active").forEach(el=>{
+    el.classList.remove("poi-hit-active");delete el.dataset.poiKind;
+  });
+  glyph.dataset.poiKind=pending.kind;
+  glyph.classList.remove("poi-hit-active");void glyph.offsetWidth;glyph.classList.add("poi-hit-active");
+  clearTimeout(poiFeedbackTimer);
+  const serial=pending.serial;
+  poiFeedbackTimer=setTimeout(()=>{
+    if(pendingPoiFeedback?.serial!==serial)return;
+    pendingPoiFeedback=null;
+    glyph.classList.remove("poi-hit-active");delete glyph.dataset.poiKind;
+  },Math.max(80,remaining));
+}
 function triggerPoiSelectionFeedback(cell,x,y){
   const selectionKind=poiSelectionKind(cell);
-  if(!selectionKind||!els.poiSelectionFx||!els.viewport)return;
-  requestAnimationFrame(()=>{
-    const glyph=els.map.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
-    if(!glyph)return;
-    const vr=els.viewport.getBoundingClientRect(),gr=glyph.getBoundingClientRect();
-    const left=gr.left-vr.left+els.viewport.scrollLeft+gr.width/2;
-    const top=gr.top-vr.top+els.viewport.scrollTop+gr.height/2;
-    const fx=els.poiSelectionFx;
-    fx.dataset.kind=selectionKind;fx.style.left=`${left}px`;fx.style.top=`${top}px`;
-    fx.classList.remove("active");void fx.offsetWidth;fx.classList.add("active");
-    glyph.classList.remove("poi-select-burst");void glyph.offsetWidth;glyph.classList.add("poi-select-burst");
-    setTimeout(()=>{fx.classList.remove("active");glyph.classList.remove("poi-select-burst")},1120);
-  });
+  if(!selectionKind||!state.lastGrid)return;
+  pendingPoiFeedback={
+    kind:selectionKind,
+    coord:gridToCoord(x,y,state.lastGrid.extent),
+    expires:performance.now()+1120,
+    serial:++poiFeedbackSerial
+  };
+  requestAnimationFrame(applyPendingPoiSelectionFeedback);
 }
 
 function selectGridCell(x,y,{assist=false,note="",showAssist=true,confirmIfSame=false}={}){
@@ -5028,6 +5120,7 @@ function selectGridCell(x,y,{assist=false,note="",showAssist=true,confirmIfSame=
   }
   const cell=state.lastGrid.grid[y][x];
   state.selectedCell={x,y,coord:gridToCoord(x,y,state.lastGrid.extent),feature:cell.feature||null};
+  debugState.lastSelection=`${x}, ${y} · ${cell.feature?.name||cell.feature?.kind||"terrain"}`;
   state.selectionSnapNote=picked.snapped?`Sélection accrochée à ${cell.feature?.name||cell.feature?.kind||"un repère voisin"}.`:note;
   state.selectionAssistVisible=showAssist;
   playCellSelectionSound(cell,{snapped:picked.snapped});
@@ -5292,7 +5385,6 @@ function downloadBlob(content,type,filename){
   const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=filename;a.click();
   setTimeout(()=>URL.revokeObjectURL(a.href),1500);
 }
-function snapshotExplorer(){return {...state.explorer,discovered:[...(state.explorer.discovered||[])]}}
 function buildAtlasSnapshot(){
   const layerKeys=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
   return {
@@ -5303,7 +5395,7 @@ function buildAtlasSnapshot(){
       osm:state.osm||[],osmMeta:state.osmMeta||null,osmBaseCoverage:state.osmBaseCoverage||[],osmDetailCoverage:state.osmDetailCoverage||[],
       officialCavities:state.officialCavities||[],cartofriches:state.cartofriches||[],heritageItems:state.heritageItems||[],heritageEnabled:state.heritageEnabled||{},
       cadastreBuildings:state.cadastreBuildings||[],cadastreParcels:state.cadastreParcels||[],address:state.address||null,
-      bss:state.bss||[],elevation:state.elevation||null,observations:state.observations||[],loreItems:state.loreItems||[],explorer:snapshotExplorer()
+      bss:state.bss||[],elevation:state.elevation||null,observations:state.observations||[],loreItems:state.loreItems||[]
     }
   };
 }
@@ -5348,7 +5440,6 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   state.cadastreBuildings=Array.isArray(d.cadastreBuildings)?d.cadastreBuildings:[];state.cadastreParcels=Array.isArray(d.cadastreParcels)?d.cadastreParcels:[];
   state.address=d.address||null;state.bss=Array.isArray(d.bss)&&d.bss.length?d.bss:mergeBssItems(BSS_EMBEDDED_LOCAL);state.elevation=d.elevation||null;
   state.observations=Array.isArray(d.observations)?d.observations:[];state.loreItems=Array.isArray(d.loreItems)?d.loreItems:[];
-  if(d.explorer){state.explorer={...state.explorer,...d.explorer,discovered:new Set(d.explorer.discovered||[])}}
   state.zoomIndex=clamp(Number(v.zoomIndex??state.zoomIndex),0,CONFIG.zooms.length-1);state.depthIndex=clamp(Number(v.depthIndex??state.depthIndex),0,CONFIG.depths.length-1);
   state.center=v.center&&Number.isFinite(+v.center.lat)&&Number.isFinite(+v.center.lon)?clampCenter({lat:+v.center.lat,lon:+v.center.lon},CONFIG.zooms[state.zoomIndex]):{...CONFIG.house};
   state.scenario=v.scenario||state.scenario;els.scenario.value=state.scenario;
@@ -5402,7 +5493,7 @@ function exportTxt(){
   for(let y=0;y<CONFIG.gridH;y++)lines.push(state.lastGrid.grid[y].map(c=>c.ch).join(""));
   const z=currentZoom(),d=currentDepth();
   const header=[
-    `ATLAS KARST ASCII v${APP_VERSION} · ciblage précis`,
+    `ATLAS KARST ASCII v${APP_VERSION} · cadrage stable`,
     `Échelle : ${z.label} (${z.widthKm} × ${z.heightKm} km)`,
     `Centre : ${state.center.lat}, ${state.center.lon}`,
     `Profondeur : ${d===0?"surface":d+" m"}`,
@@ -5451,11 +5542,9 @@ let pinch=null,pinchConsumed=false,lastPinchZoomAt=0;
 function applyPanPreview(dx,dy){
   const transform=`translate3d(${Math.round(dx)}px,${Math.round(dy)}px,0)`;
   els.map.style.transform=transform;
-  if(els.terrainAmbientCanvas)els.terrainAmbientCanvas.style.transform=transform;
 }
 function clearPanPreview(){
   els.map.style.transform="";
-  if(els.terrainAmbientCanvas)els.terrainAmbientCanvas.style.transform="";
 }
 function isPanPointer(ev){
   return ev.isPrimary!==false && (ev.pointerType!=="mouse" || ev.button===0);
@@ -5753,7 +5842,7 @@ els.scenario.addEventListener("change",e=>{state.scenario=e.target.value;hypothe
   els[id].addEventListener("change",e=>{
     state[id]=e.target.checked;
     if(id==="layerHydrology")hypothesisModelCache.clear();
-    if(id==="ambientMotion"){try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{};scheduleAmbientFrameLoop()}
+    if(id==="ambientMotion"){try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}}
     render();
   });
 });
@@ -5766,12 +5855,19 @@ els.cavitySelect.addEventListener("change",e=>{
 window.addEventListener("resize",()=>{
   if(!mobileSidebarMode())document.body.classList.remove("sidebar-open");
   scheduleFrameFit();
-  requestAnimationFrame(clearAmbientCanvas);
 });
 if(typeof ResizeObserver!=="undefined"){
   const responsiveMapObserver=new ResizeObserver(()=>scheduleFrameFit());
   responsiveMapObserver.observe(document.querySelector("main"));
 }
+if(els.debugToggle)els.debugToggle.addEventListener("click",()=>setDebugEnabled(!debugState.enabled));
+if(els.runSelfCheck)els.runSelfCheck.addEventListener("click",runAtlasSelfCheck);
+if(els.exportDebugReport)els.exportDebugReport.addEventListener("click",exportDebugReport);
+window.addEventListener("keydown",e=>{
+  if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==="d"){
+    e.preventDefault();setDebugEnabled(!debugState.enabled);
+  }
+});
 window.addEventListener("keydown",e=>{
   const tag=e.target?.tagName?.toLowerCase();
   if(["input","select","textarea"].includes(tag))return;
@@ -5792,8 +5888,7 @@ window.addEventListener("keydown",e=>{
 // Les navigateurs mobiles n’autorisent Web Audio qu’après un geste explicite.
 // On arme donc le moteur dès le premier contact, avant les gestionnaires métier.
 document.addEventListener("pointerdown",()=>retroAudio.unlock(),{capture:true,passive:true});
-document.addEventListener("visibilitychange",()=>{if(document.hidden){stopAmbientFrameLoop();retroAudio.silence()}else scheduleAmbientFrameLoop()});
-reducedMotionQuery?.addEventListener?.("change",scheduleAmbientFrameLoop);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)retroAudio.silence()});
 document.addEventListener("touchstart",()=>retroAudio.unlock(),{capture:true,passive:true});
 document.addEventListener("keydown",()=>retroAudio.unlock(),{capture:true});
 document.addEventListener("toggle",ev=>{
@@ -5810,7 +5905,7 @@ const syncSoundTargets={
 };
 const quietButtonIds=new Set([
   "audioToggle","mapZoomOut","mapZoomIn","zoomOut","zoomIn","mapDepthUp","mapDepthDown","depthUp","depthDown",
-  "selectionUp","selectionDown","selectionLeft","selectionRight","locateMe","mapLocate"
+  "selectionUp","selectionDown","selectionLeft","selectionRight","locateMe","mapLocate","debugToggle","runSelfCheck","exportDebugReport"
 ]);
 document.addEventListener("click",ev=>{
   const button=ev.target.closest?.("button");
@@ -5833,9 +5928,9 @@ els.audioToggle.addEventListener("click",()=>retroAudio.toggle());
 
 async function bootAtlas(){
   retroAudio.init();
+  setDebugEnabled(DEBUG_REQUESTED);
   try{state.ambientMotion=localStorage.getItem(AMBIENT_PREF_KEY)!=="off"}catch{}
   if(els.ambientMotion)els.ambientMotion.checked=state.ambientMotion;
-  reducedMotionQuery?.addEventListener?.("change",()=>{render();scheduleAmbientFrameLoop()});
   prepareSidebarCards();
   if(mobileSidebarMode()){
     setSidebarOpen(false);
@@ -5850,7 +5945,6 @@ async function bootAtlas(){
   loadCartofriches();
   loadBssLocal();
   els.layerBss.checked=true;state.layerBss=true;
-  loadExplorerState();
   updateLocationUI();
   populateControls();
   refreshCavities();
@@ -5867,10 +5961,10 @@ async function bootAtlas(){
     try{applyAtlasSnapshot(savedSnapshot,{source:EMBEDDED_SNAPSHOT?"instantané embarqué":"sauvegarde locale",renderNow:false})}
     catch(err){console.warn("Instantané ignoré",err);state.allowNetwork=true}
   }
-  render();
+  render("boot");
   scheduleFrameFit();
   updateSnapshotUI();
-  scheduleAmbientFrameLoop();
+  if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
 
   if(savedSnapshot){
     populateCavitySelect();
