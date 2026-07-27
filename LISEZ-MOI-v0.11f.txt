@@ -1,0 +1,11 @@
+ATLAS KARST ASCII v0.11f — ciblage précis
+
+Correctif ciblé de la v0.11e.
+
+- La sélection utilise maintenant les centres réels des cellules ASCII rendues.
+- Le padding du <pre> n’entre plus dans le calcul de ciblage.
+- Le ciblage reste exact lorsque la grille panoramique ou la taille des caractères change.
+- Pointer capture : la cellule réellement sous le curseur est retrouvée avec elementFromPoint().
+- Le moteur cartographique, le zoom, le pan, les données et les effets restent inchangés.
+
+Ouvrir le fichier HTML dans un navigateur moderne.

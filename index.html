@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.11e · ambiance légère & géolocalisation claire</title>
+<title>Atlas Karst ASCII v0.11f · ciblage précis</title>
 <style>
 :root{
   color-scheme:dark;
@@ -413,7 +413,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.11e</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.11f</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -826,7 +826,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.11e";
+const APP_VERSION = "0.11f";
 const SNAPSHOT_DB_NAME = "atlas-karst-memory";
 const SNAPSHOT_DB_STORE = "snapshots";
 const SNAPSHOT_DB_KEY = "active";
@@ -4900,17 +4900,58 @@ async function locateUser(){
 }
 function clearUserLocation(){state.userLocation=null;updateLocationUI("Position masquée. Elle n’était pas enregistrée dans l’Atlas.");render()}
 
+function cellElementAtClient(clientX,clientY){
+  // Pointer capture can make click/pointerup target the <pre> instead of the
+  // character span actually under the crosshair. elementFromPoint restores
+  // the visual target without relying on the event target.
+  const hit=document.elementFromPoint?.(clientX,clientY);
+  const cell=hit?.closest?.(".cell");
+  return cell&&els.map.contains(cell)?cell:null;
+}
+function mapGridMetrics(){
+  const cells=els.map?.children;
+  const expected=CONFIG.gridW*CONFIG.gridH;
+  if(!cells||cells.length<expected)return null;
+  const first=cells[0],nextX=CONFIG.gridW>1?cells[1]:null,nextY=CONFIG.gridH>1?cells[CONFIG.gridW]:null;
+  if(!first)return null;
+  const a=first.getBoundingClientRect();
+  const centerX=a.left+a.width/2,centerY=a.top+a.height/2;
+  let pitchX=nextX?(nextX.getBoundingClientRect().left+nextX.getBoundingClientRect().width/2-centerX):a.width;
+  let pitchY=nextY?(nextY.getBoundingClientRect().top+nextY.getBoundingClientRect().height/2-centerY):a.height;
+  if(!Number.isFinite(pitchX)||Math.abs(pitchX)<.1)pitchX=a.width||1;
+  if(!Number.isFinite(pitchY)||Math.abs(pitchY)<.1){
+    const cs=getComputedStyle(els.map);
+    pitchY=(parseFloat(cs.fontSize)||12)*(parseFloat(cs.lineHeight)||1.04);
+  }
+  return {centerX,centerY,pitchX:Math.abs(pitchX),pitchY:Math.abs(pitchY)};
+}
 function mapPositionFromClient(clientX,clientY){
   if(!state.lastGrid)return null;
-  const r=els.map.getBoundingClientRect();
-  if(!r.width||!r.height)return null;
-  const fx=clamp((clientX-r.left)/r.width,0,1),fy=clamp((clientY-r.top)/r.height,0,1);
-  return {coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x:Math.round(fx*(CONFIG.gridW-1)),y:Math.round(fy*(CONFIG.gridH-1))};
+  const metrics=mapGridMetrics();
+  let gridX,gridY;
+  if(metrics){
+    // Convert from the real centres of the rendered glyph cells. This excludes
+    // <pre> padding and remains exact when the panoramic grid or font size changes.
+    gridX=(clientX-metrics.centerX)/metrics.pitchX;
+    gridY=(clientY-metrics.centerY)/metrics.pitchY;
+  }else{
+    // Conservative fallback based on the content box rather than the padded box.
+    const r=els.map.getBoundingClientRect(),cs=getComputedStyle(els.map);
+    if(!r.width||!r.height)return null;
+    const padL=parseFloat(cs.paddingLeft)||0,padR=parseFloat(cs.paddingRight)||0;
+    const padT=parseFloat(cs.paddingTop)||0,padB=parseFloat(cs.paddingBottom)||0;
+    const width=Math.max(1,r.width-padL-padR),height=Math.max(1,r.height-padT-padB);
+    const fx0=clamp((clientX-r.left-padL)/width,0,1),fy0=clamp((clientY-r.top-padT)/height,0,1);
+    gridX=fx0*(CONFIG.gridW-1);gridY=fy0*(CONFIG.gridH-1);
+  }
+  const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
+  const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
+  return {coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
 }
 function eventMapPosition(ev){
   if(!state.lastGrid)return null;
-  const cell=ev.target.closest?.(".cell");
-  if(cell){
+  const cell=cellElementAtClient(ev.clientX,ev.clientY)||ev.target.closest?.(".cell");
+  if(cell&&els.map.contains(cell)){
     const x=+cell.dataset.x,y=+cell.dataset.y;
     return {coord:gridToCoord(x,y,state.lastGrid.extent),fx:x/(CONFIG.gridW-1),fy:y/(CONFIG.gridH-1),x,y};
   }
@@ -5385,7 +5426,7 @@ function exportTxt(){
   for(let y=0;y<CONFIG.gridH;y++)lines.push(state.lastGrid.grid[y].map(c=>c.ch).join(""));
   const z=currentZoom(),d=currentDepth();
   const header=[
-    "ATLAS KARST ASCII v0.10o · polish calme",
+    `ATLAS KARST ASCII v${APP_VERSION} · ciblage précis`,
     `Échelle : ${z.label} (${z.widthKm} × ${z.heightKm} km)`,
     `Centre : ${state.center.lat}, ${state.center.lon}`,
     `Profondeur : ${d===0?"surface":d+" m"}`,
@@ -5838,7 +5879,7 @@ async function bootAtlas(){
   populateControls();
   refreshCavities();
   els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7);
-  els.houseHelp.innerHTML=`Repère actuel : <strong>${CONFIG.house.lat.toFixed(7)}, ${CONFIG.house.lon.toFixed(7)}</strong>. La v0.11b peut exporter cet état en sauvegarde réimportable ou en HTML autonome.`;
+  els.houseHelp.innerHTML=`Repère actuel : <strong>${CONFIG.house.lat.toFixed(7)}, ${CONFIG.house.lon.toFixed(7)}</strong>. Cette version peut exporter cet état en sauvegarde réimportable ou en HTML autonome.`;
   if(els.osmHelp){
     els.osmHelp.innerHTML=LOCAL_FILE_MODE
       ? "Cette copie est ouverte en <code>file://</code>. Les requêtes sont valides, mais les serveurs Overpass peuvent refuser l’origine locale faute de Referer. Utilise <strong>tester les serveurs</strong> pour obtenir un diagnostic précis."
