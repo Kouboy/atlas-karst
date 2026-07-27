@@ -1,0 +1,14 @@
+ATLAS KARST ASCII v0.11e · AMBIANCE LÉGÈRE & GÉOLOCALISATION CLAIRE
+
+- L’animation d’eau a été fortement allégée : définition réduite, vague plus douce,
+  cycle de 14 secondes et rafraîchissement limité à environ 1 fois/s sur mobile.
+- La végétation ne clignote plus : elle conserve seulement une présence presque fixe.
+- La géolocalisation vérifie maintenant le contexte sécurisé et l’état de permission
+  avant de lancer le GPS.
+- Si le navigateur mobile bloque un fichier file:// sans afficher de demande, l’Atlas
+  l’explique explicitement au lieu d’annoncer à tort un refus récent de l’utilisateur.
+
+IMPORTANT POUR LA GÉOLOCALISATION MOBILE
+La Geolocation API n’est fiable que lorsque ce même fichier HTML est servi depuis une
+adresse HTTPS. L’ouverture directe depuis le stockage du téléphone peut être refusée
+par le navigateur sans boîte de dialogue.
