@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.11f · ciblage précis</title>
+<title>Atlas Karst ASCII v0.11g · textures terrain légères</title>
 <style>
 :root{
   color-scheme:dark;
@@ -226,14 +226,28 @@ body.explorer-mode #map{cursor:var(--atlas-crosshair)}
 @keyframes hintPulse{0%,100%{opacity:.42}50%{opacity:1}}
 
 .cell{display:inline;white-space:pre}
-/* Ambiance naturelle en mode éco : un seul calque Canvas anime tous les terrains
-   sans modifier des milliers de cellules DOM à chaque battement. */
+/* Textures naturelles sans boucle d’animation.
+   Les glyphes et leurs teintes sont calculés une seule fois au rendu : aucune
+   vague Canvas, aucun timer, aucun repeint permanent sur mobile. */
 #map{position:relative;z-index:1}
-#terrainAmbientCanvas{
-  position:absolute;left:0;top:0;z-index:2;pointer-events:none;opacity:.68;
-  transform-origin:0 0;contain:strict;image-rendering:auto;will-change:opacity
-}
-#terrainAmbientCanvas.paused{opacity:.38}
+#terrainAmbientCanvas{display:none!important}
+.cell.terrain-texture{animation:none!important;text-shadow:none!important;filter:none!important}
+.cell.terrain-water.terrain-v0{color:#83dcff;font-weight:900}
+.cell.terrain-water.terrain-v1{color:#4fbce7;font-weight:800}
+.cell.terrain-water.terrain-v2{color:#a5e8ff;font-weight:900}
+.cell.terrain-water.terrain-v3{color:#62c9ef;font-weight:800}
+.cell.terrain-forest.terrain-v0{color:#69b77f;font-weight:900}
+.cell.terrain-forest.terrain-v1{color:#4f9467;font-weight:800}
+.cell.terrain-forest.terrain-v2{color:#7ac88d;font-weight:900}
+.cell.terrain-forest.terrain-v3{color:#5ba472;font-weight:700}
+.cell.terrain-meadow.terrain-v0{color:#a6cf8f;font-weight:800}
+.cell.terrain-meadow.terrain-v1{color:#7daa76;font-weight:700}
+.cell.terrain-meadow.terrain-v2{color:#b7d99f;font-weight:800}
+.cell.terrain-meadow.terrain-v3{color:#8dbb80;font-weight:700}
+.cell.terrain-field.terrain-v0{color:#a9a86c;font-weight:700}
+.cell.terrain-field.terrain-v1{color:#7f9567;font-weight:700}
+.cell.terrain-field.terrain-v2{color:#c1b978;font-weight:800}
+.cell.terrain-field.terrain-v3{color:#919b65;font-weight:700}
 @keyframes selectedBreath{0%,100%{box-shadow:inset 0 0 0 rgba(255,223,125,0)}50%{box-shadow:inset 0 0 8px rgba(255,223,125,.42)}}
 .cell.selected{animation:selectedBreath 1.7s ease-in-out infinite}
 .depth-transition{position:absolute;inset:0;z-index:11;pointer-events:none;overflow:hidden;border-radius:12px}
@@ -413,7 +427,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.11f</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.11g</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -474,7 +488,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
     <label class="switch"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée</label>
     <label class="switch"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
     <label class="switch"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
-    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Ambiance naturelle ultra légère : vague d’eau et végétation</label>
+    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Textures naturelles légères : eau, forêt, prairies et champs</label>
     <label class="switch">Scénario
       <select id="scenario">
         <option value="prudent">prudent</option>
@@ -826,7 +840,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.11f";
+const APP_VERSION = "0.11g";
 const SNAPSHOT_DB_NAME = "atlas-karst-memory";
 const SNAPSHOT_DB_STORE = "snapshots";
 const SNAPSHOT_DB_KEY = "active";
@@ -4338,9 +4352,9 @@ function renderUndergroundBase(g){
 
 const AMBIENT_PREF_KEY="atlas-karst-ambient-motion-v1";
 const reducedMotionQuery=window.matchMedia?.("(prefers-reduced-motion: reduce)");
-let depthTransitionTimer=0,ambientFrameHandle=0,ambientLastDraw=0;
-let ambientTerrainCells=[],ambientCanvasMetrics=null,ambientMasks=null;
+let depthTransitionTimer=0;
 function ambientAllowed(){return !!state.ambientMotion&&!reducedMotionQuery?.matches}
+function terrainTexturesAllowed(){return !!state.ambientMotion&&currentDepth()===0}
 function ambientTerrainType(cell){
   const cls=String(cell?.cls||"");
   if(cls.includes("c-water"))return "water";
@@ -4349,98 +4363,44 @@ function ambientTerrainType(cell){
   if(cls.includes("c-field"))return "field";
   return "";
 }
-function collectAmbientTerrain(g){
-  ambientTerrainCells=[];
-  if(!ambientAllowed()||currentDepth()!==0||!g)return;
-  for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
-    const type=ambientTerrainType(g.grid[y][x]);
-    if(type)ambientTerrainCells.push({x,y,type});
+function terrainTexture(cell,x,y,extent){
+  if(!terrainTexturesAllowed())return null;
+  const type=ambientTerrainType(cell);
+  if(!type)return null;
+  const original=String(cell?.ch||"");
+  if(type==="water"&&!/[~≈]/u.test(original))return null;
+  if(type==="forest"&&!/[TtY;]/u.test(original))return null;
+  if(type==="meadow"&&![",","'","·"].includes(original))return null;
+  if(type==="field"&&![".",":",";"].includes(original))return null;
+  const lon=extent.minLon+((x+.5)/CONFIG.gridW)*(extent.maxLon-extent.minLon);
+  const lat=extent.maxLat-((y+.5)/CONFIG.gridH)*(extent.maxLat-extent.minLat);
+  const ix=Math.round(lon*100000),iy=Math.round(lat*100000);
+  const hash=(Math.imul(ix,73856093)^Math.imul(iy,19349663)^Math.imul(state.zoomIndex+1,83492791))>>>0;
+  let variant=hash&3,ch=original;
+  if(type==="water"){
+    variant=(Math.abs(iy+Math.floor(ix/3))&3);
+    ch=variant===0||variant===2?"≈":"~";
+  }else if(type==="forest"){
+    ch=["T","Y","T","t"][variant];
+  }else if(type==="meadow"){
+    variant=(Math.abs(ix+iy)&3);
+    ch=[",","'","·",","][variant];
+  }else if(type==="field"){
+    variant=(Math.abs(ix-Math.floor(iy/2))&3);
+    ch=[".",":",".",";"][variant];
   }
-}
-function ambientResolutionScale(){return window.matchMedia?.("(max-width:700px)")?.matches?.28:.44}
-function sizeAmbientCanvas(){
-  const canvas=els.terrainAmbientCanvas,map=els.map;
-  if(!canvas||!map)return false;
-  const cs=getComputedStyle(map),width=Math.max(1,map.offsetWidth),height=Math.max(1,map.offsetHeight),scale=ambientResolutionScale();
-  const bw=Math.max(1,Math.round(width*scale)),bh=Math.max(1,Math.round(height*scale));
-  const resized=canvas.width!==bw||canvas.height!==bh;
-  if(resized){canvas.width=bw;canvas.height=bh;ambientMasks=null}
-  canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;
-  canvas.style.left=`${map.offsetLeft}px`;canvas.style.top=`${map.offsetTop}px`;
-  const padL=(parseFloat(cs.paddingLeft)||0)*scale,padR=(parseFloat(cs.paddingRight)||0)*scale;
-  const padT=(parseFloat(cs.paddingTop)||0)*scale,padB=(parseFloat(cs.paddingBottom)||0)*scale;
-  ambientCanvasMetrics={
-    width:bw,height:bh,cssWidth:width,cssHeight:height,scale,padL,padT,
-    cellW:Math.max(.1,(bw-padL-padR)/CONFIG.gridW),
-    cellH:Math.max(.1,(bh-padT-padB)/CONFIG.gridH)
-  };
-  return true;
-}
-function makeAmbientCanvas(width,height){const c=document.createElement("canvas");c.width=width;c.height=height;return c}
-function buildAmbientMasks(){
-  const m=ambientCanvasMetrics;if(!m)return false;
-  const water=makeAmbientCanvas(m.width,m.height),vegetation=makeAmbientCanvas(m.width,m.height);
-  const wc=water.getContext("2d"),vc=vegetation.getContext("2d");if(!wc||!vc)return false;
-  wc.fillStyle="#fff";
-  for(const c of ambientTerrainCells){
-    const x=m.padL+c.x*m.cellW,y=m.padT+c.y*m.cellH;
-    if(c.type==="water"){
-      wc.fillRect(x,y,Math.ceil(m.cellW+1),Math.ceil(m.cellH+1));
-    }else{
-      vc.fillStyle=c.type==="forest"?"rgba(88,177,113,.34)":c.type==="meadow"?"rgba(143,190,125,.25)":"rgba(184,188,113,.23)";
-      vc.fillRect(x+m.cellW*.08,y+m.cellH*.18,Math.max(1,m.cellW*.84),Math.max(1,m.cellH*.64));
-    }
-  }
-  ambientMasks={water,vegetation};return true;
+  return {type,variant,ch};
 }
 function clearAmbientCanvas(){
   const canvas=els.terrainAmbientCanvas;if(!canvas)return;
-  const ctx=canvas.getContext("2d");ctx?.clearRect(0,0,canvas.width,canvas.height);
+  const ctx=canvas.getContext?.("2d");ctx?.clearRect(0,0,canvas.width||0,canvas.height||0);
 }
-function paintMaskedFill(ctx,mask,fill){
-  ctx.save();ctx.drawImage(mask,0,0);ctx.globalCompositeOperation="source-in";ctx.fillStyle=fill;ctx.fillRect(0,0,mask.width,mask.height);ctx.restore();
-}
-function drawAmbientCanvas(timestamp=performance.now()){
-  const canvas=els.terrainAmbientCanvas;
-  if(!canvas||!ambientAllowed()||currentDepth()!==0||!ambientTerrainCells.length){clearAmbientCanvas();return}
-  if(!ambientCanvasMetrics&&!sizeAmbientCanvas())return;
-  if(!ambientMasks&&!buildAmbientMasks())return;
-  const m=ambientCanvasMetrics,ctx=canvas.getContext("2d",{alpha:true});if(!ctx)return;
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  // Les végétations restent presque fixes : une présence, pas un clignotement.
-  ctx.save();ctx.globalAlpha=.62;ctx.drawImage(ambientMasks.vegetation,0,0);ctx.restore();
-  paintMaskedFill(ctx,ambientMasks.water,"rgba(52,179,239,.13)");
-  // Une seule vague très lente et douce. Le calque est de faible définition et
-  // n'est redessiné qu'une à deux fois par seconde selon l'écran.
-  const phase=(timestamp%14000)/14000;
-  const sweepX=-m.width*.38+phase*m.width*1.76,band=Math.max(26,m.width*.28);
-  const wave=ctx.createLinearGradient(sweepX-band,0,sweepX+band,0);
-  wave.addColorStop(0,"rgba(55,177,225,0)");
-  wave.addColorStop(.30,"rgba(70,190,235,.08)");
-  wave.addColorStop(.48,"rgba(190,239,255,.38)");
-  wave.addColorStop(.62,"rgba(85,205,244,.16)");
-  wave.addColorStop(1,"rgba(55,177,225,0)");
-  paintMaskedFill(ctx,ambientMasks.water,wave);
-}
-function refreshAmbientTerrain(g=state.lastGrid){
-  collectAmbientTerrain(g);ambientCanvasMetrics=null;ambientMasks=null;
-  requestAnimationFrame(()=>{sizeAmbientCanvas();buildAmbientMasks();drawAmbientCanvas();scheduleAmbientFrameLoop()});
-}
-function stopAmbientFrameLoop(){
-  if(ambientFrameHandle)clearTimeout(ambientFrameHandle);ambientFrameHandle=0;ambientLastDraw=0;clearAmbientCanvas();
-}
-function scheduleAmbientFrameLoop(){
-  if(ambientFrameHandle)clearTimeout(ambientFrameHandle);
-  if(!ambientAllowed()||document.hidden||!els.terrainAmbientCanvas){stopAmbientFrameLoop();return}
-  const compact=window.matchMedia?.("(max-width:700px)")?.matches;
-  const interval=compact?1200:700;
-  ambientFrameHandle=setTimeout(()=>{
-    ambientFrameHandle=0;
-    if(!ambientAllowed()||document.hidden){stopAmbientFrameLoop();return}
-    if(!drag&&!pinch){ambientLastDraw=performance.now();drawAmbientCanvas(ambientLastDraw)}
-    scheduleAmbientFrameLoop();
-  },interval);
-}
+function sizeAmbientCanvas(){return false}
+function buildAmbientMasks(){return false}
+function drawAmbientCanvas(){clearAmbientCanvas()}
+function refreshAmbientTerrain(){clearAmbientCanvas()}
+function stopAmbientFrameLoop(){clearAmbientCanvas()}
+function scheduleAmbientFrameLoop(){clearAmbientCanvas()}
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
   clearTimeout(depthTransitionTimer);
@@ -4505,9 +4465,12 @@ function render(){
       const selected=selectedGrid&&selectedGrid.x===x&&selectedGrid.y===y?" selected":"";
       const neighbor=selectedGrid&&!selected&&Math.abs(selectedGrid.x-x)<=1&&Math.abs(selectedGrid.y-y)<=1?" selection-neighbor":"";
       const attrs=`data-x="${x}" data-y="${y}"`;
+      const texture=terrainTexture(c,x,y,extent);
+      const textureClass=texture?` terrain-texture terrain-${texture.type} terrain-v${texture.variant}`:"";
+      const glyph=texture?.ch??c.ch;
       const poiKind=poiEffectKind(c),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
       const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-      out+=`<span class="cell ${c.cls||""}${shade}${selected}${poiClass}" ${attrs}${poiStyle}>${esc(c.ch)}</span>`;
+      out+=`<span class="cell ${c.cls||""}${shade}${selected}${textureClass}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
     }
     out+="\n";
   }
@@ -4617,8 +4580,7 @@ function applyResponsiveGridProfile(main){
   const next=responsiveGridProfile(main);
   if(next.w===CONFIG.gridW&&next.h===CONFIG.gridH)return false;
   CONFIG.gridW=next.w;CONFIG.gridH=next.h;
-  ambientCanvasMetrics=null;
-  return true;
+    return true;
 }
 function fitMapFrame(){
   const main=document.querySelector("main");
@@ -4669,8 +4631,7 @@ function fitMapFrame(){
   main.style.setProperty("--map-frame-width",`${frameWidth}px`);
   els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
 
-  ambientCanvasMetrics=null;
-  requestAnimationFrame(()=>{sizeAmbientCanvas();drawAmbientCanvas()});
+    requestAnimationFrame(clearAmbientCanvas);
 }
 function scheduleFrameFit(){
   clearTimeout(frameFitTimer);
@@ -5790,7 +5751,7 @@ els.cavitySelect.addEventListener("change",e=>{
 window.addEventListener("resize",()=>{
   if(!mobileSidebarMode())document.body.classList.remove("sidebar-open");
   scheduleFrameFit();
-  ambientCanvasMetrics=null;ambientMasks=null;requestAnimationFrame(()=>{sizeAmbientCanvas();buildAmbientMasks();drawAmbientCanvas()});
+  requestAnimationFrame(clearAmbientCanvas);
 });
 if(typeof ResizeObserver!=="undefined"){
   const responsiveMapObserver=new ResizeObserver(()=>scheduleFrameFit());

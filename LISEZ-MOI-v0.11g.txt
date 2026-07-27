@@ -1,0 +1,21 @@
+ATLAS KARST ASCII v0.11g — TEXTURES TERRAIN LÉGÈRES
+
+Cette version remplace entièrement les anciennes animations continues de l’eau et de la végétation.
+
+Nouveau rendu :
+- eau : alternance stable de ~ et ≈, avec quatre nuances de bleu ;
+- forêt : motif T / Y / t et variations de vert ;
+- prairie : motif , / ' / · plus lisible ;
+- champs : ponctuation en sillons . / : / ; et nuances végétales/ocres.
+
+Ces textures sont calculées une seule fois lors du rendu de la carte. Il n’y a plus :
+- de boucle Canvas ;
+- de minuterie d’animation ;
+- de vague périodique ;
+- de repeint permanent en arrière-plan.
+
+Le motif est lié aux coordonnées géographiques : il reste cohérent quand la carte se déplace et donne de la matière au terrain sans consommation continue.
+
+L’option « Textures naturelles légères » dans Couches permet toujours de désactiver l’ensemble.
+
+Base : v0.11f. Le moteur cartographique, la navigation tactile, la géolocalisation et les sources de données ne sont pas modifiés.
