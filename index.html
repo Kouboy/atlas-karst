@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.11h · animations légères et routes cohérentes</title>
+<title>Atlas Karst ASCII v0.11i · sols calmes et points d’intérêt sonores</title>
 <style>
 :root{
   color-scheme:dark;
@@ -176,22 +176,26 @@ select{width:100%}
 /* Confirmation ponctuelle lors de la sélection d’un vrai point d’intérêt.
    Un seul élément est animé, puis retiré : coût négligeable même sur mobile. */
 .poi-selection-fx{
-  --poi-hit:#ffe07d;position:absolute;z-index:18;width:12px;height:12px;left:0;top:0;
-  transform:translate(-50%,-50%);border:2px solid var(--poi-hit);border-radius:50%;
-  opacity:0;pointer-events:none;filter:drop-shadow(0 0 5px var(--poi-hit))
+  --poi-hit:#ffe07d;position:absolute;z-index:18;width:16px;height:16px;left:0;top:0;
+  transform:translate(-50%,-50%);border:3px solid var(--poi-hit);border-radius:50%;
+  opacity:0;pointer-events:none;filter:drop-shadow(0 0 8px var(--poi-hit))
 }
-.poi-selection-fx::before,.poi-selection-fx::after{content:"";position:absolute;inset:50%;border:1px solid var(--poi-hit);border-radius:50%;transform:translate(-50%,-50%)}
-.poi-selection-fx.active{animation:poiSelectionRing .72s cubic-bezier(.16,.82,.28,1) both}
-.poi-selection-fx.active::before{animation:poiSelectionEcho .72s .06s ease-out both}
-.poi-selection-fx.active::after{animation:poiSelectionEcho .72s .18s ease-out both}
-.poi-selection-fx[data-kind="cavity"]{--poi-hit:#d89aff}.poi-selection-fx[data-kind="bss"]{--poi-hit:#ffd866}
-.poi-selection-fx[data-kind="heritage"]{--poi-hit:#ffe08a}.poi-selection-fx[data-kind="memory"]{--poi-hit:#ffb6df}
-.poi-selection-fx[data-kind="industrial"]{--poi-hit:#ffad72}.poi-selection-fx[data-kind="natural"]{--poi-hit:#7ee1cb}
-.poi-selection-fx[data-kind="home"]{--poi-hit:#ff9aa6}.poi-selection-fx[data-kind="location"]{--poi-hit:#fff48b}
-.cell.poi-select-burst{position:relative;z-index:19;display:inline-block;animation:poiGlyphBurst .58s cubic-bezier(.18,.9,.22,1) both}
-@keyframes poiSelectionRing{0%{opacity:0;transform:translate(-50%,-50%) scale(.35)}18%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(3.5)}}
-@keyframes poiSelectionEcho{0%{width:8px;height:8px;opacity:.9}100%{width:62px;height:62px;opacity:0}}
-@keyframes poiGlyphBurst{0%{transform:scale(.75);filter:brightness(1)}35%{transform:scale(1.65);filter:brightness(1.9)}100%{transform:scale(1);filter:brightness(1.18)}}
+.poi-selection-fx::before,.poi-selection-fx::after{content:"";position:absolute;left:50%;top:50%;width:12px;height:12px;border:2px solid var(--poi-hit);border-radius:inherit;transform:translate(-50%,-50%)}
+.poi-selection-fx.active{animation:poiSelectionRing .98s cubic-bezier(.12,.86,.24,1) both}
+.poi-selection-fx.active::before{animation:poiSelectionEcho .92s .05s ease-out both}
+.poi-selection-fx.active::after{animation:poiSelectionEcho .92s .21s ease-out both}
+.poi-selection-fx[data-kind="cavity"]{--poi-hit:#d89aff;border-style:double}
+.poi-selection-fx[data-kind="bss"]{--poi-hit:#ffd866;border-style:dashed;border-radius:3px}
+.poi-selection-fx[data-kind="heritage"]{--poi-hit:#ffe08a;border-radius:2px;transform:translate(-50%,-50%) rotate(45deg)}
+.poi-selection-fx[data-kind="memory"]{--poi-hit:#ffb6df;border-style:dotted}
+.poi-selection-fx[data-kind="industrial"]{--poi-hit:#ffad72;border-radius:1px;border-style:dashed}
+.poi-selection-fx[data-kind="natural"]{--poi-hit:#7ee1cb;border-radius:45% 55% 52% 48%}
+.poi-selection-fx[data-kind="home"]{--poi-hit:#ff9aa6;border-radius:35%}
+.poi-selection-fx[data-kind="location"]{--poi-hit:#fff48b;border-style:dashed}
+.cell.poi-select-burst{position:relative;z-index:19;display:inline-block;animation:poiGlyphBurst .78s cubic-bezier(.16,.92,.2,1) both}
+@keyframes poiSelectionRing{0%{opacity:0;scale:.35}14%{opacity:1}52%{opacity:.95}100%{opacity:0;scale:3.9}}
+@keyframes poiSelectionEcho{0%{width:10px;height:10px;opacity:1}100%{width:78px;height:78px;opacity:0}}
+@keyframes poiGlyphBurst{0%{transform:scale(.72);filter:brightness(1)}26%{transform:scale(1.95);filter:brightness(2.2)}58%{transform:scale(1.18);filter:brightness(1.5)}100%{transform:scale(1);filter:brightness(1.16)}}
 .heritage-sources{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}
 .heritage-sources label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .heritage-source-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
@@ -226,47 +230,11 @@ body.explorer-mode #map{cursor:var(--atlas-crosshair)}
 @keyframes hintPulse{0%,100%{opacity:.42}50%{opacity:1}}
 
 .cell{display:inline;white-space:pre}
-/* Animations naturelles légères.
-   Une seule phase globale change à faible cadence. Les cellules ne possèdent
-   ni timer individuel ni Canvas animé : elles changent simplement de teinte
-   par bandes géographiques, ce qui produit un mouvement visible et économique. */
+/* Les sols restent volontairement statiques. Les anciennes animations d’eau,
+   forêt, prairie et champ ont été supprimées afin de préserver la lisibilité
+   et la fluidité, surtout sur mobile. */
 #map{position:relative;z-index:1}
 #terrainAmbientCanvas{display:none!important}
-.cell.terrain-texture{animation:none!important;filter:none!important;transition:none!important;text-shadow:none!important}
-.cell.terrain-water.terrain-v0{color:#74d5f5;font-weight:900}
-.cell.terrain-water.terrain-v1{color:#42add4;font-weight:800}
-.cell.terrain-water.terrain-v2{color:#8adcf6;font-weight:900}
-.cell.terrain-water.terrain-v3{color:#56bddf;font-weight:800}
-.cell.terrain-forest.terrain-v0{color:#63ad78;font-weight:900}
-.cell.terrain-forest.terrain-v1{color:#43855c;font-weight:800}
-.cell.terrain-forest.terrain-v2{color:#74bd85;font-weight:900}
-.cell.terrain-forest.terrain-v3{color:#529568;font-weight:700}
-.cell.terrain-meadow.terrain-v0{color:#9bc386;font-weight:800}
-.cell.terrain-meadow.terrain-v1{color:#709b68;font-weight:700}
-.cell.terrain-meadow.terrain-v2{color:#afd497;font-weight:800}
-.cell.terrain-meadow.terrain-v3{color:#82ab74;font-weight:700}
-.cell.terrain-field.terrain-v0{color:#a39f61;font-weight:700}
-.cell.terrain-field.terrain-v1{color:#78895d;font-weight:700}
-.cell.terrain-field.terrain-v2{color:#bab16e;font-weight:800}
-.cell.terrain-field.terrain-v3{color:#898f5c;font-weight:700}
-/* Une crête se déplace d’un groupe à l’autre. La végétation change moins fort
-   que l’eau, mais assez pour que le mouvement reste perceptible. */
-#map.terrain-phase-0 .terrain-water.terrain-v0,
-#map.terrain-phase-1 .terrain-water.terrain-v1,
-#map.terrain-phase-2 .terrain-water.terrain-v2,
-#map.terrain-phase-3 .terrain-water.terrain-v3{color:#e1faff}
-#map.terrain-phase-0 .terrain-forest.terrain-v0,
-#map.terrain-phase-1 .terrain-forest.terrain-v1,
-#map.terrain-phase-2 .terrain-forest.terrain-v2,
-#map.terrain-phase-3 .terrain-forest.terrain-v3{color:#8bd09a}
-#map.terrain-phase-0 .terrain-meadow.terrain-v2,
-#map.terrain-phase-1 .terrain-meadow.terrain-v3,
-#map.terrain-phase-2 .terrain-meadow.terrain-v0,
-#map.terrain-phase-3 .terrain-meadow.terrain-v1{color:#c2e4aa}
-#map.terrain-phase-0 .terrain-field.terrain-v1,
-#map.terrain-phase-1 .terrain-field.terrain-v2,
-#map.terrain-phase-2 .terrain-field.terrain-v3,
-#map.terrain-phase-3 .terrain-field.terrain-v0{color:#d0c77e}
 .c-road-far{font-weight:600;color:#c4b27e}
 @keyframes selectedBreath{0%,100%{box-shadow:inset 0 0 0 rgba(255,223,125,0)}50%{box-shadow:inset 0 0 8px rgba(255,223,125,.42)}}
 .cell.selected{animation:selectedBreath 1.7s ease-in-out infinite}
@@ -508,7 +476,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
     <label class="switch"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée</label>
     <label class="switch"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
     <label class="switch"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
-    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Animations naturelles légères : eau, forêt, prairies et champs</label>
+    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Animations de l’interface et des points d’intérêt</label>
     <label class="switch">Scénario
       <select id="scenario">
         <option value="prudent">prudent</option>
@@ -1049,7 +1017,7 @@ const retroAudio=(()=>{
   const ONE_SHOT_BOOST=1.55;
   let panLastAt=0,panLastX=0,panLastY=0,panActive=false,panVoice=null;
   const lastPlayAt=new Map();
-  const cooldownMs={button:42,click:42,toggle:70,panel:70,panelOpen:80,panelClose:80,zoomIn:90,zoomOut:90,depthDown:120,depthUp:120,select:55};
+  const cooldownMs={button:42,click:42,toggle:70,panel:70,panelOpen:80,panelClose:80,zoomIn:90,zoomOut:90,depthDown:120,depthUp:120,select:55,poiCavity:220,poiBss:180,poiHeritage:220,poiMemory:210,poiIndustrial:210,poiNatural:180,poiHome:220,poiLocation:180};
   try{enabled=localStorage.getItem(AUDIO_PREF_KEY)!=="off"}catch{}
 
   function updateButton(){
@@ -1156,11 +1124,48 @@ const retroAudio=(()=>{
         tone(c,330,.05,0,{type:"triangle",gain:.027});tone(c,495,.05,.045,{type:"triangle",gain:.026});tone(c,660,.085,.09,{type:"triangle",gain:.027});break;
       case "cellUnderground":
         tone(c,145,.13,0,{to:92,type:"triangle",gain:.034});tone(c,220,.06,.04,{type:"square",gain:.016});break;
+      case "poiCavity":
+        tone(c,680,.28,0,{to:150,type:"triangle",gain:.064,pan:-.28});
+        tone(c,340,.32,.075,{to:82,type:"square",gain:.046,pan:.28});
+        noise(c,.13,.035,{gain:.024,highpass:360});
+        tone(c,920,.055,.29,{to:720,type:"triangle",gain:.032});break;
+      case "poiBss":
+        tone(c,1080,.055,0,{type:"square",gain:.058,pan:-.3});
+        tone(c,540,.085,.065,{type:"triangle",gain:.052,pan:.3});
+        tone(c,1320,.06,.155,{type:"square",gain:.056,pan:-.12});
+        tone(c,330,.12,.21,{to:240,type:"triangle",gain:.038});break;
+      case "poiHeritage":
+        tone(c,392,.095,0,{type:"triangle",gain:.051,pan:-.3});
+        tone(c,523,.095,.075,{type:"triangle",gain:.054,pan:-.1});
+        tone(c,659,.105,.15,{type:"triangle",gain:.056,pan:.12});
+        tone(c,784,.145,.225,{type:"square",gain:.049,pan:.3});break;
+      case "poiMemory":
+        tone(c,330,.12,0,{type:"triangle",gain:.048,pan:-.24});
+        tone(c,440,.13,.085,{type:"triangle",gain:.052});
+        tone(c,660,.15,.175,{to:570,type:"square",gain:.041,pan:.24});
+        noise(c,.08,.12,{gain:.014,highpass:1250});break;
+      case "poiIndustrial":
+        tone(c,150,.16,0,{to:92,type:"sawtooth",gain:.064,pan:-.25});
+        tone(c,300,.07,.06,{type:"square",gain:.052,pan:.25});
+        noise(c,.13,.09,{gain:.029,highpass:480});
+        tone(c,205,.11,.19,{to:135,type:"square",gain:.044});break;
+      case "poiNatural":
+        noise(c,.09,0,{gain:.019,highpass:1550,pan:-.25});
+        tone(c,510,.15,.015,{to:920,type:"triangle",gain:.052,pan:-.18});
+        tone(c,760,.12,.12,{to:1120,type:"triangle",gain:.046,pan:.22});
+        tone(c,1240,.055,.245,{type:"square",gain:.038});break;
+      case "poiHome":
+        tone(c,330,.095,0,{type:"triangle",gain:.052,pan:-.3});
+        tone(c,495,.095,.072,{type:"triangle",gain:.054,pan:-.1});
+        tone(c,660,.105,.144,{type:"triangle",gain:.056,pan:.12});
+        tone(c,990,.15,.216,{type:"triangle",gain:.052,pan:.3});break;
+      case "poiLocation":
+        tone(c,1260,.065,0,{to:920,type:"square",gain:.058});
+        tone(c,630,.12,.075,{to:520,type:"triangle",gain:.048});
+        tone(c,1260,.055,.19,{type:"square",gain:.052});break;
       case "poiConfirm":
-        tone(c,155,.075,0,{to:118,type:"square",gain:.028});
-        tone(c,880,.045,.018,{type:"square",gain:.025,pan:-.22});
-        tone(c,1175,.07,.068,{type:"triangle",gain:.028,pan:.22});
-        noise(c,.045,.025,{gain:.009,highpass:1450});break;
+        tone(c,880,.075,0,{type:"square",gain:.052});
+        tone(c,1175,.11,.07,{type:"triangle",gain:.056});break;
       case "zoomIn":tone(c,360,.12,0,{to:820,type:"square",gain:.031});break;
       case "zoomOut":tone(c,820,.12,0,{to:330,type:"square",gain:.03});break;
       case "depthDown":
@@ -4390,45 +4395,11 @@ const AMBIENT_PREF_KEY="atlas-karst-ambient-motion-v1";
 const reducedMotionQuery=window.matchMedia?.("(prefers-reduced-motion: reduce)");
 let depthTransitionTimer=0;
 function ambientAllowed(){return !!state.ambientMotion&&!reducedMotionQuery?.matches}
-function terrainTexturesAllowed(){return !!state.ambientMotion&&currentDepth()===0}
-function ambientTerrainType(cell){
-  const cls=String(cell?.cls||"");
-  if(cls.includes("c-water"))return "water";
-  if(cls.includes("c-forest"))return "forest";
-  if(cls.includes("c-meadow"))return "meadow";
-  if(cls.includes("c-field"))return "field";
-  return "";
-}
-function terrainTexture(cell,x,y,extent){
-  if(!terrainTexturesAllowed())return null;
-  const type=ambientTerrainType(cell);
-  if(!type)return null;
-  const original=String(cell?.ch||"");
-  if(type==="water"&&!/[~≈]/u.test(original))return null;
-  if(type==="forest"&&!/[TtY;]/u.test(original))return null;
-  if(type==="meadow"&&![",","'","·"].includes(original))return null;
-  if(type==="field"&&![".",":",";"].includes(original))return null;
-  const lon=extent.minLon+((x+.5)/CONFIG.gridW)*(extent.maxLon-extent.minLon);
-  const lat=extent.maxLat-((y+.5)/CONFIG.gridH)*(extent.maxLat-extent.minLat);
-  const ix=Math.round(lon*100000),iy=Math.round(lat*100000);
-  const hash=(Math.imul(ix,73856093)^Math.imul(iy,19349663)^Math.imul(state.zoomIndex+1,83492791))>>>0;
-  let variant=hash&3,ch=original;
-  if(type==="water"){
-    variant=(Math.abs(iy+Math.floor(ix/3))&3);
-    ch=variant===0||variant===2?"≈":"~";
-  }else if(type==="forest"){
-    ch=["T","Y","T","t"][variant];
-  }else if(type==="meadow"){
-    variant=(Math.abs(ix+iy)&3);
-    ch=[",","'","·",","][variant];
-  }else if(type==="field"){
-    variant=(Math.abs(ix-Math.floor(iy/2))&3);
-    ch=[".",":",".",";"][variant];
-  }
-  return {type,variant,ch};
-}
-const TERRAIN_PHASE_CLASSES=["terrain-phase-0","terrain-phase-1","terrain-phase-2","terrain-phase-3"];
-let ambientPhase=0,ambientPhaseTimer=0;
+function terrainTexturesAllowed(){return false}
+function ambientTerrainType(){return ""}
+function terrainTexture(){return null}
+const TERRAIN_PHASE_CLASSES=[];
+let ambientPhaseTimer=0;
 function clearAmbientCanvas(){
   const canvas=els.terrainAmbientCanvas;if(!canvas)return;
   const ctx=canvas.getContext?.("2d");ctx?.clearRect(0,0,canvas.width||0,canvas.height||0);
@@ -4436,27 +4407,14 @@ function clearAmbientCanvas(){
 function sizeAmbientCanvas(){return false}
 function buildAmbientMasks(){return false}
 function drawAmbientCanvas(){clearAmbientCanvas()}
-function applyAmbientPhase(){
-  if(!els.map)return;
-  els.map.classList.remove(...TERRAIN_PHASE_CLASSES);
-  if(ambientAllowed()&&currentDepth()===0)els.map.classList.add(TERRAIN_PHASE_CLASSES[ambientPhase]);
-}
-function refreshAmbientTerrain(){applyAmbientPhase();scheduleAmbientFrameLoop()}
+function applyAmbientPhase(){els.map?.classList.remove("terrain-phase-0","terrain-phase-1","terrain-phase-2","terrain-phase-3")}
+function refreshAmbientTerrain(){stopAmbientFrameLoop()}
 function stopAmbientFrameLoop(){
   if(ambientPhaseTimer){clearInterval(ambientPhaseTimer);ambientPhaseTimer=0}
-  els.map?.classList.remove(...TERRAIN_PHASE_CLASSES);
+  applyAmbientPhase();
   clearAmbientCanvas();
 }
-function scheduleAmbientFrameLoop(){
-  if(ambientPhaseTimer){clearInterval(ambientPhaseTimer);ambientPhaseTimer=0}
-  applyAmbientPhase();
-  if(!ambientAllowed()||currentDepth()!==0||document.hidden)return;
-  ambientPhaseTimer=setInterval(()=>{
-    if(document.hidden||els.map?.classList.contains("dragging")||els.map?.classList.contains("pinching"))return;
-    ambientPhase=(ambientPhase+1)%TERRAIN_PHASE_CLASSES.length;
-    applyAmbientPhase();
-  },1200);
-}
+function scheduleAmbientFrameLoop(){stopAmbientFrameLoop()}
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
   clearTimeout(depthTransitionTimer);
@@ -5020,8 +4978,10 @@ function cellSelectionSound(cell){
   return "cellTerrain";
 }
 function playCellSelectionSound(cell,{snapped=false}={}){
-  retroAudio.play(cellSelectionSound(cell));
-  if(snapped)setTimeout(()=>retroAudio.play("snapAccent"),62);
+  const poiKind=poiSelectionKind(cell);
+  const poiSound={cavity:"poiCavity",bss:"poiBss",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
+  retroAudio.play(poiSound||cellSelectionSound(cell));
+  if(snapped)setTimeout(()=>retroAudio.play("snapAccent"),110);
 }
 
 function poiSelectionKind(cell){
@@ -5041,7 +5001,6 @@ function poiSelectionKind(cell){
 function triggerPoiSelectionFeedback(cell,x,y){
   const selectionKind=poiSelectionKind(cell);
   if(!selectionKind||!els.poiSelectionFx||!els.viewport)return;
-  retroAudio.play("poiConfirm");
   requestAnimationFrame(()=>{
     const glyph=els.map.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
     if(!glyph)return;
@@ -5052,7 +5011,7 @@ function triggerPoiSelectionFeedback(cell,x,y){
     fx.dataset.kind=selectionKind;fx.style.left=`${left}px`;fx.style.top=`${top}px`;
     fx.classList.remove("active");void fx.offsetWidth;fx.classList.add("active");
     glyph.classList.remove("poi-select-burst");void glyph.offsetWidth;glyph.classList.add("poi-select-burst");
-    setTimeout(()=>{fx.classList.remove("active");glyph.classList.remove("poi-select-burst")},820);
+    setTimeout(()=>{fx.classList.remove("active");glyph.classList.remove("poi-select-burst")},1120);
   });
 }
 
