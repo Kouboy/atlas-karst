@@ -1,0 +1,6 @@
+Atlas Karst ASCII v0.15f — Lisibilité et infobulles
+
+- textes secondaires légèrement agrandis, sans modifier la densité de la carte ;
+- infobulles redessinées comme de petits relevés de terrain rétro ;
+- positionnement des infobulles sur des pixels entiers, sans translation CSS persistante, pour éviter le flou subpixel ;
+- meilleure hiérarchie : symbole, nom, nature, relief, coordonnées, source et action.
