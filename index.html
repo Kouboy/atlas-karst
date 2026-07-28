@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.12e · rendu différentiel et survol fluide</title>
+<title>Atlas Karst ASCII v0.12f · survol différé et limites du monde</title>
 <style>
 :root{
   color-scheme:dark;
@@ -90,6 +90,45 @@ select{width:100%}
   transition:opacity .06s linear
 }
 .hover-cell-indicator.visible{opacity:1;visibility:visible}
+/* Le repère de cellule est désormais confié au moteur CSS : il suit le pointeur
+   sans JavaScript, sans mesure de géométrie et sans retard perceptible. */
+@media (hover:hover) and (pointer:fine){
+  #map:not(.dragging) .cell:hover{
+    position:relative;z-index:3;outline:1px solid rgba(121,226,171,.9);outline-offset:-1px;
+    background:rgba(121,226,171,.17);filter:brightness(1.12)
+  }
+  #map:not(.dragging) .cell.selected:hover{outline-color:#fff5c9;background:rgba(255,223,125,.38)}
+}
+
+/* Limites de l’emprise navigable. Le cadre est placé sur les centres réels des
+   cellules extrêmes, donc il reste aligné avec les formats panoramiques. */
+.world-boundary-frame{
+  position:absolute;z-index:7;pointer-events:none;box-sizing:border-box;opacity:0;
+  color:#d7c58a;filter:drop-shadow(0 0 5px rgba(215,197,138,.22));
+  transition:opacity .16s linear
+}
+.world-boundary-frame.visible{opacity:1}
+.terminal-wrap.panning .world-boundary-frame{opacity:0!important}
+.world-boundary-side{position:absolute;display:none;box-sizing:border-box}
+.world-boundary-side.active{display:block}
+.world-boundary-side span{
+  position:absolute;padding:2px 7px;border:1px solid rgba(150,133,83,.52);border-radius:5px;
+  background:rgba(8,12,9,.9);color:#cbbb82;font-size:8px;font-weight:850;letter-spacing:.14em;
+  white-space:nowrap;text-transform:uppercase;text-shadow:0 1px 2px #000
+}
+.world-boundary-side.edge-north,.world-boundary-side.edge-south{left:0;right:0;height:5px}
+.world-boundary-side.edge-west,.world-boundary-side.edge-east{top:0;bottom:0;width:5px}
+.world-boundary-side.edge-north{top:-1px;border-top:4px double rgba(191,169,98,.9)}
+.world-boundary-side.edge-south{bottom:-1px;border-bottom:4px double rgba(191,169,98,.9)}
+.world-boundary-side.edge-west{left:-1px;border-left:4px double rgba(191,169,98,.9)}
+.world-boundary-side.edge-east{right:-1px;border-right:4px double rgba(191,169,98,.9)}
+.world-boundary-side.edge-north span{left:50%;top:5px;transform:translateX(-50%)}
+.world-boundary-side.edge-south span{left:50%;bottom:5px;transform:translateX(-50%)}
+.world-boundary-side.edge-west span{left:5px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl}
+.world-boundary-side.edge-east span{right:5px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl}
+@media(max-width:700px){
+  .world-boundary-side span{font-size:7px;letter-spacing:.08em;padding:2px 4px}
+}
 .cell.selection-neighbor{filter:brightness(.62) saturate(.72);opacity:.78;background:rgba(0,0,0,.18)}
 .cell.selected{
   position:relative;z-index:5;outline:2px solid var(--selection);outline-offset:-2px;
@@ -144,7 +183,8 @@ select{width:100%}
   padding:9px 11px;border:1px solid #527666;border-radius:9px;background:rgba(5,13,9,.97);
   color:var(--text);box-shadow:0 10px 28px rgba(0,0,0,.45);pointer-events:none;font-size:11px;line-height:1.45
 }
-.hover-tip.visible{display:block}
+.hover-tip.visible{display:block;animation:hoverTipReveal .12s ease-out both}
+@keyframes hoverTipReveal{from{opacity:0;transform:translate3d(var(--tip-x,0),calc(var(--tip-y,0) + 4px),0)}to{opacity:1;transform:translate3d(var(--tip-x,0),var(--tip-y,0),0)}}
 .hover-tip .tip-head{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .hover-tip code{color:var(--accent);font-size:13px;font-weight:900}
 .hover-tip .tip-name{color:#fff3cf;font-weight:800}
@@ -425,7 +465,11 @@ body.debug-mode section.debug-only{display:block!important}
 @media(max-width:520px){.debug-kpis{grid-template-columns:1fr}}
 
 
-/* V0.12e — sélection et survol détachés du rendu complet.
+/* V0.12f — sélection détachée, survol différé et limites du monde.
+   Le détail n’apparaît qu’après une courte pause du pointeur afin de ne plus
+   effectuer de mesures de mise en page pendant les déplacements rapides.
+
+   Héritage de la V0.12e :
    Le feedback de point d’intérêt reste ancré à la cellule elle-même.
 
    V0.12d — feedback de point d’intérêt ancré à la cellule elle-même.
@@ -482,7 +526,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12e</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12f</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -579,7 +623,7 @@ body.debug-mode section.debug-only{display:block!important}
     </div>
     <button id="openHistory" style="width:100%;margin-top:7px">◫ comparer les photos aériennes anciennes</button>
     <div class="small" id="houseHelp" style="margin-top:8px">Clique n’importe quelle case pour faire apparaître le cadre jaune, puis utilise <strong>⌖ maison sur la sélection</strong>. Les champs numériques restent disponibles si la souris boude.</div>
-    <div class="small" style="margin-top:8px"><strong>Navigation :</strong> survoler un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
+    <div class="small" style="margin-top:8px"><strong>Navigation :</strong> immobiliser brièvement le pointeur sur un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
   </section>
 
   <section class="card">
@@ -876,6 +920,12 @@ body.debug-mode section.debug-only{display:block!important}
       </div>
     </div>
     <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
+    <div class="world-boundary-frame" id="worldBoundaryFrame" aria-hidden="true">
+      <div class="world-boundary-side edge-north"><span>Fin de l’Atlas · Terra incognita</span></div>
+      <div class="world-boundary-side edge-east"><span>Terra incognita</span></div>
+      <div class="world-boundary-side edge-south"><span>Fin de l’Atlas · Terra incognita</span></div>
+      <div class="world-boundary-side edge-west"><span>Terra incognita</span></div>
+    </div>
     <div class="depth-transition" id="depthTransition" aria-hidden="true"></div>
     <div class="poi-selection-fx" id="poiSelectionFx" aria-hidden="true"></div>
     <div class="selection-assist" id="selectionAssist" hidden aria-label="Ajuster précisément la cellule sélectionnée">
@@ -888,7 +938,7 @@ body.debug-mode section.debug-only{display:block!important}
       </div>
       <div class="selection-assist-text" id="selectionAssistText">Ajustement case par case</div>
     </div>
-    <div class="map-tip" id="mapTip">survol = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position</div>
+    <div class="map-tip" id="mapTip">pause 0,3 s = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position</div>
   </div>
   <div class="hover-cell-indicator" id="hoverCellIndicator" aria-hidden="true"></div>
   <div class="hover-tip" id="hoverTip" role="tooltip"></div>
@@ -900,7 +950,7 @@ body.debug-mode section.debug-only{display:block!important}
       <span class="readout-sheet-chevron" aria-hidden="true">⌃</span>
     </button>
     <div class="readout-body" id="readoutBody">
-      <strong>Mode d’emploi :</strong> survole un symbole pour sa fiche courte, ou touche une case pour ouvrir sa lecture. Le zoom sémantique révèle progressivement les détails. Sur mobile, la fiche basse possède trois positions : aperçu, lecture et plein écran.
+      <strong>Mode d’emploi :</strong> immobilise brièvement le pointeur sur un symbole pour sa fiche courte, ou touche une case pour ouvrir sa lecture. Le zoom sémantique révèle progressivement les détails. Sur mobile, la fiche basse possède trois positions : aperçu, lecture et plein écran.
     </div>
   </section>
 
@@ -915,7 +965,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.12e";
+const APP_VERSION = "0.12f";
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
@@ -1198,7 +1248,7 @@ els = Object.fromEntries([
   "map","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
-  "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx",
+  "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
@@ -1576,6 +1626,37 @@ function extentFor(center=state.center,z=currentZoom()){
 }
 function largestExtent(){
   return extentFor(CONFIG.dataCenter,{widthKm:CONFIG.dataWidthKm,heightKm:CONFIG.dataHeightKm});
+}
+function visibleWorldBoundaries(extent=state.lastGrid?.extent){
+  if(!extent)return {north:false,east:false,south:false,west:false};
+  const world=largestExtent();
+  const epsLon=Math.max(1e-8,(extent.east-extent.west)/Math.max(1,CONFIG.gridW-1)*.35);
+  const epsLat=Math.max(1e-8,(extent.north-extent.south)/Math.max(1,CONFIG.gridH-1)*.35);
+  return {
+    north:Math.abs(extent.north-world.north)<=epsLat,
+    east:Math.abs(extent.east-world.east)<=epsLon,
+    south:Math.abs(extent.south-world.south)<=epsLat,
+    west:Math.abs(extent.west-world.west)<=epsLon
+  };
+}
+function updateWorldBoundaryFrame(){
+  const frame=els.worldBoundaryFrame;
+  if(!frame||!state.lastGrid||!els.map||!els.viewport){frame?.classList.remove("visible");return}
+  const flags=visibleWorldBoundaries(state.lastGrid.extent);
+  const active=Object.values(flags).some(Boolean);
+  frame.classList.toggle("visible",active);
+  for(const side of ["north","east","south","west"]){
+    frame.querySelector(`.edge-${side}`)?.classList.toggle("active",!!flags[side]);
+  }
+  if(!active)return;
+  const first=els.map.querySelector('.cell[data-x="0"][data-y="0"]');
+  const last=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`);
+  if(!first||!last){frame.classList.remove("visible");return}
+  const vr=els.viewport.getBoundingClientRect(),a=first.getBoundingClientRect(),b=last.getBoundingClientRect();
+  const left=a.left-vr.left+els.viewport.scrollLeft;
+  const top=a.top-vr.top+els.viewport.scrollTop;
+  frame.style.left=`${left}px`;frame.style.top=`${top}px`;
+  frame.style.width=`${Math.max(1,b.right-a.left)}px`;frame.style.height=`${Math.max(1,b.bottom-a.top)}px`;
 }
 function clampCenter(center,z=currentZoom()){
   const b=largestExtent();
@@ -4774,7 +4855,7 @@ function render(reason="direct"){
     const loc=state.userLocation;
     els.locationBadge.textContent=state.locationLoading?"recherche…":loc?`± ${Math.round(loc.accuracy||0)} m`:"non localisée";
   }
-  els.mapTip.textContent="survol = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position";
+  els.mapTip.textContent="pause 0,3 s = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position";
   els.zoomLabel.textContent=z.label;
   els.depthLabel.textContent=depth===0?"surface":`${depth} m`;
   const cellX=z.widthKm*1000/CONFIG.gridW,cellY=z.heightKm*1000/CONFIG.gridH;
@@ -4793,6 +4874,7 @@ function render(reason="direct"){
   debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
   debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
   updateDebugPanel();
+  requestAnimationFrame(updateWorldBoundaryFrame);
   scheduleFrameFit();
 }
 
@@ -4928,6 +5010,7 @@ function fitMapFrame(){
   const frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
   setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);
   els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
+  requestAnimationFrame(updateWorldBoundaryFrame);
 }
 function scheduleFrameFit(){
   clearTimeout(frameFitTimer);
@@ -5545,47 +5628,48 @@ function hoverDescription(cell,x,y){
     ${f?.source?`<div class="tip-source">${esc(f.source)} · clique pour la fiche complète</div>`:`<div class="tip-source">clique pour mémoriser cette case</div>`}
   `;
 }
-let hoveredKey="",hoverFrame=0,hoverPending=null,hoverTipWidth=0,hoverTipHeight=0;
+const HOVER_DWELL_MS=320;
+let hoveredKey="",hoverCandidateKey="",hoverCandidate=null,hoverDwellTimer=0;
 function hideHover(){
-  hoverPending=null;hoveredKey="";
+  clearTimeout(hoverDwellTimer);hoverDwellTimer=0;hoverCandidate=null;hoverCandidateKey="";hoveredKey="";
   els.hoverTip.classList.remove("visible");
   els.hoverCellIndicator?.classList.remove("visible");
 }
-function flushHover(){
-  hoverFrame=0;
-  const pending=hoverPending;hoverPending=null;
-  if(!pending||state.placingHouse||drag||pinch||!state.lastGrid){hideHover();return}
-  const t=cellElementAtClient(pending.clientX,pending.clientY);
-  if(!t){hideHover();return}
-  const x=+t.dataset.x,y=+t.dataset.y,cell=state.lastGrid.grid[y]?.[x];
-  if(!cell||(cell.ch===" "&&!cell.feature)){hideHover();return}
-  const key=`${x}:${y}`;
-  if(key!==hoveredKey){
-    hoveredKey=key;
-    els.hoverTip.innerHTML=hoverDescription(cell,x,y);
-    els.hoverTip.classList.add("visible");
-    const tipRect=els.hoverTip.getBoundingClientRect();
-    hoverTipWidth=tipRect.width;hoverTipHeight=tipRect.height;
-  }
-  const cellRect=t.getBoundingClientRect();
-  const indicator=els.hoverCellIndicator;
-  if(indicator){
-    indicator.style.width=`${Math.max(2,cellRect.width)}px`;
-    indicator.style.height=`${Math.max(2,cellRect.height)}px`;
-    indicator.style.transform=`translate3d(${cellRect.left}px,${cellRect.top}px,0)`;
-    indicator.classList.add("visible");
-  }
-  const pad=12,offset=15,tw=hoverTipWidth||els.hoverTip.offsetWidth,th=hoverTipHeight||els.hoverTip.offsetHeight;
-  let left=pending.clientX+offset,top=pending.clientY+offset;
-  if(left+tw>window.innerWidth-pad)left=pending.clientX-tw-offset;
-  if(top+th>window.innerHeight-pad)top=pending.clientY-th-offset;
-  els.hoverTip.style.transform=`translate3d(${Math.max(pad,left)}px,${Math.max(pad,top)}px,0)`;
+function positionHoverTipBesideCell(target){
+  const r=target.getBoundingClientRect(),pad=12,offset=11;
+  const tipRect=els.hoverTip.getBoundingClientRect();
+  let left=r.right+offset,top=r.top-Math.min(6,tipRect.height*.12);
+  if(left+tipRect.width>window.innerWidth-pad)left=r.left-tipRect.width-offset;
+  if(top+tipRect.height>window.innerHeight-pad)top=r.bottom-tipRect.height;
+  top=clamp(top,pad,Math.max(pad,window.innerHeight-tipRect.height-pad));
+  left=clamp(left,pad,Math.max(pad,window.innerWidth-tipRect.width-pad));
+  els.hoverTip.style.setProperty("--tip-x",`${left}px`);
+  els.hoverTip.style.setProperty("--tip-y",`${top}px`);
+  els.hoverTip.style.transform=`translate3d(${left}px,${top}px,0)`;
   els.hoverTip.style.left="0";els.hoverTip.style.top="0";
 }
-function showHover(ev){
-  if(ev.pointerType&&ev.pointerType!=="mouse")return;
-  hoverPending={clientX:ev.clientX,clientY:ev.clientY};
-  if(!hoverFrame)hoverFrame=requestAnimationFrame(flushHover);
+function revealHoverCandidate(){
+  hoverDwellTimer=0;
+  const candidate=hoverCandidate;
+  if(!candidate||state.placingHouse||drag||pinch||!state.lastGrid)return;
+  const target=cellElementAtClient(candidate.clientX,candidate.clientY);
+  if(!target||target!==candidate.target)return;
+  const x=+target.dataset.x,y=+target.dataset.y,cell=state.lastGrid.grid[y]?.[x];
+  if(!cell||(cell.ch===" "&&!cell.feature))return;
+  const key=`${x}:${y}`;hoveredKey=key;
+  els.hoverTip.innerHTML=hoverDescription(cell,x,y);
+  els.hoverTip.classList.add("visible");
+  positionHoverTipBesideCell(target);
+}
+function scheduleHover(target,ev){
+  if(!target||ev.pointerType&&ev.pointerType!=="mouse"||state.placingHouse||drag||pinch)return;
+  const key=`${target.dataset.x}:${target.dataset.y}`;
+  if(key===hoveredKey&&els.hoverTip.classList.contains("visible"))return;
+  if(key===hoverCandidateKey)return;
+  clearTimeout(hoverDwellTimer);
+  els.hoverTip.classList.remove("visible");hoveredKey="";
+  hoverCandidateKey=key;hoverCandidate={target,clientX:ev.clientX,clientY:ev.clientY};
+  hoverDwellTimer=setTimeout(revealHoverCandidate,HOVER_DWELL_MS);
 }
 function saveHousePosition(coord,sourceLabel="placement manuel",persist=true){
   CONFIG.house={lat:+coord.lat,lon:+coord.lon};markSpatialIndexesDirty();
@@ -5821,12 +5905,22 @@ els.map.addEventListener("pointerdown",ev=>{
   els.viewport.classList.add("panning");
   if(ev.pointerType!=="mouse")ev.preventDefault();
 });
+els.map.addEventListener("pointerover",ev=>{
+  if(ev.pointerType!=="mouse"||drag||pinch||state.placingHouse)return;
+  const target=ev.target?.closest?.(".cell");
+  if(target&&els.map.contains(target))scheduleHover(target,ev);
+});
+els.map.addEventListener("pointerout",ev=>{
+  if(ev.pointerType!=="mouse")return;
+  const from=ev.target?.closest?.(".cell"),to=ev.relatedTarget?.closest?.(".cell");
+  if(from&&from!==to)hideHover();
+});
 els.map.addEventListener("pointermove",ev=>{
   if(ev.pointerType==="touch"&&touchPointers.has(ev.pointerId)){
     touchPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
     if(handlePinchMove(ev)){ev.preventDefault();return}
   }
-  if(!drag){if(ev.pointerType==="mouse")showHover(ev);return}
+  if(!drag)return;
   if(ev.pointerId!==drag.pointerId)return;
   const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;
   const threshold=drag.pointerType==="touch"?8:4;
