@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.13b · Canvas et pan stable</title>
+<title>Atlas Karst ASCII v0.13c · Pan ancré et limites visibles</title>
 <style>
 :root{
   color-scheme:dark;
@@ -547,7 +547,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13b</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13c</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -990,7 +990,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.13b";
+const APP_VERSION = "0.13c";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
 document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
@@ -1784,19 +1784,39 @@ function updateWorldBoundaryFrame(){
   frame.classList.toggle("visible",active);
   for(const side of ["north","east","south","west"])frame.querySelector(`.edge-${side}`)?.classList.toggle("active",!!flags[side]);
   if(!active)return;
+
   const vr=els.viewport.getBoundingClientRect();
+  let first,last;
   if(CANVAS_RENDERER){
-    const first=canvasCellRect(0,0),last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
-    if(!first||!last){frame.classList.remove("visible");return}
-    frame.style.left=`${first.left-vr.left+els.viewport.scrollLeft}px`;frame.style.top=`${first.top-vr.top+els.viewport.scrollTop}px`;
-    frame.style.width=`${Math.max(1,last.right-first.left)}px`;frame.style.height=`${Math.max(1,last.bottom-first.top)}px`;
-    return;
+    first=canvasCellRect(0,0);last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
+  }else{
+    const a=els.map.querySelector('.cell[data-x="0"][data-y="0"]')?.getBoundingClientRect();
+    const b=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`)?.getBoundingClientRect();
+    if(a&&b)first={left:a.left,top:a.top,right:a.right,bottom:a.bottom},last={left:b.left,top:b.top,right:b.right,bottom:b.bottom};
   }
-  const first=els.map.querySelector('.cell[data-x="0"][data-y="0"]'),last=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`);
   if(!first||!last){frame.classList.remove("visible");return}
-  const a=first.getBoundingClientRect(),b=last.getBoundingClientRect();
-  frame.style.left=`${a.left-vr.left+els.viewport.scrollLeft}px`;frame.style.top=`${a.top-vr.top+els.viewport.scrollTop}px`;
-  frame.style.width=`${Math.max(1,b.right-a.left)}px`;frame.style.height=`${Math.max(1,b.bottom-a.top)}px`;
+
+  // La fiche mobile peut recouvrir le bas du viewport. Le cadre est alors
+  // rabattu juste au-dessus de la fiche, au lieu de disparaître dessous.
+  let visibleBottom=vr.bottom;
+  if(mobileReadoutMode()&&els.readout&&!document.body.classList.contains("info-collapsed")){
+    const rr=els.readout.getBoundingClientRect();
+    const overlaps=rr.left<vr.right&&rr.right>vr.left&&rr.top<vr.bottom&&rr.bottom>vr.top;
+    if(overlaps)visibleBottom=Math.max(vr.top+8,Math.min(visibleBottom,rr.top-4));
+  }
+
+  const mapLeft=first.left,mapTop=first.top,mapRight=last.right,mapBottom=last.bottom;
+  const left=Math.max(vr.left,Math.min(mapLeft,vr.right-1));
+  const right=Math.min(vr.right,Math.max(mapRight,vr.left+1));
+  const top=Math.max(vr.top,Math.min(mapTop,visibleBottom-1));
+  const bottom=Math.min(visibleBottom,Math.max(mapBottom,vr.top+1));
+  if(right<=left||bottom<=top){frame.classList.remove("visible");return}
+
+  frame.style.left=`${left-vr.left+els.viewport.scrollLeft}px`;
+  frame.style.top=`${top-vr.top+els.viewport.scrollTop}px`;
+  frame.style.width=`${Math.max(1,right-left)}px`;
+  frame.style.height=`${Math.max(1,bottom-top)}px`;
+  frame.dataset.southClamped=String(flags.south&&mapBottom>visibleBottom+1);
 }
 function clampCenter(center,z=currentZoom()){
   const b=largestExtent();
@@ -2091,6 +2111,7 @@ function mergeOsmFeatures(features){
   for(const f of features||[])map.set(osmFeatureKey(f),f);
   state.osm=[...map.values()];
   state.osmCavities=extractOsmCavities(state.osm);
+  markSpatialIndexesDirty();
   refreshCavities();
 }
 function clearOsmCaches(){
@@ -5152,6 +5173,7 @@ function setReadoutSheetState(next){
   if(!els.readout)return;
   const allowed=new Set(["peek","medium","full"]);
   els.readout.dataset.sheetState=allowed.has(next)?next:"peek";
+  requestAnimationFrame(updateWorldBoundaryFrame);
 }
 function cycleReadoutSheet(){
   const current=els.readout?.dataset.sheetState||"peek";
@@ -5995,6 +6017,19 @@ function applyPanPreview(dx,dy){
   surface.style.transform=`translate3d(${safeX.toFixed(2)}px,${safeY.toFixed(2)}px,0)`;
 }
 function clearPanPreview(){const surface=activeMapSurface();if(surface)surface.style.transform=""}
+function panGeographicPixelSpan(){
+  if(CANVAS_RENDERER){
+    const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();
+    if(!m||!r)return {width:1,height:1};
+    const scaleX=m.width?Math.abs(r.width/m.width):1,scaleY=m.height?Math.abs(r.height/m.height):1;
+    return {
+      width:Math.max(1,(CONFIG.gridW-1)*m.cellW*scaleX),
+      height:Math.max(1,(CONFIG.gridH-1)*m.cellH*scaleY)
+    };
+  }
+  const m=mapGridMetrics();
+  return m?{width:Math.max(1,(CONFIG.gridW-1)*m.pitchX),height:Math.max(1,(CONFIG.gridH-1)*m.pitchY)}:{width:1,height:1};
+}
 function isPanPointer(ev){
   return ev.isPrimary!==false && (ev.pointerType!=="mouse" || ev.button===0);
 }
@@ -6032,15 +6067,15 @@ activeMapSurface().addEventListener("pointerdown",ev=>{
     if(state.placingHouse)return;
   }
   if(!isPanPointer(ev)||state.placingHouse||drag||pinch)return;
-  const rect=els.viewport.getBoundingClientRect();
+  const rect=els.viewport.getBoundingClientRect(),panSpan=panGeographicPixelSpan();
   drag={
     pointerId:ev.pointerId,
     pointerType:ev.pointerType||"mouse",
-    x:ev.clientX,y:ev.clientY,
+    x:ev.clientX,y:ev.clientY,lastX:ev.clientX,lastY:ev.clientY,
     center:{...state.center},
     extent:extentFor(),
     rect:{width:rect.width,height:rect.height},
-    mapSize:{width:Math.max(1,activeMapSurface()?.offsetWidth||1),height:Math.max(1,activeMapSurface()?.offsetHeight||1)},
+    panSpan,
     moved:false,dx:0,dy:0
   };
   try{activeMapSurface()?.setPointerCapture?.(ev.pointerId)}catch{}
@@ -6066,7 +6101,8 @@ activeMapSurface().addEventListener("pointermove",ev=>{
   if(CANVAS_RENDERER&&ev.pointerType==="mouse"&&!drag&&!pinch&&!state.placingHouse){const pos=mapPositionFromClient(ev.clientX,ev.clientY);if(pos)scheduleCanvasHover(pos,ev)}
   if(!drag)return;
   if(ev.pointerId!==drag.pointerId)return;
-  const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;
+  drag.lastX=ev.clientX;drag.lastY=ev.clientY;
+  const dx=drag.lastX-drag.x,dy=drag.lastY-drag.y;
   const threshold=drag.pointerType==="touch"?8:4;
   if(!drag.moved&&Math.hypot(dx,dy)<=threshold)return;
   if(!drag.moved)retroAudio.panStart();
@@ -6093,16 +6129,23 @@ function endDrag(ev){
   }
   try{activeMapSurface()?.releasePointerCapture?.(current.pointerId)}catch{}
 
-  if(moved&&current.mapSize.width>0&&current.mapSize.height>0){
+  if(moved&&current.panSpan?.width>0&&current.panSpan?.height>0){
+    // Le relâchement peut arriver quelques pixels après le dernier pointermove.
+    // On utilise donc la dernière position réelle connue, puis le pas exact entre
+    // le centre de la première et de la dernière cellule. Les marges du Canvas ne
+    // participent plus à la conversion géographique, ce qui supprime la dérive.
+    const finalX=Number.isFinite(current.lastX)?current.lastX:current.x+current.dx;
+    const finalY=Number.isFinite(current.lastY)?current.lastY:current.y+current.dy;
+    const dx=finalX-current.x,dy=finalY-current.y;
     const latSpan=current.extent.north-current.extent.south;
     const lonSpan=current.extent.east-current.extent.west;
     const candidate={
-      lat:current.center.lat+(current.dy/current.mapSize.height)*latSpan,
-      lon:current.center.lon-(current.dx/current.mapSize.width)*lonSpan
+      lat:current.center.lat+(dy/current.panSpan.height)*latSpan,
+      lon:current.center.lon-(dx/current.panSpan.width)*lonSpan
     };
     if(Number.isFinite(candidate.lat)&&Number.isFinite(candidate.lon)){
       state.center=clampCenter(candidate,currentZoom());
-      render();
+      render("pan-release");
     }
   }
 

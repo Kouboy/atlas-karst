@@ -1,0 +1,14 @@
+ATLAS KARST ASCII v0.13c — pan ancré et limites visibles
+
+Cette version repart de la v0.13b Canvas.
+
+Corrections principales :
+- Le déplacement géographique au relâchement utilise maintenant la distance réelle entre les centres des cellules extrêmes, sans inclure les marges du Canvas.
+- La dernière position de pointeur fiable est conservée pour éviter les sauts liés à un événement de perte de capture.
+- La limite « Terra incognita » est rabattue dans la partie visible de la carte lorsque la fiche d'information réduit ou recouvre le bas de l'écran.
+- Les changements de contenu OSM invalident explicitement l'index spatial avant le nouveau rendu Canvas.
+
+Mises à jour de données :
+Le moteur Canvas est uniquement un mode d'affichage. La grille de données reste reconstruite lors d'une synchronisation OSM, d'un import, de l'ajout ou de la suppression d'une observation, d'un repère local, d'une donnée patrimoniale ou d'un autre point d'intérêt. Les nouveaux objets sont donc dessinés normalement sur la carte.
+
+Mode de secours : ajouter ?renderer=dom à l'URL pour revenir au rendu DOM historique.
