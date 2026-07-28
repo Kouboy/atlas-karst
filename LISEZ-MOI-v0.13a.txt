@@ -1,0 +1,28 @@
+ATLAS KARST ASCII v0.13a — MOTEUR CANVAS EXPÉRIMENTAL
+
+Cette version remplace par défaut les milliers de cellules HTML individuelles par un seul Canvas.
+L’esthétique ASCII, la sélection, le survol différé, le pan, le pinch, le zoom, les sons et les fiches sont conservés.
+
+OBJECTIF
+- supprimer les 8 000 à 14 000 éléments DOM qui faisaient chuter les FPS ;
+- rendre le survol et le glissement indépendants du rendu des cellules ;
+- corriger le cadre inférieur « Terra incognita » en l’alignant sur la vraie bordure du Canvas.
+
+MODE DE SECOURS
+Pour comparer ou revenir temporairement à l’ancien moteur DOM, ajouter à l’adresse :
+  ?renderer=dom
+
+Exemple :
+  index.html?renderer=dom
+
+Le moteur Canvas reste le mode par défaut.
+
+TESTS EFFECTUÉS
+- syntaxe JavaScript ;
+- rendu Canvas desktop 1440 × 900 et 2560 × 1440 ;
+- sélection d’une cellule et d’un point BSS ;
+- déplacement par glisser-déposer ;
+- zoom ;
+- survol sans nouveau rendu cartographique ;
+- cadre sud de l’Atlas ;
+- absence d’erreurs JavaScript dans Chromium automatisé.

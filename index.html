@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.12f · survol différé et limites du monde</title>
+<title>Atlas Karst ASCII v0.13a · moteur Canvas</title>
 <style>
 :root{
   color-scheme:dark;
@@ -79,6 +79,26 @@ select{width:100%}
 #map{margin:0;padding:var(--map-padding);display:inline-block;white-space:pre;font-size:var(--map-font-size);line-height:1.04;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:paint style}
 #map.dragging{cursor:grabbing;transition:none}.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
 #map.placing-house{cursor:var(--atlas-crosshair)}
+#mapCanvas{display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:layout paint style}
+body.renderer-canvas #map{display:none!important}
+body.renderer-canvas #mapCanvas{display:block}
+.terminal-wrap.map-centered #mapCanvas{margin-inline:auto}
+#mapCanvas.dragging{cursor:grabbing;transition:none}
+#mapCanvas.placing-house{cursor:var(--atlas-crosshair)}
+.canvas-cell-marker{position:absolute;display:none;z-index:9;pointer-events:none;box-sizing:border-box;transform:translateZ(0)}
+.canvas-cell-marker.visible{display:block}
+#canvasHoverMarker{border:1px solid rgba(121,226,171,.94);background:rgba(121,226,171,.14);box-shadow:0 0 0 1px rgba(2,8,5,.72),0 0 8px rgba(121,226,171,.24)}
+#canvasSelectionMarker{z-index:10;border:2px solid var(--selection);background:var(--selection-soft);box-shadow:0 0 7px rgba(255,223,125,.74),inset 0 0 5px rgba(255,223,125,.28);animation:canvasSelectedBreath 1.7s ease-in-out infinite}
+#canvasPoiMarker{z-index:11;border:2px solid var(--poi-hit,#ffe08a);border-radius:50%;opacity:0}
+#canvasPoiMarker.active{animation:canvasPoiBurst .95s cubic-bezier(.12,.86,.24,1) both}
+#canvasPoiMarker[data-poi-kind="bss"],#canvasPoiMarker[data-poi-kind="industrial"],#canvasPoiMarker[data-poi-kind="location"]{border-style:dashed;border-radius:2px}
+#canvasPoiMarker[data-poi-kind="heritage"]{border-radius:2px;transform:rotate(45deg)}
+#canvasPoiMarker[data-poi-kind="memory"]{border-style:dotted}
+#canvasPoiMarker[data-poi-kind="natural"]{border-radius:43% 57% 51% 49%}
+@keyframes canvasSelectedBreath{0%,100%{filter:brightness(1);box-shadow:0 0 5px rgba(255,223,125,.52),inset 0 0 3px rgba(255,223,125,.18)}50%{filter:brightness(1.22);box-shadow:0 0 11px rgba(255,223,125,.82),inset 0 0 7px rgba(255,223,125,.34)}}
+@keyframes canvasPoiBurst{0%{opacity:0;transform:scale(.45)}20%{opacity:1}100%{opacity:0;transform:scale(3.1)}}
+.canvas-style-probe{position:fixed!important;left:-10000px!important;top:-10000px!important;visibility:hidden!important;animation:none!important;transition:none!important;pointer-events:none!important}
+@media (prefers-reduced-motion:reduce){#canvasSelectionMarker,#canvasPoiMarker{animation:none!important}}
 /* Le survol vit dans un calque fixe indépendant. Il ne modifie plus les milliers
    de cellules du <pre> et suit le pointeur au rythme de requestAnimationFrame. */
 .cell.hovered{position:relative;z-index:3;outline:1px solid rgba(121,226,171,.85);outline-offset:-1px;background:rgba(121,226,171,.17)}
@@ -526,7 +546,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12f</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13a</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -920,6 +940,10 @@ body.debug-mode section.debug-only{display:block!important}
       </div>
     </div>
     <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
+    <canvas id="mapCanvas" aria-label="Carte ASCII interactive rendue sur Canvas" role="img"></canvas>
+    <div class="canvas-cell-marker" id="canvasHoverMarker" aria-hidden="true"></div>
+    <div class="canvas-cell-marker" id="canvasSelectionMarker" aria-hidden="true"></div>
+    <div class="canvas-cell-marker" id="canvasPoiMarker" aria-hidden="true"></div>
     <div class="world-boundary-frame" id="worldBoundaryFrame" aria-hidden="true">
       <div class="world-boundary-side edge-north"><span>Fin de l’Atlas · Terra incognita</span></div>
       <div class="world-boundary-side edge-east"><span>Terra incognita</span></div>
@@ -965,7 +989,10 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.12f";
+const APP_VERSION = "0.13a";
+const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
+const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
+document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
@@ -1027,16 +1054,17 @@ function runAtlasSelfCheck(){
   const ids=[...document.querySelectorAll("[id]")].map(el=>el.id);
   const duplicates=ids.filter((id,i)=>ids.indexOf(id)!==i);
   checks.push(debugCheckResult("Identifiants HTML uniques",duplicates.length===0,duplicates.length?duplicates.join(", "): `${ids.length} identifiants`));
-  const cellCount=els.map?.querySelectorAll(".cell").length||0;
-  checks.push(debugCheckResult("Nombre de cellules",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
+  const cellCount=CANVAS_RENDERER?CONFIG.gridW*CONFIG.gridH:(els.map?.querySelectorAll(".cell").length||0);
+  checks.push(debugCheckResult(CANVAS_RENDERER?"Cellules virtuelles Canvas":"Nombre de cellules",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
   checks.push(debugCheckResult("Centre géographique valide",Number.isFinite(state.center?.lat)&&Number.isFinite(state.center?.lon),`${state.center?.lat} / ${state.center?.lon}`));
   checks.push(debugCheckResult("Grille en mémoire",!!state.lastGrid&&state.lastGrid.grid?.length===CONFIG.gridH,state.lastGrid?`${state.lastGrid.grid.length} lignes`:"absente"));
   const expectedCorners=[[0,0],[CONFIG.gridW-1,0],[0,CONFIG.gridH-1],[CONFIG.gridW-1,CONFIG.gridH-1]];
   let targetOk=true,targetDetails=[];
   for(const [x,y] of expectedCorners){
-    const glyph=els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);if(!glyph){targetOk=false;targetDetails.push(`${x},${y}: absent`);continue}
-    const r=glyph.getBoundingClientRect(),pos=mapPositionFromClient(r.left+r.width/2,r.top+r.height/2);
-    const ok=pos&&pos.x===x&&pos.y===y;targetOk=targetOk&&ok;targetDetails.push(`${x},${y}:${pos?`${pos.x},${pos.y}`:"?"}`);
+    const r=CANVAS_RENDERER?canvasCellRect(x,y):els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`)?.getBoundingClientRect();
+    if(!r){targetOk=false;targetDetails.push(`${x},${y}: absent`);continue}
+    const pos=mapPositionFromClient(r.left+r.width/2,r.top+r.height/2);
+    const ok=!!pos&&pos.x===x&&pos.y===y;targetOk=targetOk&&ok;targetDetails.push(`${x},${y}:${pos?`${pos.x},${pos.y}`:"?"}`);
   }
   checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
@@ -1245,7 +1273,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "map","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "map","mapCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame",
@@ -1255,6 +1283,98 @@ els = Object.fromEntries([
   "scenario","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"
 ].map(id=>[id,document.getElementById(id)]));
 
+function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
+const canvasRuntime={metrics:null,styleCache:new Map(),probe:null,lastGrid:null,dpr:1};
+function cssNumber(name,fallback){
+  const main=document.querySelector("main");
+  const value=parseFloat(getComputedStyle(main).getPropertyValue(name));
+  return Number.isFinite(value)?value:fallback;
+}
+function canvasFontFamily(){return 'ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace'}
+function measureCanvasLayout(fontSize=cssNumber("--map-font-size",12),padding=cssNumber("--map-padding",17)){
+  const ctx=(els.mapCanvas||document.createElement("canvas")).getContext("2d");
+  ctx.font=`${fontSize}px ${canvasFontFamily()}`;
+  const cellW=Math.max(3,ctx.measureText("M").width);
+  const cellH=Math.max(4,fontSize*1.04);
+  return {fontSize,padding,cellW,cellH,width:padding*2+CONFIG.gridW*cellW,height:padding*2+CONFIG.gridH*cellH};
+}
+function syncCanvasSize(){
+  if(!CANVAS_RENDERER||!els.mapCanvas)return null;
+  const m=measureCanvasLayout();
+  const compact=matchMedia("(max-width:700px)").matches;
+  const dpr=Math.min(window.devicePixelRatio||1,compact?1.25:1.75);
+  const pixelW=Math.max(1,Math.round(m.width*dpr)),pixelH=Math.max(1,Math.round(m.height*dpr));
+  if(els.mapCanvas.width!==pixelW)els.mapCanvas.width=pixelW;
+  if(els.mapCanvas.height!==pixelH)els.mapCanvas.height=pixelH;
+  els.mapCanvas.style.width=`${m.width}px`;els.mapCanvas.style.height=`${m.height}px`;
+  canvasRuntime.metrics={...m,dpr};canvasRuntime.dpr=dpr;
+  return canvasRuntime.metrics;
+}
+function canvasStyleProbe(){
+  if(canvasRuntime.probe?.isConnected)return canvasRuntime.probe;
+  const probe=document.createElement("span");probe.className="cell canvas-style-probe";probe.textContent="M";document.body.appendChild(probe);canvasRuntime.probe=probe;return probe;
+}
+function transparentColor(value){return !value||value==="transparent"||/rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(value)}
+function canvasVisualFor(classes){
+  const band=document.body.dataset.depthBand||"surface",key=`${band}|${classes}`;
+  const cached=canvasRuntime.styleCache.get(key);if(cached)return cached;
+  const probe=canvasStyleProbe();probe.className=`cell canvas-style-probe ${classes}`;
+  const cs=getComputedStyle(probe);
+  const visual={color:cs.color||"#dce9e1",background:cs.backgroundColor||"transparent",fontWeight:cs.fontWeight||"400",opacity:Number.parseFloat(cs.opacity)||1};
+  canvasRuntime.styleCache.set(key,visual);return visual;
+}
+function drawCanvasMap(grid=state.lastGrid){
+  if(!CANVAS_RENDERER||!grid||!els.mapCanvas)return 0;
+  const m=syncCanvasSize();if(!m)return 0;
+  canvasRuntime.lastGrid=grid;
+  const ctx=els.mapCanvas.getContext("2d",{alpha:true});
+  ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.clearRect(0,0,m.width,m.height);
+  ctx.textBaseline="top";ctx.textAlign="left";ctx.fontKerning="none";
+  let visiblePoiCount=0;
+  // Fonds de relief, groupés horizontalement pour limiter les appels de dessin.
+  for(let y=0;y<CONFIG.gridH;y++){
+    let runStart=0,runBg=null;
+    const flushBg=x=>{if(runBg&&!transparentColor(runBg))ctx.fillRect(m.padding+runStart*m.cellW,m.padding+y*m.cellH,(x-runStart)*m.cellW,m.cellH)};
+    for(let x=0;x<=CONFIG.gridW;x++){
+      const c=x<CONFIG.gridW?grid.grid[y][x]:null;
+      const shade=c&&state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
+      const visual=c?canvasVisualFor(`${c.cls||""}${shade}`):null;
+      const bg=visual?.background||null;
+      if(x===0){runBg=bg;runStart=0}else if(bg!==runBg){flushBg(x);runStart=x;runBg=bg}
+    }
+  }
+  // Glyphes, groupés par style. Les POI sont dessinés seuls avec un léger halo statique.
+  for(let y=0;y<CONFIG.gridH;y++){
+    let text="",startX=0,lastKey="",lastVisual=null;
+    const flush=()=>{if(!text||!lastVisual)return;ctx.globalAlpha=lastVisual.opacity;ctx.fillStyle=lastVisual.color;ctx.shadowBlur=0;ctx.font=`${lastVisual.fontWeight} ${m.fontSize}px ${canvasFontFamily()}`;ctx.fillText(text,m.padding+startX*m.cellW,m.padding+y*m.cellH);text=""};
+    for(let x=0;x<CONFIG.gridW;x++){
+      const c=grid.grid[y][x],shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
+      const visual=canvasVisualFor(`${c.cls||""}${shade}`),key=`${visual.color}|${visual.fontWeight}|${visual.opacity}`;
+      const poi=poiEffectKind(c);
+      if(poi){
+        flush();visiblePoiCount++;ctx.globalAlpha=visual.opacity;ctx.fillStyle=visual.color;ctx.font=`${visual.fontWeight} ${m.fontSize}px ${canvasFontFamily()}`;ctx.shadowColor=visual.color;ctx.shadowBlur=Math.max(2,m.fontSize*.34);ctx.fillText(c.ch,m.padding+x*m.cellW,m.padding+y*m.cellH);ctx.shadowBlur=0;lastKey="";lastVisual=null;startX=x+1;continue;
+      }
+      if(!text){text=c.ch;startX=x;lastKey=key;lastVisual=visual}
+      else if(key===lastKey){text+=c.ch}
+      else{flush();text=c.ch;startX=x;lastKey=key;lastVisual=visual}
+    }
+    flush();
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+  return visiblePoiCount;
+}
+function canvasCellRect(x,y){
+  if(!CANVAS_RENDERER||!els.mapCanvas||!canvasRuntime.metrics)return null;
+  const m=canvasRuntime.metrics,r=els.mapCanvas.getBoundingClientRect();
+  return {left:r.left+m.padding+x*m.cellW,top:r.top+m.padding+y*m.cellH,width:m.cellW,height:m.cellH,right:r.left+m.padding+(x+1)*m.cellW,bottom:r.top+m.padding+(y+1)*m.cellH};
+}
+function positionCanvasMarker(marker,x,y,visible=true){
+  if(!marker||!CANVAS_RENDERER||!els.viewport){return}
+  if(!visible){marker.classList.remove("visible");return}
+  const r=canvasCellRect(x,y),vr=els.viewport.getBoundingClientRect();if(!r){marker.classList.remove("visible");return}
+  marker.style.left=`${r.left-vr.left+els.viewport.scrollLeft}px`;marker.style.top=`${r.top-vr.top+els.viewport.scrollTop}px`;
+  marker.style.width=`${r.width}px`;marker.style.height=`${r.height}px`;marker.classList.add("visible");
+}
 
 const AUDIO_PREF_KEY="atlas-karst-audio-v1";
 const retroAudio=(()=>{
@@ -1640,22 +1760,24 @@ function visibleWorldBoundaries(extent=state.lastGrid?.extent){
   };
 }
 function updateWorldBoundaryFrame(){
-  const frame=els.worldBoundaryFrame;
-  if(!frame||!state.lastGrid||!els.map||!els.viewport){frame?.classList.remove("visible");return}
-  const flags=visibleWorldBoundaries(state.lastGrid.extent);
-  const active=Object.values(flags).some(Boolean);
+  const frame=els.worldBoundaryFrame,surface=activeMapSurface();
+  if(!frame||!state.lastGrid||!surface||!els.viewport){frame?.classList.remove("visible");return}
+  const flags=visibleWorldBoundaries(state.lastGrid.extent),active=Object.values(flags).some(Boolean);
   frame.classList.toggle("visible",active);
-  for(const side of ["north","east","south","west"]){
-    frame.querySelector(`.edge-${side}`)?.classList.toggle("active",!!flags[side]);
-  }
+  for(const side of ["north","east","south","west"])frame.querySelector(`.edge-${side}`)?.classList.toggle("active",!!flags[side]);
   if(!active)return;
-  const first=els.map.querySelector('.cell[data-x="0"][data-y="0"]');
-  const last=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`);
+  const vr=els.viewport.getBoundingClientRect();
+  if(CANVAS_RENDERER){
+    const first=canvasCellRect(0,0),last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
+    if(!first||!last){frame.classList.remove("visible");return}
+    frame.style.left=`${first.left-vr.left+els.viewport.scrollLeft}px`;frame.style.top=`${first.top-vr.top+els.viewport.scrollTop}px`;
+    frame.style.width=`${Math.max(1,last.right-first.left)}px`;frame.style.height=`${Math.max(1,last.bottom-first.top)}px`;
+    return;
+  }
+  const first=els.map.querySelector('.cell[data-x="0"][data-y="0"]'),last=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`);
   if(!first||!last){frame.classList.remove("visible");return}
-  const vr=els.viewport.getBoundingClientRect(),a=first.getBoundingClientRect(),b=last.getBoundingClientRect();
-  const left=a.left-vr.left+els.viewport.scrollLeft;
-  const top=a.top-vr.top+els.viewport.scrollTop;
-  frame.style.left=`${left}px`;frame.style.top=`${top}px`;
+  const a=first.getBoundingClientRect(),b=last.getBoundingClientRect();
+  frame.style.left=`${a.left-vr.left+els.viewport.scrollLeft}px`;frame.style.top=`${a.top-vr.top+els.viewport.scrollTop}px`;
   frame.style.width=`${Math.max(1,b.right-a.left)}px`;frame.style.height=`${Math.max(1,b.bottom-a.top)}px`;
 }
 function clampCenter(center,z=currentZoom()){
@@ -4833,20 +4955,25 @@ function render(reason="direct"){
     drawUserLocation(g);
   }
   state.lastGrid=g;
-  let out="",visiblePoiCount=0;
-  for(let y=0;y<CONFIG.gridH;y++){
-    for(let x=0;x<CONFIG.gridW;x++){
-      const c=g.grid[y][x], shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
-      const attrs=`data-x="${x}" data-y="${y}"`;
-      const glyph=c.ch;
-      const poiKind=poiEffectKind(c),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
-      if(poiKind)visiblePoiCount++;
-      const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-      out+=`<span class="cell ${c.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
+  let visiblePoiCount=0;
+  if(CANVAS_RENDERER){
+    visiblePoiCount=drawCanvasMap(g);
+    els.map.textContent="";
+  }else{
+    let out="";
+    for(let y=0;y<CONFIG.gridH;y++){
+      for(let x=0;x<CONFIG.gridW;x++){
+        const c=g.grid[y][x],shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
+        const attrs=`data-x="${x}" data-y="${y}"`,glyph=c.ch;
+        const poiKind=poiEffectKind(c),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
+        if(poiKind)visiblePoiCount++;
+        const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
+        out+=`<span class="cell ${c.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
+      }
+      out+="\n";
     }
-    out+="\n";
+    els.map.innerHTML=out;
   }
-  els.map.innerHTML=out;
   syncSelectionDom();
   if(pendingPoiFeedback)requestAnimationFrame(applyPendingPoiSelectionFeedback);
   updateSelectionAssist();
@@ -4855,7 +4982,7 @@ function render(reason="direct"){
     const loc=state.userLocation;
     els.locationBadge.textContent=state.locationLoading?"recherche…":loc?`± ${Math.round(loc.accuracy||0)} m`:"non localisée";
   }
-  els.mapTip.textContent="pause 0,3 s = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position";
+  els.mapTip.textContent=`pause 0,3 s = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position${CANVAS_RENDERER?" · Canvas":""}`;
   els.zoomLabel.textContent=z.label;
   els.depthLabel.textContent=depth===0?"surface":`${depth} m`;
   const cellX=z.widthKm*1000/CONFIG.gridW,cellY=z.heightKm*1000/CONFIG.gridH;
@@ -4970,46 +5097,29 @@ function setMapCssVariable(main,name,value){
   if(main.style.getPropertyValue(name)!==value)main.style.setProperty(name,value);
 }
 function fitMapFrame(){
-  const main=document.querySelector("main");
-  if(!main||!els.map||!els.viewport)return;
-  if(applyResponsiveGridProfile(main)){
-    scheduleRender("responsive-grid");
-    return;
-  }
-
-  const availableWidth=Math.max(280,main.clientWidth);
-  const compact=matchMedia("(max-width:520px)").matches;
-  const desktop=matchMedia("(min-width:941px)").matches;
-  const baseFont=compact?11:12;
-  const basePadding=compact?12:17;
-
-  setMapCssVariable(main,"--map-font-size",`${baseFont}px`);
-  setMapCssVariable(main,"--map-padding",`${basePadding}px`);
-  setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
-
-  const baseWidth=Math.max(1,els.map.scrollWidth);
-  const baseHeight=Math.max(1,els.map.scrollHeight);
-  const viewportHeight=Math.max(220,els.viewport.clientHeight);
-  let scale=1;
-
+  const main=document.querySelector("main"),surface=activeMapSurface();
+  if(!main||!surface||!els.viewport)return;
+  if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
+  const availableWidth=Math.max(280,main.clientWidth),compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches;
+  const baseFont=compact?11:12,basePadding=compact?12:17;
+  setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
+  let baseWidth,baseHeight;
+  if(CANVAS_RENDERER){const base=measureCanvasLayout(baseFont,basePadding);baseWidth=base.width;baseHeight=base.height}else{baseWidth=Math.max(1,els.map.scrollWidth);baseHeight=Math.max(1,els.map.scrollHeight)}
+  const viewportHeight=Math.max(220,els.viewport.clientHeight);let scale=1;
   if(desktop){
-    const horizontalRoom=Math.max(320,availableWidth-28);
-    const verticalRoom=Math.max(260,viewportHeight-24);
-    const widthScale=horizontalRoom/baseWidth;
-    const heightScale=verticalRoom/baseHeight;
-    // Le profil panoramique rapproche déjà les deux rapports. On privilégie
-    // légèrement la largeur, avec au maximum un petit débordement vertical.
+    const horizontalRoom=Math.max(320,availableWidth-28),verticalRoom=Math.max(260,viewportHeight-24);
+    const widthScale=horizontalRoom/baseWidth,heightScale=verticalRoom/baseHeight;
     scale=clamp(Math.min(widthScale,heightScale*1.10),1,2.45);
   }
-
   responsiveMapScale=scale;
   setMapCssVariable(main,"--map-font-size",`${(baseFont*scale).toFixed(2)}px`);
   setMapCssVariable(main,"--map-padding",`${Math.round(basePadding*Math.min(scale,1.45))}px`);
-
-  const finalWidth=Math.ceil(els.map.scrollWidth+2);
+  let finalWidth;
+  if(CANVAS_RENDERER){const m=syncCanvasSize();finalWidth=Math.ceil(m?.width||baseWidth);if(state.lastGrid)drawCanvasMap(state.lastGrid)}else finalWidth=Math.ceil(els.map.scrollWidth+2);
   const frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
   setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);
   els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
+  syncSelectionDom();if(pendingPoiFeedback)applyPendingPoiSelectionFeedback();
   requestAnimationFrame(updateWorldBoundaryFrame);
 }
 function scheduleFrameFit(){
@@ -5108,8 +5218,9 @@ function setZoomIndex(i,focus=null,screen=null){
   render();
 }
 function viewportZoomAnchor(){
-  if(!state.lastGrid||!els.viewport||!els.map)return null;
-  const vr=els.viewport.getBoundingClientRect(),mr=els.map.getBoundingClientRect();
+  const surface=activeMapSurface();
+  if(!state.lastGrid||!els.viewport||!surface)return null;
+  const vr=els.viewport.getBoundingClientRect(),mr=surface.getBoundingClientRect();
   const clientX=clamp(vr.left+vr.width/2,mr.left+1,mr.right-1);
   const clientY=clamp(vr.top+vr.height/2,mr.top+1,mr.bottom-1);
   return mapPositionFromClient(clientX,clientY);
@@ -5189,11 +5300,8 @@ async function locateUser(){
 function clearUserLocation(){state.userLocation=null;updateLocationUI("Position masquée. Elle n’était pas enregistrée dans l’Atlas.");render()}
 
 function cellElementAtClient(clientX,clientY){
-  // Pointer capture can make click/pointerup target the <pre> instead of the
-  // character span actually under the crosshair. elementFromPoint restores
-  // the visual target without relying on the event target.
-  const hit=document.elementFromPoint?.(clientX,clientY);
-  const cell=hit?.closest?.(".cell");
+  if(CANVAS_RENDERER)return null;
+  const hit=document.elementFromPoint?.(clientX,clientY),cell=hit?.closest?.(".cell");
   return cell&&els.map.contains(cell)?cell:null;
 }
 function mapGridMetrics(){
@@ -5215,6 +5323,16 @@ function mapGridMetrics(){
 }
 function mapPositionFromClient(clientX,clientY){
   if(!state.lastGrid)return null;
+  if(CANVAS_RENDERER){
+    const r=els.mapCanvas.getBoundingClientRect(),m=canvasRuntime.metrics||syncCanvasSize();
+    if(!r.width||!r.height||!m)return null;
+    const gridX=(clientX-r.left-m.padding)/m.cellW,gridY=(clientY-r.top-m.padding)/m.cellH;
+    const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
+    const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
+    const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
+    if(debugState.enabled){debugState.lastPointer=`${x}, ${y} · ${result.coord.lat.toFixed(5)} / ${result.coord.lon.toFixed(5)}`;updateDebugPanel()}
+    return result;
+  }
   const metrics=mapGridMetrics();
   let gridX,gridY;
   if(metrics){
@@ -5240,6 +5358,7 @@ function mapPositionFromClient(clientX,clientY){
 }
 function eventMapPosition(ev){
   if(!state.lastGrid)return null;
+  if(CANVAS_RENDERER)return mapPositionFromClient(ev.clientX,ev.clientY);
   const cell=cellElementAtClient(ev.clientX,ev.clientY)||ev.target.closest?.(".cell");
   if(cell&&els.map.contains(cell)){
     const x=+cell.dataset.x,y=+cell.dataset.y;
@@ -5272,13 +5391,14 @@ function assistedCell(x,y,radius=2){
 }
 let selectedDomCell=null,selectionNeighborDomCells=[];
 function mapCellElement(x,y){
-  if(!els.map||x<0||y<0||x>=CONFIG.gridW||y>=CONFIG.gridH)return null;
+  if(CANVAS_RENDERER||!els.map||x<0||y<0||x>=CONFIG.gridW||y>=CONFIG.gridH)return null;
   return els.map.children[y*CONFIG.gridW+x]||null;
 }
 function clearSelectionDom(){
   if(selectedDomCell)selectedDomCell.classList.remove("selected");
   for(const el of selectionNeighborDomCells)el?.classList.remove("selection-neighbor");
   selectedDomCell=null;selectionNeighborDomCells=[];
+  els.canvasSelectionMarker?.classList.remove("visible");
 }
 function syncSelectionDom(){
   clearSelectionDom();
@@ -5288,17 +5408,15 @@ function syncSelectionDom(){
   }
   const p=coordToGrid(state.selectedCell.coord.lat,state.selectedCell.coord.lon,state.lastGrid.extent);
   const x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
+  state.selectedCell.x=x;state.selectedCell.y=y;state.selectedCell.feature=state.lastGrid.grid[y]?.[x]?.feature||null;
+  if(CANVAS_RENDERER){positionCanvasMarker(els.canvasSelectionMarker,x,y,true);els.viewport?.classList.add("selection-active");return true}
   const target=mapCellElement(x,y);
   if(!target){els.viewport?.classList.remove("selection-active");return false}
-  state.selectedCell.x=x;state.selectedCell.y=y;state.selectedCell.feature=state.lastGrid.grid[y]?.[x]?.feature||null;
   target.classList.add("selected");selectedDomCell=target;
   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-    if(!dx&&!dy)continue;
-    const neighbor=mapCellElement(x+dx,y+dy);
-    if(neighbor){neighbor.classList.add("selection-neighbor");selectionNeighborDomCells.push(neighbor)}
+    if(!dx&&!dy)continue;const neighbor=mapCellElement(x+dx,y+dy);if(neighbor){neighbor.classList.add("selection-neighbor");selectionNeighborDomCells.push(neighbor)}
   }
-  els.viewport?.classList.add("selection-active");
-  return true;
+  els.viewport?.classList.add("selection-active");return true;
 }
 function closeSelectionAssist(){
   state.selectionAssistVisible=false;
@@ -5348,26 +5466,17 @@ function poiSelectionKind(cell){
 }
 let pendingPoiFeedback=null,poiFeedbackTimer=0,poiFeedbackSerial=0;
 function applyPendingPoiSelectionFeedback(){
-  const pending=pendingPoiFeedback;
-  if(!pending||!els.map||!state.lastGrid)return;
-  const remaining=pending.expires-performance.now();
-  if(remaining<=0){pendingPoiFeedback=null;return}
-  const p=coordToGrid(pending.coord.lat,pending.coord.lon,state.lastGrid.extent);
-  const x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
-  const glyph=mapCellElement(x,y);
-  if(!glyph)return;
-  els.map.querySelectorAll(".cell.poi-hit-active").forEach(el=>{
-    el.classList.remove("poi-hit-active");delete el.dataset.poiKind;
-  });
-  glyph.dataset.poiKind=pending.kind;
-  glyph.classList.remove("poi-hit-active");void glyph.offsetWidth;glyph.classList.add("poi-hit-active");
-  clearTimeout(poiFeedbackTimer);
-  const serial=pending.serial;
-  poiFeedbackTimer=setTimeout(()=>{
-    if(pendingPoiFeedback?.serial!==serial)return;
-    pendingPoiFeedback=null;
-    glyph.classList.remove("poi-hit-active");delete glyph.dataset.poiKind;
-  },Math.max(80,remaining));
+  const pending=pendingPoiFeedback;if(!pending||!state.lastGrid)return;
+  const remaining=pending.expires-performance.now();if(remaining<=0){pendingPoiFeedback=null;els.canvasPoiMarker?.classList.remove("active","visible");return}
+  const p=coordToGrid(pending.coord.lat,pending.coord.lon,state.lastGrid.extent),x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
+  if(CANVAS_RENDERER){
+    const marker=els.canvasPoiMarker;positionCanvasMarker(marker,x,y,true);marker.dataset.poiKind=pending.kind;marker.classList.remove("active");void marker.offsetWidth;marker.classList.add("active");
+    clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;marker.classList.remove("active","visible");delete marker.dataset.poiKind},Math.max(80,remaining));return;
+  }
+  const glyph=mapCellElement(x,y);if(!glyph)return;
+  els.map.querySelectorAll(".cell.poi-hit-active").forEach(el=>{el.classList.remove("poi-hit-active");delete el.dataset.poiKind});
+  glyph.dataset.poiKind=pending.kind;glyph.classList.remove("poi-hit-active");void glyph.offsetWidth;glyph.classList.add("poi-hit-active");
+  clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;glyph.classList.remove("poi-hit-active");delete glyph.dataset.poiKind},Math.max(80,remaining));
 }
 function triggerPoiSelectionFeedback(cell,x,y){
   const selectionKind=poiSelectionKind(cell);
@@ -5633,10 +5742,10 @@ let hoveredKey="",hoverCandidateKey="",hoverCandidate=null,hoverDwellTimer=0;
 function hideHover(){
   clearTimeout(hoverDwellTimer);hoverDwellTimer=0;hoverCandidate=null;hoverCandidateKey="";hoveredKey="";
   els.hoverTip.classList.remove("visible");
-  els.hoverCellIndicator?.classList.remove("visible");
+  els.hoverCellIndicator?.classList.remove("visible");els.canvasHoverMarker?.classList.remove("visible");
 }
-function positionHoverTipBesideCell(target){
-  const r=target.getBoundingClientRect(),pad=12,offset=11;
+function positionHoverTipBesideRect(r){
+  const pad=12,offset=11;
   const tipRect=els.hoverTip.getBoundingClientRect();
   let left=r.right+offset,top=r.top-Math.min(6,tipRect.height*.12);
   if(left+tipRect.width>window.innerWidth-pad)left=r.left-tipRect.width-offset;
@@ -5647,6 +5756,22 @@ function positionHoverTipBesideCell(target){
   els.hoverTip.style.setProperty("--tip-y",`${top}px`);
   els.hoverTip.style.transform=`translate3d(${left}px,${top}px,0)`;
   els.hoverTip.style.left="0";els.hoverTip.style.top="0";
+}
+function positionHoverTipBesideCell(target){positionHoverTipBesideRect(target.getBoundingClientRect())}
+function revealCanvasHoverCandidate(){
+  hoverDwellTimer=0;const candidate=hoverCandidate;
+  if(!candidate||state.placingHouse||drag||pinch||!state.lastGrid)return;
+  const pos=mapPositionFromClient(candidate.clientX,candidate.clientY);if(!pos||`${pos.x}:${pos.y}`!==candidate.key)return;
+  const cell=state.lastGrid.grid[pos.y]?.[pos.x];if(!cell||(cell.ch===" "&&!cell.feature))return;
+  hoveredKey=candidate.key;els.hoverTip.innerHTML=hoverDescription(cell,pos.x,pos.y);els.hoverTip.classList.add("visible");
+  const rect=canvasCellRect(pos.x,pos.y);if(rect)positionHoverTipBesideRect(rect);
+}
+function scheduleCanvasHover(pos,ev){
+  if(!pos||ev.pointerType!=="mouse"||state.placingHouse||drag||pinch)return;
+  positionCanvasMarker(els.canvasHoverMarker,pos.x,pos.y,true);
+  const key=`${pos.x}:${pos.y}`;if(key===hoverCandidateKey)return;
+  clearTimeout(hoverDwellTimer);els.hoverTip.classList.remove("visible");hoveredKey="";hoverCandidateKey=key;
+  hoverCandidate={key,clientX:ev.clientX,clientY:ev.clientY};hoverDwellTimer=setTimeout(revealCanvasHoverCandidate,HOVER_DWELL_MS);
 }
 function revealHoverCandidate(){
   hoverDwellTimer=0;
@@ -5675,13 +5800,13 @@ function saveHousePosition(coord,sourceLabel="placement manuel",persist=true){
   CONFIG.house={lat:+coord.lat,lon:+coord.lon};markSpatialIndexesDirty();
   if(els.houseLat){els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7)}
   if(persist){HOUSE_WAS_SAVED=true;try{localStorage.setItem("atlas-karst-house-v06",JSON.stringify(CONFIG.house));localStorage.removeItem("atlas-karst-house-v05")}catch{}}
-  state.placingHouse=false;els.map.classList.remove("placing-house");
+  state.placingHouse=false;activeMapSurface()?.classList.remove("placing-house");
   els.placeHouse.classList.remove("active");
   els.houseHelp.innerHTML=`Repère enregistré : <strong>${CONFIG.house.lat.toFixed(6)}, ${CONFIG.house.lon.toFixed(6)}</strong> · ${sourceLabel}.`;
   hideHover();render();
 }
 function setHousePlacement(active){
-  state.placingHouse=active;els.placeHouse.classList.toggle("active",active);els.map.classList.toggle("placing-house",active);
+  state.placingHouse=active;els.placeHouse.classList.toggle("active",active);activeMapSurface()?.classList.toggle("placing-house",active);
   hideHover();
   els.houseHelp.innerHTML=active?'<span class="house-placement-note">Clique maintenant l’emplacement de la maison sur la carte. Le glisser-déposer est temporairement désactivé.</span>':`Repère actuel : <strong>${CONFIG.house.lat.toFixed(6)}, ${CONFIG.house.lon.toFixed(6)}</strong>.`;
 }
@@ -5799,7 +5924,7 @@ function exportTxt(){
   for(let y=0;y<CONFIG.gridH;y++)lines.push(state.lastGrid.grid[y].map(c=>c.ch).join(""));
   const z=currentZoom(),d=currentDepth();
   const header=[
-    `ATLAS KARST ASCII v${APP_VERSION} · index spatial`,
+    `ATLAS KARST ASCII v${APP_VERSION} · moteur Canvas et index spatial`,
     `Échelle : ${z.label} (${z.widthKm} × ${z.heightKm} km)`,
     `Centre : ${state.center.lat}, ${state.center.lon}`,
     `Profondeur : ${d===0?"surface":d+" m"}`,
@@ -5813,7 +5938,7 @@ function exportTxt(){
 }
 
 let suppressClickUntil=0;
-els.map.addEventListener("click",ev=>{
+activeMapSurface().addEventListener("click",ev=>{
   if(Date.now()<suppressClickUntil)return;
   if(state.placingHouse){
     const pos=eventMapPosition(ev);if(pos)saveHousePosition(pos.coord,"placement manuel sur la grille");
@@ -5822,7 +5947,7 @@ els.map.addEventListener("click",ev=>{
   const pos=eventMapPosition(ev);if(!pos||!state.lastGrid)return;
   selectGridCell(pos.x,pos.y,{assist:coarsePointer(),note:"Sélection directe"});
 });
-els.map.addEventListener("dblclick",ev=>{
+activeMapSurface().addEventListener("dblclick",ev=>{
   ev.preventDefault();
   if(state.placingHouse)return;
   const pos=eventMapPosition(ev);if(!pos)return;
@@ -5845,13 +5970,8 @@ els.viewport.addEventListener("wheel",ev=>{
 let drag=null;
 const touchPointers=new Map();
 let pinch=null,pinchConsumed=false,lastPinchZoomAt=0;
-function applyPanPreview(dx,dy){
-  const transform=`translate3d(${Math.round(dx)}px,${Math.round(dy)}px,0)`;
-  els.map.style.transform=transform;
-}
-function clearPanPreview(){
-  els.map.style.transform="";
-}
+function applyPanPreview(dx,dy){const surface=activeMapSurface();if(surface)surface.style.transform=`translate3d(${Math.round(dx)}px,${Math.round(dy)}px,0)`}
+function clearPanPreview(){const surface=activeMapSurface();if(surface)surface.style.transform=""}
 function isPanPointer(ev){
   return ev.isPrimary!==false && (ev.pointerType!=="mouse" || ev.button===0);
 }
@@ -5860,10 +5980,10 @@ function beginPinch(){
   if(touchPointers.size<2||state.placingHouse)return false;
   const pair=[...touchPointers.entries()].slice(0,2),a=pair[0][1],b=pair[1][1];
   const distance=pointerDistance(a,b);if(distance<14)return false;
-  if(drag){drag=null;clearPanPreview();els.map.classList.remove("dragging")}
+  if(drag){drag=null;clearPanPreview();activeMapSurface()?.classList.remove("dragging")}
   pinch={ids:[pair[0][0],pair[1][0]],distance};
   pinchConsumed=true;suppressClickUntil=Date.now()+900;
-  els.map.classList.add("pinching");els.viewport.classList.add("panning");
+  activeMapSurface()?.classList.add("pinching");els.viewport.classList.add("panning");
   return true;
 }
 function handlePinchMove(ev){
@@ -5881,10 +6001,10 @@ function handlePinchMove(ev){
   if(pos)setZoomIndex(next,pos.coord,{fx:pos.fx,fy:pos.fy});
   return true;
 }
-els.map.addEventListener("pointerdown",ev=>{
+activeMapSurface().addEventListener("pointerdown",ev=>{
   if(ev.pointerType==="touch"){
     touchPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
-    try{els.map.setPointerCapture?.(ev.pointerId)}catch{}
+    try{activeMapSurface()?.setPointerCapture?.(ev.pointerId)}catch{}
     if(touchPointers.size>=2&&beginPinch()){ev.preventDefault();return}
     if(state.placingHouse)return;
   }
@@ -5897,29 +6017,30 @@ els.map.addEventListener("pointerdown",ev=>{
     center:{...state.center},
     extent:extentFor(),
     rect:{width:rect.width,height:rect.height},
-    mapSize:{width:Math.max(1,els.map.offsetWidth),height:Math.max(1,els.map.offsetHeight)},
+    mapSize:{width:Math.max(1,activeMapSurface()?.offsetWidth||1),height:Math.max(1,activeMapSurface()?.offsetHeight||1)},
     moved:false,dx:0,dy:0
   };
-  try{els.map.setPointerCapture?.(ev.pointerId)}catch{}
-  els.map.classList.add("dragging");
+  try{activeMapSurface()?.setPointerCapture?.(ev.pointerId)}catch{}
+  activeMapSurface()?.classList.add("dragging");
   els.viewport.classList.add("panning");
   if(ev.pointerType!=="mouse")ev.preventDefault();
 });
-els.map.addEventListener("pointerover",ev=>{
-  if(ev.pointerType!=="mouse"||drag||pinch||state.placingHouse)return;
+activeMapSurface().addEventListener("pointerover",ev=>{
+  if(CANVAS_RENDERER||ev.pointerType!=="mouse"||drag||pinch||state.placingHouse)return;
   const target=ev.target?.closest?.(".cell");
   if(target&&els.map.contains(target))scheduleHover(target,ev);
 });
-els.map.addEventListener("pointerout",ev=>{
-  if(ev.pointerType!=="mouse")return;
+activeMapSurface().addEventListener("pointerout",ev=>{
+  if(CANVAS_RENDERER||ev.pointerType!=="mouse")return;
   const from=ev.target?.closest?.(".cell"),to=ev.relatedTarget?.closest?.(".cell");
   if(from&&from!==to)hideHover();
 });
-els.map.addEventListener("pointermove",ev=>{
+activeMapSurface().addEventListener("pointermove",ev=>{
   if(ev.pointerType==="touch"&&touchPointers.has(ev.pointerId)){
     touchPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
     if(handlePinchMove(ev)){ev.preventDefault();return}
   }
+  if(CANVAS_RENDERER&&ev.pointerType==="mouse"&&!drag&&!pinch&&!state.placingHouse){const pos=mapPositionFromClient(ev.clientX,ev.clientY);if(pos)scheduleCanvasHover(pos,ev)}
   if(!drag)return;
   if(ev.pointerId!==drag.pointerId)return;
   const dx=ev.clientX-drag.x,dy=ev.clientY-drag.y;
@@ -5933,7 +6054,7 @@ els.map.addEventListener("pointermove",ev=>{
   ev.preventDefault();
   applyPanPreview(dx,dy);
 });
-els.map.addEventListener("pointerleave",ev=>{if(!drag&&ev.pointerType==="mouse")hideHover()});
+activeMapSurface().addEventListener("pointerleave",ev=>{if(!drag&&ev.pointerType==="mouse")hideHover()});
 function endDrag(ev){
   if(!drag||ev.pointerId!==drag.pointerId)return;
   const current=drag;
@@ -5947,7 +6068,7 @@ function endDrag(ev){
     const pos=eventMapPosition(ev);
     if(pos){suppressClickUntil=Date.now()+700;selectGridCell(pos.x,pos.y,{assist:true,note:"Sélection tactile",showAssist:true,confirmIfSame:true});ev.preventDefault()}
   }
-  try{els.map.releasePointerCapture?.(current.pointerId)}catch{}
+  try{activeMapSurface()?.releasePointerCapture?.(current.pointerId)}catch{}
 
   if(moved&&current.mapSize.width>0&&current.mapSize.height>0){
     const latSpan=current.extent.north-current.extent.south;
@@ -5963,7 +6084,7 @@ function endDrag(ev){
   }
 
   clearPanPreview();
-  els.map.classList.remove("dragging");
+  activeMapSurface()?.classList.remove("dragging");
   els.viewport.classList.remove("panning");
 }
 function finishMapPointer(ev){
@@ -5973,22 +6094,23 @@ function finishMapPointer(ev){
     suppressClickUntil=Date.now()+900;
     if(ev.cancelable)ev.preventDefault();
     if(pinch&&(!touchPointers.has(pinch.ids[0])||!touchPointers.has(pinch.ids[1]))){
-      pinch=null;els.map.classList.remove("pinching");
+      pinch=null;activeMapSurface()?.classList.remove("pinching");
       if(!drag)els.viewport.classList.remove("panning");
     }
-    try{els.map.releasePointerCapture?.(ev.pointerId)}catch{}
+    try{activeMapSurface()?.releasePointerCapture?.(ev.pointerId)}catch{}
     if(touchPointers.size===0)pinchConsumed=false;
     return;
   }
   endDrag(ev);
 }
-els.map.addEventListener("pointerup",finishMapPointer);
-els.map.addEventListener("pointercancel",finishMapPointer);
-els.map.addEventListener("lostpointercapture",ev=>{
+activeMapSurface().addEventListener("pointerup",finishMapPointer);
+activeMapSurface().addEventListener("pointercancel",finishMapPointer);
+activeMapSurface().addEventListener("lostpointercapture",ev=>{
   if(ev.pointerType==="touch"&&touchPointers.has(ev.pointerId))touchPointers.delete(ev.pointerId);
   if(pinchConsumed)return;
   if(drag&&ev.pointerId===drag.pointerId)endDrag(ev);
 });
+els.viewport.addEventListener("scroll",()=>{if(CANVAS_RENDERER){syncSelectionDom();if(hoverCandidate){const [x,y]=hoverCandidate.key.split(":").map(Number);positionCanvasMarker(els.canvasHoverMarker,x,y,true)}updateWorldBoundaryFrame()}},{passive:true});
 els.selectionUp.addEventListener("click",()=>moveSelection(0,-1));
 els.selectionDown.addEventListener("click",()=>moveSelection(0,1));
 els.selectionLeft.addEventListener("click",()=>moveSelection(-1,0));
