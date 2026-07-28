@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.13a · moteur Canvas</title>
+<title>Atlas Karst ASCII v0.13b · Canvas et pan stable</title>
 <style>
 :root{
   color-scheme:dark;
@@ -79,11 +79,12 @@ select{width:100%}
 #map{margin:0;padding:var(--map-padding);display:inline-block;white-space:pre;font-size:var(--map-font-size);line-height:1.04;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:paint style}
 #map.dragging{cursor:grabbing;transition:none}.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
 #map.placing-house{cursor:var(--atlas-crosshair)}
-#mapCanvas{display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:layout paint style}
+#mapCanvas{display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
 body.renderer-canvas #map{display:none!important}
 body.renderer-canvas #mapCanvas{display:block}
 .terminal-wrap.map-centered #mapCanvas{margin-inline:auto}
-#mapCanvas.dragging{cursor:grabbing;transition:none}
+#mapCanvas.dragging{cursor:grabbing;transition:none;will-change:transform}
+.terminal-wrap.panning .canvas-cell-marker{opacity:0!important;visibility:hidden!important}
 #mapCanvas.placing-house{cursor:var(--atlas-crosshair)}
 .canvas-cell-marker{position:absolute;display:none;z-index:9;pointer-events:none;box-sizing:border-box;transform:translateZ(0)}
 .canvas-cell-marker.visible{display:block}
@@ -546,7 +547,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13a</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13b</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -989,7 +990,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.13a";
+const APP_VERSION = "0.13b";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
 document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
@@ -1284,15 +1285,28 @@ els = Object.fromEntries([
 ].map(id=>[id,document.getElementById(id)]));
 
 function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
-const canvasRuntime={metrics:null,styleCache:new Map(),probe:null,lastGrid:null,dpr:1};
+const canvasRuntime={metrics:null,styleCache:new Map(),probe:null,lastGrid:null,dpr:1,ctx:null,measureCanvas:null,measureCtx:null};
 function cssNumber(name,fallback){
   const main=document.querySelector("main");
   const value=parseFloat(getComputedStyle(main).getPropertyValue(name));
   return Number.isFinite(value)?value:fallback;
 }
 function canvasFontFamily(){return 'ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace'}
+function canvasMeasureContext(){
+  if(canvasRuntime.measureCtx)return canvasRuntime.measureCtx;
+  canvasRuntime.measureCanvas=document.createElement("canvas");
+  canvasRuntime.measureCtx=canvasRuntime.measureCanvas.getContext("2d");
+  return canvasRuntime.measureCtx;
+}
+function canvasContext(){
+  if(canvasRuntime.ctx)return canvasRuntime.ctx;
+  // Un Canvas opaque évite le blanchiment de la couche lors des transforms GPU,
+  // particulièrement visible dans Firefox pendant un glisser-déposer.
+  canvasRuntime.ctx=els.mapCanvas.getContext("2d",{alpha:false});
+  return canvasRuntime.ctx;
+}
 function measureCanvasLayout(fontSize=cssNumber("--map-font-size",12),padding=cssNumber("--map-padding",17)){
-  const ctx=(els.mapCanvas||document.createElement("canvas")).getContext("2d");
+  const ctx=canvasMeasureContext();
   ctx.font=`${fontSize}px ${canvasFontFamily()}`;
   const cellW=Math.max(3,ctx.measureText("M").width);
   const cellH=Math.max(4,fontSize*1.04);
@@ -1327,8 +1341,12 @@ function drawCanvasMap(grid=state.lastGrid){
   if(!CANVAS_RENDERER||!grid||!els.mapCanvas)return 0;
   const m=syncCanvasSize();if(!m)return 0;
   canvasRuntime.lastGrid=grid;
-  const ctx=els.mapCanvas.getContext("2d",{alpha:true});
-  ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.clearRect(0,0,m.width,m.height);
+  const ctx=canvasContext();
+  ctx.setTransform(m.dpr,0,0,m.dpr,0,0);
+  // Le bitmap est explicitement opaque. Les fonds semi-transparents des cellules
+  // sont ainsi composités ici, et non par le navigateur au moment du drag.
+  const mapCore=getComputedStyle(document.body).getPropertyValue("--map-core").trim()||"#06110c";
+  ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.fillStyle=mapCore;ctx.fillRect(0,0,m.width,m.height);
   ctx.textBaseline="top";ctx.textAlign="left";ctx.fontKerning="none";
   let visiblePoiCount=0;
   // Fonds de relief, groupés horizontalement pour limiter les appels de dessin.
@@ -5970,7 +5988,12 @@ els.viewport.addEventListener("wheel",ev=>{
 let drag=null;
 const touchPointers=new Map();
 let pinch=null,pinchConsumed=false,lastPinchZoomAt=0;
-function applyPanPreview(dx,dy){const surface=activeMapSurface();if(surface)surface.style.transform=`translate3d(${Math.round(dx)}px,${Math.round(dy)}px,0)`}
+function applyPanPreview(dx,dy){
+  const surface=activeMapSurface();if(!surface)return;
+  const safeX=clamp(Number(dx)||0,-window.innerWidth*1.5,window.innerWidth*1.5);
+  const safeY=clamp(Number(dy)||0,-window.innerHeight*1.5,window.innerHeight*1.5);
+  surface.style.transform=`translate3d(${safeX.toFixed(2)}px,${safeY.toFixed(2)}px,0)`;
+}
 function clearPanPreview(){const surface=activeMapSurface();if(surface)surface.style.transform=""}
 function isPanPointer(ev){
   return ev.isPrimary!==false && (ev.pointerType!=="mouse" || ev.button===0);
@@ -6086,6 +6109,7 @@ function endDrag(ev){
   clearPanPreview();
   activeMapSurface()?.classList.remove("dragging");
   els.viewport.classList.remove("panning");
+  if(CANVAS_RENDERER){syncSelectionDom();updateWorldBoundaryFrame()}
 }
 function finishMapPointer(ev){
   const wasTouch=ev.pointerType==="touch";
