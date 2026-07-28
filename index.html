@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.15f · Lisibilité et infobulles</title>
+<title>Atlas Karst ASCII v0.15h · Lecture terrain compacte</title>
 <style>
 :root{
   color-scheme:dark;
@@ -623,10 +623,8 @@ label.switch{font-size:11px;color:#c9d8cf}
 .readout-body{padding:11px 12px 14px;overflow:auto;overscroll-behavior:contain;min-height:0}
 #readout[data-sheet-state="peek"] .readout-body{display:none}
 #readout[data-sheet-state="peek"]{max-height:48px}
-#readout[data-sheet-state="medium"]{max-height:clamp(220px,34vh,430px)}
 #readout[data-sheet-state="full"]{max-height:clamp(300px,62vh,820px)}
 #readout[data-sheet-state="full"] .readout-sheet-chevron{transform:rotate(180deg)}
-#readout[data-sheet-state="medium"] .readout-sheet-chevron{transform:rotate(90deg)}
 
 /* Sections internes repliables dans la fiche. */
 .cell-section.is-foldable h3{
@@ -650,6 +648,41 @@ label.switch{font-size:11px;color:#c9d8cf}
 @media(max-width:940px){
   .sidebar-cluster-head h2{font-size:11px}
 }
+
+
+
+/* V0.15h — lecture compacte des cellules ordinaires.
+   Une cellule sans POI conserve une carte d'identité courte et lisible ; les
+   véritables repères ouvrent toujours la fiche documentaire complète. */
+#readout[data-readout-kind="plain"][data-sheet-state="full"]{
+  max-height:clamp(126px,18vh,178px)
+}
+#readout[data-readout-kind="plain"] .readout-body{padding:9px 11px 11px;overflow:hidden}
+.plain-cell-summary{
+  display:grid;grid-template-columns:44px minmax(0,1fr);gap:10px;align-items:start;
+  border:1px solid #315343;border-radius:8px;background:#09150f;padding:9px 10px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)
+}
+.plain-cell-symbol{
+  display:grid;place-items:center;min-height:42px;border:1px solid #456956;border-radius:6px;
+  background:#0d1d15;color:var(--accent);font-size:20px;font-weight:900
+}
+.plain-cell-kicker{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#7f9c8d;margin-bottom:2px}
+.plain-cell-title{font-size:13px;font-weight:900;color:#f2ecd6;line-height:1.2}
+.plain-cell-detail{margin-top:4px;color:#bdd0c4;font-size:10.5px;line-height:1.38}
+.plain-cell-meta{margin-top:5px;color:#7f9a8c;font-size:9.5px;line-height:1.35}
+.plain-cell-source{color:#8ec9a8}
+@media(max-width:940px){
+  #readout[data-readout-kind="plain"][data-sheet-state="full"]{height:auto;max-height:156px}
+  .plain-cell-summary{grid-template-columns:38px minmax(0,1fr);gap:8px;padding:8px}
+  .plain-cell-symbol{min-height:38px;font-size:18px}
+  .plain-cell-title{font-size:12px}.plain-cell-detail{font-size:10px}
+}
+
+/* V0.15g — fiche info contextuelle à deux états. */
+#readout{transition:max-height .22s cubic-bezier(.2,.8,.2,1),transform .25s cubic-bezier(.2,.8,.2,1)}
+#readout[data-sheet-state="peek"] .readout-sheet-grip{background:#476052}
+#readout[data-sheet-state="full"] .readout-sheet-grip{background:var(--accent)}
 
 /* Palettes de strate : seule la scène cartographique change de climat. */
 body[data-depth-band="surface"]{--map-core:#06140d;--map-edge:#020806;--map-haze:rgba(57,137,88,.13);--selection:#ffe07d;--selection-soft:rgba(255,224,125,.25)}
@@ -705,7 +738,6 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
     transition:transform .25s cubic-bezier(.2,.8,.2,1)
   }
   #readout[data-sheet-state="peek"]{transform:translateY(calc(100% - 54px))}
-  #readout[data-sheet-state="medium"]{transform:translateY(43%)}
   #readout[data-sheet-state="full"]{transform:translateY(0)}
   .readout-sheet-handle{display:grid;grid-template-columns:22px minmax(0,1fr) 22px;align-items:center;gap:6px;min-height:52px;width:100%;padding:7px 10px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:#0e1c15;color:var(--text);text-align:left}
   .readout-sheet-grip{width:22px;height:4px;border-radius:999px;background:#597165;justify-self:center}
@@ -1506,7 +1538,7 @@ body.encounter-open{overflow:hidden}
       <span class="readout-sheet-chevron" aria-hidden="true">⌃</span>
     </button>
     <div class="readout-body" id="readoutBody">
-      <strong>Mode d’emploi :</strong> immobilise brièvement le pointeur sur un symbole pour sa fiche courte, ou touche une case pour ouvrir sa lecture. Le zoom sémantique révèle progressivement les détails. Sur mobile, la fiche basse possède trois positions : aperçu, lecture et plein écran.
+      <strong>Mode d’emploi :</strong> immobilise brièvement le pointeur sur un symbole pour sa fiche courte, ou touche une case pour ouvrir sa lecture. Le zoom sémantique révèle progressivement les détails. La fiche basse possède désormais deux états : bandeau replié ou lecture ouverte.
     </div>
   </section>
 
@@ -1527,7 +1559,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.15f";
+const APP_VERSION = "0.15h";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
 document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
@@ -6541,8 +6573,11 @@ function mobileReadoutMode(){return matchMedia?.("(max-width:940px)")?.matches}
 let readoutFitTimer=0;
 function setReadoutSheetState(next){
   if(!els.readout)return;
-  const allowed=new Set(["peek","medium","full"]);
-  els.readout.dataset.sheetState=allowed.has(next)?next:"peek";
+  // Les anciennes demandes « medium » sont volontairement promues vers la
+  // seule taille de lecture utile. Il ne reste que deux états : replié / ouvert.
+  const normalized=next==="peek"?"peek":"full";
+  els.readout.dataset.sheetState=normalized;
+  els.readoutSheetHandle?.setAttribute("aria-label",normalized==="full"?"Replier la fiche de cellule":"Déployer la fiche de cellule");
   requestAnimationFrame(()=>{updateWorldBoundaryFrame();updateRelationOverlay()});
   clearTimeout(readoutFitTimer);
   // La hauteur réellement libre n'est fiable qu'à la fin de la transition CSS.
@@ -6550,19 +6585,68 @@ function setReadoutSheetState(next){
 }
 function cycleReadoutSheet(){
   const current=els.readout?.dataset.sheetState||"peek";
-  setReadoutSheetState(current==="peek"?"medium":current==="medium"?"full":"peek");
+  setReadoutSheetState(current==="full"?"peek":"full");
 }
-function setReadoutContent(html,{title="Fiche de cellule",sheet="medium"}={}){
+function setReadoutContent(html,{title="Fiche de cellule",sheet="full",kind="poi"}={}){
+  if(els.readout)els.readout.dataset.readoutKind=kind;
   if(els.readoutBody)els.readoutBody.innerHTML=html;
   if(els.readoutSheetLabel)els.readoutSheetLabel.textContent=title;
   prepareReadoutSections();
-  if(mobileReadoutMode()){
-    setInfoVisible(true);
-    setReadoutSheetState(sheet);
-  }else{
-    setInfoVisible(true);
-    if((els.readout?.dataset.sheetState||"peek")==="peek")setReadoutSheetState("medium");
+  setInfoVisible(true);
+  setReadoutSheetState(sheet==="peek"?"peek":"full");
+}
+function plainCellIdentity(cell){
+  const f=cell?.feature||{},tags=f.tags||{},cls=String(cell?.cls||"");
+  const name=String(f.name||tags.name||"").trim(),ref=String(tags.ref||f.ref||"").trim();
+  let label="Terrain non nommé",kind="lecture du terrain",symbol=symbolForCell(cell),qualifier="";
+  if(cls.includes("water")){
+    const waterway=String(tags.waterway||f.waterway||"").toLowerCase();
+    label=waterway==="river"?"Rivière":waterway==="stream"?"Ruisseau":waterway==="canal"?"Canal":waterway==="ditch"?"Fossé":waterway==="drain"?"Drain / fossé":"Cours d’eau ou zone humide";
+    kind="hydrographie";symbol="≈";
+  }else if(cls.includes("path")){
+    const highway=String(tags.highway||"").toLowerCase();
+    label=highway==="footway"?"Sentier pédestre":highway==="cycleway"?"Piste cyclable":highway==="track"?"Piste / chemin agricole":"Chemin";
+    kind="voie douce";symbol="·";
+  }else if(cls.includes("road")){
+    const highway=String(tags.highway||"").toLowerCase();
+    const roads={motorway:"Autoroute",trunk:"Axe majeur",primary:"Route principale",secondary:"Route départementale",tertiary:"Route locale",residential:"Rue résidentielle",service:"Voie de service",unclassified:"Route locale",track:"Piste"};
+    label=roads[highway]||"Route ou voie";kind="circulation";symbol=cls.includes("major")?"═":"─";
+  }else if(cls.includes("forest")){
+    label=tags.landuse==="forest"?"Forêt":"Bois / couverture arborée";kind="végétation";symbol="T";
+  }else if(cls.includes("meadow")){
+    label="Prairie";kind="espace ouvert";symbol=",";
+  }else if(cls.includes("field")){
+    const land=String(tags.landuse||f.landuse||"").toLowerCase();
+    label=land==="orchard"?"Verger":land==="vineyard"?"Vigne":land==="farmland"?"Champ cultivé":"Champ / parcelle ouverte";
+    kind="occupation du sol";symbol=".";
+  }else if(cls.includes("building")||cls.includes("cad-building")){
+    const building=String(tags.building||f.building||"").toLowerCase();
+    label=building&&building!=="yes"?`Bâtiment · ${building}`:"Bâtiment cadastral";kind="bâti";symbol="█";
+  }else if(cls.includes("quarry")){
+    label="Carrière ou terrain d’extraction";kind="terrain remanié";symbol="q";
+  }else if(cls.includes("scrub")){
+    label="Friche végétale / broussailles";kind="végétation";symbol=";";
+  }else if(currentDepth()<0){
+    label=`Coupe interprétative ${depthSliceLabel()}`;kind="sous-sol hypothétique";symbol=cell?.ch||"▓";
   }
+  const displayName=name||ref;
+  if(displayName)qualifier=displayName;
+  else if(f.kind&&!/objet cartographique/i.test(String(f.kind)))qualifier=String(f.kind);
+  return {label,kind,symbol,qualifier,source:f.source||""};
+}
+function plainCellSummaryHtml(cell,x,y){
+  const identity=plainCellIdentity(cell),coord=gridToCoord(x,y,state.lastGrid.extent),slope=localSlopeDegrees(x,y);
+  const metrics=[Number.isFinite(cell.elev)?`alt. ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",`${coord.lat.toFixed(5)}, ${coord.lon.toFixed(5)}`].filter(Boolean).join(" · ");
+  const detail=identity.qualifier?`<strong>${esc(identity.qualifier)}</strong> · ${esc(identity.label)}`:esc(identity.label);
+  const source=identity.source?`<span class="plain-cell-source">source : ${esc(identity.source)}</span>`:"lecture issue des couches visibles";
+  return `<div class="plain-cell-summary"><div class="plain-cell-symbol">${esc(identity.symbol)}</div><div><div class="plain-cell-kicker">${esc(identity.kind)}</div><div class="plain-cell-title">${detail}</div><div class="plain-cell-detail">${esc(terrainPhrase(cell,slope,x,y))}</div><div class="plain-cell-meta">${esc(metrics)} · ${source}</div></div></div>`;
+}
+function collapseReadoutForPlainCell(cell,x,y){
+  // Invalide une éventuelle hydratation documentaire encore en attente.
+  descriptionRuntime.selectionToken++;
+  const identity=plainCellIdentity(cell);
+  const title=identity.qualifier?`${identity.label} · ${identity.qualifier}`:identity.label;
+  setReadoutContent(plainCellSummaryHtml(cell,x,y),{title,sheet:"full",kind:"plain"});
 }
 
 function setInfoVisible(visible){
@@ -6935,9 +7019,14 @@ function selectGridCell(x,y,{assist=false,note="",showAssist=coarsePointer(),con
   playCellSelectionSound(cell,{snapped:picked.snapped});
   syncSelectionDom();
   updateSelectionAssist();
-  triggerPoiSelectionFeedback(cell,x,y);
-  const assistHint=coarsePointer()?" Utilise le réticule pour corriger d’une case, puis ✓ pour le refermer.":"";
-  presentCellDescription(cell,x,y,{note:state.selectionSnapNote||"Sélection mémorisée",assistHint,title:cell.feature?.name||cell.feature?.kind||"Case sélectionnée",sheet:"medium"});
+  const poiKind=poiSelectionKind(cell);
+  if(poiKind){
+    triggerPoiSelectionFeedback(cell,x,y);
+    const assistHint=coarsePointer()?" Utilise le réticule pour corriger d’une case, puis ✓ pour le refermer.":"";
+    presentCellDescription(cell,x,y,{note:state.selectionSnapNote||"Sélection mémorisée",assistHint,title:cell.feature?.name||cell.feature?.kind||"Point d’intérêt",sheet:"full"});
+  }else{
+    collapseReadoutForPlainCell(cell,x,y);
+  }
 }
 function moveSelection(dx,dy){
   if(!state.selectedCell||!state.lastGrid)return;
@@ -7221,12 +7310,12 @@ function getCellDescriptionBundle(cell,x,y){
   descriptionRuntime.misses++;
   const bundle=buildCellDescriptionBundle(cell,x,y);descriptionRuntime.cache.set(key,bundle);trimDescriptionCache();return bundle;
 }
-function presentCellDescription(cell,x,y,{note="",assistHint="",title="Case sélectionnée",sheet="medium"}={}){
+function presentCellDescription(cell,x,y,{note="",assistHint="",title="Case sélectionnée",sheet="full"}={}){
   const bundle=getCellDescriptionBundle(cell,x,y),token=++descriptionRuntime.selectionToken;
   descriptionRuntime.lastKey=bundle.key;
   const footer=`<div class="readout-note"><span>▹</span><span>${esc(note||"Sélection mémorisée")}.${assistHint}</span></div>`;
   const placeholder=`<div class="cell-deferred is-loading" data-cell-details-token="${token}">Lecture documentaire en cours…</div>`;
-  setReadoutContent(`${bundle.immediate}${placeholder}</article>${footer}`,{title,sheet});
+  setReadoutContent(`${bundle.immediate}${placeholder}</article>${footer}`,{title,sheet,kind:"poi"});
   const hydrate=()=>{
     if(token!==descriptionRuntime.selectionToken)return;
     const target=els.readoutBody?.querySelector(`[data-cell-details-token="${token}"]`);if(!target)return;
@@ -7907,7 +7996,7 @@ els.cavitySelect.addEventListener("change",e=>{
   const c=state.cavities.find(v=>v.id===e.target.value);
   if(!c||!Number.isFinite(c.lat))return;
   state.zoomIndex=2;state.center=clampCenter({lat:c.lat,lon:c.lon},currentZoom());state.selectedCavity=c.id;render();
-  setReadoutContent(`<strong>${esc(cavityName(c))}</strong><br>${esc(cavityMarker(c).label)} · ${esc(c.id)}${c.commune?` · ${esc(c.commune)}`:""}<br>La carte est recentrée sur le point inventorié. Descends à −8 m ou −14 m pour voir les scénarios, sans confondre leur dessin avec une topographie réelle.`,{title:cavityName(c),sheet:"medium"});
+  setReadoutContent(`<strong>${esc(cavityName(c))}</strong><br>${esc(cavityMarker(c).label)} · ${esc(c.id)}${c.commune?` · ${esc(c.commune)}`:""}<br>La carte est recentrée sur le point inventorié. Descends à −8 m ou −14 m pour voir les scénarios, sans confondre leur dessin avec une topographie réelle.`,{title:cavityName(c),sheet:"full"});
 });
 window.addEventListener("resize",()=>{
   if(!mobileSidebarMode())document.body.classList.remove("sidebar-open");
@@ -7997,7 +8086,7 @@ prepareSidebarCards();
   }else{
     setSidebarOpen(true);
     setInfoVisible(true);
-    setReadoutSheetState("medium");
+    setReadoutSheetState("peek");
   }
   loadLocalCavities();
   loadLoreItems();

@@ -1,0 +1,7 @@
+Atlas Karst ASCII v0.15h — lecture terrain compacte
+
+- Une cellule ordinaire ouvre désormais une fiche courte : type de terrain, nom éventuel de la route ou du cours d’eau, altitude, pente et coordonnées.
+- Les points d’intérêt ouvrent toujours la fiche documentaire complète.
+- La fenêtre conserve seulement deux états manuels : repliée ou ouverte. Sa hauteur ouverte dépend du contexte : compacte pour le terrain, grande pour un POI.
+
+Fichier principal : atlas_karst_ascii_v0_15h_lecture_terrain_compacte.html
