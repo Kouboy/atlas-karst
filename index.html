@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.12b · cadrage stable et effets centrés</title>
+<title>Atlas Karst ASCII v0.12d · points normalisés et index spatial</title>
 <style>
 :root{
   color-scheme:dark;
@@ -415,7 +415,7 @@ body.debug-mode section.debug-only{display:block!important}
 @media(max-width:520px){.debug-kpis{grid-template-columns:1fr}}
 
 
-/* V0.12b — feedback de point d’intérêt ancré à la cellule elle-même.
+/* V0.12d — feedback de point d’intérêt ancré à la cellule elle-même.
    L’ancien calque absolu est masqué : il dépendait du scroll du viewport et
    pouvait dériver après redimensionnement, zoom ou déplacement. */
 #poiSelectionFx{display:none!important}
@@ -469,7 +469,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12b</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12d</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -901,7 +901,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.12b";
+const APP_VERSION = "0.12d";
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
@@ -947,7 +947,7 @@ function updateDebugPanel(forceStorage=false){
   if(els.debugRenderTime)els.debugRenderTime.textContent=debugState.renderCount?`${debugState.lastRenderMs.toFixed(1)} ms · max ${debugState.maxRenderMs.toFixed(1)}`:"—";
   if(els.debugRenderAverage)els.debugRenderAverage.textContent=debugState.renderCount?`${average.toFixed(1)} ms · ${debugState.renderCount} rendus`:"—";
   if(els.debugGrid)els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m`;
-  if(els.debugPoiCount)els.debugPoiCount.textContent=String(debugState.lastPoiCount);
+  if(els.debugPoiCount)els.debugPoiCount.textContent=`${debugState.lastPoiCount} visibles · ${spatialRuntime.normalizedPois.length} indexés`;
   if(els.debugStorage)els.debugStorage.textContent=`${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`;
   if(els.debugPointer)els.debugPointer.textContent=debugState.lastPointer||"—";
   if(els.debugErrors){
@@ -976,6 +976,7 @@ function runAtlasSelfCheck(){
   }
   checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
+  checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
   checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
   checks.push(debugCheckResult("OSM",state.osm?.length?true:null,state.osm?.length?`${state.osm.length} objets`:debugStatusText("osmStatus")));
   checks.push(debugCheckResult("Patrimoine",state.heritageItems?.length?true:null,state.heritageItems?.length?`${state.heritageItems.length} notices`:debugStatusText("heritageStatus")));
@@ -996,7 +997,8 @@ function createDebugReport(){
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · profondeur ${currentDepth()} m`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
-    `Points d’intérêt visibles : ${debugState.lastPoiCount}`,
+    `Points d’intérêt visibles : ${debugState.lastPoiCount} · normalisés : ${spatialRuntime.normalizedPois.length}`,
+    `Index spatial : ${spatialRuntime.rebuilds} reconstructions · dernière ${spatialRuntime.lastBuildMs.toFixed(2)} ms · candidats ${spatialRuntime.lastQueryCandidates} / résultats ${spatialRuntime.lastQueryResults}`,
     `Cache local Atlas : ${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`,
     `OSM : ${debugStatusText("osmStatus")}`,
     `Culture : ${debugStatusText("heritageStatus")}`,
@@ -1584,6 +1586,180 @@ function gridToCoord(x,y,extent){
   };
 }
 function inExtent(lat,lon,e){return lat>=e.south&&lat<=e.north&&lon>=e.west&&lon<=e.east}
+
+/* V0.12d — socle commun des points d’intérêt et indexation spatiale.
+   Les sources conservent leurs données brutes, mais le moteur ne les parcourt
+   plus toutes à chaque rendu. Un index géographique léger fournit uniquement
+   les objets présents dans l’emprise courante. */
+class SpatialHashIndex{
+  constructor(cellDegrees=.012){this.cellDegrees=cellDegrees;this.buckets=new Map();this.overflow=[];this.count=0}
+  clear(){this.buckets.clear();this.overflow=[];this.count=0}
+  key(ix,iy){return `${ix}:${iy}`}
+  range(bounds){
+    const s=this.cellDegrees;
+    return {
+      x1:Math.floor(bounds.west/s),x2:Math.floor(bounds.east/s),
+      y1:Math.floor(bounds.south/s),y2:Math.floor(bounds.north/s)
+    };
+  }
+  insert(item,bounds){
+    if(!bounds||![bounds.west,bounds.east,bounds.south,bounds.north].every(Number.isFinite))return;
+    const r=this.range(bounds);this.count++;
+    const cells=(r.x2-r.x1+1)*(r.y2-r.y1+1);
+    if(cells>2048){this.overflow.push(item);return}
+    for(let iy=r.y1;iy<=r.y2;iy++)for(let ix=r.x1;ix<=r.x2;ix++){
+      const k=this.key(ix,iy),bucket=this.buckets.get(k);
+      if(bucket)bucket.push(item);else this.buckets.set(k,[item]);
+    }
+  }
+  insertPoint(item,lat,lon){
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+    this.insert(item,{west:lon,east:lon,south:lat,north:lat});
+  }
+  query(extent){
+    if(!extent)return[];
+    const r=this.range(extent),seen=new Set(),out=[];
+    for(const item of this.overflow){seen.add(item);out.push(item)}
+    for(let iy=r.y1;iy<=r.y2;iy++)for(let ix=r.x1;ix<=r.x2;ix++){
+      const bucket=this.buckets.get(this.key(ix,iy));if(!bucket)continue;
+      for(const item of bucket)if(!seen.has(item)){seen.add(item);out.push(item)}
+    }
+    return out;
+  }
+}
+const spatialRuntime={
+  dirty:true,refs:new Map(),normalizedPois:[],poiByRaw:new WeakMap(),
+  poiIndex:new SpatialHashIndex(.012),osmIndex:new SpatialHashIndex(.012),cadastreIndex:new SpatialHashIndex(.006),
+  rebuilds:0,lastBuildMs:0,lastQueryCandidates:0,lastQueryResults:0
+};
+function markSpatialIndexesDirty(){spatialRuntime.dirty=true}
+function boundsFromCoords(coords){
+  if(!Array.isArray(coords)||!coords.length)return null;
+  let west=Infinity,east=-Infinity,south=Infinity,north=-Infinity;
+  for(const pair of coords){
+    const lon=Number(pair?.[0]),lat=Number(pair?.[1]);
+    if(!Number.isFinite(lon)||!Number.isFinite(lat))continue;
+    west=Math.min(west,lon);east=Math.max(east,lon);south=Math.min(south,lat);north=Math.max(north,lat);
+  }
+  return Number.isFinite(west)?{west,east,south,north}:null;
+}
+function featureBounds(feature){
+  const b=feature?.bbox;
+  if(b&&[b.west,b.east,b.south,b.north].every(Number.isFinite))return b;
+  return boundsFromCoords(feature?.coords);
+}
+function normalizedPoiCategory(sourceType,raw){
+  if(sourceType==="bss")return "bss";
+  if(sourceType==="cavity")return "cavity";
+  if(sourceType==="heritage")return "heritage";
+  if(sourceType==="observation"||sourceType==="lore")return "memory";
+  if(sourceType==="cartofriches")return "industrial";
+  if(sourceType==="house")return "home";
+  if(sourceType==="location")return "location";
+  return "natural";
+}
+function makeNormalizedPoi(sourceType,raw,overrides={}){
+  const lat=Number(overrides.lat??raw?.lat),lon=Number(overrides.lon??raw?.lon);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+  const id=String(overrides.id??raw?.id??raw?.indice??`${sourceType}:${lat.toFixed(6)}:${lon.toFixed(6)}`);
+  const title=String(overrides.title??raw?.name??raw?.designation??raw?.nomCavite??overrides.kind??sourceType);
+  return {
+    uid:`${sourceType}:${id}`,id,sourceType,
+    category:overrides.category||normalizedPoiCategory(sourceType,raw),
+    subtype:String(overrides.subtype??raw?.category??raw?.type??raw?.nature??""),
+    title,kind:String(overrides.kind??raw?.kind??raw?.type??sourceType),
+    description:String(overrides.description??raw?.description??raw?.note??""),
+    source:String(overrides.source??raw?.source??""),
+    lat,lon,priority:Number(overrides.priority??0),raw,
+    tags:overrides.tags||raw?.tags||null
+  };
+}
+function poiFeatureInfo(poi,extra={}){
+  return {
+    id:poi.id,name:poi.title,kind:poi.kind,source:poi.source,lat:poi.lat,lon:poi.lon,
+    poi:true,poiId:poi.uid,poiCategory:poi.category,poiSourceType:poi.sourceType,
+    normalizedPoi:poi,record:poi.raw,...extra
+  };
+}
+function spatialSourceChanged(name,value){
+  const previous=spatialRuntime.refs.get(name);
+  const length=Array.isArray(value)?value.length:-1;
+  if(!previous||previous.ref!==value||previous.length!==length){
+    spatialRuntime.refs.set(name,{ref:value,length});return true;
+  }
+  return false;
+}
+function ensureSpatialIndexes(){
+  let changed=spatialRuntime.dirty;
+  const sources={
+    osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
+    bss:state.bss,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
+    lore:state.loreItems,cartofriches:state.cartofriches,userLocation:state.userLocation
+  };
+  for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
+  const houseStamp=`${CONFIG.house.lat}:${CONFIG.house.lon}`;
+  if(spatialRuntime.refs.get("houseStamp")!==houseStamp){spatialRuntime.refs.set("houseStamp",houseStamp);changed=true}
+  if(!changed)return;
+  const started=performance.now();
+  spatialRuntime.poiIndex.clear();spatialRuntime.osmIndex.clear();spatialRuntime.cadastreIndex.clear();
+  spatialRuntime.normalizedPois=[];spatialRuntime.poiByRaw=new WeakMap();
+  const seen=new Set();
+  const addPoi=(sourceType,raw,overrides={})=>{
+    const poi=makeNormalizedPoi(sourceType,raw,overrides);if(!poi)return;
+    const dedupe=`${poi.sourceType}|${poi.id}|${poi.lat.toFixed(6)}|${poi.lon.toFixed(6)}`;
+    if(seen.has(dedupe))return;seen.add(dedupe);
+    spatialRuntime.normalizedPois.push(poi);spatialRuntime.poiIndex.insertPoint(poi,poi.lat,poi.lon);
+    if(raw&&typeof raw==="object")spatialRuntime.poiByRaw.set(raw,poi);
+  };
+  for(const b of state.bss||[])addPoi("bss",b,{kind:b.piezo?"station piézométrique":"forage ou ouvrage BSS",priority:b.piezo?19:17});
+  for(const c of state.cavities||[])addPoi("cavity",c,{kind:cavityType(c),title:cavityName(c),priority:18});
+  for(const o of state.observations||[])if(o.mode!=="point")addPoi("observation",o,{kind:o.mode==="sight"?"ligne de visée observée":"zone d’observation approximative",title:o.name||"Observation locale",priority:19});
+  for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
+  for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});
+  for(const f of state.cartofriches||[])addPoi("cartofriches",f,{kind:f.type||"site Cartofriches",title:f.name||"Site recensé",priority:22});
+  if(OFFLINE_TEST&&!state.cartofriches?.length&&!state.loreItems?.length&&!state.localCavities?.length){
+    for(const d of OFFLINE_DEMO_POINTS)addPoi("demo",d,{kind:d.kind,title:d.name,priority:21});
+  }
+  addPoi("house",CONFIG.house,{id:"house",title:"42 rue de la Falaise",kind:"maison",source:"Repère privé de l’Atlas",priority:24});
+  if(state.userLocation)addPoi("location",state.userLocation,{id:"user-location",title:"Ma position",kind:"position actuelle",source:"Géolocalisation ponctuelle du navigateur",priority:50});
+  for(const f of state.osm||[]){
+    const bounds=featureBounds(f);if(bounds)spatialRuntime.osmIndex.insert(f,bounds);
+    const t=f.tags||{};
+    if(["spring","sinkhole","cave_entrance"].includes(t.natural)&&Array.isArray(f.coords)&&f.coords.length){
+      const c=f.coords[Math.floor(f.coords.length/2)];
+      addPoi("osm-natural",f,{id:f.id,title:t.name||t.natural,kind:`point naturel OSM · ${t.natural}`,lat:c?.[1],lon:c?.[0],source:"OpenStreetMap",priority:12,tags:t});
+    }
+  }
+  for(const f of state.cadastreBuildings||[]){const bounds=featureBounds(f);if(bounds)spatialRuntime.cadastreIndex.insert({kind:"building",feature:f},bounds)}
+  for(const f of state.cadastreParcels||[]){const bounds=featureBounds(f);if(bounds)spatialRuntime.cadastreIndex.insert({kind:"parcel",feature:f},bounds)}
+  spatialRuntime.dirty=false;spatialRuntime.rebuilds++;spatialRuntime.lastBuildMs=performance.now()-started;
+}
+function queryNormalizedPois(extent,sourceTypes=null){
+  ensureSpatialIndexes();
+  const candidates=spatialRuntime.poiIndex.query(extent);
+  spatialRuntime.lastQueryCandidates+=candidates.length;
+  const allowed=sourceTypes==null?null:new Set(Array.isArray(sourceTypes)?sourceTypes:[sourceTypes]);
+  const results=candidates.filter(p=>inExtent(p.lat,p.lon,extent)&&(!allowed||allowed.has(p.sourceType)));
+  spatialRuntime.lastQueryResults+=results.length;
+  return results;
+}
+function queryOsmFeatures(extent){
+  ensureSpatialIndexes();
+  const candidates=spatialRuntime.osmIndex.query(extent);
+  spatialRuntime.lastQueryCandidates+=candidates.length;
+  const results=candidates.filter(f=>coordsIntersectExtent(f,extent));
+  spatialRuntime.lastQueryResults+=results.length;
+  return results;
+}
+function queryCadastreFeatures(extent,kind){
+  ensureSpatialIndexes();
+  const candidates=spatialRuntime.cadastreIndex.query(extent);
+  spatialRuntime.lastQueryCandidates+=candidates.length;
+  const results=candidates.filter(v=>(!kind||v.kind===kind)&&coordsIntersectExtent(v.feature,extent));
+  spatialRuntime.lastQueryResults+=results.length;
+  return results;
+}
+
 
 function setStatus(kind,status,label){
   state.load[kind]=status;
@@ -3834,33 +4010,30 @@ function renderCadastre(g){
   if(!detail.cadastreBuildings&&!detail.parcels)return;
   const e=g.extent;
   if(state.layerParcels&&detail.parcels){
-    for(const f of state.cadastreParcels){
-      if(!coordsIntersectExtent(f,e))continue;
-      const pts=f.coords.map(([lon,lat])=>coordToGrid(lat,lon,e));
+    for(const indexed of queryCadastreFeatures(e,"parcel")){
+      const f=indexed.feature,pts=f.coords.map(([lon,lat])=>coordToGrid(lat,lon,e));
       lineDraw(g,pts,"┄","c-parcel",4,{kind:"limite de parcelle cadastrale",name:f.id||f.properties?.id||"parcelle",id:f.id,source:"Cadastre Etalab / DGFiP"});
     }
   }
   if(state.layerCadastreBuildings&&detail.cadastreBuildings){
-    for(const f of state.cadastreBuildings){
-      if(!coordsIntersectExtent(f,e))continue;
-      const pts=f.coords.map(([lon,lat])=>coordToGrid(lat,lon,e));
+    for(const indexed of queryCadastreFeatures(e,"building")){
+      const f=indexed.feature,pts=f.coords.map(([lon,lat])=>coordToGrid(lat,lon,e));
       polygonFill(g,pts,"█","c-cad-building",12,{kind:"bâtiment cadastral",name:"Emprise bâtie officielle",id:f.id,source:"Cadastre Etalab / DGFiP",cadastre:true,properties:f.properties});
     }
   }
 }
 function drawBss(g){
   if(!state.layerBss||!state.bss.length||state.zoomIndex<1)return;
-  const visible=state.bss.filter(b=>inExtent(b.lat,b.lon,g.extent));
+  const visible=queryNormalizedPois(g.extent,"bss");
   if(!visible.length)return;
 
-  // À l'échelle communale, les centaines d'ouvrages deviennent des grappes sobres.
   if(state.zoomIndex===1){
     const buckets=new Map();
-    for(const b of visible){
-      const p=coordToGrid(b.lat,b.lon,g.extent);
+    for(const poi of visible){
+      const b=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent);
       const key=`${Math.floor(p.x/6)}:${Math.floor(p.y/4)}`;
-      const bucket=buckets.get(key)||{items:[],sx:0,sy:0};
-      bucket.items.push(b);bucket.sx+=p.x;bucket.sy+=p.y;buckets.set(key,bucket);
+      const bucket=buckets.get(key)||{items:[],pois:[],sx:0,sy:0};
+      bucket.items.push(b);bucket.pois.push(poi);bucket.sx+=p.x;bucket.sy+=p.y;buckets.set(key,bucket);
     }
     for(const bucket of buckets.values()){
       const x=Math.round(bucket.sx/bucket.items.length),y=Math.round(bucket.sy/bucket.items.length);
@@ -3869,7 +4042,8 @@ function drawBss(g){
         kind:count>1?`groupe de ${count} ouvrages BSS`:piezo?"station piézométrique":"forage ou ouvrage BSS",
         name:count>1?`${count} ouvrages dans cette zone`:bucket.items[0].name,
         source:"BRGM · BSS Charente, regroupement visuel à cette échelle",
-        bss:true,piezo,records:bucket.items
+        bss:true,piezo,records:bucket.items,normalizedPois:bucket.pois,
+        poi:true,poiCategory:"bss",poiSourceType:"bss",poiId:`bss-cluster:${x}:${y}`
       };
       putText(g,x,y,piezo?"P":count>1?"B+":"B",piezo?"c-piezo":"c-bss",17,info);
     }
@@ -3877,10 +4051,11 @@ function drawBss(g){
   }
 
   const detail=semanticZoom();
-  const ordered=visible.slice().sort((a,b)=>Number(!!b.piezo)-Number(!!a.piezo)||distanceMeters(state.center,a)-distanceMeters(state.center,b));
-  for(const b of ordered){
-    const p=coordToGrid(b.lat,b.lon,g.extent),info={kind:b.piezo?"station piézométrique":"forage ou ouvrage BSS",name:b.name,id:b.id,source:b.source,depth:b.depth,nature:b.nature,altitude:b.altitude,commune:b.commune,indice:b.indice,place:b.place,bss:true,piezo:!!b.piezo,record:b};
-    const visibility=explorerMarkerState(info,b.lat,b.lon,b.piezo?"piezo":"bss");
+  const ordered=visible.slice().sort((a,b)=>Number(!!b.raw?.piezo)-Number(!!a.raw?.piezo)||distanceMeters(state.center,a)-distanceMeters(state.center,b));
+  for(const poi of ordered){
+    const b=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent);
+    const info=poiFeatureInfo(poi,{kind:b.piezo?"station piézométrique":"forage ou ouvrage BSS",depth:b.depth,nature:b.nature,altitude:b.altitude,commune:b.commune,indice:b.indice,place:b.place,bss:true,piezo:!!b.piezo});
+    const visibility=explorerMarkerState(info,poi.lat,poi.lon,b.piezo?"piezo":"bss");
     if(visibility==="hidden")continue;
     if(visibility==="hint"){put(g,p.x,p.y,"?","c-explorer-hint",17,{kind:"indice documentaire proche",name:"Quelque chose mérite peut-être un examen",source:"Brouillard de connaissance"});continue}
     const glyph=b.piezo?"P≈":currentDepth()<0?"B│":"B•";
@@ -3894,10 +4069,10 @@ function drawBss(g){
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
-  for(const o of state.observations){
-    if(o.mode==="point")continue;
-    const info={kind:o.mode==="sight"?"ligne de visée observée":"zone d’observation approximative",name:o.name||"Observation locale",source:"Observation locale enregistrée dans cet atlas",observation:true,record:o,confidenceLabel:confidenceLabel(o.confidence),season:o.season||"",bearing:o.bearing,distance:o.distance};
-    const p=coordToGrid(o.lat,o.lon,g.extent),visibility=explorerMarkerState(info,o.lat,o.lon,"observation");
+  for(const poi of queryNormalizedPois(g.extent,"observation")){
+    const o=poi.raw;
+    const info=poiFeatureInfo(poi,{kind:o.mode==="sight"?"ligne de visée observée":"zone d’observation approximative",observation:true,confidenceLabel:confidenceLabel(o.confidence),season:o.season||"",bearing:o.bearing,distance:o.distance});
+    const p=coordToGrid(poi.lat,poi.lon,g.extent),visibility=explorerMarkerState(info,poi.lat,poi.lon,"observation");
     if(visibility==="hidden")continue;
     if(visibility==="hint"){put(g,p.x,p.y,"?","c-explorer-hint",19,{kind:"indice d’observation proche",name:"Une observation reste à révéler",source:"Brouillard de connaissance"});continue}
     if(o.mode==="sight"){
@@ -3918,48 +4093,33 @@ function drawObservations(g){
 
 function drawCartofriches(g){
   if(!state.layerCartofriches||currentDepth()!==0||!state.cartofriches.length)return;
-  for(const f of state.cartofriches){
+  for(const poi of queryNormalizedPois(g.extent,"cartofriches")){
+    const f=poi.raw;
     if(!state.cartofrichesIncludeReconverted&&(f.status||"").toLowerCase().includes("reconvert"))continue;
-    if(!inExtent(f.lat,f.lon,g.extent))continue;
-    const m=cartofrichesMarker(f),p=coordToGrid(f.lat,f.lon,g.extent);
-    const info={
-      id:f.id,kind:m.label,name:f.name,source:"Cartofriches / Cerema · Licence Ouverte 2.0",
-      cartofriches:true,siteType:f.type,siteStatus:f.status,address:f.address,surface:f.surface,
+    const m=cartofrichesMarker(f),p=coordToGrid(poi.lat,poi.lon,g.extent);
+    const info=poiFeatureInfo(poi,{
+      kind:m.label,cartofriches:true,siteType:f.type,siteStatus:f.status,address:f.address,surface:f.surface,
       occupation:f.occupation,activity:f.activity,activityEnd:f.activityEnd,updated:f.updated,
       identified:f.identified,commune:f.commune,insee:f.insee,producer:f.producer,
-      sourceNature:f.sourceNature,url:f.url,security:f.security,pollution:f.pollution,
-      record:f,lat:f.lat,lon:f.lon
-    };
-    const visibility=explorerMarkerState(info,f.lat,f.lon,"cartofriches");
+      sourceNature:f.sourceNature,url:f.url,security:f.security,pollution:f.pollution
+    });
+    const visibility=explorerMarkerState(info,poi.lat,poi.lon,"cartofriches");
     if(visibility==="hidden")continue;
-    if(visibility==="hint"){
-      put(g,p.x,p.y,"?","c-explorer-hint",22,{kind:"friche officielle proche",name:"Un site Cartofriches reste à identifier",source:"Brouillard de connaissance"});
-      continue;
-    }
+    if(visibility==="hint"){put(g,p.x,p.y,"?","c-explorer-hint",22,{kind:"friche officielle proche",name:"Un site Cartofriches reste à identifier",source:"Brouillard de connaissance"});continue}
     putText(g,p.x,p.y,m.glyph,m.cls,22,info);
     const detail=semanticZoom();
-    if(state.layerLabels&&detail.poiLabel>0&&f.name){
-      tryMapLabel(g,p,f.name,"c-label",14,info,"poi",detail.poiLabel,false);
-    }
+    if(state.layerLabels&&detail.poiLabel>0&&f.name)tryMapLabel(g,p,f.name,"c-label",14,info,"poi",detail.poiLabel,false);
   }
 }
 
 function drawOfflineDemoPoints(g){
   if(!OFFLINE_TEST||currentDepth()!==0||state.cartofriches.length||state.loreItems.length||state.localCavities.length)return;
-  for(const d of OFFLINE_DEMO_POINTS){
-    if(!inExtent(d.lat,d.lon,g.extent))continue;
-    const p=coordToGrid(d.lat,d.lon,g.extent);
-    const info={
-      id:d.id,kind:d.kind,name:d.name,note:d.note,
-      source:"Démonstration embarquée · donnée synthétique, non géographique",
-      demo:true,lat:d.lat,lon:d.lon
-    };
-    const visibility=explorerMarkerState(info,d.lat,d.lon,"demo");
+  for(const poi of queryNormalizedPois(g.extent,"demo")){
+    const d=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent);
+    const info=poiFeatureInfo(poi,{kind:d.kind,note:d.note,source:"Démonstration embarquée · donnée synthétique, non géographique",demo:true});
+    const visibility=explorerMarkerState(info,poi.lat,poi.lon,"demo");
     if(visibility==="hidden")continue;
-    if(visibility==="hint"){
-      put(g,p.x,p.y,"?","c-explorer-hint",21,{kind:"indice de démonstration",name:"Une balise de test est proche",source:"Démonstration embarquée"});
-      continue;
-    }
+    if(visibility==="hint"){put(g,p.x,p.y,"?","c-explorer-hint",21,{kind:"indice de démonstration",name:"Une balise de test est proche",source:"Démonstration embarquée"});continue}
     putText(g,p.x,p.y,d.glyph,"c-demo",21,info);
   }
 }
@@ -3967,20 +4127,21 @@ function drawOfflineDemoPoints(g){
 
 function drawHeritage(g){
   if(!state.layerHeritage||currentDepth()!==0)return;
-  const visible=enabledHeritageItems().filter(v=>inExtent(v.lat,v.lon,g.extent));if(!visible.length)return;
+  const visible=queryNormalizedPois(g.extent,"heritage").filter(p=>state.heritageEnabled[p.raw?.category]!==false);
+  if(!visible.length)return;
   if(state.zoomIndex<=1){
     const stepX=state.zoomIndex===0?9:6,stepY=state.zoomIndex===0?5:4,buckets=new Map();
-    for(const item of visible){const p=coordToGrid(item.lat,item.lon,g.extent),key=`${Math.floor(p.x/stepX)}:${Math.floor(p.y/stepY)}`,b=buckets.get(key)||{items:[],sx:0,sy:0};b.items.push(item);b.sx+=p.x;b.sy+=p.y;buckets.set(key,b)}
+    for(const poi of visible){const p=coordToGrid(poi.lat,poi.lon,g.extent),key=`${Math.floor(p.x/stepX)}:${Math.floor(p.y/stepY)}`,b=buckets.get(key)||{items:[],pois:[],sx:0,sy:0};b.items.push(poi.raw);b.pois.push(poi);b.sx+=p.x;b.sy+=p.y;buckets.set(key,b)}
     for(const b of buckets.values()){
-      const x=Math.round(b.sx/b.items.length),y=Math.round(b.sy/b.items.length),single=b.items.length===1?b.items[0]:null,d=heritageMarkerDefinition(single?.category||"monument");
-      const info=single?heritageFeatureInfo(single):{kind:`groupe de ${b.items.length} lieux patrimoniaux`,name:`${b.items.length} lieux documentés dans cette zone`,source:"Regroupement visuel de plusieurs sources patrimoniales",heritage:true,records:b.items};
+      const x=Math.round(b.sx/b.items.length),y=Math.round(b.sy/b.items.length),single=b.items.length===1?b.items[0]:null,singlePoi=b.pois.length===1?b.pois[0]:null,d=heritageMarkerDefinition(single?.category||"monument");
+      const info=singlePoi?poiFeatureInfo(singlePoi,heritageFeatureInfo(single)):{kind:`groupe de ${b.items.length} lieux patrimoniaux`,name:`${b.items.length} lieux documentés dans cette zone`,source:"Regroupement visuel de plusieurs sources patrimoniales",heritage:true,records:b.items,normalizedPois:b.pois,poi:true,poiCategory:"heritage",poiSourceType:"heritage",poiId:`heritage-cluster:${x}:${y}`};
       putText(g,x,y,single?d.glyph:"P+",single?d.cls:"c-heritage-monument",21,info);
     }
     return;
   }
-  const ordered=visible.slice().sort((a,b)=>heritagePriority(b)-heritagePriority(a));
-  for(const item of ordered){
-    const p=coordToGrid(item.lat,item.lon,g.extent),d=heritageMarkerDefinition(item.category),info=heritageFeatureInfo(item);
+  const ordered=visible.slice().sort((a,b)=>heritagePriority(b.raw)-heritagePriority(a.raw));
+  for(const poi of ordered){
+    const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),d=heritageMarkerDefinition(item.category),info=poiFeatureInfo(poi,heritageFeatureInfo(item));
     putText(g,p.x,p.y,d.glyph,d.cls,heritagePriority(item),info);
     const detail=semanticZoom();if(state.layerLabels&&detail.poiLabel>0&&item.name)tryMapLabel(g,p,item.name,"c-label",15,info,"poi",detail.poiLabel,false);
   }
@@ -3993,35 +4154,25 @@ function heritageFeatureInfo(item){
 
 function drawLore(g){
   if(!state.layerLore||currentDepth()!==0||!state.loreItems.length)return;
-  for(const item of state.loreItems){
-    if(!inExtent(item.lat,item.lon,g.extent))continue;
-    const p=coordToGrid(item.lat,item.lon,g.extent),def=loreMarkerDefinition(item.category);
-    const info={
-      kind:def.label,
-      name:item.name||def.label,
-      source:item.source||"Repère local enregistré dans cet atlas",
-      lore:true,
-      category:item.category,
-      categoryLabel:def.label,
-      period:item.period||"",
-      note:item.note||"",
-      record:item
-    };
-    const visibility=explorerMarkerState(info,item.lat,item.lon,"lore");
+  for(const poi of queryNormalizedPois(g.extent,"lore")){
+    const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),def=loreMarkerDefinition(item.category);
+    const info=poiFeatureInfo(poi,{
+      kind:def.label,source:item.source||"Repère local enregistré dans cet atlas",
+      lore:true,category:item.category,categoryLabel:def.label,period:item.period||"",note:item.note||""
+    });
+    const visibility=explorerMarkerState(info,poi.lat,poi.lon,"lore");
     if(visibility==="hidden")continue;
     if(visibility==="hint"){put(g,p.x,p.y,"?","c-explorer-hint",20,{kind:"lieu intrigant à proximité",name:"Un détail du paysage attire l’attention",source:"Brouillard de connaissance"});continue}
     putText(g,p.x,p.y,def.glyph,def.cls,20,info);
     const detail=semanticZoom();
-    if(state.layerLabels&&detail.poiLabel>0&&item.name){
-      tryMapLabel(g,p,item.name,"c-label",14,info,"poi",detail.poiLabel,false);
-    }
+    if(state.layerLabels&&detail.poiLabel>0&&item.name)tryMapLabel(g,p,item.name,"c-label",14,info,"poi",detail.poiLabel,false);
   }
 }
 
 function renderSurface(g){
   if(state.osm){
     const z=currentZoom(), e=g.extent;
-    const features=state.osm.filter(f=>coordsIntersectExtent(f,e));
+    const features=queryOsmFeatures(e);
     const polygons=[],lines=[],labels=[];
     for(const f of features){
       const t=f.tags;
@@ -4133,7 +4284,9 @@ function renderSurface(g){
   if(state.layerHouse){
     const p=coordToGrid(CONFIG.house.lat,CONFIG.house.lon,g.extent);
     const source=state.houseBuilding?"centre d’un bâtiment du Cadastre Etalab, rapproché du point BAN":state.address?"Géoplateforme / Base Adresse Nationale":"repère de secours ou réglage manuel";
-    put(g,p.x,p.y,"@","c-house",24,{kind:"maison",name:"42 rue de la Falaise",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""});
+    ensureSpatialIndexes();
+    const housePoi=spatialRuntime.normalizedPois.find(v=>v.sourceType==="house");
+    put(g,p.x,p.y,"@","c-house",24,housePoi?poiFeatureInfo(housePoi,{kind:"maison",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""}):{kind:"maison",name:"42 rue de la Falaise",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""});
   }
 }
 
@@ -4189,23 +4342,23 @@ function cavityInfo(c,marker){
 function drawCavities(g){
   if(!state.layerCavities||!state.cavities.length)return;
   const depth=currentDepth();
-  for(const c of state.cavities){
+  for(const poi of queryNormalizedPois(g.extent,"cavity")){
+    const c=poi.raw;
     if(c.local&&!state.layerObservations)continue;
-    if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon)||!inExtent(c.lat,c.lon,g.extent))continue;
-    const p=coordToGrid(c.lat,c.lon,g.extent),m=cavityMarker(c),info=cavityInfo(c,m);
-    const visibility=explorerMarkerState(info,c.lat,c.lon,"cavity");
+    const p=coordToGrid(poi.lat,poi.lon,g.extent),m=cavityMarker(c),info=poiFeatureInfo(poi,cavityInfo(c,m));
+    const visibility=explorerMarkerState(info,poi.lat,poi.lon,"cavity");
     if(visibility==="hidden")continue;
     if(visibility==="hint"){put(g,p.x,p.y,"?","c-explorer-hint",18,{kind:"anomalie souterraine proche",name:"Un repère reste à identifier",source:"Brouillard de connaissance"});continue}
     putText(g,p.x,p.y,m.glyph,m.cls,18,info);
     const detail=semanticZoom();
-    if(depth===0&&state.layerLabels&&detail.poiLabel>0){
-      tryMapLabel(g,p,c.name||"","c-label",14,info,"poi",detail.poiLabel,false);
-    }
+    if(depth===0&&state.layerLabels&&detail.poiLabel>0)tryMapLabel(g,p,c.name||"","c-label",14,info,"poi",detail.poiLabel,false);
   }
 }
 
 function drawUserLocation(g){
   const loc=state.userLocation;if(!loc||!Number.isFinite(loc.lat)||!Number.isFinite(loc.lon)||!inExtent(loc.lat,loc.lon,g.extent))return;
+  ensureSpatialIndexes();
+  const poi=spatialRuntime.normalizedPois.find(p=>p.sourceType==="location");
   const p=coordToGrid(loc.lat,loc.lon,g.extent),z=currentZoom();
   const metersPerCell=Math.max(1,((z.widthKm*1000/CONFIG.gridW)+(z.heightKm*1000/CONFIG.gridH))/2);
   const radius=clamp(Math.round((Number(loc.accuracy)||0)/metersPerCell),0,6);
@@ -4216,7 +4369,7 @@ function drawUserLocation(g){
       put(g,x,y,"·","c-user-accuracy",5,{kind:"incertitude GPS",name:`Précision approximative ± ${Math.round(loc.accuracy)} m`,source:"Géolocalisation ponctuelle du navigateur"});
     }
   }
-  put(g,p.x,p.y,"⌖","c-user-position",50,{
+  put(g,p.x,p.y,"⌖","c-user-position",50,poi?poiFeatureInfo(poi,{accuracy:loc.accuracy,timestamp:loc.timestamp}):{
     kind:"position actuelle",name:"Ma position",source:"Géolocalisation ponctuelle du navigateur",
     lat:loc.lat,lon:loc.lon,accuracy:loc.accuracy,timestamp:loc.timestamp
   });
@@ -4463,11 +4616,12 @@ function drawHypothesisModel(g,c,model){
 function drawHypotheses(g){
   const depth=currentDepth();
   if(depth===0||!state.layerHypothesis||!state.cavities.length)return;
-  for(const c of state.cavities){
+  const searchExtent=expandExtentBox(g.extent,1.7);
+  for(const poi of queryNormalizedPois(searchExtent,"cavity")){
+    const c=poi.raw;
     if(c.local&&!state.layerObservations)continue;
-    if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon))continue;
-    const marker=cavityMarker(c),info=cavityInfo(c,marker);
-    const visibility=explorerMarkerState(info,c.lat,c.lon,"cavity");
+    const marker=cavityMarker(c),info=poiFeatureInfo(poi,cavityInfo(c,marker));
+    const visibility=explorerMarkerState(info,poi.lat,poi.lon,"cavity");
     if(visibility!=="known")continue;
     const model=getHypothesisModel(c,depth);
     if(!model||!hypothesisModelIntersects(c,model,g.extent))continue;
@@ -4476,9 +4630,9 @@ function drawHypotheses(g){
   if(state.scenario==="extensive")drawPossibleConnections(g);
 }
 function drawPossibleConnections(g){
-  const depth=currentDepth();
-  const candidates=state.cavities.filter(c=>{
-    if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon)||!cavityType(c).includes("carri"))return false;
+  const depth=currentDepth(),searchExtent=expandExtentBox(g.extent,2.1);
+  const candidates=queryNormalizedPois(searchExtent,"cavity").map(p=>p.raw).filter(c=>{
+    if(!cavityType(c).includes("carri"))return false;
     if(!depthStrength(c,depth))return false;
     return true;
   });
@@ -4543,6 +4697,7 @@ function poiEffectKind(cell){
   if(!ambientAllowed()||!cell)return "";
   const cls=String(cell.cls||""),f=cell.feature||{};
   if(cls.includes("c-label"))return "";
+  if(f.poiCategory)return f.poiCategory;
   if(cls.includes("c-user-position"))return "location";
   if(cls.includes("c-house")||cls.includes("c-address"))return "home";
   if(cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
@@ -4566,7 +4721,9 @@ function render(reason="direct"){
   if(!drag)clearPanPreview();
   const responsiveMain=document.querySelector("main");
   if(responsiveMain)applyResponsiveGridProfile(responsiveMain);
-  const z=currentZoom(),depth=currentDepth(),extent=extentFor(),g=createGrid(extent);
+  const z=currentZoom(),depth=currentDepth(),extent=extentFor();
+  spatialRuntime.lastQueryCandidates=0;spatialRuntime.lastQueryResults=0;ensureSpatialIndexes();
+  const g=createGrid(extent);
   document.body.dataset.depthBand=depth===0?"surface":depth>=-5?"shallow":depth>=-15?"middle":"deep";
   if(depth===0){
     if(state.layerSurface)renderSurface(g);
@@ -5009,7 +5166,7 @@ function eventMapPosition(ev){
 function coarsePointer(){return matchMedia?.("(pointer: coarse)")?.matches||navigator.maxTouchPoints>0}
 function selectableFeature(cell){
   const f=cell?.feature;
-  return !!(f&&(f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.cartofriches));
+  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.cartofriches));
 }
 function assistedCell(x,y,radius=2){
   if(!state.lastGrid)return {x,y,snapped:false};
@@ -5035,6 +5192,8 @@ function closeSelectionAssist(){
 }
 function cellSelectionSound(cell){
   const f=cell?.feature||{},cls=String(cell?.cls||""),tags=f.tags||{};
+  const normalized={cavity:"cellCavity",bss:"cellBss",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
+  if(normalized)return normalized;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0||cell?.confidence)return "cellUnderground";
   if(f.kind==="maison"||cls.includes("house"))return "cellHome";
@@ -5061,6 +5220,7 @@ function playCellSelectionSound(cell,{snapped=false}={}){
 function poiSelectionKind(cell){
   if(!cell)return "";
   const cls=String(cell.cls||""),f=cell.feature||{},tags=f.tags||{};
+  if(f.poiCategory)return f.poiCategory;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(f.kind==="maison"||cls.includes("c-house")||cls.includes("c-address"))return "home";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "cavity";
@@ -5206,17 +5366,30 @@ function featureNarrative(f){
 }
 function nearbyNarrative(x,y){
   if(!state.lastGrid)return "";
-  const seen=new Set(),found=[];
-  for(let r=1;r<=4;r++)for(let yy=y-r;yy<=y+r;yy++)for(let xx=x-r;xx<=x+r;xx++){
-    if(Math.max(Math.abs(xx-x),Math.abs(yy-y))!==r)continue;
-    const f=state.lastGrid.grid[yy]?.[xx]?.feature;
-    if(!f||!f.name)continue;
-    const key=f.id||`${f.kind}:${f.name}`;if(seen.has(key))continue;seen.add(key);
-    found.push({f,r});if(found.length>=2)break;
+  const center=gridToCoord(x,y,state.lastGrid.extent),z=currentZoom();
+  const latRadius=(z.heightKm/111.32/Math.max(1,CONFIG.gridH-1))*4.5;
+  const lonRadius=(z.widthKm/kmPerLon(center.lat)/Math.max(1,CONFIG.gridW-1))*4.5;
+  const extent={west:center.lon-lonRadius,east:center.lon+lonRadius,south:center.lat-latRadius,north:center.lat+latRadius};
+  const current=state.lastGrid.grid[y]?.[x]?.feature,currentId=current?.poiId||current?.id;
+  const indexed=queryNormalizedPois(extent)
+    .filter(p=>p.title&&p.uid!==currentId)
+    .sort((a,b)=>distanceMeters(center,a)-distanceMeters(center,b));
+  const names=[],seen=new Set();
+  for(const p of indexed){
+    const key=p.uid||`${p.category}:${p.title}`;if(seen.has(key))continue;seen.add(key);names.push(p.title);
+    if(names.length>=2)break;
   }
-  if(!found.length)return "";
-  if(found.length===1)return `Dans le voisinage immédiat, la carte laisse aussi entrevoir <strong>${esc(found[0].f.name)}</strong>.`;
-  return `À quelques cellules, <strong>${esc(found[0].f.name)}</strong> et <strong>${esc(found[1].f.name)}</strong> composent le voisinage cartographique.`;
+  if(!names.length){
+    for(let r=1;r<=4&&names.length<2;r++)for(let yy=y-r;yy<=y+r;yy++)for(let xx=x-r;xx<=x+r;xx++){
+      if(Math.max(Math.abs(xx-x),Math.abs(yy-y))!==r)continue;
+      const f=state.lastGrid.grid[yy]?.[xx]?.feature;if(!f||!f.name)continue;
+      const key=f.poiId||f.id||`${f.kind}:${f.name}`;if(seen.has(key))continue;seen.add(key);names.push(f.name);
+      if(names.length>=2)break;
+    }
+  }
+  if(!names.length)return "";
+  if(names.length===1)return `Dans le voisinage immédiat, la carte laisse aussi entrevoir <strong>${esc(names[0])}</strong>.`;
+  return `À quelques cellules, <strong>${esc(names[0])}</strong> et <strong>${esc(names[1])}</strong> composent le voisinage cartographique.`;
 }
 function technicalCellLines(cell,x,y){
   const c=gridToCoord(x,y,state.lastGrid.extent),parts=[];
@@ -5366,7 +5539,7 @@ function showHover(ev){
   els.hoverTip.style.top=`${Math.max(pad,top)}px`;
 }
 function saveHousePosition(coord,sourceLabel="placement manuel",persist=true){
-  CONFIG.house={lat:+coord.lat,lon:+coord.lon};
+  CONFIG.house={lat:+coord.lat,lon:+coord.lon};markSpatialIndexesDirty();
   if(els.houseLat){els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7)}
   if(persist){HOUSE_WAS_SAVED=true;try{localStorage.setItem("atlas-karst-house-v06",JSON.stringify(CONFIG.house));localStorage.removeItem("atlas-karst-house-v05")}catch{}}
   state.placingHouse=false;els.map.classList.remove("placing-house");
@@ -5429,7 +5602,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   if(!snapshot||snapshot.format!=="atlas-karst-snapshot"||!snapshot.data)throw new Error("Format d’instantané non reconnu");
   const d=snapshot.data,v=snapshot.view||{};
   if(snapshot.house&&Number.isFinite(+snapshot.house.lat)&&Number.isFinite(+snapshot.house.lon)){
-    CONFIG.house={lat:+snapshot.house.lat,lon:+snapshot.house.lon};
+    CONFIG.house={lat:+snapshot.house.lat,lon:+snapshot.house.lon};markSpatialIndexesDirty();
     els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7);
   }
   state.osm=Array.isArray(d.osm)?d.osm:[];state.osmMeta=d.osmMeta||null;
@@ -5493,7 +5666,7 @@ function exportTxt(){
   for(let y=0;y<CONFIG.gridH;y++)lines.push(state.lastGrid.grid[y].map(c=>c.ch).join(""));
   const z=currentZoom(),d=currentDepth();
   const header=[
-    `ATLAS KARST ASCII v${APP_VERSION} · cadrage stable`,
+    `ATLAS KARST ASCII v${APP_VERSION} · index spatial`,
     `Échelle : ${z.label} (${z.widthKm} × ${z.heightKm} km)`,
     `Centre : ${state.center.lat}, ${state.center.lon}`,
     `Profondeur : ${d===0?"surface":d+" m"}`,
@@ -5749,7 +5922,7 @@ els.resetHouse.addEventListener("click",()=>{
 els.geocodeHouse.addEventListener("click",async()=>{
   const a=await fetchAddress(true);if(!a)return;
   if(state.cadastreBuildings.length){
-    CONFIG.house={lat:a.lat,lon:a.lon};
+    CONFIG.house={lat:a.lat,lon:a.lon};markSpatialIndexesDirty();
     state.address=a;
     snapHouseToBuilding(true);
   }else{
@@ -5772,7 +5945,7 @@ els.addLocalMarker.addEventListener("click",()=>{
   const target=state.selectedCell.coord,confidence=els.observationConfidence.value,season=els.observationSeason.value.trim();
   const o={id:`OBS-${Date.now()}`,mode,glyph,name,lat:target.lat,lon:target.lon,confidence,season,radius:clamp(Number(els.observationRadius.value)||80,10,1000),source:"Observation locale enregistrée dans cet atlas"};
   if(mode==="sight"){o.origin={...CONFIG.house};o.distance=distanceMeters(CONFIG.house,target);o.bearing=bearingDegrees(CONFIG.house,target)}
-  state.observations.push(o);saveLocalCavities();refreshCavities();render();
+  state.observations.push(o);markSpatialIndexesDirty();saveLocalCavities();refreshCavities();render();
   els.localHelp.innerHTML=mode==="sight"?`Visée <strong>${o.bearing.toFixed(0)}°</strong> sur environ <strong>${Math.round(o.distance)} m</strong> enregistrée.`:`Observation <strong>${esc(name)}</strong> enregistrée avec une confiance ${confidenceLabel(confidence)}.`;
   els.localName.value="";
 });
@@ -5799,7 +5972,7 @@ els.addLoreItem.addEventListener("click",()=>{
     lat:target.lat,
     lon:target.lon
   };
-  state.loreItems.push(item);saveLoreItems();render();
+  state.loreItems.push(item);markSpatialIndexesDirty();saveLoreItems();render();
   els.loreHelp.innerHTML=`Repère <strong>${esc(item.name)}</strong> enregistré en catégorie <strong>${def.glyph}</strong>.`;
   els.loreName.value=""; els.lorePeriod.value=""; els.loreSource.value=""; els.loreNote.value="";
 });
