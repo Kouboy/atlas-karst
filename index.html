@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.12d · points normalisés et index spatial</title>
+<title>Atlas Karst ASCII v0.12e · rendu différentiel et survol fluide</title>
 <style>
 :root{
   color-scheme:dark;
@@ -79,7 +79,17 @@ select{width:100%}
 #map{margin:0;padding:var(--map-padding);display:inline-block;white-space:pre;font-size:var(--map-font-size);line-height:1.04;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:paint style}
 #map.dragging{cursor:grabbing;transition:none}.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
 #map.placing-house{cursor:var(--atlas-crosshair)}
+/* Le survol vit dans un calque fixe indépendant. Il ne modifie plus les milliers
+   de cellules du <pre> et suit le pointeur au rythme de requestAnimationFrame. */
 .cell.hovered{position:relative;z-index:3;outline:1px solid rgba(121,226,171,.85);outline-offset:-1px;background:rgba(121,226,171,.17)}
+.hover-cell-indicator{
+  position:fixed;left:0;top:0;z-index:999;box-sizing:border-box;pointer-events:none;
+  opacity:0;visibility:hidden;border:1px solid rgba(121,226,171,.94);
+  background:rgba(121,226,171,.13);box-shadow:0 0 0 1px rgba(2,8,5,.72),0 0 8px rgba(121,226,171,.26);
+  transform:translate3d(-100px,-100px,0);will-change:transform;contain:layout paint style;
+  transition:opacity .06s linear
+}
+.hover-cell-indicator.visible{opacity:1;visibility:visible}
 .cell.selection-neighbor{filter:brightness(.62) saturate(.72);opacity:.78;background:rgba(0,0,0,.18)}
 .cell.selected{
   position:relative;z-index:5;outline:2px solid var(--selection);outline-offset:-2px;
@@ -415,7 +425,10 @@ body.debug-mode section.debug-only{display:block!important}
 @media(max-width:520px){.debug-kpis{grid-template-columns:1fr}}
 
 
-/* V0.12d — feedback de point d’intérêt ancré à la cellule elle-même.
+/* V0.12e — sélection et survol détachés du rendu complet.
+   Le feedback de point d’intérêt reste ancré à la cellule elle-même.
+
+   V0.12d — feedback de point d’intérêt ancré à la cellule elle-même.
    L’ancien calque absolu est masqué : il dépendait du scroll du viewport et
    pouvait dériver après redimensionnement, zoom ou déplacement. */
 #poiSelectionFx{display:none!important}
@@ -469,7 +482,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12d</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.12e</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -877,6 +890,7 @@ body.debug-mode section.debug-only{display:block!important}
     </div>
     <div class="map-tip" id="mapTip">survol = détail · toucher = sélection assistée · glisser = déplacement · ⌖ = position</div>
   </div>
+  <div class="hover-cell-indicator" id="hoverCellIndicator" aria-hidden="true"></div>
   <div class="hover-tip" id="hoverTip" role="tooltip"></div>
 
   <section class="card readout map-bound" id="readout" data-sheet-state="peek">
@@ -901,7 +915,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.12d";
+const APP_VERSION = "0.12e";
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
@@ -1186,7 +1200,7 @@ els = Object.fromEntries([
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
-  "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip",
+  "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
   "scenario","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"
 ].map(id=>[id,document.getElementById(id)]));
@@ -4646,16 +4660,9 @@ function drawPossibleConnections(g){
       (pb.x<0||pb.y<0||pb.x>=CONFIG.gridW||pb.y>=CONFIG.gridH)
     );
     if(bothOutside)continue;
-    const info={
-      kind:"connexion hypothétique très faible",
-      name:`${a.name} ↔ ${b.name}`,
-      source:"moteur d’hypothèse métrique stable",
-      comments:`Distance réelle entre repères : ${Math.round(distance)} m`
-    };
-    let n=0;
-    bresenham(pa.x,pa.y,pb.x,pb.y,(x,y)=>{
-      if(n++%2===0)put(g,x,y,"?","c-hyp-low",10,info,"low");
-    });
+    const confidence=distance<300?"med":"low";
+    const info={kind:"connexion possible entre exploitations",name:`${cavityName(a)} ↔ ${cavityName(b)}`,source:"hypothèse géométrique générée par l’Atlas",confidenceLabel:confidence==="med"?"moyenne":"faible"};
+    let n=0;bresenham(pa.x,pa.y,pb.x,pb.y,(x,y)=>{if(n++%3===0)put(g,x,y,"·",confidence==="med"?"c-hyp-med":"c-hyp-low",9,info,confidence)});
   }
 }
 
@@ -4717,6 +4724,7 @@ function scheduleRender(reason="scheduled"){
 }
 function render(reason="direct"){
   const renderStarted=performance.now();
+  hideHover();
   if(debugState.enabled)debugState.lastReason=reason;
   if(!drag)clearPanPreview();
   const responsiveMain=document.querySelector("main");
@@ -4744,28 +4752,21 @@ function render(reason="direct"){
     drawUserLocation(g);
   }
   state.lastGrid=g;
-  let selectedGrid=null;
-  if(state.selectedCell&&inExtent(state.selectedCell.coord.lat,state.selectedCell.coord.lon,extent)){
-    const p=coordToGrid(state.selectedCell.coord.lat,state.selectedCell.coord.lon,extent);
-    selectedGrid={x:clamp(p.x,0,CONFIG.gridW-1),y:clamp(p.y,0,CONFIG.gridH-1)};
-  }
-  els.viewport.classList.toggle("selection-active",!!selectedGrid);
   let out="",visiblePoiCount=0;
   for(let y=0;y<CONFIG.gridH;y++){
     for(let x=0;x<CONFIG.gridW;x++){
       const c=g.grid[y][x], shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
-      const selected=selectedGrid&&selectedGrid.x===x&&selectedGrid.y===y?" selected":"";
-      const neighbor=selectedGrid&&!selected&&Math.abs(selectedGrid.x-x)<=1&&Math.abs(selectedGrid.y-y)<=1?" selection-neighbor":"";
       const attrs=`data-x="${x}" data-y="${y}"`;
       const glyph=c.ch;
       const poiKind=poiEffectKind(c),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
       if(poiKind)visiblePoiCount++;
       const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-      out+=`<span class="cell ${c.cls||""}${shade}${selected}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
+      out+=`<span class="cell ${c.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
     }
     out+="\n";
   }
   els.map.innerHTML=out;
+  syncSelectionDom();
   if(pendingPoiFeedback)requestAnimationFrame(applyPendingPoiSelectionFeedback);
   updateSelectionAssist();
   scheduleOsmEnsure();
@@ -5186,6 +5187,36 @@ function assistedCell(x,y,radius=2){
   }
   return best?{x:best.x,y:best.y,snapped:true}:{x,y,snapped:false};
 }
+let selectedDomCell=null,selectionNeighborDomCells=[];
+function mapCellElement(x,y){
+  if(!els.map||x<0||y<0||x>=CONFIG.gridW||y>=CONFIG.gridH)return null;
+  return els.map.children[y*CONFIG.gridW+x]||null;
+}
+function clearSelectionDom(){
+  if(selectedDomCell)selectedDomCell.classList.remove("selected");
+  for(const el of selectionNeighborDomCells)el?.classList.remove("selection-neighbor");
+  selectedDomCell=null;selectionNeighborDomCells=[];
+}
+function syncSelectionDom(){
+  clearSelectionDom();
+  if(!state.selectedCell||!state.lastGrid||!inExtent(state.selectedCell.coord.lat,state.selectedCell.coord.lon,state.lastGrid.extent)){
+    els.viewport?.classList.remove("selection-active");
+    return false;
+  }
+  const p=coordToGrid(state.selectedCell.coord.lat,state.selectedCell.coord.lon,state.lastGrid.extent);
+  const x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
+  const target=mapCellElement(x,y);
+  if(!target){els.viewport?.classList.remove("selection-active");return false}
+  state.selectedCell.x=x;state.selectedCell.y=y;state.selectedCell.feature=state.lastGrid.grid[y]?.[x]?.feature||null;
+  target.classList.add("selected");selectedDomCell=target;
+  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+    if(!dx&&!dy)continue;
+    const neighbor=mapCellElement(x+dx,y+dy);
+    if(neighbor){neighbor.classList.add("selection-neighbor");selectionNeighborDomCells.push(neighbor)}
+  }
+  els.viewport?.classList.add("selection-active");
+  return true;
+}
 function closeSelectionAssist(){
   state.selectionAssistVisible=false;
   updateSelectionAssist();
@@ -5240,7 +5271,7 @@ function applyPendingPoiSelectionFeedback(){
   if(remaining<=0){pendingPoiFeedback=null;return}
   const p=coordToGrid(pending.coord.lat,pending.coord.lon,state.lastGrid.extent);
   const x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
-  const glyph=els.map.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+  const glyph=mapCellElement(x,y);
   if(!glyph)return;
   els.map.querySelectorAll(".cell.poi-hit-active").forEach(el=>{
     el.classList.remove("poi-hit-active");delete el.dataset.poiKind;
@@ -5284,7 +5315,8 @@ function selectGridCell(x,y,{assist=false,note="",showAssist=true,confirmIfSame=
   state.selectionSnapNote=picked.snapped?`Sélection accrochée à ${cell.feature?.name||cell.feature?.kind||"un repère voisin"}.`:note;
   state.selectionAssistVisible=showAssist;
   playCellSelectionSound(cell,{snapped:picked.snapped});
-  render();
+  syncSelectionDom();
+  updateSelectionAssist();
   triggerPoiSelectionFeedback(cell,x,y);
   setReadoutContent(cellDescription(cell,x,y)+`<div class="small" style="margin-top:7px">${esc(state.selectionSnapNote||"Sélection mémorisée")}. Utilise le réticule pour corriger d’une case, puis ✓ pour le refermer.</div>`,{title:cell.feature?.name||cell.feature?.kind||"Case sélectionnée",sheet:"medium"});
 }
@@ -5513,30 +5545,47 @@ function hoverDescription(cell,x,y){
     ${f?.source?`<div class="tip-source">${esc(f.source)} · clique pour la fiche complète</div>`:`<div class="tip-source">clique pour mémoriser cette case</div>`}
   `;
 }
-let hoveredElement=null,hoveredKey="";
+let hoveredKey="",hoverFrame=0,hoverPending=null,hoverTipWidth=0,hoverTipHeight=0;
 function hideHover(){
-  if(hoveredElement)hoveredElement.classList.remove("hovered");
-  hoveredElement=null;hoveredKey="";els.hoverTip.classList.remove("visible");
+  hoverPending=null;hoveredKey="";
+  els.hoverTip.classList.remove("visible");
+  els.hoverCellIndicator?.classList.remove("visible");
 }
-function showHover(ev){
-  if(state.placingHouse||drag){hideHover();return}
-  const t=ev.target.closest?.(".cell");
-  if(!t||!state.lastGrid){hideHover();return}
+function flushHover(){
+  hoverFrame=0;
+  const pending=hoverPending;hoverPending=null;
+  if(!pending||state.placingHouse||drag||pinch||!state.lastGrid){hideHover();return}
+  const t=cellElementAtClient(pending.clientX,pending.clientY);
+  if(!t){hideHover();return}
   const x=+t.dataset.x,y=+t.dataset.y,cell=state.lastGrid.grid[y]?.[x];
   if(!cell||(cell.ch===" "&&!cell.feature)){hideHover();return}
   const key=`${x}:${y}`;
   if(key!==hoveredKey){
-    if(hoveredElement)hoveredElement.classList.remove("hovered");
-    hoveredElement=t;hoveredElement.classList.add("hovered");hoveredKey=key;
+    hoveredKey=key;
     els.hoverTip.innerHTML=hoverDescription(cell,x,y);
     els.hoverTip.classList.add("visible");
+    const tipRect=els.hoverTip.getBoundingClientRect();
+    hoverTipWidth=tipRect.width;hoverTipHeight=tipRect.height;
   }
-  const pad=12,offset=15,tw=els.hoverTip.offsetWidth,th=els.hoverTip.offsetHeight;
-  let left=ev.clientX+offset,top=ev.clientY+offset;
-  if(left+tw>window.innerWidth-pad)left=ev.clientX-tw-offset;
-  if(top+th>window.innerHeight-pad)top=ev.clientY-th-offset;
-  els.hoverTip.style.left=`${Math.max(pad,left)}px`;
-  els.hoverTip.style.top=`${Math.max(pad,top)}px`;
+  const cellRect=t.getBoundingClientRect();
+  const indicator=els.hoverCellIndicator;
+  if(indicator){
+    indicator.style.width=`${Math.max(2,cellRect.width)}px`;
+    indicator.style.height=`${Math.max(2,cellRect.height)}px`;
+    indicator.style.transform=`translate3d(${cellRect.left}px,${cellRect.top}px,0)`;
+    indicator.classList.add("visible");
+  }
+  const pad=12,offset=15,tw=hoverTipWidth||els.hoverTip.offsetWidth,th=hoverTipHeight||els.hoverTip.offsetHeight;
+  let left=pending.clientX+offset,top=pending.clientY+offset;
+  if(left+tw>window.innerWidth-pad)left=pending.clientX-tw-offset;
+  if(top+th>window.innerHeight-pad)top=pending.clientY-th-offset;
+  els.hoverTip.style.transform=`translate3d(${Math.max(pad,left)}px,${Math.max(pad,top)}px,0)`;
+  els.hoverTip.style.left="0";els.hoverTip.style.top="0";
+}
+function showHover(ev){
+  if(ev.pointerType&&ev.pointerType!=="mouse")return;
+  hoverPending={clientX:ev.clientX,clientY:ev.clientY};
+  if(!hoverFrame)hoverFrame=requestAnimationFrame(flushHover);
 }
 function saveHousePosition(coord,sourceLabel="placement manuel",persist=true){
   CONFIG.house={lat:+coord.lat,lon:+coord.lon};markSpatialIndexesDirty();
