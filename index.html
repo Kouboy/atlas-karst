@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.13c · Pan ancré et limites visibles</title>
+<title>Atlas Karst ASCII v0.13d · Ciblage Canvas centré</title>
 <style>
 :root{
   color-scheme:dark;
@@ -547,7 +547,7 @@ body.debug-mode section.debug-only{display:block!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13c</div>
+      <div class="eyebrow">PROTOTYPE EXPLORATOIRE · V0.13d</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Atlas autonome · lecture hiérarchisée · données sourcées</div>
       <div class="sidebar-tools">
@@ -990,7 +990,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.13c";
+const APP_VERSION = "0.13d";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
 document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
@@ -1381,10 +1381,25 @@ function drawCanvasMap(grid=state.lastGrid){
   ctx.globalAlpha=1;ctx.shadowBlur=0;
   return visiblePoiCount;
 }
+function canvasDisplayMetrics(){
+  if(!CANVAS_RENDERER||!els.mapCanvas)return null;
+  const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas.getBoundingClientRect();
+  if(!m||!r.width||!r.height)return null;
+  // Le bitmap peut être redimensionné par la mise en page, le zoom navigateur ou
+  // une transformation temporaire. Tous les calculs interactifs doivent employer
+  // la même géométrie réellement affichée, jamais les dimensions théoriques seules.
+  const scaleX=m.width?Math.abs(r.width/m.width):1;
+  const scaleY=m.height?Math.abs(r.height/m.height):1;
+  return {
+    m,r,scaleX,scaleY,
+    paddingX:m.padding*scaleX,paddingY:m.padding*scaleY,
+    cellW:m.cellW*scaleX,cellH:m.cellH*scaleY
+  };
+}
 function canvasCellRect(x,y){
-  if(!CANVAS_RENDERER||!els.mapCanvas||!canvasRuntime.metrics)return null;
-  const m=canvasRuntime.metrics,r=els.mapCanvas.getBoundingClientRect();
-  return {left:r.left+m.padding+x*m.cellW,top:r.top+m.padding+y*m.cellH,width:m.cellW,height:m.cellH,right:r.left+m.padding+(x+1)*m.cellW,bottom:r.top+m.padding+(y+1)*m.cellH};
+  const d=canvasDisplayMetrics();if(!d)return null;
+  const left=d.r.left+d.paddingX+x*d.cellW,top=d.r.top+d.paddingY+y*d.cellH;
+  return {left,top,width:d.cellW,height:d.cellH,right:left+d.cellW,bottom:top+d.cellH};
 }
 function positionCanvasMarker(marker,x,y,visible=true){
   if(!marker||!CANVAS_RENDERER||!els.viewport){return}
@@ -5364,9 +5379,13 @@ function mapGridMetrics(){
 function mapPositionFromClient(clientX,clientY){
   if(!state.lastGrid)return null;
   if(CANVAS_RENDERER){
-    const r=els.mapCanvas.getBoundingClientRect(),m=canvasRuntime.metrics||syncCanvasSize();
-    if(!r.width||!r.height||!m)return null;
-    const gridX=(clientX-r.left-m.padding)/m.cellW,gridY=(clientY-r.top-m.padding)/m.cellH;
+    const d=canvasDisplayMetrics();if(!d)return null;
+    // Les glyphes sont dessinés à l'origine de chaque case. Pour convertir le
+    // pointeur en indice de cellule, on travaille toutefois par rapport au CENTRE
+    // des cases. Sans ce demi-pas, le centre visuel de la case x était arrondi vers
+    // x+1 : la croix se retrouvait dans le coin supérieur gauche de la surbrillance.
+    const gridX=(clientX-d.r.left-d.paddingX)/d.cellW-.5;
+    const gridY=(clientY-d.r.top-d.paddingY)/d.cellH-.5;
     const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
     const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
     const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
