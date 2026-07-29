@@ -1,0 +1,8 @@
+Atlas Karst ASCII v0.16d — Balises cartographiques stables
+
+- Une seule icône est dessinée par point d’intérêt, directement à ses coordonnées géographiques.
+- Les symboles ne sont plus répétés sous les labels.
+- Les labels utilisent des cartouches séparés avec un trait de rappel ; leur côté est déterminé par l’identifiant du lieu et reste stable. En cas de collision, un label est masqué plutôt que déplacé.
+- Taille et zone de détection progressent doucement à chaque niveau de zoom.
+- Survol et clic utilisent directement la couche de balises Canvas.
+- Direction artistique renforcée : balises d’arpentage, codes de familles, cadre cartographique, glows discrets et contrôles mieux intégrés.
