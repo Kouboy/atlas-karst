@@ -1,10 +1,15 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { chromium } from "playwright";
 import { startAtlasServer } from "./serve.mjs";
 
 const outputDirectory = new URL("../test-results/", import.meta.url);
+const standaloneUrl = new URL("../index.html?offline&debug", import.meta.url).href;
+const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const escapedAtlasVersion = packageMetadata.atlasVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const titleVersionPattern = new RegExp(`Atlas Karst ASCII v${escapedAtlasVersion}`);
 await mkdir(outputDirectory, { recursive: true });
 
 const server = await startAtlasServer({ port: 0, silent: true });
@@ -29,7 +34,7 @@ function runtimeErrors(page) {
 
 async function openOfflineAtlas(page, query = "?offline&debug") {
   await page.goto(`${baseURL}/${query}`, { waitUntil: "domcontentloaded" });
-  assert.match(await page.title(), /Atlas Karst ASCII v0\.16s/);
+  assert.match(await page.title(), titleVersionPattern);
   await page.locator("#viewport").waitFor({ state: "visible" });
   await page.waitForFunction(() => /^(symbolic|ascii)$/.test(document.body.dataset.effectiveRender || ""));
   if (query.includes("debug")) {
@@ -131,6 +136,14 @@ try {
     await page.locator("#mapCanvas").press("ArrowRight");
     await page.waitForFunction((value) => document.getElementById("centerLabel")?.textContent !== value, before);
     assert.equal(await page.evaluate(() => document.activeElement?.id), "mapCanvas");
+  });
+
+  await withPage("livrable autonome file", { width: 1280, height: 720 }, async (page) => {
+    await page.goto(standaloneUrl, { waitUntil: "domcontentloaded" });
+    assert.match(await page.title(), titleVersionPattern);
+    await page.locator('body[data-effective-render="symbolic"]').waitFor();
+    await page.waitForFunction(() => document.getElementById("debugRenderTime")?.textContent !== "—");
+    assert.ok(await page.locator("#mapCanvas").isVisible(), "Canvas autonome invisible");
   });
 } finally {
   if (browser) await browser.close();
