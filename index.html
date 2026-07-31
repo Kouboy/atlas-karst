@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.16e · réseaux nettoyés & cartographie d’arpenteur</title>
+<title>Atlas Karst ASCII v0.16r · stabilisation</title>
 <style>
 :root{
   color-scheme:dark;
@@ -83,7 +83,7 @@ select{width:100%}
 #map{margin:0;padding:var(--map-padding);display:inline-block;white-space:pre;font-size:var(--map-font-size);line-height:1.04;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:paint style}
 #map.dragging{cursor:grabbing;transition:none}.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
 #map.placing-house{cursor:var(--atlas-crosshair)}
-#mapCanvas{display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
+#mapCanvas{position:relative;z-index:2;display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
 body.renderer-canvas #map{display:none!important}
 body.renderer-canvas #mapCanvas{display:block}
 .terminal-wrap.map-centered #mapCanvas{margin-inline:auto}
@@ -735,12 +735,13 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   body.sidebar-open .sidebar-backdrop{display:block}
   main{height:100vh;min-height:0;padding:8px;overflow:hidden}
   .statusbar{gap:5px}
+  .statusbar .toolbar-button{min-height:44px}
   .statusbar .badge{padding:6px 8px;font-size:10px}
   .statusbar .secondary{display:none}
   .terminal-wrap{min-height:0;width:100%;overscroll-behavior:none}
   #mapCanvas{max-width:none;max-height:none}
-  .map-actions{grid-template-columns:repeat(6,40px)}
-  .map-actions button{width:40px;height:40px}
+  .map-actions{grid-template-columns:repeat(6,44px)}
+  .map-actions button{width:44px;height:44px}
   .readout{font-size:11px}
   #readout{
     position:fixed;left:7px;right:7px;bottom:7px;z-index:46;width:auto!important;max-width:none;
@@ -1171,6 +1172,505 @@ body[data-effective-render="symbolic"] .map-actions button{
   backdrop-filter:none;
 }
 
+
+
+/* V0.16f — console rétro plus affirmée et fiche flottante.
+   Aucun changement de moteur : cette passe touche uniquement au layout et à
+   la peau graphique. La fiche ne participe plus à la hauteur de la carte. */
+@media(min-width:941px){
+  #readout{
+    position:fixed!important;
+    left:calc(var(--sidebar-width,350px) + 12px)!important;
+    right:12px!important;
+    bottom:30px!important;
+    top:auto!important;
+    z-index:52!important;
+    width:auto!important;
+    max-width:none!important;
+    margin:0!important;
+    max-height:min(52vh,660px)!important;
+    height:auto!important;
+    border:2px solid #456b57!important;
+    border-top:4px double #8c8052!important;
+    background:rgba(5,13,9,.975)!important;
+    box-shadow:
+      0 -18px 46px rgba(0,0,0,.46),
+      0 0 0 1px rgba(4,10,7,.95),
+      inset 0 0 0 1px rgba(217,202,161,.045),
+      inset 0 0 42px rgba(28,67,45,.08)!important;
+    transform:none!important;
+  }
+  body.sidebar-collapsed #readout{left:12px!important}
+  #readout[data-sheet-state="peek"]{max-height:48px!important}
+  #readout[data-sheet-state="full"]{max-height:min(52vh,660px)!important}
+  #readout[data-readout-kind="plain"][data-sheet-state="full"]{max-height:178px!important}
+  #readout .readout-body{max-height:calc(min(52vh,660px) - 48px);overflow:auto}
+  #readout[data-sheet-state="peek"] .readout-body{display:none}
+}
+
+/* Cadre d'arpentage : plus mécanique, moins "carte web". */
+body[data-effective-render="symbolic"] #viewport{
+  border:2px solid #5d715f!important;
+  border-radius:3px!important;
+  background:
+    linear-gradient(90deg,rgba(210,194,137,.025) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(210,194,137,.02) 1px,transparent 1px),
+    linear-gradient(180deg,rgba(225,213,170,.035),transparent 14%,transparent 82%,rgba(0,0,0,.24)),
+    radial-gradient(ellipse at 48% 40%,#12291d 0,#07110c 74%)!important;
+  background-size:32px 32px,32px 32px,auto,auto!important;
+  box-shadow:
+    inset 0 0 0 1px #020805,
+    inset 0 0 0 4px rgba(129,151,124,.10),
+    inset 0 0 72px rgba(0,0,0,.70),
+    inset 0 0 160px rgba(52,115,78,.13),
+    0 0 0 1px rgba(161,151,107,.30),
+    0 10px 36px rgba(0,0,0,.22)!important;
+}
+body[data-effective-render="symbolic"] #viewport::before{
+  content:"";position:absolute;inset:7px;z-index:18;pointer-events:none;
+  background:
+    linear-gradient(#c4b87e,#c4b87e) left top/22px 1px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) left top/1px 22px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) right top/22px 1px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) right top/1px 22px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) left bottom/22px 1px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) left bottom/1px 22px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) right bottom/22px 1px no-repeat,
+    linear-gradient(#c4b87e,#c4b87e) right bottom/1px 22px no-repeat;
+  opacity:.62
+}
+body[data-effective-render="symbolic"] .map-top-overlay::before{
+  content:"ATLAS // LOCAL SURVEY";position:absolute;left:68px;top:12px;z-index:12;
+  padding:4px 7px;border:1px solid rgba(116,153,130,.42);background:rgba(4,13,8,.88);
+  color:#9bb6a6;font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+  box-shadow:inset 0 0 0 1px rgba(217,202,161,.025)
+}
+body[data-effective-render="symbolic"] .map-top-overlay::after{
+  content:"VECTOR LAYERS · GRID LOCK";position:absolute;right:275px;top:14px;z-index:12;
+  color:#6d8879;font-size:7px;letter-spacing:.14em;text-transform:uppercase
+}
+
+/* Commandes comme un petit pupitre physique. */
+body[data-effective-render="symbolic"] .map-actions{gap:4px}
+body[data-effective-render="symbolic"] .map-actions button{
+  border-radius:4px!important;border:1px solid #50745f!important;
+  background:
+    linear-gradient(180deg,rgba(30,58,43,.97),rgba(6,18,11,.98))!important;
+  color:#e8efe8!important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    inset 0 -3px 0 rgba(0,0,0,.22),
+    0 0 0 1px rgba(2,8,5,.82),
+    0 4px 8px rgba(0,0,0,.20)!important;
+}
+body[data-effective-render="symbolic"] .map-actions button:hover,
+body[data-effective-render="symbolic"] .map-actions button:focus-visible{
+  border-color:#8eb69e!important;color:#fff6cf!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 12px rgba(121,226,171,.16)!important
+}
+body[data-effective-render="symbolic"] .north{
+  border-radius:3px!important;border:1px solid #867b4f!important;
+  background:linear-gradient(180deg,#151b10,#07100b)!important;
+  color:#e6d799!important;letter-spacing:.12em!important;
+  box-shadow:0 0 0 1px #020805,inset 0 0 10px rgba(232,189,100,.04)!important
+}
+body[data-effective-render="symbolic"] .map-tip{
+  border-radius:2px!important;border:1px solid rgba(144,135,89,.42)!important;
+  border-left:3px solid #7e8e64!important;background:rgba(3,10,6,.93)!important;
+  color:#9caf9f!important;letter-spacing:.015em!important
+}
+
+/* Barre d'instrument et fiche : langage visuel plus rétro. */
+.statusbar{
+  border-radius:3px!important;border:1px solid #3f5f4d!important;border-top:3px double #627b65!important;
+  background:
+    repeating-linear-gradient(90deg,rgba(121,226,171,.018) 0 1px,transparent 1px 10px),
+    linear-gradient(180deg,#101e16,#07110c)!important;
+}
+.statusbar .toolbar-button,.statusbar .badge{
+  border-radius:3px!important;border-color:#355746!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.018)!important
+}
+#readout .readout-sheet-handle{
+  min-height:46px!important;border-radius:0!important;border-bottom:3px double #4d6b57!important;
+  background:
+    repeating-linear-gradient(90deg,rgba(217,202,161,.025) 0 1px,transparent 1px 12px),
+    linear-gradient(180deg,#17271d,#08130d)!important
+}
+#readout .readout-sheet-label{color:#f0dfae!important;letter-spacing:.14em!important}
+#readout::after{content:"FIELD RECORD // OVERLAY DECK"!important;color:#7c8f78!important}
+#readout[data-sheet-state="full"]::before{
+  content:"";position:absolute;inset:4px;pointer-events:none;z-index:4;
+  border:1px solid rgba(218,202,151,.08);
+  background:linear-gradient(90deg,#d9c98f,#d9c98f) left top/14px 1px no-repeat,
+             linear-gradient(#d9c98f,#d9c98f) left top/1px 14px no-repeat,
+             linear-gradient(90deg,#d9c98f,#d9c98f) right bottom/14px 1px no-repeat,
+             linear-gradient(#d9c98f,#d9c98f) right bottom/1px 14px no-repeat;
+  opacity:.45
+}
+.cell-sheet-head{border-radius:2px!important;border-color:#526c59!important}
+.cell-section{border-radius:0!important;border-top:1px dotted rgba(114,147,128,.18)!important}
+.hover-tip{border-radius:2px!important;border:2px solid #496854!important;box-shadow:0 12px 34px rgba(0,0,0,.42),0 0 0 1px #020805!important}
+.hover-tip .tip-kicker{background:linear-gradient(90deg,rgba(121,226,171,.08),transparent)!important}
+
+@media(max-width:940px){
+  body[data-effective-render="symbolic"] .map-top-overlay::before,
+  body[data-effective-render="symbolic"] .map-top-overlay::after{display:none}
+  body[data-effective-render="symbolic"] #viewport::before{inset:5px;opacity:.42}
+}
+@media(prefers-reduced-motion:reduce){#readout{transition:none!important}}
+
+
+
+/* V0.16l — effets globaux optimisés.
+   Les effets lourds ne sont jamais redessinés cellule par cellule.
+   Symbolique : phosphore de laboratoire. ASCII : tube cathodique statique. */
+body[data-effective-render="symbolic"] #viewport{
+  border-color:#6c947b!important;
+  background:
+    linear-gradient(90deg,rgba(112,255,195,.045) 1px,transparent 1px),
+    linear-gradient(0deg,rgba(112,255,195,.035) 1px,transparent 1px),
+    radial-gradient(circle at 20% 18%,rgba(90,255,198,.095),transparent 28%),
+    radial-gradient(circle at 82% 30%,rgba(83,209,255,.075),transparent 26%),
+    radial-gradient(ellipse at 50% 42%,#10271b 0,#07120c 68%,#030805 100%)!important;
+  background-size:28px 28px,28px 28px,auto,auto,auto!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(160,255,212,.10),
+    inset 0 0 34px rgba(72,221,145,.07),
+    inset 0 0 105px rgba(0,0,0,.67),
+    0 0 0 1px rgba(3,12,7,.95),
+    0 0 20px rgba(86,255,183,.095),
+    0 12px 34px rgba(0,0,0,.25)!important;
+}
+body[data-effective-render="symbolic"] #viewport::after{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(107,255,195,.035),transparent 44%),
+    radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.10) 82%,rgba(0,0,0,.24) 100%),
+    linear-gradient(180deg,rgba(145,255,210,.025),transparent 18%,transparent 82%,rgba(83,206,255,.018));
+}
+body[data-effective-render="symbolic"] #mapCanvas{
+  filter:saturate(1.14) contrast(1.09) brightness(1.035)!important;
+}
+body[data-effective-render="symbolic"] .map-top-overlay::before{
+  color:#b4efd3!important;border-color:rgba(113,240,181,.35)!important;
+  box-shadow:0 0 9px rgba(101,245,185,.10),inset 0 0 0 1px rgba(230,255,244,.025)!important;
+}
+body[data-effective-render="symbolic"] .map-top-overlay::after{
+  color:#78deb1!important;text-shadow:0 0 7px rgba(92,239,170,.20)!important;
+}
+body[data-effective-render="symbolic"] .map-actions button,
+body[data-effective-render="symbolic"] .north{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 0 0 1px rgba(2,8,5,.82),0 0 10px rgba(101,245,185,.11),0 4px 8px rgba(0,0,0,.20)!important;
+}
+
+body[data-effective-render="ascii"] #viewport{
+  border-color:#566c5b!important;
+  background:
+    radial-gradient(circle at 50% 44%,rgba(63,116,80,.21),transparent 47%),
+    linear-gradient(180deg,rgba(189,255,208,.016),rgba(0,0,0,.13)),
+    linear-gradient(0deg,#06110c,#031009 56%,#020805)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(155,221,174,.06),
+    inset 0 0 52px rgba(0,0,0,.72),
+    inset 0 0 118px rgba(72,172,112,.075),
+    0 0 0 1px rgba(2,8,5,.92),
+    0 9px 27px rgba(0,0,0,.28)!important;
+}
+body[data-effective-render="ascii"] #viewport::before{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,rgba(204,255,219,.030) 0 1px,transparent 1px 4px),
+    repeating-linear-gradient(90deg,rgba(91,255,150,.010) 0 1px,transparent 1px 9px),
+    radial-gradient(circle at 50% 48%,transparent 0 58%,rgba(0,0,0,.12) 85%,rgba(0,0,0,.25) 100%);
+}
+body[data-effective-render="ascii"] #viewport::after{
+  content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0 44%,rgba(205,255,221,.022) 49%,rgba(205,255,221,.035) 50%,transparent 55%);
+  opacity:.52;
+}
+body[data-effective-render="ascii"] #mapCanvas{
+  image-rendering:auto!important;
+  filter:saturate(1.13) contrast(1.14) brightness(1.035)!important;
+}
+body[data-effective-render="ascii"] .map-top-overlay::before{
+  content:"CRT MATRIX // ASCII FIELD"!important;
+  color:#9ad7ae!important;border-color:rgba(121,226,171,.28)!important;
+  box-shadow:inset 0 0 0 1px rgba(121,226,171,.02)!important;
+}
+body[data-effective-render="ascii"] .map-top-overlay::after{
+  content:"PHOSPHOR GRID · STATIC TRACE"!important;
+  color:#668b72!important;text-shadow:none!important;
+}
+body[data-effective-render="ascii"] .map-tip,
+body[data-effective-render="ascii"] .north,
+body[data-effective-render="ascii"] .map-actions button{
+  box-shadow:0 0 8px rgba(121,226,171,.065)!important;
+}
+
+@media(max-width:700px){
+  body[data-effective-render="symbolic"] #viewport::after,
+  body[data-effective-render="ascii"] #viewport::before,
+  body[data-effective-render="ascii"] #viewport::after{opacity:.72}
+}
+
+
+
+/* V0.16n — contraste de signal franchement visible, sans travail par cellule.
+   Les deux modes utilisent des overlays CSS globaux et une seule passe emissive
+   post-rendu. Aucun bruit n'est recalculé caractère par caractère. */
+@keyframes vectorSweep{
+  0%{background-position:180% 0}
+  100%{background-position:-80% 0}
+}
+@keyframes crtSweep{
+  0%{transform:translateY(-125%)}
+  100%{transform:translateY(625%)}
+}
+@keyframes crtFlicker{
+  0%,100%{opacity:.92}
+  17%{opacity:.84}
+  18%{opacity:.98}
+  48%{opacity:.89}
+  49%{opacity:.96}
+  73%{opacity:.86}
+  74%{opacity:.94}
+}
+body[data-effective-render="symbolic"] #viewport{
+  border-color:#83c79d!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(181,255,220,.20),
+    inset 0 0 28px rgba(64,255,164,.12),
+    inset 0 0 120px rgba(0,0,0,.62),
+    0 0 0 1px rgba(2,12,7,.96),
+    0 0 28px rgba(70,255,166,.18),
+    0 14px 40px rgba(0,0,0,.30)!important;
+}
+body[data-effective-render="symbolic"] #mapCanvas{
+  filter:saturate(1.28) contrast(1.14) brightness(1.065)!important;
+}
+body[data-effective-render="symbolic"] #viewport::after{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    linear-gradient(90deg,transparent 0 38%,rgba(119,255,201,.03) 43%,rgba(167,255,222,.12) 50%,rgba(92,219,255,.045) 57%,transparent 62%),
+    radial-gradient(circle at 50% 42%,rgba(88,255,188,.08),transparent 48%),
+    radial-gradient(circle at 50% 50%,transparent 0 62%,rgba(0,0,0,.14) 88%,rgba(0,0,0,.30) 100%);
+  background-size:220% 100%,100% 100%,100% 100%;
+  mix-blend-mode:screen;
+  animation:vectorSweep 9s linear infinite;
+}
+body[data-effective-render="symbolic"] .map-tip,
+body[data-effective-render="symbolic"] .north,
+body[data-effective-render="symbolic"] .map-actions button{
+  border-color:#6ca888!important;
+  box-shadow:inset 0 0 0 1px rgba(175,255,215,.04),0 0 14px rgba(80,255,173,.16)!important;
+}
+
+body[data-effective-render="ascii"] #viewport{
+  border-color:#76947c!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(189,255,207,.14),
+    inset 0 0 42px rgba(66,255,140,.10),
+    inset 0 0 128px rgba(0,0,0,.74),
+    0 0 0 1px rgba(1,8,4,.98),
+    0 0 22px rgba(76,255,139,.13),
+    0 12px 38px rgba(0,0,0,.34)!important;
+}
+body[data-effective-render="ascii"] #mapCanvas{
+  image-rendering:auto!important;
+  filter:saturate(1.28) contrast(1.25) brightness(1.075)!important;
+}
+body[data-effective-render="ascii"] #viewport::before{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,rgba(212,255,224,.080) 0 1px,rgba(0,0,0,.045) 1px 3px),
+    repeating-linear-gradient(90deg,rgba(255,45,45,.018) 0 1px,rgba(35,255,126,.022) 1px 2px,rgba(50,116,255,.018) 2px 3px,transparent 3px 6px),
+    radial-gradient(circle at 50% 46%,rgba(95,255,151,.055),transparent 52%),
+    radial-gradient(circle at 50% 50%,transparent 0 60%,rgba(0,0,0,.15) 86%,rgba(0,0,0,.34) 100%);
+  mix-blend-mode:screen;
+  animation:crtFlicker 2.8s steps(2,end) infinite;
+}
+body[data-effective-render="ascii"] #viewport::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:16%;z-index:9;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.025) 30%,rgba(218,255,230,.095) 52%,rgba(164,255,194,.025) 72%,transparent 100%);
+  mix-blend-mode:screen;
+  animation:crtSweep 8.5s linear infinite;
+}
+body[data-effective-render="ascii"] .map-tip,
+body[data-effective-render="ascii"] .north,
+body[data-effective-render="ascii"] .map-actions button{
+  border-color:#5f866b!important;
+  text-shadow:0 0 5px rgba(124,255,169,.24)!important;
+  box-shadow:inset 0 0 0 1px rgba(139,255,177,.03),0 0 13px rgba(73,255,133,.12)!important;
+}
+@media(max-width:700px){
+  body[data-effective-render="symbolic"] #viewport::after{animation-duration:14s;opacity:.70}
+  body[data-effective-render="ascii"] #viewport::before{opacity:.76;animation:none}
+  body[data-effective-render="ascii"] #viewport::after{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  body[data-effective-render="symbolic"] #viewport::after,
+  body[data-effective-render="ascii"] #viewport::before,
+  body[data-effective-render="ascii"] #viewport::after{animation:none!important}
+}
+
+
+
+/* V0.16o — pousse la dualité visuelle plus loin et remplit mieux le cadre
+   sur grands écrans sans changer le moteur. Les effets restent globaux et
+   légers : overlays CSS + halo post-rendu unique. */
+@keyframes vectorPulseSoft{0%,100%{opacity:.74}50%{opacity:1}}
+@keyframes vectorGridDrift{0%{background-position:0 0,0 0,0 0}100%{background-position:140px 56px,-120px 0,0 0}}
+@keyframes asciiNoiseDrift{0%{background-position:0 0,0 0,0 0,0 0}100%{background-position:0 3px,6px 0,2px 0,0 0}}
+@keyframes asciiBloomPulse{0%,100%{opacity:.74}50%{opacity:1}}
+@keyframes asciiRefreshJitter{0%,100%{transform:translateY(0)}19%{transform:translateY(0)}20%{transform:translateY(-.45%)}21%{transform:translateY(.28%)}22%{transform:translateY(0)}}
+
+body[data-effective-render="symbolic"] #viewport{
+  border-color:#92d8ae!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(200,255,228,.24),
+    inset 0 0 36px rgba(64,255,164,.16),
+    inset 0 0 140px rgba(0,0,0,.58),
+    0 0 0 1px rgba(2,12,7,.96),
+    0 0 42px rgba(70,255,166,.23),
+    0 18px 52px rgba(0,0,0,.36)!important;
+}
+body[data-effective-render="symbolic"] #mapCanvas{
+  filter:saturate(1.38) contrast(1.18) brightness(1.11)!important;
+}
+body[data-effective-render="symbolic"] #viewport::before{
+  content:"";position:absolute;inset:0;z-index:7;pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 50%,rgba(115,255,197,.07),transparent 56%),
+    repeating-linear-gradient(90deg,rgba(84,255,185,.03) 0 1px,transparent 1px 12px),
+    repeating-linear-gradient(180deg,rgba(132,255,214,.022) 0 1px,transparent 1px 11px);
+  mix-blend-mode:screen;opacity:.78;
+  animation:vectorPulseSoft 3.2s ease-in-out infinite,vectorGridDrift 18s linear infinite;
+}
+body[data-effective-render="symbolic"] #viewport::after{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    linear-gradient(90deg,transparent 0 34%,rgba(119,255,201,.04) 40%,rgba(205,255,234,.16) 49%,rgba(92,219,255,.06) 58%,transparent 64%),
+    radial-gradient(circle at 50% 44%,rgba(88,255,188,.14),transparent 49%),
+    radial-gradient(circle at 50% 50%,transparent 0 60%,rgba(0,0,0,.12) 86%,rgba(0,0,0,.30) 100%);
+  background-size:220% 100%,100% 100%,100% 100%;
+  mix-blend-mode:screen;
+  animation:vectorSweep 6.8s linear infinite,vectorPulseSoft 2.8s ease-in-out infinite;
+}
+body[data-effective-render="symbolic"] .map-tip,
+body[data-effective-render="symbolic"] .north,
+body[data-effective-render="symbolic"] .map-actions button{
+  border-color:#76b993!important;
+  text-shadow:0 0 7px rgba(164,255,212,.22)!important;
+  box-shadow:inset 0 0 0 1px rgba(175,255,215,.05),0 0 18px rgba(80,255,173,.20)!important;
+}
+
+body[data-effective-render="ascii"] #viewport{
+  border-color:#88a68e!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(189,255,207,.16),
+    inset 0 0 56px rgba(66,255,140,.12),
+    inset 0 0 150px rgba(0,0,0,.78),
+    0 0 0 1px rgba(1,8,4,.98),
+    0 0 28px rgba(76,255,139,.16),
+    0 14px 42px rgba(0,0,0,.38)!important;
+}
+body[data-effective-render="ascii"] #mapCanvas{
+  image-rendering:auto!important;
+  filter:saturate(1.34) contrast(1.31) brightness(1.09)!important;
+}
+body[data-effective-render="ascii"] #viewport::before{
+  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg,rgba(212,255,224,.105) 0 1px,rgba(0,0,0,.055) 1px 3px),
+    repeating-linear-gradient(90deg,rgba(255,45,45,.028) 0 1px,rgba(35,255,126,.032) 1px 2px,rgba(50,116,255,.028) 2px 3px,transparent 3px 6px),
+    radial-gradient(circle at 50% 46%,rgba(95,255,151,.075),transparent 52%),
+    radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.18) 84%,rgba(0,0,0,.36) 100%);
+  mix-blend-mode:screen;
+  opacity:.86;
+  animation:crtFlicker 2.4s steps(2,end) infinite,asciiNoiseDrift 1.8s steps(3,end) infinite,asciiBloomPulse 3.1s ease-in-out infinite;
+}
+body[data-effective-render="ascii"] #viewport::after{
+  content:"";position:absolute;left:0;right:0;top:0;height:18%;z-index:9;pointer-events:none;
+  background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.03) 24%,rgba(222,255,233,.13) 50%,rgba(164,255,194,.03) 76%,transparent 100%);
+  mix-blend-mode:screen;
+  animation:crtSweep 7.1s linear infinite,asciiRefreshJitter 2.9s steps(2,end) infinite;
+}
+body[data-effective-render="ascii"] .map-tip,
+body[data-effective-render="ascii"] .north,
+body[data-effective-render="ascii"] .map-actions button{
+  border-color:#6b9778!important;
+  text-shadow:0 0 6px rgba(124,255,169,.32)!important;
+  box-shadow:inset 0 0 0 1px rgba(139,255,177,.04),0 0 16px rgba(73,255,133,.16)!important;
+}
+@media(max-width:700px){
+  body[data-effective-render="symbolic"] #viewport::before{opacity:.64;animation:vectorPulseSoft 3.6s ease-in-out infinite}
+  body[data-effective-render="symbolic"] #viewport::after{animation-duration:10s;opacity:.82}
+  body[data-effective-render="ascii"] #viewport::before{opacity:.82;animation:crtFlicker 2.6s steps(2,end) infinite}
+  body[data-effective-render="ascii"] #viewport::after{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  body[data-effective-render="symbolic"] #viewport::before,
+  body[data-effective-render="symbolic"] #viewport::after,
+  body[data-effective-render="ascii"] #viewport::before,
+  body[data-effective-render="ascii"] #viewport::after{animation:none!important}
+}
+
+
+
+/* V0.16q — pipeline Canvas consolidé.
+   Les données et le post-traitement statique sont composités dans le Canvas.
+   Le calque animé est strictement calé sur le rectangle réel du Canvas, jamais
+   sur toute la fenêtre de défilement. Les marqueurs et commandes restent devant. */
+body[data-effective-render="symbolic"] #viewport::before,
+body[data-effective-render="symbolic"] #viewport::after,
+body[data-effective-render="ascii"] #viewport::before,
+body[data-effective-render="ascii"] #viewport::after{display:none!important}
+.render-fx-layer{position:absolute;left:0;top:0;width:0;height:0;z-index:6;pointer-events:none;overflow:hidden;border-radius:2px;contain:paint;isolation:isolate;transform:translateZ(0)}
+.render-fx-layer>div{position:absolute;inset:0;pointer-events:none;opacity:0}
+.fx-instrument-frame{z-index:6!important;opacity:.68!important;background:
+  linear-gradient(#c9bb7d,#c9bb7d) 7px 7px/24px 1px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) 7px 7px/1px 24px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) 7px/24px 1px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) 7px/1px 24px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) 7px calc(100% - 7px)/24px 1px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) 7px calc(100% - 7px)/1px 24px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) calc(100% - 7px)/24px 1px no-repeat,
+  linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) calc(100% - 7px)/1px 24px no-repeat}
+@keyframes fxVectorSweep{0%{transform:translateX(-135%)}100%{transform:translateX(535%)}}
+@keyframes fxVectorPulse{0%,100%{opacity:.50;filter:brightness(.92)}50%{opacity:.94;filter:brightness(1.18)}}
+@keyframes fxVectorDrift{0%{background-position:0 0,0 0}100%{background-position:96px 48px,-72px 36px}}
+@keyframes fxAsciiGrain{0%{background-position:0 0,0 0}25%{background-position:2px -1px,-2px 1px}50%{background-position:-1px 2px,1px -2px}75%{background-position:1px 1px,-1px 0}100%{background-position:0 0,0 0}}
+@keyframes fxAsciiRefresh{0%{transform:translateY(0)}100%{transform:translateY(650%)}}
+@keyframes fxAsciiPulse{0%,100%{opacity:.68}48%{opacity:.88}49%{opacity:.58}50%{opacity:.92}}
+body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.52;background:
+  repeating-linear-gradient(90deg,rgba(99,255,190,.045) 0 1px,transparent 1px 12px),
+  repeating-linear-gradient(180deg,rgba(133,255,215,.033) 0 1px,transparent 1px 11px);mix-blend-mode:screen;animation:fxVectorDrift 20s linear infinite}
+body[data-effective-render="symbolic"] .fx-vector-bloom{opacity:.74;background:
+  radial-gradient(circle at 50% 45%,rgba(95,255,190,.14),transparent 52%),
+  radial-gradient(circle at 50% 50%,transparent 0 61%,rgba(0,0,0,.14) 86%,rgba(0,0,0,.31) 100%);mix-blend-mode:screen;animation:fxVectorPulse 3.1s ease-in-out infinite}
+body[data-effective-render="symbolic"] .fx-vector-sweep{inset:-10% auto -10% -18%;width:18%;opacity:.92;background:linear-gradient(90deg,transparent,rgba(130,255,205,.05) 22%,rgba(220,255,239,.22) 50%,rgba(89,221,255,.07) 78%,transparent);filter:blur(.6px);mix-blend-mode:screen;animation:fxVectorSweep 7.2s linear infinite}
+body[data-effective-render="ascii"] .fx-ascii-mask{opacity:.88;background:
+  repeating-linear-gradient(180deg,rgba(213,255,226,.10) 0 1px,rgba(0,0,0,.06) 1px 3px),
+  repeating-linear-gradient(90deg,rgba(255,42,42,.025) 0 1px,rgba(38,255,129,.032) 1px 2px,rgba(54,117,255,.025) 2px 3px,transparent 3px 6px),
+  radial-gradient(circle at 50% 46%,rgba(94,255,151,.08),transparent 53%),
+  radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.18) 85%,rgba(0,0,0,.37) 100%);mix-blend-mode:screen;animation:fxAsciiPulse 2.6s steps(2,end) infinite}
+body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
+  radial-gradient(circle,rgba(217,255,228,.18) 0 .55px,transparent .75px) 0 0/7px 5px,
+  radial-gradient(circle,rgba(78,255,139,.10) 0 .5px,transparent .7px) 0 0/11px 9px;mix-blend-mode:screen;animation:fxAsciiGrain .36s steps(2,end) infinite}
+body[data-effective-render="ascii"] .fx-ascii-refresh{inset:-18% 0 auto;height:18%;opacity:.96;background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.025) 25%,rgba(226,255,235,.15) 50%,rgba(164,255,194,.03) 76%,transparent 100%);mix-blend-mode:screen;will-change:transform;animation:fxAsciiRefresh 6.4s linear infinite}
+.terminal-wrap.panning .render-fx-layer>div,.terminal-wrap:has(#mapCanvas.pinching) .render-fx-layer>div{animation-play-state:paused!important}
+@media(max-width:700px){
+  body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.32;animation:none}
+  body[data-effective-render="symbolic"] .fx-vector-sweep{animation-duration:10s;opacity:.64}
+  body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.16;animation-duration:.7s}
+  body[data-effective-render="ascii"] .fx-ascii-refresh{display:none}
+}
+@media(prefers-reduced-motion:reduce){.render-fx-layer>div{animation:none!important}}
+.render-fx-layer.fx-restart>div{animation-name:none!important}
+body:not(.renderer-canvas) .render-fx-layer{display:none!important}
+
+
 </style>
 </head>
 <body data-depth-band="surface">
@@ -1179,7 +1679,7 @@ body[data-effective-render="symbolic"] .map-actions button{
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.16e</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.16r</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -1638,8 +2138,17 @@ body[data-effective-render="symbolic"] .map-actions button{
       </div>
     </div>
     <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
-    <canvas id="mapCanvas" aria-label="Carte ASCII interactive rendue sur Canvas" role="img"></canvas>
+    <canvas id="mapCanvas" aria-label="Carte interactive rendue sur Canvas" aria-describedby="mapTip" role="group" tabindex="0">Carte interactive : utilisez les flèches pour vous déplacer, plus et moins pour changer d’échelle.</canvas>
     <canvas id="zoomTransitionCanvas" class="zoom-transition-canvas" aria-hidden="true"></canvas>
+    <div class="render-fx-layer" id="renderFxLayer" aria-hidden="true">
+      <div class="fx-vector-grid"></div>
+      <div class="fx-vector-bloom"></div>
+      <div class="fx-vector-sweep"></div>
+      <div class="fx-ascii-mask"></div>
+      <div class="fx-ascii-grain"></div>
+      <div class="fx-ascii-refresh"></div>
+      <div class="fx-instrument-frame"></div>
+    </div>
     <div class="canvas-cell-marker" id="canvasHoverMarker" aria-hidden="true"></div>
     <div class="canvas-cell-marker" id="canvasSelectionMarker" aria-hidden="true"></div>
     <div class="canvas-cell-marker" id="canvasPoiMarker" aria-hidden="true"></div>
@@ -1701,7 +2210,8 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.16e";
+const APP_VERSION = "0.16r";
+const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
 document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
@@ -1782,6 +2292,8 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
   checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
+  checks.push(debugCheckResult("Pipeline Canvas final",renderPipelineRuntime.lastStages.at(-1)==="fx-final"&&renderPipelineRuntime.lastFinalizedFrame===renderPipelineRuntime.frame,`${renderPipelineRuntime.lastStages.join(" → ")} · frame ${renderPipelineRuntime.lastFinalizedFrame}`));
+  checks.push(debugCheckResult("FX synchronisés avec OSM",renderPipelineRuntime.lastFxOsmRevision===renderPipelineRuntime.osmRevision,`FX ${renderPipelineRuntime.lastFxOsmRevision} · OSM ${renderPipelineRuntime.osmRevision}`));
   checks.push(debugCheckResult("OSM",state.osm?.length?true:null,state.osm?.length?`${state.osm.length} objets`:debugStatusText("osmStatus")));
   checks.push(debugCheckResult("Patrimoine",state.heritageItems?.length?true:null,state.heritageItems?.length?`${state.heritageItems.length} notices`:debugStatusText("heritageStatus")));
   const html=checks.map(c=>`<div class="debug-check ${c.status}"><b>${c.status==="ok"?"✓":c.status==="bad"?"×":"!"}</b><span><strong>${esc(c.name)}</strong>${c.detail?`<br><span class="small">${esc(c.detail)}</span>`:""}</span></div>`).join("");
@@ -1804,6 +2316,7 @@ function createDebugReport(){
     `Points d’intérêt visibles : ${debugState.lastPoiCount} · normalisés : ${spatialRuntime.normalizedPois.length}`,
     `Index spatial : ${spatialRuntime.rebuilds} reconstructions · dernière ${spatialRuntime.lastBuildMs.toFixed(2)} ms · candidats ${spatialRuntime.lastQueryCandidates} / résultats ${spatialRuntime.lastQueryResults}`,
     `Cache local Atlas : ${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`,
+    `Pipeline Canvas : ${renderPipelineRuntime.lastStages.join(" -> ")} · frame ${renderPipelineRuntime.lastFinalizedFrame} · FX ${renderPipelineRuntime.fxRevision} · OSM ${renderPipelineRuntime.osmRevision}`,
     `OSM : ${debugStatusText("osmStatus")}`,
     `Culture : ${debugStatusText("heritageStatus")}`,
     `Cadastre : ${debugStatusText("cadastreStatus")}`,
@@ -1997,18 +2510,34 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "map","mapCanvas","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "map","mapCanvas","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
-  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"
+  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
+  "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 
 function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
-const canvasRuntime={metrics:null,styleCache:new Map(),probe:null,lastGrid:null,dpr:1,ctx:null,measureCanvas:null,measureCtx:null};
+const canvasRuntime={metrics:null,layoutSignature:"",styleCache:new Map(),probe:null,lastGrid:null,dpr:1,ctx:null,measureCanvas:null,measureCtx:null,signalCanvas:null,signalCtx:null};
+const renderPipelineRuntime={
+  frame:0,dataRevision:0,osmRevision:0,fxRevision:0,lastFxOsmRevision:-1,
+  lastMode:"",lastReason:"",lastStages:[],lastFinalizedFrame:0,lastFinalizedAt:0
+};
+function markMapDataRevision(source="data"){
+  renderPipelineRuntime.dataRevision++;
+  if(source==="osm")renderPipelineRuntime.osmRevision++;
+}
+function beginCanvasPipeline(mode,reason="direct"){
+  renderPipelineRuntime.frame++;renderPipelineRuntime.lastMode=mode;renderPipelineRuntime.lastReason=reason;
+  renderPipelineRuntime.lastStages=["canvas-size","map-data"];
+  return renderPipelineRuntime.frame;
+}
+function recordCanvasStage(stage){renderPipelineRuntime.lastStages.push(stage)}
+
 function cssNumber(name,fallback){
   const main=document.querySelector("main");
   const value=parseFloat(getComputedStyle(main).getPropertyValue(name));
@@ -2035,18 +2564,31 @@ function measureCanvasLayout(fontSize=cssNumber("--map-font-size",12),padding=cs
   const cellH=Math.max(4,fontSize*1.04);
   return {fontSize,padding,cellW,cellH,width:padding*2+CONFIG.gridW*cellW,height:padding*2+CONFIG.gridH*cellH};
 }
+
+function desiredCanvasDisplayScale(){
+  // V0.16q : la grille responsive est l'unique autorité de dimensionnement.
+  // Le bitmap n'est plus agrandi une seconde fois après son calcul.
+  return 1;
+}
+
 function syncCanvasSize(){
   if(!CANVAS_RENDERER||!els.mapCanvas)return null;
   const m=measureCanvasLayout();
   const compact=matchMedia("(max-width:700px)").matches;
   const dpr=Math.min(window.devicePixelRatio||1,compact?1.25:1.75);
+  const displayScale=1,displayWidth=Math.round(m.width),displayHeight=Math.round(m.height);
   const pixelW=Math.max(1,Math.round(m.width*dpr)),pixelH=Math.max(1,Math.round(m.height*dpr));
+  const bitmapChanged=els.mapCanvas.width!==pixelW||els.mapCanvas.height!==pixelH;
+  const cssChanged=els.mapCanvas.style.width!==`${displayWidth}px`||els.mapCanvas.style.height!==`${displayHeight}px`;
   if(els.mapCanvas.width!==pixelW)els.mapCanvas.width=pixelW;
   if(els.mapCanvas.height!==pixelH)els.mapCanvas.height=pixelH;
-  els.mapCanvas.style.width=`${m.width}px`;els.mapCanvas.style.height=`${m.height}px`;
-  canvasRuntime.metrics={...m,dpr};canvasRuntime.dpr=dpr;
+  els.mapCanvas.style.width=`${displayWidth}px`;els.mapCanvas.style.height=`${displayHeight}px`;
+  const layoutSignature=[m.fontSize,m.padding,CONFIG.gridW,CONFIG.gridH,dpr,displayWidth,displayHeight].join("|");
+  canvasRuntime.metrics={...m,dpr,displayScale,displayWidth,displayHeight,bitmapChanged,cssChanged,layoutSignature};
+  canvasRuntime.layoutSignature=layoutSignature;canvasRuntime.dpr=dpr;
   return canvasRuntime.metrics;
 }
+
 function canvasStyleProbe(){
   if(canvasRuntime.probe?.isConnected)return canvasRuntime.probe;
   const probe=document.createElement("span");probe.className="cell canvas-style-probe";probe.textContent="M";document.body.appendChild(probe);canvasRuntime.probe=probe;return probe;
@@ -2060,10 +2602,117 @@ function canvasVisualFor(classes){
   const visual={color:cs.color||"#dce9e1",background:cs.backgroundColor||"transparent",fontWeight:cs.fontWeight||"400",opacity:Number.parseFloat(cs.opacity)||1};
   canvasRuntime.styleCache.set(key,visual);return visual;
 }
-function drawAsciiCanvasMap(grid=state.lastGrid){
+function globalSignalSurface(){
+  if(!canvasRuntime.signalCanvas){
+    canvasRuntime.signalCanvas=document.createElement("canvas");
+    canvasRuntime.signalCtx=canvasRuntime.signalCanvas.getContext("2d",{alpha:true});
+  }
+  const c=canvasRuntime.signalCanvas;
+  if(c.width!==els.mapCanvas.width)c.width=els.mapCanvas.width;
+  if(c.height!==els.mapCanvas.height)c.height=els.mapCanvas.height;
+  return {canvas:c,ctx:canvasRuntime.signalCtx};
+}
+function drawGlobalSignalPass(ctx,m,mode){
+  if(!els.mapCanvas||!m)return;
+  const compact=matchMedia("(max-width:700px)").matches;
+  const moving=!!els.viewport?.classList.contains("panning")||!!activeMapSurface()?.classList.contains("pinching");
+  const {canvas:scratch,ctx:sctx}=globalSignalSurface();
+  if(!sctx)return;
+  const symbolic=mode==="symbolic";
+
+  // Extraction emissive globale : les tons sombres restent presque noirs, tandis
+  // que routes, eau, bâtiments, glyphes et contours nourrissent réellement le halo.
+  sctx.save();
+  sctx.setTransform(1,0,0,1,0,0);
+  sctx.globalCompositeOperation="copy";
+  sctx.globalAlpha=1;
+  sctx.filter=symbolic?"brightness(1.56) contrast(1.72) saturate(1.42)":"brightness(1.78) contrast(1.95) saturate(1.28)";
+  sctx.drawImage(els.mapCanvas,0,0);
+  sctx.restore();
+
+  ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.globalCompositeOperation="screen";
+  if(symbolic){
+    ctx.globalAlpha=compact?.18:.31;
+    ctx.filter=(!compact&&!moving)?"blur(2.6px)":"none";
+    ctx.drawImage(scratch,0,0);
+    ctx.filter="none";
+    ctx.globalAlpha=compact?.11:.18;
+    ctx.drawImage(scratch,-1,0);ctx.drawImage(scratch,1,0);
+  }else{
+    // ASCII : pas de blur coûteux. Trois copies très légèrement décalées donnent
+    // une persistance cathodique sur toute la carte, sans travail par glyphe.
+    ctx.filter="none";
+    ctx.globalAlpha=compact?.10:.16;ctx.drawImage(scratch,-1,0);
+    ctx.globalAlpha=compact?.10:.16;ctx.drawImage(scratch,1,0);
+    ctx.globalAlpha=compact?.12:.21;ctx.drawImage(scratch,0,1);
+  }
+  ctx.restore();
+
+  ctx.save();ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.globalCompositeOperation="screen";
+  const wash=ctx.createLinearGradient(0,0,m.width,m.height);
+  if(symbolic){
+    wash.addColorStop(0,"rgba(83,255,178,.145)");
+    wash.addColorStop(.48,"rgba(188,255,222,.055)");
+    wash.addColorStop(1,"rgba(72,216,255,.12)");
+  }else{
+    wash.addColorStop(0,"rgba(80,255,132,.085)");
+    wash.addColorStop(.5,"rgba(188,255,204,.042)");
+    wash.addColorStop(1,"rgba(66,213,118,.073)");
+  }
+  ctx.fillStyle=wash;ctx.fillRect(0,0,m.width,m.height);ctx.restore();
+}
+function drawCanvasModeFinish(ctx,m,mode){
+  // Post-traitement statique réellement inclus dans le bitmap final.
+  // Il est recalculé après chaque redraw, y compris après fusion de données OSM.
+  const symbolic=mode==="symbolic";
+  ctx.save();ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.globalCompositeOperation="screen";
+  if(symbolic){
+    ctx.globalAlpha=.075;ctx.strokeStyle="#8fffd0";ctx.lineWidth=.5;ctx.beginPath();
+    const stepX=Math.max(24,Math.round(m.cellW*12)),stepY=Math.max(22,Math.round(m.cellH*8));
+    for(let x=m.padding;x<m.width-m.padding;x+=stepX){ctx.moveTo(x,m.padding);ctx.lineTo(x,m.height-m.padding)}
+    for(let y=m.padding;y<m.height-m.padding;y+=stepY){ctx.moveTo(m.padding,y);ctx.lineTo(m.width-m.padding,y)}
+    ctx.stroke();
+  }else{
+    ctx.globalAlpha=.065;ctx.fillStyle="#caffd7";
+    for(let y=1;y<m.height;y+=3)ctx.fillRect(0,y,m.width,.55);
+    ctx.globalAlpha=.025;ctx.fillStyle="#5dff9b";
+    for(let x=2;x<m.width;x+=6)ctx.fillRect(x,0,.45,m.height);
+  }
+  ctx.globalCompositeOperation="source-over";ctx.globalAlpha=1;
+  const vignette=ctx.createRadialGradient(m.width*.5,m.height*.47,Math.min(m.width,m.height)*.18,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.72);
+  vignette.addColorStop(0,"rgba(0,0,0,0)");vignette.addColorStop(.72,"rgba(0,0,0,.025)");vignette.addColorStop(1,symbolic?"rgba(0,8,5,.24)":"rgba(0,5,2,.30)");
+  ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);ctx.restore();
+}
+function syncRenderFxGeometry(m=canvasRuntime.metrics){
+  const fx=els.renderFxLayer,canvas=els.mapCanvas;if(!fx||!canvas||!m)return;
+  // offsetLeft/Top suivent le contenu scrollable : les FX restent collés au
+  // bitmap pendant le pan, au lieu de flotter sur tout le viewport.
+  fx.style.left=`${canvas.offsetLeft}px`;fx.style.top=`${canvas.offsetTop}px`;
+  fx.style.width=`${canvas.offsetWidth||m.displayWidth}px`;fx.style.height=`${canvas.offsetHeight||m.displayHeight}px`;
+}
+function restartRenderFxAnimations(){
+  const fx=els.renderFxLayer;if(!fx)return;
+  fx.classList.add("fx-restart");void fx.offsetWidth;fx.classList.remove("fx-restart");
+}
+function finalizeCanvasFrame(ctx,m,mode,reason="direct",frame=renderPipelineRuntime.frame){
+  recordCanvasStage("signal-pass");drawGlobalSignalPass(ctx,m,mode);
+  recordCanvasStage("mode-finish");drawCanvasModeFinish(ctx,m,mode);
+  recordCanvasStage("fx-final");
+  renderPipelineRuntime.fxRevision++;renderPipelineRuntime.lastFinalizedFrame=frame;renderPipelineRuntime.lastFinalizedAt=performance.now();
+  syncRenderFxGeometry(m);
+  const fxNeedsRestart=renderPipelineRuntime.lastFxOsmRevision!==renderPipelineRuntime.osmRevision||
+    els.renderFxLayer?.dataset.mode!==mode||reason==="render-mode";
+  if(els.renderFxLayer){
+    els.renderFxLayer.dataset.mode=mode;els.renderFxLayer.dataset.canvasFrame=String(frame);
+    els.renderFxLayer.dataset.osmRevision=String(renderPipelineRuntime.osmRevision);
+  }
+  if(fxNeedsRestart){restartRenderFxAnimations();renderPipelineRuntime.lastFxOsmRevision=renderPipelineRuntime.osmRevision}
+}
+
+function drawAsciiCanvasMap(grid=state.lastGrid,reason="direct"){
   if(!CANVAS_RENDERER||!grid||!els.mapCanvas)return 0;
   const m=syncCanvasSize();if(!m)return 0;
-  canvasRuntime.lastGrid=grid;
+  const frame=beginCanvasPipeline("ascii",reason);canvasRuntime.lastGrid=grid;
   const ctx=canvasContext();
   ctx.setTransform(m.dpr,0,0,m.dpr,0,0);
   // Le bitmap est explicitement opaque. Les fonds semi-transparents des cellules
@@ -2101,6 +2750,7 @@ function drawAsciiCanvasMap(grid=state.lastGrid){
     }
     flush();
   }
+  finalizeCanvasFrame(ctx,m,"ascii",reason,frame);
   ctx.globalAlpha=1;ctx.shadowBlur=0;
   return visiblePoiCount;
 }
@@ -2109,27 +2759,27 @@ function effectiveRenderMode(){
 }
 function symbolicTerrainStyle(cell){
   const cls=String(cell?.cls||"");
-  if(cls.includes("c-water"))return {fill:"#123b43",kind:"water"};
-  if(cls.includes("c-forest"))return {fill:"#183b27",kind:"forest"};
-  if(cls.includes("c-meadow"))return {fill:"#26452e",kind:"meadow"};
-  if(cls.includes("c-field"))return {fill:"#3c3b25",kind:"field"};
-  if(cls.includes("c-scrub"))return {fill:"#2c3b2c",kind:"scrub"};
-  if(cls.includes("c-quarry"))return {fill:"#514433",kind:"quarry"};
-  if(cls.includes("c-residential")||cls.includes("c-clearing"))return {fill:"#26332e",kind:"settled"};
-  if(cls.includes("c-rock"))return {fill:"#343b37",kind:"rock"};
-  if(cls.includes("c-soil"))return {fill:"#423126",kind:"soil"};
-  return {fill:"#102019",kind:"plain"};
+  if(cls.includes("c-water"))return {fill:"#0f414b",kind:"water"};
+  if(cls.includes("c-forest"))return {fill:"#16472a",kind:"forest"};
+  if(cls.includes("c-meadow"))return {fill:"#295538",kind:"meadow"};
+  if(cls.includes("c-field"))return {fill:"#4b4324",kind:"field"};
+  if(cls.includes("c-scrub"))return {fill:"#2b4931",kind:"scrub"};
+  if(cls.includes("c-quarry"))return {fill:"#5b4932",kind:"quarry"};
+  if(cls.includes("c-residential")||cls.includes("c-clearing"))return {fill:"#253b35",kind:"settled"};
+  if(cls.includes("c-rock"))return {fill:"#354741",kind:"rock"};
+  if(cls.includes("c-soil"))return {fill:"#4a3325",kind:"soil"};
+  return {fill:"#0d2418",kind:"plain"};
 }
 function symbolicOsmLandStyle(tags={}){
   const lu=tags.landuse,n=tags.natural;
-  if(lu==="forest"||n==="wood")return {fill:"#1a422b",stroke:"#2e6944",kind:"forest"};
-  if(lu==="meadow"||lu==="grass")return {fill:"#2a4d32",stroke:"#477052",kind:"meadow"};
-  if(["farmland","orchard","vineyard"].includes(lu))return {fill:"#464127",stroke:"#756c3e",kind:"field"};
-  if(lu==="quarry")return {fill:"#574a38",stroke:"#90775a",kind:"quarry"};
-  if(lu==="residential"||lu==="industrial")return {fill:"#2b3833",stroke:"#52665d",kind:"settled"};
-  if(n==="scrub")return {fill:"#30422f",stroke:"#557052",kind:"scrub"};
-  if(n==="water")return {fill:"#154955",stroke:"#55bed4",kind:"water"};
-  if(lu==="cemetery")return {fill:"#30382f",stroke:"#687666",kind:"settled"};
+  if(lu==="forest"||n==="wood")return {fill:"#174b2c",stroke:"#3d8b58",kind:"forest"};
+  if(lu==="meadow"||lu==="grass")return {fill:"#2b5837",stroke:"#62a56e",kind:"meadow"};
+  if(["farmland","orchard","vineyard"].includes(lu))return {fill:"#504725",stroke:"#a08b43",kind:"field"};
+  if(lu==="quarry")return {fill:"#604d35",stroke:"#c08f5d",kind:"quarry"};
+  if(lu==="residential"||lu==="industrial")return {fill:"#293f38",stroke:"#66877a",kind:"settled"};
+  if(n==="scrub")return {fill:"#315036",stroke:"#6b9b68",kind:"scrub"};
+  if(n==="water")return {fill:"#105361",stroke:"#62dff2",kind:"water"};
+  if(lu==="cemetery")return {fill:"#314238",stroke:"#78967f",kind:"settled"};
   return null;
 }
 function symbolicProject(lon,lat,extent,m){
@@ -2149,24 +2799,6 @@ function symbolicTraceCoords(ctx,coords,extent,m,close=false){
   if(close&&started)ctx.closePath();
   return started;
 }
-function symbolicDrawGridTerrain(ctx,grid,m){
-  for(let y=0;y<CONFIG.gridH;y++){
-    let start=0,last="";
-    const flush=x=>{if(last)ctx.fillRect(m.padding+start*m.cellW,m.padding+y*m.cellH,(x-start)*m.cellW+0.5,m.cellH+0.5)};
-    for(let x=0;x<=CONFIG.gridW;x++){
-      const style=x<CONFIG.gridW?symbolicTerrainStyle(grid.grid[y][x]):null;
-      const fill=style?.fill||"";
-      if(x===0){last=fill;start=0;ctx.fillStyle=fill}
-      else if(fill!==last){flush(x);last=fill;start=x;ctx.fillStyle=fill}
-    }
-  }
-  if(!state.layerRelief)return;
-  for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
-    const c=grid.grid[y][x];if(!Number.isFinite(c.elev)||!c.shade)continue;
-    const a=Math.min(.16,(c.shade||0)*.018);ctx.fillStyle=`rgba(182,222,193,${a})`;
-    ctx.fillRect(m.padding+x*m.cellW,m.padding+y*m.cellH,m.cellW+.4,m.cellH+.4);
-  }
-}
 function symbolicDrawPatterns(ctx,grid,m){
   const close=state.zoomIndex>=3;
   ctx.lineWidth=Math.max(.55,m.fontSize*.045);ctx.lineCap="round";
@@ -2174,15 +2806,15 @@ function symbolicDrawPatterns(ctx,grid,m){
     const c=grid.grid[y][x],s=symbolicTerrainStyle(c),cx=m.padding+(x+.5)*m.cellW,cy=m.padding+(y+.5)*m.cellH;
     const seed=(x*17+y*29)%11;
     if(s.kind==="forest"&&seed<3){
-      ctx.fillStyle="rgba(105,174,117,.34)";ctx.beginPath();ctx.moveTo(cx,cy-m.cellH*.28);ctx.lineTo(cx-m.cellW*.25,cy+m.cellH*.22);ctx.lineTo(cx+m.cellW*.25,cy+m.cellH*.22);ctx.closePath();ctx.fill();
+      ctx.fillStyle="rgba(112,220,139,.43)";ctx.beginPath();ctx.moveTo(cx,cy-m.cellH*.28);ctx.lineTo(cx-m.cellW*.25,cy+m.cellH*.22);ctx.lineTo(cx+m.cellW*.25,cy+m.cellH*.22);ctx.closePath();ctx.fill();
     }else if(s.kind==="field"&&(seed<4||close)){
-      ctx.strokeStyle="rgba(214,194,111,.22)";ctx.beginPath();ctx.moveTo(cx-m.cellW*.42,cy+m.cellH*.24);ctx.lineTo(cx+m.cellW*.42,cy-m.cellH*.24);ctx.stroke();
+      ctx.strokeStyle="rgba(236,210,112,.31)";ctx.beginPath();ctx.moveTo(cx-m.cellW*.42,cy+m.cellH*.24);ctx.lineTo(cx+m.cellW*.42,cy-m.cellH*.24);ctx.stroke();
     }else if(s.kind==="meadow"&&seed<2){
-      ctx.fillStyle="rgba(164,213,153,.30)";ctx.beginPath();ctx.arc(cx,cy,Math.max(.55,m.fontSize*.045),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle="rgba(179,235,164,.38)";ctx.beginPath();ctx.arc(cx,cy,Math.max(.55,m.fontSize*.045),0,Math.PI*2);ctx.fill();
     }else if(s.kind==="scrub"&&seed<2){
-      ctx.strokeStyle="rgba(142,188,137,.25)";ctx.beginPath();ctx.moveTo(cx-2,cy-2);ctx.lineTo(cx+2,cy+2);ctx.moveTo(cx+2,cy-2);ctx.lineTo(cx-2,cy+2);ctx.stroke();
+      ctx.strokeStyle="rgba(157,221,153,.33)";ctx.beginPath();ctx.moveTo(cx-2,cy-2);ctx.lineTo(cx+2,cy+2);ctx.moveTo(cx+2,cy-2);ctx.lineTo(cx-2,cy+2);ctx.stroke();
     }else if(s.kind==="quarry"&&seed<4){
-      ctx.strokeStyle="rgba(224,188,133,.28)";ctx.beginPath();ctx.moveTo(cx-m.cellW*.35,cy+m.cellH*.18);ctx.lineTo(cx,cy-m.cellH*.18);ctx.lineTo(cx+m.cellW*.35,cy+m.cellH*.08);ctx.stroke();
+      ctx.strokeStyle="rgba(245,201,133,.36)";ctx.beginPath();ctx.moveTo(cx-m.cellW*.35,cy+m.cellH*.18);ctx.lineTo(cx,cy-m.cellH*.18);ctx.lineTo(cx+m.cellW*.35,cy+m.cellH*.08);ctx.stroke();
     }
   }
 }
@@ -2193,33 +2825,16 @@ function symbolicDrawOsmPolygons(ctx,grid,m){
     const t=f.tags||{};if(!f.closed||t.building)continue;
     const style=symbolicOsmLandStyle(t);if(!style)continue;
     if(!symbolicTraceCoords(ctx,f.coords,grid.extent,m,true))continue;
-    ctx.globalAlpha=.78;ctx.fillStyle=style.fill;ctx.fill();ctx.globalAlpha=.72;ctx.strokeStyle=style.stroke;ctx.lineWidth=Math.max(.55,m.fontSize*.055);ctx.stroke();
+    ctx.save();
+    // Remplissage un peu plus translucide : le fond phosphore reste perceptible.
+    ctx.globalAlpha=.73;ctx.fillStyle=style.fill;ctx.fill();
+    // Aura de contour peu coûteuse, sans shadowBlur.
+    ctx.globalAlpha=.18;ctx.strokeStyle=style.stroke;ctx.lineWidth=Math.max(2.2,m.fontSize*.19);ctx.stroke();
+    ctx.globalAlpha=.98;ctx.strokeStyle=style.stroke;ctx.lineWidth=Math.max(.75,m.fontSize*.068);ctx.stroke();
+    ctx.restore();
   }
   ctx.globalAlpha=1;
 }
-function symbolicDrawCadastre(ctx,grid,m){
-  const detail=semanticZoom();
-  if(state.layerParcels&&detail.parcels){
-    ctx.save();ctx.strokeStyle="rgba(169,188,174,.28)";ctx.lineWidth=Math.max(.55,m.fontSize*.045);ctx.setLineDash([3,3]);
-    for(const indexed of queryCadastreFeatures(grid.extent,"parcel")){if(symbolicTraceCoords(ctx,indexed.feature.coords,grid.extent,m,true))ctx.stroke()}
-    ctx.restore();
-  }
-  if(state.layerCadastreBuildings&&detail.cadastreBuildings){
-    ctx.save();ctx.fillStyle="#ded5bc";ctx.strokeStyle="#8f8876";ctx.lineWidth=Math.max(.65,m.fontSize*.055);
-    for(const indexed of queryCadastreFeatures(grid.extent,"building")){
-      if(!symbolicTraceCoords(ctx,indexed.feature.coords,grid.extent,m,true))continue;ctx.fill();ctx.stroke();
-    }
-    ctx.restore();
-  }
-  if(state.osm&&detail.osmBuildings){
-    ctx.save();ctx.fillStyle="rgba(216,207,184,.82)";ctx.strokeStyle="rgba(120,115,101,.9)";ctx.lineWidth=Math.max(.55,m.fontSize*.05);
-    for(const f of queryOsmFeatures(grid.extent)){
-      if(!f.tags?.building||!f.closed)continue;if(!symbolicTraceCoords(ctx,f.coords,grid.extent,m,true))continue;ctx.fill();ctx.stroke();
-    }
-    ctx.restore();
-  }
-}
-
 /* V0.16b — réseaux vectoriels stables.
    Les routes et cours d'eau ne sont plus reconstruits à partir du voisinage
    des cellules. Cette ancienne méthode créait des diagonales opportunistes,
@@ -2241,14 +2856,6 @@ function symbolicNetworkKind(tags={}){
   if(["service","living_street"].includes(highway))return "road-minor";
   if(["track","path","footway","cycleway","bridleway","steps"].includes(highway))return "path";
   return "road-minor";
-}
-function symbolicNetworkVisible(kind){
-  const detail=semanticZoom(),z=state.zoomIndex;
-  if(kind==="path")return !!detail.paths&&z>=2;
-  if(kind==="road-minor")return !!detail.minorRoads&&z>=1;
-  if(kind==="water-minor")return !!detail.minorWater&&z>=2;
-  if(kind==="water")return z>=1||!!detail.minorWater;
-  return true;
 }
 function symbolicNetworkToleranceMeters(kind){
   const road=[95,58,30,14,6,2.5],water=[72,42,22,10,4.5,2],minor=[120,78,42,20,9,4];
@@ -2287,32 +2894,42 @@ function symbolicFeatureMeters(coords,lat0){
   }
   return out;
 }
-function symbolicSimplifiedCoords(feature,kind){
-  const coords=feature?.coords||[];if(coords.length<=2)return coords;
-  const lat0=state.lastGrid?.extent?(state.lastGrid.extent.north+state.lastGrid.extent.south)/2:state.center.lat;
-  const meters=symbolicFeatureMeters(coords,lat0);
-  const simple=symbolicSimplifyProjected(meters,symbolicNetworkToleranceMeters(kind));
-  return simple.map(p=>[p.lon,p.lat]);
-}
-function symbolicNetworkStyle(kind,m){
+function symbolicNetworkStyleLabDraft(kind,m){
   const fs=m.fontSize;
-  if(kind==="water-major")return {color:"#55d8f4",outer:"rgba(2,20,27,.88)",width:Math.max(2.6,fs*.27),casing:Math.max(1.7,fs*.18),dash:[]};
-  if(kind==="water")return {color:"#4fc7e1",outer:"rgba(2,20,27,.82)",width:Math.max(1.8,fs*.19),casing:Math.max(1.2,fs*.13),dash:[]};
-  if(kind==="water-minor")return {color:"rgba(89,196,218,.88)",outer:null,width:Math.max(1,fs*.10),casing:0,dash:[4,3]};
-  if(kind==="road-major")return {color:"#e1cc88",outer:"rgba(25,19,8,.92)",width:Math.max(2.35,fs*.23),casing:Math.max(1.7,fs*.16),dash:[]};
-  if(kind==="road")return {color:"#c5b27a",outer:"rgba(23,18,9,.84)",width:Math.max(1.55,fs*.15),casing:Math.max(1.15,fs*.10),dash:[]};
-  if(kind==="road-minor")return {color:"rgba(191,173,121,.88)",outer:"rgba(20,17,10,.65)",width:Math.max(1.05,fs*.10),casing:Math.max(.7,fs*.055),dash:[]};
-  return {color:"rgba(177,159,112,.78)",outer:null,width:Math.max(.85,fs*.075),casing:0,dash:[4,4]};
+  if(kind==="water-major")return {color:"#63ddff",outer:"rgba(4,18,27,.94)",width:Math.max(2.9,fs*.285),casing:Math.max(1.95,fs*.19),dash:[],glow:"rgba(100,225,255,.18)",glowBlur:10};
+  if(kind==="water")return {color:"#58d1f2",outer:"rgba(3,18,24,.88)",width:Math.max(2.0,fs*.205),casing:Math.max(1.25,fs*.135),dash:[],glow:"rgba(83,214,244,.12)",glowBlur:7};
+  if(kind==="water-minor")return {color:"rgba(108,211,232,.9)",outer:null,width:Math.max(1.05,fs*.105),casing:0,dash:[5,3],glow:null,glowBlur:0};
+  if(kind==="road-major")return {color:"#e7d192",outer:"rgba(27,20,8,.94)",width:Math.max(2.45,fs*.24),casing:Math.max(1.8,fs*.17),dash:[],glow:"rgba(245,222,148,.10)",glowBlur:8};
+  if(kind==="road")return {color:"#ccb87f",outer:"rgba(24,19,10,.86)",width:Math.max(1.62,fs*.155),casing:Math.max(1.15,fs*.105),dash:[],glow:"rgba(218,197,132,.07)",glowBlur:5};
+  if(kind==="road-minor")return {color:"rgba(197,180,127,.9)",outer:"rgba(20,17,10,.68)",width:Math.max(1.08,fs*.102),casing:Math.max(.72,fs*.058),dash:[],glow:null,glowBlur:0};
+  return {color:"rgba(185,166,118,.82)",outer:null,width:Math.max(.9,fs*.078),casing:0,dash:[4,4],glow:null,glowBlur:0};
 }
-function symbolicTraceNetworkPath(ctx,coords,extent,m){
-  if(!coords?.length)return false;let started=false;ctx.beginPath();
+function symbolicCornerRadius(kind,m){
+  const fs=m.fontSize;
+  if(kind==="water-major")return Math.max(4,fs*.72);
+  if(kind==="water")return Math.max(3,fs*.55);
+  if(kind==="road-major")return Math.max(3.4,fs*.60);
+  if(kind==="road")return Math.max(2.5,fs*.42);
+  if(kind==="road-minor")return Math.max(1.8,fs*.30);
+  return Math.max(1.4,fs*.22);
+}
+function symbolicTraceNetworkPath(ctx,coords,extent,m,kind="road"){
+  if(!coords?.length)return false;
+  const pts=[];
   for(const [lon,lat] of coords){
     const p=symbolicProject(lon,lat,extent,m);
-    if(!started){ctx.moveTo(p.x,p.y);started=true}else ctx.lineTo(p.x,p.y);
+    if(!pts.length||Math.hypot(p.x-pts[pts.length-1].x,p.y-pts[pts.length-1].y)>.35)pts.push(p);
   }
-  return started;
+  if(pts.length<2)return false;
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  // Précision d'abord : on suit la polyline simplifiée exacte, sans arrondir les
+  // sommets. Le côté "écran vectoriel" provient du casing et du glow, pas d'une
+  // interpolation qui réinterprète la topologie des carrefours.
+  for(let i=1;i<pts.length;i++)ctx.lineTo(pts[i].x,pts[i].y);
+  return true;
 }
-function symbolicDrawOsmNetworks(ctx,grid,m){
+function symbolicDrawOsmNetworksLabDraft(ctx,grid,m){
   if(!state.osm)return 0;
   const groups=new Map();let count=0;
   for(const feature of queryOsmFeatures(grid.extent)){
@@ -2323,13 +2940,23 @@ function symbolicDrawOsmNetworks(ctx,grid,m){
   const order=["water-minor","water","water-major","path","road-minor","road","road-major"];
   for(const kind of order){
     const paths=groups.get(kind);if(!paths?.length)continue;
-    const style=symbolicNetworkStyle(kind,m);ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+    const style=symbolicNetworkStyleLabDraft(kind,m);ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+    if(style.glow&&style.glowBlur>0){
+      ctx.save();ctx.strokeStyle=style.glow;ctx.lineWidth=style.width+style.casing*2.8;ctx.setLineDash([]);ctx.shadowColor=style.glow;ctx.shadowBlur=style.glowBlur;
+      for(const coords of paths){if(symbolicTraceNetworkPath(ctx,coords,grid.extent,m,kind))ctx.stroke()}
+      ctx.restore();
+    }
     if(style.outer){
       ctx.strokeStyle=style.outer;ctx.lineWidth=style.width+style.casing*2;ctx.setLineDash([]);
-      for(const coords of paths){if(symbolicTraceNetworkPath(ctx,coords,grid.extent,m))ctx.stroke()}
+      for(const coords of paths){if(symbolicTraceNetworkPath(ctx,coords,grid.extent,m,kind))ctx.stroke()}
     }
     ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.setLineDash(style.dash);
-    for(const coords of paths){if(symbolicTraceNetworkPath(ctx,coords,grid.extent,m))ctx.stroke()}
+    for(const coords of paths){if(symbolicTraceNetworkPath(ctx,coords,grid.extent,m,kind))ctx.stroke()}
+    // cœur clair, discret : rappelle le balayage lumineux des écrans vectoriels.
+    if(!style.dash?.length&&style.width>=1.4){
+      ctx.strokeStyle="rgba(255,255,255,.10)";ctx.lineWidth=Math.max(.6,style.width*.22);ctx.setLineDash([]);
+      for(const coords of paths){if(symbolicTraceNetworkPath(ctx,coords,grid.extent,m,kind))ctx.stroke()}
+    }
     ctx.restore();
   }
   return count;
@@ -2481,12 +3108,6 @@ function symbolicDrawPoiLabels(ctx,entries,m,occupied=[]){
   }
   ctx.restore();
 }
-function symbolicDrawInstrumentFrame(ctx,m){
-  const x=m.padding-.5,y=m.padding-.5,w=Math.max(1,CONFIG.gridW*m.cellW+1),h=Math.max(1,CONFIG.gridH*m.cellH+1),c="rgba(218,202,146,.28)";
-  ctx.save();ctx.strokeStyle=c;ctx.lineWidth=.75;ctx.strokeRect(x,y,w,h);ctx.strokeStyle="rgba(121,226,171,.16)";ctx.setLineDash([1,5]);ctx.strokeRect(x+3,y+3,Math.max(1,w-6),Math.max(1,h-6));ctx.setLineDash([]);
-  const len=Math.max(7,m.fontSize*.75);ctx.strokeStyle="rgba(231,218,171,.52)";ctx.lineWidth=1.1;ctx.beginPath();
-  for(const [cx,cy,sx,sy] of [[x,y,1,1],[x+w,y,-1,1],[x,y+h,1,-1],[x+w,y+h,-1,-1]]){ctx.moveTo(cx,cy+sy*len);ctx.lineTo(cx,cy);ctx.lineTo(cx+sx*len,cy)}ctx.stroke();ctx.restore();
-}
 function symbolicDrawPoisAndLabels(ctx,grid,m){
   const pois=symbolicVisiblePois(grid),scale=symbolicPoiScale(),entries=[];canvasRuntime.symbolicPoiHitRegions=[];
   for(const poi of pois){
@@ -2627,18 +3248,6 @@ function drawSymbolicUndergroundMap(grid,m,ctx){
   return symbolicDrawPoisAndLabels(ctx,grid,m);
 }
 
-function drawSymbolicCanvasMap(grid=state.lastGrid){
-  if(!CANVAS_RENDERER||!grid||!els.mapCanvas)return 0;
-  const m=syncCanvasSize();if(!m)return 0;canvasRuntime.lastGrid=grid;
-  const ctx=canvasContext();ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.globalAlpha=1;ctx.shadowBlur=0;
-  if(currentDepth()<0){const count=drawSymbolicUndergroundMap(grid,m,ctx);ctx.globalAlpha=1;ctx.shadowBlur=0;return count}
-  const mapCore=getComputedStyle(document.body).getPropertyValue("--map-core").trim()||"#06110c";ctx.fillStyle=mapCore;ctx.fillRect(0,0,m.width,m.height);
-  symbolicDrawGridTerrain(ctx,grid,m);symbolicDrawOsmPolygons(ctx,grid,m);symbolicDrawPatterns(ctx,grid,m);symbolicDrawCadastre(ctx,grid,m);const networkCount=symbolicDrawOsmNetworks(ctx,grid,m);if(!networkCount)symbolicDrawFallbackGridLines(ctx,grid,m);
-  symbolicDrawInstrumentFrame(ctx,m);
-  const count=symbolicDrawPoisAndLabels(ctx,grid,m);ctx.globalAlpha=1;ctx.shadowBlur=0;return count;
-}
-
-
 /* V0.16e — réseaux nettoyés et direction artistique renforcée.
    Cette passe n'altère aucune donnée. Elle déduplique les fragments OSM au
    moment du dessin, élimine les aires routières prises pour des axes, masque
@@ -2652,18 +3261,49 @@ function symbolicNetworkVisible(kind){
   if(kind==="water")return z>=1||!!detail.minorWater;
   return true;
 }
-function symbolicNetworkFeatureAllowed(feature,kind){
+function symbolicNetworkFeatureAllowed(feature,kind,length=0){
   const t=feature?.tags||{},z=state.zoomIndex,highway=String(t.highway||"").toLowerCase();
+  const name=String(t.name||t.ref||"").trim();
+  const access=String(t.access||"").toLowerCase();
+  const service=String(t.service||"").toLowerCase();
   if(t.area==="yes")return false;
   if(feature?.closed&&String(t.junction||"").toLowerCase()!=="roundabout")return false;
-  if(String(t.access||"").toLowerCase()==="no")return false;
+  if(["no","private","customers"].includes(access))return false;
+
+  // Les voies de parking, accès de maison et bretelles techniques sont utiles
+  // dans la base, mais illisibles dans une carte synthétique. Même au zoom max,
+  // elles ne sont pas affichées par défaut.
   if(highway==="service"){
-    const service=String(t.service||"").toLowerCase();
+    if(["driveway","parking_aisle","emergency_access","drive-through"].includes(service))return false;
     if(z<5)return false;
-    if(["driveway","parking_aisle","emergency_access"].includes(service)&&z<5)return false;
+    if(!name&&length<90)return false;
   }
-  if(["footway","path","cycleway","bridleway","steps"].includes(highway)&&z<4)return false;
-  if(highway==="track"&&z<3)return false;
+  if(highway==="living_street"){
+    if(z<5)return false;
+    if(!name&&length<75)return false;
+  }
+
+  // Les chemins sont réservés aux deux niveaux les plus proches. À l'échelle
+  // Site, seuls les itinéraires nommés ou réellement continus restent visibles.
+  if(["footway","path","cycleway","bridleway","steps"].includes(highway)){
+    if(z<4)return false;
+    if(z===4&&!name)return false;
+    if(!name&&length<80)return false;
+  }
+  if(highway==="track"){
+    if(z<4)return false;
+    if(z===4&&!name&&length<180)return false;
+  }
+
+  // Généralisation des rues locales. On garde toutes les données, mais pas tous
+  // les fragments à toutes les échelles.
+  if(["residential","unclassified"].includes(highway)){
+    if(z<=2&&!name)return false;
+    if(z===3&&!name&&length<220)return false;
+    if(z===4&&!name&&length<85)return false;
+    if(z===5&&!name&&length<45)return false;
+  }
+  if(kind==="road-minor"&&z<5)return false;
   if(kind==="water-minor"&&z<5)return false;
   return true;
 }
@@ -2675,25 +3315,50 @@ function symbolicNetworkLengthMeters(coords){
   }
   return total;
 }
+function symbolicNetworkEndpointKey(pair){
+  const lon=Number(pair?.[0]),lat=Number(pair?.[1]);
+  return Number.isFinite(lon)&&Number.isFinite(lat)?`${lon.toFixed(5)},${lat.toFixed(5)}`:"";
+}
+function symbolicNetworkGeometryKey(feature,kind){
+  const coords=feature?.coords||[];if(coords.length<2)return "";
+  const sample=coords.length>14?coords.filter((_,i)=>i===0||i===coords.length-1||i%Math.ceil(coords.length/12)===0):coords;
+  const direct=sample.map(p=>`${Number(p[0]).toFixed(5)},${Number(p[1]).toFixed(5)}`).join("|");
+  const reverse=sample.slice().reverse().map(p=>`${Number(p[0]).toFixed(5)},${Number(p[1]).toFixed(5)}`).join("|");
+  return `${kind}|${direct<reverse?direct:reverse}`;
+}
 function symbolicNetworkCandidates(extent){
-  const ways=new Map(),others=new Map();
+  const byId=new Map(),byGeometry=new Map();
   for(const feature of queryOsmFeatures(extent)){
-    const kind=symbolicNetworkKind(feature.tags||{});
-    if(!kind||!symbolicNetworkVisible(kind)||!symbolicNetworkFeatureAllowed(feature,kind))continue;
+    const kind=symbolicNetworkKind(feature.tags||{});if(!kind||!symbolicNetworkVisible(kind))continue;
     const length=symbolicNetworkLengthMeters(feature.coords);
-    if(feature.type==="way"){
-      const key=feature.id||`way:${feature.coords?.[0]}`;
-      const previous=ways.get(key);
-      // Les fenêtres Overpass successives peuvent fournir plusieurs copies du
-      // même way. On conserve la géométrie la plus complète, pas leurs fragments.
-      if(!previous||length>previous.length||(length===previous.length&&(feature.coords?.length||0)>(previous.feature.coords?.length||0)))ways.set(key,{feature,kind,length});
+    if(!symbolicNetworkFeatureAllowed(feature,kind,length))continue;
+    const item={feature,kind,length};
+    const idKey=feature.type==="way"&&feature.id?`way:${feature.id}`:"";
+    if(idKey){
+      const previous=byId.get(idKey);
+      if(!previous||length>previous.length||(length===previous.length&&(feature.coords?.length||0)>(previous.feature.coords?.length||0)))byId.set(idKey,item);
     }else{
-      const first=feature.coords?.[0]||[],last=feature.coords?.at?.(-1)||[];
-      const key=`${feature.id}|${first[0]?.toFixed?.(6)},${first[1]?.toFixed?.(6)}|${last[0]?.toFixed?.(6)},${last[1]?.toFixed?.(6)}`;
-      if(!others.has(key))others.set(key,{feature,kind,length});
+      const geometryKey=symbolicNetworkGeometryKey(feature,kind);if(!geometryKey)continue;
+      const previous=byGeometry.get(geometryKey);
+      if(!previous||length>previous.length)byGeometry.set(geometryKey,item);
     }
   }
-  return [...ways.values(),...others.values()];
+  const items=[...byId.values(),...byGeometry.values()];
+  // Comptage des extrémités pour repérer les petits rameaux orphelins. Cela ne
+  // supprime jamais un axe nommé ou majeur, uniquement du bruit cartographique.
+  const endpointUse=new Map();
+  for(const item of items){
+    const coords=item.feature.coords||[],a=symbolicNetworkEndpointKey(coords[0]),b=symbolicNetworkEndpointKey(coords.at(-1));
+    if(a)endpointUse.set(a,(endpointUse.get(a)||0)+1);if(b)endpointUse.set(b,(endpointUse.get(b)||0)+1);
+  }
+  return items.filter(item=>{
+    const t=item.feature.tags||{},name=String(t.name||t.ref||"").trim();
+    if(name||["road-major","water-major"].includes(item.kind))return true;
+    const coords=item.feature.coords||[],a=symbolicNetworkEndpointKey(coords[0]),b=symbolicNetworkEndpointKey(coords.at(-1));
+    const dangling=(endpointUse.get(a)||0)<=1||(endpointUse.get(b)||0)<=1;
+    const threshold=item.kind==="road"?(state.zoomIndex>=5?55:state.zoomIndex===4?95:180):item.kind==="road-minor"?120:item.kind==="path"?140:item.kind==="water-minor"?80:0;
+    return !(dangling&&item.length<threshold);
+  });
 }
 function symbolicSimplifiedCoords(feature,kind){
   const coords=feature?.coords||[];if(coords.length<=2)return coords;
@@ -2727,13 +3392,13 @@ function symbolicNetworkUseful(feature,kind,coords,extent,m){
 }
 function symbolicNetworkStyle(kind,m){
   const fs=m.fontSize;
-  if(kind==="water-major")return {color:"#54d8f1",outer:"rgba(1,18,24,.96)",width:Math.max(2.45,fs*.25),casing:Math.max(2.0,fs*.19),highlight:"rgba(187,247,255,.36)",highlightWidth:Math.max(.55,fs*.045),dash:[]};
-  if(kind==="water")return {color:"#43bdd6",outer:"rgba(1,18,24,.92)",width:Math.max(1.65,fs*.17),casing:Math.max(1.35,fs*.13),highlight:"rgba(178,242,250,.24)",highlightWidth:Math.max(.45,fs*.037),dash:[]};
-  if(kind==="water-minor")return {color:"rgba(88,185,204,.68)",outer:null,width:Math.max(.85,fs*.075),casing:0,highlight:null,dash:[]};
-  if(kind==="road-major")return {color:"#dbc781",outer:"rgba(19,15,7,.98)",width:Math.max(2.15,fs*.215),casing:Math.max(1.75,fs*.17),highlight:"rgba(255,242,191,.26)",highlightWidth:Math.max(.45,fs*.04),dash:[]};
-  if(kind==="road")return {color:"#bea96f",outer:"rgba(18,15,8,.94)",width:Math.max(1.42,fs*.135),casing:Math.max(1.05,fs*.095),highlight:"rgba(255,239,181,.18)",highlightWidth:Math.max(.35,fs*.03),dash:[]};
-  if(kind==="road-minor")return {color:"rgba(181,161,107,.72)",outer:"rgba(17,15,9,.68)",width:Math.max(.9,fs*.08),casing:Math.max(.55,fs*.045),highlight:null,dash:[]};
-  return {color:"rgba(166,151,108,.64)",outer:null,width:Math.max(.72,fs*.06),casing:0,highlight:null,dash:[2,4]};
+  if(kind==="water-major")return {aura:"rgba(70,218,245,.16)",auraWidth:Math.max(6.0,fs*.56),color:"#64e3f8",outer:"rgba(1,18,24,.97)",width:Math.max(2.5,fs*.255),casing:Math.max(2.0,fs*.19),highlight:"rgba(219,252,255,.52)",highlightWidth:Math.max(.58,fs*.048),dash:[]};
+  if(kind==="water")return {aura:"rgba(64,201,229,.10)",auraWidth:Math.max(4.2,fs*.40),color:"#50cde4",outer:"rgba(1,18,24,.93)",width:Math.max(1.7,fs*.175),casing:Math.max(1.35,fs*.13),highlight:"rgba(197,247,252,.32)",highlightWidth:Math.max(.46,fs*.038),dash:[]};
+  if(kind==="water-minor")return {aura:null,auraWidth:0,color:"rgba(96,196,216,.74)",outer:null,width:Math.max(.86,fs*.076),casing:0,highlight:null,dash:[]};
+  if(kind==="road-major")return {aura:"rgba(240,211,116,.085)",auraWidth:Math.max(5.0,fs*.46),color:"#e8cf86",outer:"rgba(19,15,7,.98)",width:Math.max(2.2,fs*.22),casing:Math.max(1.8,fs*.175),highlight:"rgba(255,246,206,.34)",highlightWidth:Math.max(.48,fs*.042),dash:[]};
+  if(kind==="road")return {aura:"rgba(220,192,102,.045)",auraWidth:Math.max(3.2,fs*.29),color:"#cbb474",outer:"rgba(18,15,8,.94)",width:Math.max(1.45,fs*.14),casing:Math.max(1.05,fs*.095),highlight:"rgba(255,239,181,.20)",highlightWidth:Math.max(.35,fs*.03),dash:[]};
+  if(kind==="road-minor")return {aura:null,auraWidth:0,color:"rgba(180,163,113,.52)",outer:null,width:Math.max(.73,fs*.061),casing:0,highlight:null,dash:[3,3]};
+  return {aura:null,auraWidth:0,color:"rgba(164,153,115,.49)",outer:null,width:Math.max(.63,fs*.053),casing:0,highlight:null,dash:[2,5]};
 }
 function symbolicDrawOsmNetworks(ctx,grid,m){
   if(!state.osm)return 0;
@@ -2747,20 +3412,24 @@ function symbolicDrawOsmNetworks(ctx,grid,m){
   for(const kind of order){
     const paths=groups.get(kind);if(!paths?.length)continue;
     const style=symbolicNetworkStyle(kind,m);ctx.save();ctx.lineCap=kind==="path"?"butt":"round";ctx.lineJoin="round";
+    if(style.aura){
+      ctx.strokeStyle=style.aura;ctx.lineWidth=style.auraWidth;ctx.setLineDash([]);ctx.lineDashOffset=0;
+      for(const item of paths){if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m,kind))ctx.stroke()}
+    }
     if(style.outer){
       ctx.strokeStyle=style.outer;ctx.lineWidth=style.width+style.casing*2;ctx.setLineDash([]);
-      for(const item of paths){if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m))ctx.stroke()}
+      for(const item of paths){if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m,kind))ctx.stroke()}
     }
     ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.setLineDash(style.dash);
     for(const item of paths){
       // Phase stable par identifiant : les pointillés ne changent plus de motif
       // à chaque mouvement de la fenêtre.
       ctx.lineDashOffset=style.dash.length?-(symbolicPoiHash(item.feature.id||"")%17):0;
-      if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m))ctx.stroke();
+      if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m,kind))ctx.stroke();
     }
     if(style.highlight){
       ctx.strokeStyle=style.highlight;ctx.lineWidth=style.highlightWidth;ctx.setLineDash([]);ctx.lineDashOffset=0;
-      for(const item of paths){if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m))ctx.stroke()}
+      for(const item of paths){if(symbolicTraceNetworkPath(ctx,item.coords,grid.extent,m,kind))ctx.stroke()}
     }
     ctx.restore();
   }
@@ -2802,13 +3471,13 @@ function symbolicDrawCadastre(ctx,grid,m){
   if(useCadastre){
     ctx.save();ctx.translate(Math.max(.8,m.fontSize*.055),Math.max(1,m.fontSize*.07));ctx.fillStyle="rgba(1,8,5,.42)";
     for(const indexed of cadastre){if(symbolicTraceCoords(ctx,indexed.feature.coords,grid.extent,m,true))ctx.fill()}ctx.restore();
-    ctx.save();ctx.fillStyle="#d8d0b8";ctx.strokeStyle="#746f61";ctx.lineWidth=Math.max(.55,m.fontSize*.045);
+    ctx.save();ctx.fillStyle="#e4dcc2";ctx.strokeStyle="#a69d7f";ctx.lineWidth=Math.max(.55,m.fontSize*.045);
     for(const indexed of cadastre){if(!symbolicTraceCoords(ctx,indexed.feature.coords,grid.extent,m,true))continue;ctx.fill();ctx.stroke()}ctx.restore();
   }
   // Évite le double contour OSM + cadastre, particulièrement brouillon dans les
   // lotissements. OSM ne sert de repli que si le cadastre n'est pas disponible.
   if(!useCadastre&&state.osm&&detail.osmBuildings){
-    ctx.save();ctx.fillStyle="rgba(213,205,183,.84)";ctx.strokeStyle="rgba(112,107,94,.88)";ctx.lineWidth=Math.max(.5,m.fontSize*.04);
+    ctx.save();ctx.fillStyle="rgba(229,220,194,.88)";ctx.strokeStyle="rgba(157,148,116,.94)";ctx.lineWidth=Math.max(.5,m.fontSize*.04);
     for(const f of queryOsmFeatures(grid.extent)){if(!f.tags?.building||!f.closed)continue;if(!symbolicTraceCoords(ctx,f.coords,grid.extent,m,true))continue;ctx.fill();ctx.stroke()}ctx.restore();
   }
 }
@@ -2828,28 +3497,31 @@ function symbolicDrawInstrumentFrame(ctx,m){
 }
 function symbolicDrawCartographicFinish(ctx,m){
   ctx.save();
-  const vignette=ctx.createRadialGradient(m.width*.48,m.height*.44,Math.min(m.width,m.height)*.16,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.72);
-  vignette.addColorStop(0,"rgba(0,0,0,0)");vignette.addColorStop(.72,"rgba(0,0,0,.035)");vignette.addColorStop(1,"rgba(0,5,3,.23)");
+  const vignette=ctx.createRadialGradient(m.width*.48,m.height*.44,Math.min(m.width,m.height)*.14,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.72);
+  vignette.addColorStop(0,"rgba(92,255,184,.022)");vignette.addColorStop(.66,"rgba(0,0,0,.03)");vignette.addColorStop(1,"rgba(0,5,3,.25)");
   ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);
-  ctx.globalAlpha=.035;ctx.fillStyle="#d8e6d9";
-  for(let y=m.padding+3;y<m.height-m.padding;y+=7){const shift=((y/7)|0)%2?3:0;for(let x=m.padding+shift+3;x<m.width-m.padding;x+=11)ctx.fillRect(x,y,.55,.55)}
+  const wash=ctx.createLinearGradient(0,0,m.width,m.height);
+  wash.addColorStop(0,"rgba(91,255,190,.024)");wash.addColorStop(.5,"rgba(255,223,135,.010)");wash.addColorStop(1,"rgba(65,205,255,.020)");
+  ctx.fillStyle=wash;ctx.fillRect(0,0,m.width,m.height);
   ctx.restore();
 }
-function drawSymbolicCanvasMap(grid=state.lastGrid){
+function drawSymbolicCanvasMap(grid=state.lastGrid,reason="direct"){
   if(!CANVAS_RENDERER||!grid||!els.mapCanvas)return 0;
-  const m=syncCanvasSize();if(!m)return 0;canvasRuntime.lastGrid=grid;
+  const m=syncCanvasSize();if(!m)return 0;const frame=beginCanvasPipeline("symbolic",reason);canvasRuntime.lastGrid=grid;
   const ctx=canvasContext();ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.globalAlpha=1;ctx.shadowBlur=0;
-  if(currentDepth()<0){const count=drawSymbolicUndergroundMap(grid,m,ctx);symbolicDrawCartographicFinish(ctx,m);ctx.globalAlpha=1;ctx.shadowBlur=0;return count}
+  if(currentDepth()<0){
+    const count=drawSymbolicUndergroundMap(grid,m,ctx);symbolicDrawCartographicFinish(ctx,m);finalizeCanvasFrame(ctx,m,"symbolic",reason,frame);ctx.globalAlpha=1;ctx.shadowBlur=0;return count
+  }
   const mapCore=getComputedStyle(document.body).getPropertyValue("--map-core").trim()||"#06110c";ctx.fillStyle=mapCore;ctx.fillRect(0,0,m.width,m.height);
   symbolicDrawGridTerrain(ctx,grid,m);symbolicDrawOsmPolygons(ctx,grid,m);symbolicDrawPatterns(ctx,grid,m);symbolicDrawCadastre(ctx,grid,m);
   const networkCount=symbolicDrawOsmNetworks(ctx,grid,m);if(!networkCount)symbolicDrawFallbackGridLines(ctx,grid,m);
-  symbolicDrawInstrumentFrame(ctx,m);const count=symbolicDrawPoisAndLabels(ctx,grid,m);symbolicDrawCartographicFinish(ctx,m);
+  symbolicDrawInstrumentFrame(ctx,m);const count=symbolicDrawPoisAndLabels(ctx,grid,m);symbolicDrawCartographicFinish(ctx,m);finalizeCanvasFrame(ctx,m,"symbolic",reason,frame);
   ctx.globalAlpha=1;ctx.shadowBlur=0;return count;
 }
 
-function drawCanvasMap(grid=state.lastGrid){
+function drawCanvasMap(grid=state.lastGrid,reason="direct"){
   document.body.dataset.effectiveRender=effectiveRenderMode();
-  return effectiveRenderMode()==="symbolic"?drawSymbolicCanvasMap(grid):drawAsciiCanvasMap(grid);
+  return effectiveRenderMode()==="symbolic"?drawSymbolicCanvasMap(grid,reason):drawAsciiCanvasMap(grid,reason);
 }
 function updateRenderModeControls(){
   const symbolic=state.renderMode==="symbolic",underground=currentDepth()!==0;
@@ -3253,16 +3925,14 @@ function rad(v){return v*Math.PI/180}
 function kmPerLon(lat){return 111.32*Math.cos(rad(lat))}
 function currentZoom(){
   const base=CONFIG.zooms[state.zoomIndex];
-  if(matchMedia("(min-width:941px)").matches)return base;
-  // Sur mobile, on adapte l'emprise géographique à la forme réelle de la
-  // fenêtre. On garde l'identité du niveau de zoom (même ordre de grandeur),
-  // mais on fait varier largeur/hauteur pour remplir l'écran sans écraser la
-  // carte. L'aire observée reste proche du niveau nominal.
+  // L'emprise adopte désormais le ratio visuel réel de la grille sur desktop
+  // comme sur mobile. L'aire nominale du niveau est préservée : on gagne du
+  // panorama, sans étirer la géographie ni modifier la quantité de territoire.
   try{
     const metrics=measureCanvasLayout();
     const visualRatio=(CONFIG.gridW*Math.max(1,metrics.cellW))/(CONFIG.gridH*Math.max(1,metrics.cellH));
     const area=Math.max(1e-6,base.widthKm*base.heightKm);
-    const widthKm=Math.sqrt(area*Math.max(.18,visualRatio));
+    const widthKm=Math.sqrt(area*Math.max(.24,visualRatio));
     const heightKm=area/Math.max(.001,widthKm);
     return {...base,widthKm,heightKm};
   }catch{return base}
@@ -4334,6 +5004,7 @@ function mergeOsmFeatures(features){
   const map=new Map((state.osm||[]).map(f=>[osmFeatureKey(f),f]));
   for(const f of features||[])map.set(osmFeatureKey(f),f);
   state.osm=[...map.values()];
+  markMapDataRevision("osm");
   state.osmCavities=extractOsmCavities(state.osm);
   markSpatialIndexesDirty();
   refreshCavities();
@@ -4455,7 +5126,7 @@ async function loadOsmWindow(kind,extent,force=false){
 }
 async function ensureOsmForCurrentView(force=false){
   if((OFFLINE_TEST||!state.allowNetwork)&&!force)return;
-  if(state.osmLoading)return;
+  if(state.osmLoading){osmEnsurePending=true;return}
   const view=extentFor();
   const baseExtent=expandExtentBox(view,1.18);
   const needBase=force||!osmCoverageHas("base",view);
@@ -4478,7 +5149,7 @@ async function ensureOsmForCurrentView(force=false){
       const r=await loadOsmWindow("base",baseExtent,force);
       if(r.cached)fromCache++;
       setStatus("osm","pending",`${state.osm?.length||0} objets · détails…`);
-      render();
+      render("osm-base-refresh");
     }
     if(needDetail){
       state.osmAttemptLabel="recherche des bâtiments";updateOsmActivity();
@@ -4492,7 +5163,7 @@ async function ensureOsmForCurrentView(force=false){
     setStatus("osm","ok",`${state.osm?.length||0} objets${fromCache?" · cache":""}${skipped?` · ${skipped} trous ignorés`:""}`);
     els.osmHelp.textContent=`Synchronisation réussie via ${host}${state.osmMeta?.method?` (${state.osmMeta.method})`:""}. Les géométries sont limitées à la fenêtre visible pour alléger la réponse.${parseNote}`;
     els.sourceNote.textContent=`Surface OSM chargée par fenêtres locales via ${host}. Les bâtiments ne sont demandés qu’aux zooms Site, Parcelle et Détail.${parseNote}`;
-    render();
+    render("osm-sync-complete");
     return true;
   }catch(err){
     const cancelled=err?.name==="AbortError"&&state.osmAbortRequested;
@@ -4501,7 +5172,7 @@ async function ensureOsmForCurrentView(force=false){
       if(state.osm?.length)setStatus("osm","ok",`${state.osm.length} objets · synchro annulée`);
       else setStatus("osm","pending","synchronisation annulée");
       els.osmHelp.textContent="Synchronisation OSM annulée. Les données déjà reçues restent disponibles.";
-      render();return false;
+      render("osm-sync-cancelled");return false;
     }
     if(state.osm?.length)setStatus("osm","ok",`${state.osm.length} objets · mise à jour échouée`);
     else setStatus("osm","bad","échec OSM · diagnostic disponible");
@@ -4512,19 +5183,22 @@ async function ensureOsmForCurrentView(force=false){
     els.osmHelp.innerHTML=`<strong>Échec OSM.</strong> ${esc(state.osmLastError)}${esc(localHint)}`;
     els.sourceNote.innerHTML=`OSM n’a pas répondu pour cette fenêtre. ${esc(localHint||"Le diagnostic des serveurs permet de distinguer surcharge, refus HTTP et blocage CORS.")}`;
     console.warn("OSM indisponible",err);
-    render();
+    render("osm-sync-error");
     return false;
   }finally{
     clearInterval(osmActivityTimer);osmActivityTimer=0;
     state.osmLoading=false;state.osmActivityStarted=0;state.osmAbortController=null;state.osmAbortRequested=false;state.osmAttemptLabel="";
     if(els.syncOsm){els.syncOsm.disabled=false;els.syncOsm.textContent="↻ synchroniser OSM"}
+    if(osmEnsurePending){osmEnsurePending=false;scheduleOsmEnsure(0)}
   }
 }
-let osmEnsureTimer=0;
+let osmEnsureTimer=0,osmEnsurePending=false;
 function scheduleOsmEnsure(delay=650){
   if(OFFLINE_TEST||!state.allowNetwork)return;
+  if(state.osmLoading){osmEnsurePending=true;return}
   clearTimeout(osmEnsureTimer);
-  osmEnsureTimer=setTimeout(()=>ensureOsmForCurrentView(false),delay);
+  osmEnsurePending=false;
+  osmEnsureTimer=setTimeout(()=>{osmEnsureTimer=0;ensureOsmForCurrentView(false)},delay);
 }
 async function fetchOverpass(){
   if(!state.osmLegacyChecked){
@@ -4536,7 +5210,7 @@ async function fetchOverpass(){
       mergeOsmFeatures(legacy.data);
       state.osmMeta=legacy.meta||null;
       setStatus("osm","pending",`${state.osm.length} objets anciens · actualisation…`);
-      render();
+      render("osm-legacy-cache");
     }
   }
   return ensureOsmForCurrentView(false);
@@ -4601,7 +5275,7 @@ async function importOsmJsonFile(file){
     setStatus("osm","ok",`${state.osm.length} objets · import JSON`);
     const skipped=state.osmParseStats.droppedPoints;
     els.osmHelp.textContent=`${parsed.length} géométries importées depuis ${file.name}.${skipped?` ${skipped} sommet${skipped>1?"s":""} incomplet${skipped>1?"s":""} ignoré${skipped>1?"s":""}.`:""} Elles seront incluses dans la prochaine sauvegarde ou copie autonome.`;
-    render();
+    render("osm-import");
   }catch(err){
     els.osmHelp.textContent=`Import OSM impossible : ${err?.message||"fichier invalide"}`;
   }finally{els.osmFile.value=""}
@@ -7146,7 +7820,7 @@ function render(reason="direct"){
   state.lastGrid=g;
   let visiblePoiCount=0;
   if(CANVAS_RENDERER){
-    visiblePoiCount=drawCanvasMap(g);
+    visiblePoiCount=drawCanvasMap(g,reason);
     els.map.textContent="";
   }else{
     let out="";
@@ -7395,36 +8069,27 @@ function effectiveMapViewportRect(){
 }
 function responsiveGridProfile(main){
   const desktop=matchMedia("(min-width:941px)").matches;
-  if(!desktop){
-    // Sur mobile, on remplit franchement la fenêtre utile. La géographie ne sera
-    // plus déformée car currentZoom() adapte ensuite l'emprise au ratio obtenu.
-    const compact=matchMedia("(max-width:520px)").matches;
-    const fontSize=compact?11:12,padding=compact?12:14;
-    const available=effectiveMapViewportRect();
-    const roomW=Math.max(260,available?.width||main.clientWidth||window.innerWidth);
-    const roomH=Math.max(190,available?.height||els.viewport?.clientHeight||window.innerHeight*.58);
-    const probe=measureCanvasLayout(fontSize,padding);
-    let columns=Math.floor((roomW-padding*2-4)/Math.max(1,probe.cellW));
-    let rows=Math.floor((roomH-padding*2-4)/Math.max(1,probe.cellH));
-    columns=Math.floor(columns/4)*4;
-    rows=Math.floor(rows/2)*2;
-    return {w:clamp(columns,40,144),h:clamp(rows,18,96)};
-  }
-  const largeScreen=window.innerHeight>=1100||window.innerWidth>=1850;
-  if(!largeScreen)return {w:120,h:64};
+  const compact=matchMedia("(max-width:520px)").matches;
+  const fontSize=compact?11:12,padding=compact?12:17;
+  const available=effectiveMapViewportRect();
+  const roomW=Math.max(desktop?620:260,available?.width||main.clientWidth||window.innerWidth);
+  const roomH=Math.max(desktop?320:190,available?.height||els.viewport?.clientHeight||window.innerHeight*.58);
+  const probe=measureCanvasLayout(fontSize,padding);
 
-  const roomW=Math.max(720,main.clientWidth-24);
-  const vr=els.viewport?.getBoundingClientRect();
-  const roomH=Math.max(360,vr?.height||Math.round(window.innerHeight*.62));
-  const rows=window.innerHeight>=1300?52:48;
-  const characterWidthRatio=.61;
-  const targetAspect=clamp(roomW/roomH,1.65,3.10);
-  let columns=Math.round((rows*targetAspect/characterWidthRatio)/8)*8;
-  columns=clamp(columns,160,264);
+  // La grille est calculée depuis la fenêtre réellement disponible, et non
+  // depuis la résolution physique de l'écran. Elle fonctionne donc aussi avec
+  // la mise à l'échelle Windows à 125 %, 150 % ou davantage.
+  let columns=Math.floor((roomW-padding*2-8)/Math.max(1,probe.cellW));
+  let rows=Math.floor((roomH-padding*2-8)/Math.max(1,probe.cellH));
+  columns=Math.floor(columns/8)*8;
+  rows=Math.floor(rows/(desktop?4:2))*(desktop?4:2);
+  columns=clamp(columns,desktop?120:40,desktop?384:160);
+  rows=clamp(rows,desktop?44:18,desktop?128:104);
 
-  // Petite hystérésis pour éviter une oscillation de huit colonnes lorsque
-  // une barre de défilement apparaît ou disparaît.
-  if(CONFIG.gridW>=160&&CONFIG.gridH===rows&&Math.abs(columns-CONFIG.gridW)<16)columns=CONFIG.gridW;
+  // Hystérésis pour éviter les oscillations lorsque les barres de défilement
+  // apparaissent ou disparaissent d'un pixel.
+  if(Math.abs(columns-CONFIG.gridW)<16)columns=CONFIG.gridW;
+  if(Math.abs(rows-CONFIG.gridH)<4)rows=CONFIG.gridH;
   return {w:columns,h:rows};
 }
 function applyResponsiveGridProfile(main){
@@ -7453,37 +8118,26 @@ function alignRenderedCenterToVisibleViewport(){
 function fitMapFrame(){
   const main=document.querySelector("main"),surface=activeMapSurface();
   if(!main||!surface||!els.viewport)return;
-  if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
-  const availableWidth=Math.max(280,main.clientWidth),compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches;
+  const compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches;
   const baseFont=compact?11:12,basePadding=compact?12:17;
-  setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
-  let baseWidth,baseHeight;
-  if(CANVAS_RENDERER){const base=measureCanvasLayout(baseFont,basePadding);baseWidth=base.width;baseHeight=base.height}else{baseWidth=Math.max(1,els.map.scrollWidth);baseHeight=Math.max(1,els.map.scrollHeight)}
-  const viewportHeight=Math.max(220,els.viewport.clientHeight);let scale=1;
-  if(desktop){
-    const horizontalRoom=Math.max(320,availableWidth-28),verticalRoom=Math.max(260,viewportHeight-24);
-    const widthScale=horizontalRoom/baseWidth,heightScale=verticalRoom/baseHeight;
-    scale=clamp(Math.min(widthScale,heightScale*1.10),1,2.45);
-  }else{
-    // Sur mobile, on veut maintenant occuper un maximum d'écran sans jamais
-    // tordre le ratio géographique. La grille conserve son aspect, puis on la
-    // grossit uniformément jusqu'à remplir au mieux la fenêtre visible.
-    const horizontalRoom=Math.max(240,availableWidth-18),verticalRoom=Math.max(180,viewportHeight-18);
-    const widthScale=horizontalRoom/baseWidth,heightScale=verticalRoom/baseHeight;
-    // Petite marge haute pour que les contrôles flottants et la respiration du
-    // cadre restent lisibles. On autorise une légère sur-échelle maîtrisée.
-    scale=clamp(Math.min(widthScale,heightScale),1,2.2);
-  }
-  responsiveMapScale=scale;
-  setMapCssVariable(main,"--map-font-size",`${(baseFont*scale).toFixed(2)}px`);
-  setMapCssVariable(main,"--map-padding",`${Math.round(basePadding*Math.min(scale,1.45))}px`);
-  let finalWidth;
-  if(CANVAS_RENDERER){const m=syncCanvasSize();finalWidth=Math.ceil(m?.width||baseWidth);if(state.lastGrid)drawCanvasMap(state.lastGrid)}else finalWidth=Math.ceil(els.map.scrollWidth+2);
+  // Une seule autorité : taille de cellule fixe + nombre de lignes/colonnes
+  // calculé depuis la fenêtre disponible. Aucun second zoom CSS du Canvas.
+  setMapCssVariable(main,"--map-font-size",`${baseFont}px`);
+  setMapCssVariable(main,"--map-padding",`${basePadding}px`);
+  const availableWidth=Math.max(280,main.clientWidth);
+  setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
+  responsiveMapScale=1;
+  if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
+  const previousSignature=canvasRuntime.layoutSignature;
+  const m=CANVAS_RENDERER?syncCanvasSize():null;
+  const finalWidth=Math.ceil(m?.displayWidth||els.map.scrollWidth+2);
   const frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
   setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);
   els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
+  if(CANVAS_RENDERER&&state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
+  else if(CANVAS_RENDERER)syncRenderFxGeometry(m);
   requestAnimationFrame(()=>{
-    alignRenderedCenterToVisibleViewport();
+    syncRenderFxGeometry(canvasRuntime.metrics);alignRenderedCenterToVisibleViewport();
     syncSelectionDom();if(pendingPoiFeedback)applyPendingPoiSelectionFeedback();
     updateWorldBoundaryFrame();updateRelationOverlay();updateGuidedTourMarker();
   });
@@ -8484,7 +9138,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
     CONFIG.house={lat:+snapshot.house.lat,lon:+snapshot.house.lon};markSpatialIndexesDirty();
     els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7);
   }
-  state.osm=Array.isArray(d.osm)?d.osm:[];state.osmMeta=d.osmMeta||null;
+  state.osm=Array.isArray(d.osm)?d.osm:[];markMapDataRevision("osm");state.osmMeta=d.osmMeta||null;
   state.osmBaseCoverage=Array.isArray(d.osmBaseCoverage)?d.osmBaseCoverage:[];state.osmDetailCoverage=Array.isArray(d.osmDetailCoverage)?d.osmDetailCoverage:[];
   state.osmCavities=extractOsmCavities(state.osm);
   state.officialCavities=Array.isArray(d.officialCavities)?d.officialCavities:[];
@@ -8602,9 +9256,14 @@ function applyPanPreview(dx,dy){
   const surface=activeMapSurface();if(!surface)return;
   const safeX=clamp(Number(dx)||0,-window.innerWidth*1.5,window.innerWidth*1.5);
   const safeY=clamp(Number(dy)||0,-window.innerHeight*1.5,window.innerHeight*1.5);
-  surface.style.transform=`translate3d(${safeX.toFixed(2)}px,${safeY.toFixed(2)}px,0)`;
+  const transform=`translate3d(${safeX.toFixed(2)}px,${safeY.toFixed(2)}px,0)`;
+  surface.style.transform=transform;
+  if(CANVAS_RENDERER&&els.renderFxLayer)els.renderFxLayer.style.transform=transform;
 }
-function clearPanPreview(){const surface=activeMapSurface();if(surface)surface.style.transform=""}
+function clearPanPreview(){
+  const surface=activeMapSurface();if(surface)surface.style.transform="";
+  if(els.renderFxLayer)els.renderFxLayer.style.transform="translateZ(0)";
+}
 function panGeographicPixelSpan(){
   if(CANVAS_RENDERER){
     const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();
@@ -8765,7 +9424,7 @@ activeMapSurface().addEventListener("lostpointercapture",ev=>{
   if(pinchConsumed)return;
   if(drag&&ev.pointerId===drag.pointerId)endDrag(ev);
 });
-els.viewport.addEventListener("scroll",()=>{if(CANVAS_RENDERER){syncSelectionDom();if(hoverCandidate){if(hoverCandidate.poiUid){const poi=normalizedPoiByUid(hoverCandidate.poiUid);if(poi&&state.lastGrid){const p=coordToGrid(poi.lat,poi.lon,state.lastGrid.extent);positionCanvasMarker(els.canvasHoverMarker,p.x,p.y,true)}}else{const [x,y]=hoverCandidate.key.split(":").map(Number);positionCanvasMarker(els.canvasHoverMarker,x,y,true)}}updateWorldBoundaryFrame()}},{passive:true});
+els.viewport.addEventListener("scroll",()=>{if(CANVAS_RENDERER){syncRenderFxGeometry(canvasRuntime.metrics);syncSelectionDom();if(hoverCandidate){if(hoverCandidate.poiUid){const poi=normalizedPoiByUid(hoverCandidate.poiUid);if(poi&&state.lastGrid){const p=coordToGrid(poi.lat,poi.lon,state.lastGrid.extent);positionCanvasMarker(els.canvasHoverMarker,p.x,p.y,true)}}else{const [x,y]=hoverCandidate.key.split(":").map(Number);positionCanvasMarker(els.canvasHoverMarker,x,y,true)}}updateWorldBoundaryFrame()}},{passive:true});
 els.selectionUp.addEventListener("click",()=>moveSelection(0,-1));
 els.selectionDown.addEventListener("click",()=>moveSelection(0,1));
 els.selectionLeft.addEventListener("click",()=>moveSelection(-1,0));
@@ -9002,7 +9661,7 @@ window.addEventListener("keydown",e=>{
 });
 window.addEventListener("keydown",e=>{
   const tag=e.target?.tagName?.toLowerCase();
-  if(["input","select","textarea"].includes(tag))return;
+  if(["input","select","textarea","button","a"].includes(tag)||e.target?.isContentEditable)return;
   const k=e.key.toLowerCase();
   const controlled=["arrowleft","arrowright","arrowup","arrowdown","q","d","z","s","+","-","[","]","h"];
   if(controlled.includes(k)||e.key==="=")e.preventDefault();

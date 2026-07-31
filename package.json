@@ -1,0 +1,10 @@
+{
+  "name": "atlas-karst",
+  "version": "0.16.0-r.1",
+  "private": true,
+  "description": "Atlas cartographique autonome à rendu Canvas symbolique et ASCII",
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node tools/audit-html.mjs"
+  }
+}
