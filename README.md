@@ -51,6 +51,21 @@ Cette commande vérifie notamment :
 - la cohérence du registre central des éléments d’interface ;
 - la présence des contrats essentiels du pipeline Canvas et OSM.
 
+Les scénarios navigateur demandent Chromium, installé une fois avec :
+
+```text
+npx playwright install chromium
+npm run test:browser
+```
+
+Pour lancer tous les contrôles locaux :
+
+```text
+npm run test:all
+```
+
+GitHub Actions répète ces contrôles sur chaque pull request et sur chaque modification de `main`. En cas d’échec navigateur, le rapport conserve les éléments utiles au diagnostic.
+
 Le moteur Canvas est le mode normal. Le moteur DOM reste un filet de sécurité pendant la phase de stabilisation et pourra être retiré après comparaison fonctionnelle.
 
 ## Historique

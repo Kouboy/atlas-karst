@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.16s — Filet de sécurité automatisé
+
+- Ajout de tests navigateur reproductibles pour les rendus symbolique, ASCII et DOM.
+- Vérification des formats desktop, mobile portrait et mobile paysage.
+- Contrôle du diagnostic intégré, de la navigation clavier, des cibles tactiles et du budget de rendu.
+- Échec des tests en cas d’erreur JavaScript ou console inattendue.
+- Exécution automatique des audits statiques et navigateur dans GitHub Actions.
+- Une capture ciblée est conservée pour chaque scénario en échec.
+
 ## 0.16r — Stabilisation du dépôt
 
 - Adoption de la v0.16q comme nouvelle base officielle du dépôt.

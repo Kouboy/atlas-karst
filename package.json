@@ -1,10 +1,17 @@
 {
   "name": "atlas-karst",
-  "version": "0.16.0-r.1",
+  "version": "0.16.0-s.1",
+  "atlasVersion": "0.16s",
   "private": true,
   "description": "Atlas cartographique autonome à rendu Canvas symbolique et ASCII",
   "scripts": {
     "start": "node tools/serve.mjs",
-    "test": "node tools/audit-html.mjs"
+    "test": "npm run test:static",
+    "test:static": "node tools/audit-html.mjs",
+    "test:browser": "node tools/browser-check.mjs",
+    "test:all": "npm run test:static && npm run test:browser"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.1"
   }
 }
