@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.16r · stabilisation</title>
+<title>Atlas Karst ASCII v0.16s · filet de sécurité</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1679,7 +1679,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.16r</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.16s</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2210,7 +2210,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.16r";
+const APP_VERSION = "0.16s";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
@@ -3525,6 +3525,7 @@ function drawCanvasMap(grid=state.lastGrid,reason="direct"){
 }
 function updateRenderModeControls(){
   const symbolic=state.renderMode==="symbolic",underground=currentDepth()!==0;
+  document.body.dataset.effectiveRender=effectiveRenderMode();
   els.renderModeSymbolic?.classList.toggle("active",symbolic);els.renderModeAscii?.classList.toggle("active",!symbolic);
   els.renderModeSymbolic?.setAttribute("aria-pressed",String(symbolic));els.renderModeAscii?.setAttribute("aria-pressed",String(!symbolic));
   els.renderModeSymbolic?.setAttribute("aria-disabled","false");

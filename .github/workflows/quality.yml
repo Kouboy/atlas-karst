@@ -1,0 +1,43 @@
+name: Qualité
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  statique:
+    name: Audit statique
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:static
+
+  navigateur:
+    name: Tests navigateur
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - name: Conserver les captures d’échec
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: diagnostic-navigateur
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7

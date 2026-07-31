@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import vm from "node:vm";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+const atlasVersion = packageMetadata.atlasVersion;
 const failures = [];
 
 function check(label, test) {
@@ -24,7 +26,7 @@ const registeredIds = registeredBlock ? [...registeredBlock[1].matchAll(/"([^"]+
 const missingRegisteredIds = registeredIds.filter((id) => !ids.includes(id));
 const classicScripts = [...html.matchAll(/<script(?![^>]*type="application\/json")[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
 
-check("version visible cohérente", () => html.includes("v0.16r") && html.includes('const APP_VERSION = "0.16r"'));
+check("version visible cohérente", () => Boolean(atlasVersion) && html.includes(`v${atlasVersion}`) && html.includes(`const APP_VERSION = "${atlasVersion}"`));
 check("identifiants HTML uniques", () => duplicateIds.length === 0);
 check("fonctions nommées uniques", () => duplicateFunctions.length === 0);
 check("registre des éléments détecté", () => Boolean(registeredBlock));
