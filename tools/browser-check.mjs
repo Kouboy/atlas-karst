@@ -147,6 +147,35 @@ try {
     assert.equal(result.lastReason,"test-direct-interaction");
   });
 
+  await withPage("démarrage réseau étagé", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      let running=0,maxRunning=0;const starts=[];
+      const task=(id,delay,fail=false)=>({id,run:()=>new Promise((resolve,reject)=>{
+        running++;maxRunning=Math.max(maxRunning,running);starts.push(id);
+        setTimeout(()=>{running--;fail?reject(new Error(`échec ${id}`)):resolve(id)},delay);
+      })});
+      const results=await runStartupQueue([
+        task("osm",45),task("adresse",18),task("cavités",12,true),task("relief",8),task("cadastre",5)
+      ],{concurrency:2,reason:"test"});
+      let simulatedHidden=true;
+      Object.defineProperty(document,"hidden",{configurable:true,get:()=>simulatedHidden});
+      const visibilityStarted=performance.now(),visibilityGate=waitForStartupVisibility();
+      setTimeout(()=>{simulatedHidden=false;document.dispatchEvent(new Event("visibilitychange"))},28);
+      await visibilityGate;const visibilityDelay=performance.now()-visibilityStarted;
+      delete document.hidden;
+      return {maxRunning,starts,visibilityDelay,results:results.map(item=>({id:item.id,status:item.status})),runtime:{maxConcurrent:startupRuntime.maxConcurrent,failed:startupRuntime.failed,active:startupRuntime.active,visibilityPauses:startupRuntime.visibilityPauses}};
+    });
+    assert.equal(result.maxRunning,2,"plus de deux synchronisations ont travaillé ensemble");
+    assert.deepEqual(result.starts.slice(0,2),["osm","adresse"],"les priorités initiales ne sont pas respectées");
+    assert.equal(result.results.filter(item=>item.status==="rejected").length,1,"un échec isolé n’est pas contenu");
+    assert.equal(result.runtime.maxConcurrent,2);
+    assert.equal(result.runtime.failed,1);
+    assert.equal(result.runtime.active,false);
+    assert.ok(result.visibilityDelay>=20,"une tâche masquée n’a pas attendu le retour de la page");
+    assert.equal(result.runtime.visibilityPauses,1);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {

@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -88,6 +88,14 @@ check("services de données isolés", () =>
   sourceByName["data-services.js"].includes("async function fetchBss") &&
   !sourceByName["main.js"].includes("async function overpassRequest") &&
   !sourceByName["main.js"].includes("async function fetchCadastre")
+);
+check("démarrage réseau étagé", () =>
+  sourceByName["startup-loader.js"].includes("const STARTUP_DATA_CONCURRENCY=2") &&
+  sourceByName["startup-loader.js"].includes("requestIdleCallback") &&
+  sourceByName["startup-loader.js"].includes('document.addEventListener("visibilitychange",resume)') &&
+  sourceByName["startup-loader.js"].includes("function runStartupDataLoad") &&
+  sourceByName["main.js"].includes("runStartupDataLoad()") &&
+  !sourceByName["main.js"].includes("Promise.allSettled([fetchOverpass()")
 );
 check("services applicatifs ordonnés", () =>
   sourceByName["audio.js"].includes("const retroAudio") &&

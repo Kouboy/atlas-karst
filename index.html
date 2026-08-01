@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17m · peau visuelle consolidée</title>
+<title>Atlas Karst ASCII v0.17n · démarrage réseau étagé</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1297,7 +1297,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17m</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17n</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -1832,7 +1832,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17m";
+const APP_VERSION = "0.17n";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2051,6 +2051,7 @@ function runAtlasSelfCheck(){
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
+  checks.push(debugCheckResult("Démarrage réseau étagé",startupRuntime.ready&&startupRuntime.maxConcurrent<=STARTUP_DATA_CONCURRENCY,`${startupRuntime.completed}/${startupRuntime.total} tâches · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.visibilityPauses} pauses`));
   const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -2077,6 +2078,7 @@ function createDebugReport(){
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
     `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,
+    `Démarrage réseau : ${startupRuntime.completed}/${startupRuntime.total} tâches · ${startupRuntime.failed} échecs · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.idleYields} créneaux libres · ${startupRuntime.visibilityPauses} pauses`,
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
@@ -6806,6 +6808,81 @@ async function fetchBss(){
   return state.bss;
 }
 
+const STARTUP_DATA_CONCURRENCY=2;
+const STARTUP_IDLE_TIMEOUT=180;
+const startupRuntime={
+  ready:true,active:false,total:0,started:0,completed:0,failed:0,running:0,
+  maxConcurrent:0,visibilityPauses:0,idleYields:0,lastTask:"—",timeline:[],promise:null
+};
+
+function waitForStartupVisibility(){
+  if(!document.hidden)return Promise.resolve();
+  startupRuntime.visibilityPauses++;
+  return new Promise(resolve=>{
+    const resume=()=>{
+      if(document.hidden)return;
+      document.removeEventListener("visibilitychange",resume);
+      resolve();
+    };
+    document.addEventListener("visibilitychange",resume);
+  });
+}
+
+function yieldStartupIdle(){
+  startupRuntime.idleYields++;
+  return new Promise(resolve=>{
+    if(typeof requestIdleCallback==="function")requestIdleCallback(()=>resolve(),{timeout:STARTUP_IDLE_TIMEOUT});
+    else setTimeout(resolve,0);
+  });
+}
+
+async function runStartupQueue(tasks,{concurrency=STARTUP_DATA_CONCURRENCY,reason="startup"}={}){
+  const queue=(Array.isArray(tasks)?tasks:[]).filter(task=>task&&typeof task.run==="function");
+  if(!queue.length)return [];
+  const limit=clamp(Math.round(concurrency)||1,1,queue.length),results=new Array(queue.length);
+  let cursor=0;
+  startupRuntime.active=true;startupRuntime.total+=queue.length;
+  const worker=async()=>{
+    while(true){
+      const index=cursor++;if(index>=queue.length)return;
+      const task=queue[index],id=String(task.id||`task-${index+1}`);
+      await waitForStartupVisibility();
+      await yieldStartupIdle();
+      startupRuntime.started++;startupRuntime.running++;startupRuntime.lastTask=id;
+      startupRuntime.maxConcurrent=Math.max(startupRuntime.maxConcurrent,startupRuntime.running);
+      startupRuntime.timeline.push({id,event:"start",at:Math.round(performance.now()),reason});
+      try{
+        const value=await task.run();
+        results[index]={status:"fulfilled",value,id};
+      }catch(error){
+        startupRuntime.failed++;results[index]={status:"rejected",reason:error,id};
+        console.warn(`Chargement initial ${id} indisponible`,error);
+      }finally{
+        startupRuntime.running--;startupRuntime.completed++;
+        startupRuntime.timeline.push({id,event:"end",at:Math.round(performance.now()),reason});
+        if(startupRuntime.timeline.length>32)startupRuntime.timeline.splice(0,startupRuntime.timeline.length-32);
+      }
+    }
+  };
+  await Promise.all(Array.from({length:limit},worker));
+  startupRuntime.active=false;
+  return results;
+}
+
+function runStartupDataLoad(){
+  if(startupRuntime.promise)return startupRuntime.promise;
+  const tasks=[
+    {id:"osm",run:()=>fetchOverpass()},
+    {id:"adresse",run:()=>fetchAddress()},
+    {id:"cavités",run:()=>fetchCavities()},
+    {id:"relief",run:()=>fetchElevation()},
+    {id:"cadastre",run:()=>fetchCadastre()}
+  ];
+  startupRuntime.promise=runStartupQueue(tasks,{reason:"boot"})
+    .finally(()=>{updateSnapshotUI();updateDebugPanel()});
+  return startupRuntime.promise;
+}
+
 function bearingDegrees(a,b){
   const p1=rad(a.lat),p2=rad(b.lat),dl=rad(b.lon-a.lon);const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
@@ -9591,7 +9668,7 @@ prepareSidebarCards();
   }else{
     if(els.offlineNotice)els.offlineNotice.style.display="none";
     render("boot-online");
-    Promise.allSettled([fetchOverpass(),fetchAddress(),fetchCadastre(),fetchCavities(),fetchElevation()]).then(()=>updateSnapshotUI());
+    runStartupDataLoad();
   }
   scheduleFrameFit();updateSnapshotUI();
   if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
