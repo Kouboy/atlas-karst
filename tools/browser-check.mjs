@@ -98,6 +98,36 @@ try {
     assert.equal(renderCountAfter, idle.renderCount, "nouveau rendu JavaScript pendant le repos");
   });
 
+  await withPage("rafales de données regroupées", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.waitForTimeout(260);
+    const result = await page.evaluate(async () => {
+      const baseline=debugState.renderCount,requestsBefore=dataRenderRuntime.requests,rendersBefore=dataRenderRuntime.renders;
+      scheduleDataRender("test-osm");scheduleDataRender("test-cadastre");scheduleDataRender("test-relief");
+      await new Promise(resolve=>setTimeout(resolve,280));
+      const afterBatch=debugState.renderCount;
+      scheduleDataRender("test-covered");
+      render("test-direct-interaction");
+      await new Promise(resolve=>setTimeout(resolve,280));
+      return {
+        baseline,afterBatch,afterCovered:debugState.renderCount,
+        requests:dataRenderRuntime.requests-requestsBefore,
+        renders:dataRenderRuntime.renders-rendersBefore,
+        coalesced:dataRenderCoalescedCount(),covered:dataRenderRuntime.covered,
+        maxBatch:dataRenderRuntime.maxBatchSize,lastReason:debugState.lastReason
+      };
+    });
+    assert.ok(result.baseline<=2,`le démarrage hors ligne produit encore ${result.baseline} rendus`);
+    assert.equal(result.afterBatch,result.baseline+1,"la première rafale a produit plus d’un rendu");
+    assert.equal(result.afterCovered,result.afterBatch+1,"la mise à jour couverte a produit un rendu supplémentaire");
+    assert.equal(result.requests,4);
+    assert.equal(result.renders,1);
+    assert.ok(result.coalesced>=3,`seulement ${result.coalesced} demandes regroupées`);
+    assert.ok(result.covered>=1,"le rendu direct n’a pas couvert la donnée en attente");
+    assert.equal(result.maxBatch,3);
+    assert.equal(result.lastReason,"test-direct-interaction");
+  });
+
   await withPage("rendus symbolique et ASCII", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     assert.equal(await page.locator("body").getAttribute("data-effective-render"), "symbolic");

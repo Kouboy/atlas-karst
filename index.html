@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17f · sous-sol harmonisé</title>
+<title>Atlas Karst ASCII v0.17g · démarrage regroupé</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1677,7 +1677,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17f</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17g</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2034,6 +2034,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
     <div class="debug-kpis">
       <div class="debug-kpi"><span>Dernier rendu</span><strong id="debugRenderTime">—</strong></div>
       <div class="debug-kpi"><span>Moyenne</span><strong id="debugRenderAverage">—</strong></div>
+      <div class="debug-kpi"><span>Rafales de données</span><strong id="debugDataRenders">—</strong></div>
       <div class="debug-kpi"><span>Phases CPU</span><strong id="debugRenderPhases">—</strong></div>
       <div class="debug-kpi"><span>Grille</span><strong id="debugGrid">—</strong></div>
       <div class="debug-kpi"><span>Points visibles</span><strong id="debugPoiCount">—</strong></div>
@@ -2207,7 +2208,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17f";
+const APP_VERSION = "0.17g";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
@@ -2232,7 +2233,66 @@ const performanceRuntime = {
   fxActive: false,
   fxReason: "initialisation"
 };
+const dataRenderRuntime = {
+  timer:0,batchStarted:0,reasons:new Set(),pendingRequests:0,requests:0,renders:0,covered:0,
+  scheduledBatchSize:0,lastBatchSize:0,maxBatchSize:0,lastReason:"—"
+};
+const DATA_RENDER_DELAY=90,DATA_RENDER_MAX_WAIT=220;
 let renderFxIdleTimer = 0;
+let scheduledRenderFrame=0,scheduledRenderReason="";
+
+function scheduleRender(reason="scheduled") {
+  scheduledRenderReason=reason;
+  if(scheduledRenderFrame)return;
+  scheduledRenderFrame=requestAnimationFrame(()=>{
+    scheduledRenderFrame=0;const why=scheduledRenderReason;scheduledRenderReason="";render(why);
+  });
+}
+
+function clearDataRenderTimer(){
+  clearTimeout(dataRenderRuntime.timer);dataRenderRuntime.timer=0;
+}
+
+function flushDataRenderBatch(){
+  clearDataRenderTimer();
+  const reasons=[...dataRenderRuntime.reasons],size=dataRenderRuntime.pendingRequests;
+  dataRenderRuntime.reasons.clear();dataRenderRuntime.pendingRequests=0;dataRenderRuntime.batchStarted=0;
+  if(!size)return;
+  dataRenderRuntime.scheduledBatchSize+=size;
+  scheduleRender(`data-batch:${reasons.join("+")}`);
+}
+
+function scheduleDataRender(reason="data"){
+  const label=String(reason||"data");
+  dataRenderRuntime.requests++;
+  dataRenderRuntime.pendingRequests++;
+  dataRenderRuntime.reasons.add(label);
+  const now=performance.now();if(!dataRenderRuntime.batchStarted)dataRenderRuntime.batchStarted=now;
+  clearDataRenderTimer();
+  const remaining=Math.max(0,DATA_RENDER_MAX_WAIT-(now-dataRenderRuntime.batchStarted));
+  if(remaining===0){flushDataRenderBatch();return}
+  dataRenderRuntime.timer=setTimeout(flushDataRenderBatch,Math.min(DATA_RENDER_DELAY,remaining));
+}
+
+function accountDataRender(reason){
+  const label=String(reason||"");
+  if(label.startsWith("data-batch:")){
+    const size=Math.max(1,dataRenderRuntime.scheduledBatchSize);
+    dataRenderRuntime.scheduledBatchSize=0;dataRenderRuntime.renders++;
+    dataRenderRuntime.lastBatchSize=size;dataRenderRuntime.maxBatchSize=Math.max(dataRenderRuntime.maxBatchSize,size);
+    dataRenderRuntime.lastReason=label.slice(11)||"data";
+    return;
+  }
+  let covered=dataRenderRuntime.pendingRequests;
+  if(covered){dataRenderRuntime.reasons.clear();dataRenderRuntime.pendingRequests=0;dataRenderRuntime.batchStarted=0;clearDataRenderTimer()}
+  if(scheduledRenderFrame&&scheduledRenderReason.startsWith("data-batch:")){
+    cancelAnimationFrame(scheduledRenderFrame);scheduledRenderFrame=0;scheduledRenderReason="";
+    covered+=dataRenderRuntime.scheduledBatchSize;dataRenderRuntime.scheduledBatchSize=0;
+  }
+  dataRenderRuntime.covered+=covered;
+}
+
+function dataRenderCoalescedCount(){return Math.max(0,dataRenderRuntime.requests-dataRenderRuntime.renders)}
 
 function ambientAllowed() {
   return !!state.ambientMotion && !reducedMotionQuery?.matches;
@@ -2311,12 +2371,14 @@ function debugRenderPhasesText(){
   if(!debugState.renderCount||!p)return "—";
   return `mise en page ${p.layout.toFixed(1)} · index ${p.index.toFixed(1)} · grille ${p.grid.toFixed(1)} · couches ${p.layers.toFixed(1)} · sortie ${p.output.toFixed(1)} · interface ${p.interface.toFixed(1)} ms`;
 }
+function debugDataRendersText(){const renders=dataRenderRuntime.renders;return `${dataRenderRuntime.requests} demandes · ${renders} rendu${renders>1?"s":""} · ${dataRenderCoalescedCount()} regroupées`}
 function updateDebugPanel(forceStorage=false){
   if(!debugState.enabled||!els?.debugPanel)return;
   debugScanStorage(forceStorage);
   const average=debugState.renderCount?debugState.totalRenderMs/debugState.renderCount:0;
   if(els.debugRenderTime)els.debugRenderTime.textContent=debugState.renderCount?`${debugState.lastRenderMs.toFixed(1)} ms · max ${debugState.maxRenderMs.toFixed(1)}`:"—";
   if(els.debugRenderAverage)els.debugRenderAverage.textContent=debugState.renderCount?`${average.toFixed(1)} ms · ${debugState.renderCount} rendus`:"—";
+  if(els.debugDataRenders)els.debugDataRenders.textContent=debugDataRendersText();
   if(els.debugRenderPhases)els.debugRenderPhases.textContent=debugRenderPhasesText();
   if(els.debugGrid){
     const bitmap=canvasRuntime.metrics?` · bitmap ${els.mapCanvas.width} × ${els.mapCanvas.height} @${canvasRuntime.metrics.dpr}`:"";
@@ -2354,6 +2416,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
+  checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
   const canvasBudgetOk=!CANVAS_RENDERER||performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,CANVAS_RENDERER?`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`:"moteur DOM"));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -2379,6 +2442,7 @@ function createDebugReport(){
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · coupe ${depthSliceLabel()}`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
+    `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,
     `Phases CPU : ${debugRenderPhasesText()}`,
     `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
     `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
@@ -2587,7 +2651,7 @@ els = Object.fromEntries([
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
-  "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
+  "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 
 function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
@@ -5280,7 +5344,7 @@ async function ensureOsmForCurrentView(force=false){
       const r=await loadOsmWindow("base",baseExtent,force);
       if(r.cached)fromCache++;
       setStatus("osm","pending",`${state.osm?.length||0} objets · détails…`);
-      render("osm-base-refresh");
+      scheduleDataRender("osm-base-refresh");
     }
     if(needDetail){
       state.osmAttemptLabel="recherche des bâtiments";updateOsmActivity();
@@ -5294,7 +5358,7 @@ async function ensureOsmForCurrentView(force=false){
     setStatus("osm","ok",`${state.osm?.length||0} objets${fromCache?" · cache":""}${skipped?` · ${skipped} trous ignorés`:""}`);
     els.osmHelp.textContent=`Synchronisation réussie via ${host}${state.osmMeta?.method?` (${state.osmMeta.method})`:""}. Les géométries sont limitées à la fenêtre visible pour alléger la réponse.${parseNote}`;
     els.sourceNote.textContent=`Surface OSM chargée par fenêtres locales via ${host}. Les bâtiments ne sont demandés qu’aux zooms Site, Parcelle et Détail.${parseNote}`;
-    render("osm-sync-complete");
+    scheduleDataRender("osm-sync-complete");
     return true;
   }catch(err){
     const cancelled=err?.name==="AbortError"&&state.osmAbortRequested;
@@ -5303,7 +5367,7 @@ async function ensureOsmForCurrentView(force=false){
       if(state.osm?.length)setStatus("osm","ok",`${state.osm.length} objets · synchro annulée`);
       else setStatus("osm","pending","synchronisation annulée");
       els.osmHelp.textContent="Synchronisation OSM annulée. Les données déjà reçues restent disponibles.";
-      render("osm-sync-cancelled");return false;
+      scheduleDataRender("osm-sync-cancelled");return false;
     }
     if(state.osm?.length)setStatus("osm","ok",`${state.osm.length} objets · mise à jour échouée`);
     else setStatus("osm","bad","échec OSM · diagnostic disponible");
@@ -5314,7 +5378,7 @@ async function ensureOsmForCurrentView(force=false){
     els.osmHelp.innerHTML=`<strong>Échec OSM.</strong> ${esc(state.osmLastError)}${esc(localHint)}`;
     els.sourceNote.innerHTML=`OSM n’a pas répondu pour cette fenêtre. ${esc(localHint||"Le diagnostic des serveurs permet de distinguer surcharge, refus HTTP et blocage CORS.")}`;
     console.warn("OSM indisponible",err);
-    render("osm-sync-error");
+    scheduleDataRender("osm-sync-error");
     return false;
   }finally{
     clearInterval(osmActivityTimer);osmActivityTimer=0;
@@ -5341,7 +5405,7 @@ async function fetchOverpass(){
       mergeOsmFeatures(legacy.data);
       state.osmMeta=legacy.meta||null;
       setStatus("osm","pending",`${state.osm.length} objets anciens · actualisation…`);
-      render("osm-legacy-cache");
+      scheduleDataRender("osm-legacy-cache");
     }
   }
   return ensureOsmForCurrentView(false);
@@ -6379,7 +6443,7 @@ async function fetchCavities(){
     state.cavityInventoryOnly=false;
     state.load.cavities="ok";
     refreshCavities();
-    render();
+    scheduleDataRender("cavities-cache");
     return;
   }
   const base="https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/G%C3%A9orisques___inventaire_des_cavit%C3%A9s_souterraines__France_enti%C3%A8re_/FeatureServer/1/query";
@@ -6413,7 +6477,7 @@ async function fetchCavities(){
     console.warn("Cavités géolocalisées indisponibles",err);
   }
   refreshCavities();
-  render();
+  scheduleDataRender("cavities-sync");
 }
 function normalizeCavityRecord(c){
   if(!c||typeof c!=="object")return null;
@@ -6507,7 +6571,7 @@ async function fetchElevation(){
   if(cached){
     state.elevation=cached;
     setStatus("elevation","ok",`cache ${cached.source||"local"}`);
-    render();
+    scheduleDataRender("elevation-cache");
     return;
   }
   const e=largestExtent(),cols=23,rows=17,points=[];
@@ -6544,7 +6608,7 @@ async function fetchElevation(){
       openMeteo:openMeteoError?.message||openMeteoError
     });
   }
-  render();
+  scheduleDataRender("elevation-sync");
 }
 
 function elevationAt(lat,lon){
@@ -6591,7 +6655,7 @@ function normalizeCadastre(fc,kind){
 }
 async function fetchCadastre(){
   const cached=cacheGet("atlas-karst-cadastre-v06");
-  if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();render();return}
+  if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();scheduleDataRender("cadastre-cache");return}
   const root="https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/16/16418";
   try{
     const [buildingsFc,parcelsFc]=await Promise.all([
@@ -6604,7 +6668,7 @@ async function fetchCadastre(){
     setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${state.cadastreParcels.length} parc.`);
     autoSnapHouse();
   }catch(err){setStatus("cadastre","bad","indisponible");console.warn("Cadastre indisponible",err)}
-  render();
+  scheduleDataRender("cadastre-sync");
 }
 function polygonCentroid(coords){
   let x=0,y=0,a=0;
@@ -6644,7 +6708,7 @@ function autoSnapHouse(){
 }
 async function fetchAddress(force=false){
   const cached=!force&&cacheGet("atlas-karst-address-v06");
-  if(cached){state.address=cached;setStatus("address","ok",`cache · score ${Math.round((cached.score||0)*100)} %`);if(!HOUSE_WAS_SAVED){CONFIG.house={lat:cached.lat,lon:cached.lon};autoSnapHouse();render()}return cached}
+  if(cached){state.address=cached;setStatus("address","ok",`cache · score ${Math.round((cached.score||0)*100)} %`);if(!HOUSE_WAS_SAVED){CONFIG.house={lat:cached.lat,lon:cached.lon};autoSnapHouse();scheduleDataRender("address-cache")}return cached}
   const q=encodeURIComponent("42 rue de la Falaise 16400 Vœuil-et-Giget");
   const url=`https://data.geopf.fr/geocodage/search?q=${q}&index=address&limit=5`;
   try{
@@ -6652,7 +6716,7 @@ async function fetchAddress(force=false){
     const f=j.features?.[0];const c=f?.geometry?.coordinates;if(!Array.isArray(c)||!Number.isFinite(+c[0])||!Number.isFinite(+c[1]))throw new Error("Adresse non trouvée");
     state.address={lon:+c[0],lat:+c[1],label:f.properties?.label||"42 rue de la Falaise",score:+f.properties?.score||0,id:f.properties?.id||"",source:"Géoplateforme / Base Adresse Nationale"};
     cacheSet("atlas-karst-address-v06",state.address);setStatus("address","ok",`score ${Math.round(state.address.score*100)} %`);
-    if(force||!HOUSE_WAS_SAVED){CONFIG.house={lat:state.address.lat,lon:state.address.lon};if(force)HOUSE_WAS_SAVED=false;autoSnapHouse();render()}
+    if(force||!HOUSE_WAS_SAVED){CONFIG.house={lat:state.address.lat,lon:state.address.lon};if(force)HOUSE_WAS_SAVED=false;autoSnapHouse();scheduleDataRender("address-sync")}
     return state.address;
   }catch(err){setStatus("address","bad","non trouvée");console.warn("Adresse officielle indisponible",err);return null}
 }
@@ -8015,13 +8079,8 @@ function poiEffectKind(cell){
   return "";
 }
 
-let scheduledRenderFrame=0,scheduledRenderReason="";
-function scheduleRender(reason="scheduled"){
-  scheduledRenderReason=reason;
-  if(scheduledRenderFrame)return;
-  scheduledRenderFrame=requestAnimationFrame(()=>{scheduledRenderFrame=0;const why=scheduledRenderReason;scheduledRenderReason="";render(why)});
-}
 function render(reason="direct"){
+  accountDataRender(reason);
   const renderStarted=performance.now();
   let phaseStarted=renderStarted;
   hideHover();
@@ -8083,6 +8142,7 @@ function render(reason="direct"){
   debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
   debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
   updateDebugPanel();
+  if(debugState.enabled&&String(reason).startsWith("data-batch:"))requestAnimationFrame(runAtlasSelfCheck);
 }
 
 
@@ -9979,14 +10039,11 @@ prepareSidebarCards();
     try{applyAtlasSnapshot(savedSnapshot,{source:EMBEDDED_SNAPSHOT?"instantané embarqué":"sauvegarde locale",renderNow:false})}
     catch(err){console.warn("Instantané ignoré",err);state.allowNetwork=true}
   }
-  render("boot");
-  scheduleFrameFit();
-  updateSnapshotUI();
-  if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
-
   if(savedSnapshot){
     populateCavitySelect();
-    render();
+    render("boot-snapshot");
+    scheduleFrameFit();updateSnapshotUI();
+    if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
     return;
   }
   if(OFFLINE_TEST){
@@ -10006,11 +10063,14 @@ prepareSidebarCards();
     setStatus("elevation","bad","non embarqué");
     els.sourceNote.innerHTML="Mode de démonstration hors ligne. Exporte une sauvegarde ou un HTML autonome après synchronisation pour conserver un état plus complet.";
     populateCavitySelect();
-    render();
+    render("boot-offline");
   }else{
     if(els.offlineNotice)els.offlineNotice.style.display="none";
+    render("boot-online");
     Promise.allSettled([fetchOverpass(),fetchAddress(),fetchCadastre(),fetchCavities(),fetchElevation()]).then(()=>updateSnapshotUI());
   }
+  scheduleFrameFit();updateSnapshotUI();
+  if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
 }
 bootAtlas();
 </script>

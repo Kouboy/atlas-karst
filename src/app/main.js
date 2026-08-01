@@ -28,13 +28,8 @@ function poiEffectKind(cell){
   return "";
 }
 
-let scheduledRenderFrame=0,scheduledRenderReason="";
-function scheduleRender(reason="scheduled"){
-  scheduledRenderReason=reason;
-  if(scheduledRenderFrame)return;
-  scheduledRenderFrame=requestAnimationFrame(()=>{scheduledRenderFrame=0;const why=scheduledRenderReason;scheduledRenderReason="";render(why)});
-}
 function render(reason="direct"){
+  accountDataRender(reason);
   const renderStarted=performance.now();
   let phaseStarted=renderStarted;
   hideHover();
@@ -96,6 +91,7 @@ function render(reason="direct"){
   debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
   debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
   updateDebugPanel();
+  if(debugState.enabled&&String(reason).startsWith("data-batch:"))requestAnimationFrame(runAtlasSelfCheck);
 }
 
 
@@ -1992,14 +1988,11 @@ prepareSidebarCards();
     try{applyAtlasSnapshot(savedSnapshot,{source:EMBEDDED_SNAPSHOT?"instantané embarqué":"sauvegarde locale",renderNow:false})}
     catch(err){console.warn("Instantané ignoré",err);state.allowNetwork=true}
   }
-  render("boot");
-  scheduleFrameFit();
-  updateSnapshotUI();
-  if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
-
   if(savedSnapshot){
     populateCavitySelect();
-    render();
+    render("boot-snapshot");
+    scheduleFrameFit();updateSnapshotUI();
+    if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
     return;
   }
   if(OFFLINE_TEST){
@@ -2019,10 +2012,13 @@ prepareSidebarCards();
     setStatus("elevation","bad","non embarqué");
     els.sourceNote.innerHTML="Mode de démonstration hors ligne. Exporte une sauvegarde ou un HTML autonome après synchronisation pour conserver un état plus complet.";
     populateCavitySelect();
-    render();
+    render("boot-offline");
   }else{
     if(els.offlineNotice)els.offlineNotice.style.display="none";
+    render("boot-online");
     Promise.allSettled([fetchOverpass(),fetchAddress(),fetchCadastre(),fetchCavities(),fetchElevation()]).then(()=>updateSnapshotUI());
   }
+  scheduleFrameFit();updateSnapshotUI();
+  if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
 }
 bootAtlas();

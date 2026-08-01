@@ -54,6 +54,13 @@ check("diagnostic entièrement enregistré", () => [
 ].every((id) => registeredIds.includes(id)));
 check("pipeline Canvas final vérifié", () => html.includes('recordCanvasStage("fx-final")'));
 check("repos graphique borné", () => html.includes("pulseRenderFxActivity") && html.includes("render-fx-layer.fx-active") && html.includes("adaptiveCanvasDpr"));
+check("rafales de données regroupées", () =>
+  sourceByName["performance.js"].includes("function scheduleDataRender") &&
+  sourceByName["performance.js"].includes("DATA_RENDER_MAX_WAIT=220") &&
+  sourceByName["main.js"].includes("accountDataRender(reason)") &&
+  sourceByName["data-services.js"].includes('scheduleDataRender("osm-sync-complete")') &&
+  sourceByName["data-services.js"].includes('scheduleDataRender("cadastre-sync")')
+);
 check("balayages CRT supprimés", () => !html.includes("fx-vector-sweep") && !html.includes("fx-ascii-refresh") && !html.includes("fxVectorSweep") && !html.includes("fxAsciiRefresh"));
 check("moteur Canvas isolé", () =>
   sourceByName["canvas-renderer.js"].includes("function drawAsciiCanvasMap") &&
