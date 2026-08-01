@@ -317,6 +317,39 @@ try {
     assert.deepEqual(tour.badChecks,[],`diagnostic en échec après les expériences : ${tour.badChecks.join(", ")}`);
   });
 
+  await withPage("contrôleur de vue et préférences", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.evaluate(()=>document.getElementById("renderModeAscii").click());
+    await page.waitForFunction(()=>document.body.dataset.effectiveRender==="ascii");
+    const result=await page.evaluate(async()=>{
+      const change=(id,checked)=>{const control=document.getElementById(id);control.checked=checked;control.dispatchEvent(new Event("change",{bubbles:true}))};
+      change("layerHydrology",false);change("ambientMotion",false);
+      const scenario=document.getElementById("scenario");scenario.value="extensive";scenario.dispatchEvent(new Event("change",{bubbles:true}));
+      const cavity={id:"TEST-VIEW-CAVITY",name:"Cavité de contrôle",type:"cavité naturelle",lat:CONFIG.house.lat+.00042,lon:CONFIG.house.lon-.00031,commune:"Test"};
+      state.cavities=[...state.cavities,cavity];markSpatialIndexesDirty();populateCavitySelect();
+      const cavitySelect=document.getElementById("cavitySelect");cavitySelect.value=cavity.id;cavitySelect.dispatchEvent(new Event("change",{bubbles:true}));
+      const cavityReadout=document.getElementById("readoutBody").textContent;
+      selectGridCell(Math.floor(CONFIG.gridW*.58),Math.floor(CONFIG.gridH*.46),{note:"test vue"});
+      const selectedCoord={...state.selectedCell.coord};document.getElementById("recenterSelected").click();
+      document.getElementById("debugToggle").click();
+      await new Promise(resolve=>requestAnimationFrame(resolve));
+      return {selectedCoord,cavity,cavityReadout,afterControls:{mode:state.renderMode,hydrology:state.layerHydrology,ambient:state.ambientMotion,scenario:state.scenario,selectedCavity:state.selectedCavity,center:{...state.center},debug:debugState.enabled},storedMotion:localStorage.getItem(AMBIENT_PREF_KEY)};
+    });
+    await page.keyboard.press("Control+Shift+D");
+    await page.waitForFunction(()=>debugState.enabled===true);
+    await page.evaluate(()=>document.getElementById("runSelfCheck").click());
+    const diagnostic=await page.evaluate(()=>{
+      const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
+      return {runtime:{...viewControllerRuntime},debug:debugState.enabled,motionDisabled:document.body.classList.contains("motion-disabled"),badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+    });
+    assert.equal(result.afterControls.mode,"ascii");assert.equal(result.afterControls.hydrology,false);assert.equal(result.afterControls.ambient,false);assert.equal(result.afterControls.scenario,"extensive");
+    assert.equal(result.afterControls.selectedCavity,"TEST-VIEW-CAVITY");assert.deepEqual(result.afterControls.center,result.selectedCoord);assert.equal(result.afterControls.debug,false);assert.equal(result.storedMotion,"off");
+    assert.equal(diagnostic.debug,true);assert.equal(diagnostic.motionDisabled,true);assert.match(result.cavityReadout,/Cavité de contrôle/);
+    assert.equal(diagnostic.runtime.ready,true);assert.equal(diagnostic.runtime.bound,true);
+    assert.equal(diagnostic.runtime.modeChanges,1);assert.equal(diagnostic.runtime.scenarioChanges,1);assert.equal(diagnostic.runtime.layerChanges,2);assert.equal(diagnostic.runtime.cavitySelections,1);assert.equal(diagnostic.runtime.recenters,1);assert.equal(diagnostic.runtime.debugActions,3);
+    assert.deepEqual(diagnostic.badChecks,[],`diagnostic en échec après les réglages de vue : ${diagnostic.badChecks.join(", ")}`);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {
