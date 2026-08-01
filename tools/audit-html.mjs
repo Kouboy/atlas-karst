@@ -87,6 +87,15 @@ check("moteur cartographique isolé et mesuré", () =>
   !sourceByName["main.js"].includes("function renderSurface") &&
   !sourceByName["main.js"].includes("function renderUndergroundBase")
 );
+check("contrat souterrain harmonisé", () =>
+  sourceByName["map-engine.js"].includes("function undergroundVisualContract") &&
+  sourceByName["map-engine.js"].includes("function renderUndergroundSurfaceGhost") &&
+  sourceByName["map-engine.js"].includes("c-underground-volume") &&
+  sourceByName["map-engine.js"].includes("c-underground-line") &&
+  sourceByName["canvas-renderer.js"].includes("function symbolicDrawUndergroundLinesAndEdges") &&
+  !sourceByName["map-engine.js"].includes("renderSurface(ghost)") &&
+  !sourceByName["map-engine.js"].includes("emprise simplifiée du même modèle")
+);
 check("révision OSM propagée", () => html.includes('markMapDataRevision("osm")'));
 check("dernière vue OSM reprise", () => html.includes("osmEnsurePending") && html.includes("scheduleOsmEnsure(0)"));
 check("Canvas accessible au clavier", () => /<canvas[^>]+id="mapCanvas"[^>]+tabindex="0"/.test(html));

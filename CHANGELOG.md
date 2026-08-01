@@ -2,6 +2,17 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17f — Sous-sol harmonisé
+
+- Contrat visuel commun aux coupes ASCII et symboliques pour les profondeurs, niveaux de confiance, conduits, volumes, murs, piliers, eau et surface fantôme.
+- Remplacement des rectangles artificiels aux zooms lointains par les seuls repères documentés ; les géométries redeviennent visibles lorsqu’elles occupent assez de cellules.
+- Rendu symbolique distinct des volumes surfaciques et des réseaux linéaires, avec restitution des murs auparavant perdus.
+- Fond ASCII minéral continu et calme, fractures espacées et projection de surface ramenée à quelques axes et silhouettes utiles.
+- Projection fantôme dédiée : elle ne reconstruit plus toute la carte de surface à chaque coupe.
+- Post-traitement souterrain commun aux deux modes, sans halo plein écran ni scanlines spécifiques à l’ASCII.
+- Réduction mesurée de la phase « couches » d’environ 67 ms à 4–8 ms au zoom parcelle sur la vue de contrôle synchronisée.
+- Conservation des galeries et connexions qui traversent l’écran lorsque leur point d’origine est hors champ ; ordre de composition stabilisé pendant les déplacements.
+
 ## 0.17e — Moteur cartographique mesuré
 
 - Extraction de la construction de grille, du relief et des couches de surface ou souterraines dans `map-engine.js`.

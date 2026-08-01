@@ -48,6 +48,7 @@ function render(reason="direct"){
   const indexMs=performance.now()-phaseStarted;
   const composed=composeMapGrid(extent,depth),g=composed.grid;
   document.body.dataset.depthBand=depth===0?"surface":depth>=-5?"shallow":depth>=-15?"middle":"deep";
+  if(depth<0)applyUndergroundVisualContract(depth);
   state.lastGrid=g;
   const outputStarted=performance.now();
   let visiblePoiCount=0;
