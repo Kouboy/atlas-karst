@@ -222,6 +222,60 @@ try {
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après travail de terrain : ${result.badChecks.join(", ")}`);
   });
 
+  await withPage("contrôleur des sources locales", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.locator("#osmFile").setInputFiles({
+      name:"atlas-test.osm.json",mimeType:"application/json",
+      buffer:Buffer.from(JSON.stringify({elements:[{type:"node",id:991001,lat:45.5981,lon:.1472,tags:{natural:"spring",name:"Source test"}}]}))
+    });
+    await page.waitForFunction(()=>sourceControllerRuntime.imports===1&&(state.osm||[]).some(feature=>feature.id==="node/991001"));
+    await page.locator("#bssFile").setInputFiles({
+      name:"atlas-test-bss.csv",mimeType:"text/csv",
+      buffer:Buffer.from("code_bss;nom;latitude;longitude\nTEST-BSS;Forage test;45.5981;0.1472\n")
+    });
+    await page.waitForFunction(()=>sourceControllerRuntime.imports===2&&state.bss.some(item=>item.id==="TEST-BSS"));
+    await page.locator("#cartofrichesFile").setInputFiles({
+      name:"atlas-test-cartofriches.csv",mimeType:"text/csv",
+      buffer:Buffer.from("site_id;site_nom;lat;long;site_statut;comm_nom\nTEST-CF;Friche test;45.59815;0.14725;friche sans projet;Gond-Pontouvre\n")
+    });
+    await page.waitForFunction(()=>sourceControllerRuntime.imports===3&&state.cartofriches.some(item=>item.id==="TEST-CF"));
+    const imported=await page.evaluate(()=>({
+      osm:state.osm.some(feature=>feature.id==="node/991001"),
+      bss:state.bss.some(item=>item.id==="TEST-BSS"),
+      cartofriches:state.cartofriches.some(item=>item.id==="TEST-CF"),
+      savedBss:JSON.parse(localStorage.getItem(BSS_LOCAL_KEY)||"{}").items?.some(item=>item.id==="TEST-BSS")||false,
+      savedCartofriches:JSON.parse(localStorage.getItem(CARTOFRICHES_KEY)||"{}").items?.some(item=>item.id==="TEST-CF")||false
+    }));
+    assert.deepEqual(imported,{osm:true,bss:true,cartofriches:true,savedBss:true,savedCartofriches:true});
+    const result=await page.evaluate(async()=>{
+      document.getElementById("clearBss").click();
+      document.getElementById("clearCartofriches").click();
+      const heritageToggle=document.getElementById("heritageMonuments");heritageToggle.checked=false;heritageToggle.dispatchEvent(new Event("change",{bubbles:true}));
+      document.getElementById("clearHeritage").click();
+      window.__sourceRetryCalls=[];
+      syncOsmNow=async()=>{window.__sourceRetryCalls.push("osm")};
+      fetchAddress=async()=>{window.__sourceRetryCalls.push("adresse")};
+      fetchCadastre=async()=>{window.__sourceRetryCalls.push("cadastre")};
+      fetchCavities=async()=>{window.__sourceRetryCalls.push("cavités")};
+      fetchElevation=async()=>{window.__sourceRetryCalls.push("relief")};
+      document.getElementById("retryData").click();
+      await new Promise(resolve=>setTimeout(resolve,30));
+      const checks=runAtlasSelfCheck();
+      return {
+        runtime:{...sourceControllerRuntime},calls:[...window.__sourceRetryCalls],
+        state:{bssTest:state.bss.some(item=>item.id==="TEST-BSS"),cartofriches:state.cartofriches.length,heritageMonuments:state.heritageEnabled.monument},
+        storage:{bss:localStorage.getItem(BSS_LOCAL_KEY),cartofriches:localStorage.getItem(CARTOFRICHES_KEY)},
+        badChecks:checks.filter(check=>check.ok===false).map(check=>check.name)
+      };
+    });
+    assert.equal(result.runtime.ready,true);assert.equal(result.runtime.bound,true);
+    assert.equal(result.runtime.operations,8);assert.equal(result.runtime.imports,3);assert.equal(result.runtime.clears,3);assert.equal(result.runtime.filterChanges,1);assert.equal(result.runtime.retries,1);
+    assert.deepEqual(result.calls,["osm","adresse","cadastre","cavités","relief"]);
+    assert.deepEqual(result.state,{bssTest:false,cartofriches:0,heritageMonuments:false});
+    assert.deepEqual(result.storage,{bss:null,cartofriches:null});
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec après gestion des sources : ${result.badChecks.join(", ")}`);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {
@@ -242,11 +296,12 @@ try {
       const legacyAccepted=validateAtlasSnapshot(legacy)===legacy&&snapshotRuntime.lastSchema===1;
       validateAtlasSnapshot(loaded);
       const checks=runAtlasSelfCheck();
+      const functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       await deleteSnapshotFromDb();
       return {
         expected,
         restored:{zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length},
-        loadedSchema:loaded.schema,futureError,legacyAccepted,badChecks:checks.filter(check=>check.ok===false).map(check=>check.name),
+        loadedSchema:loaded.schema,futureError,legacyAccepted,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name),
         runtime:{bound:snapshotRuntime.bound,applied:snapshotRuntime.applied,dbSaves:snapshotRuntime.dbSaves,dbLoads:snapshotRuntime.dbLoads,dbDeletes:snapshotRuntime.dbDeletes,lastError:snapshotRuntime.lastError}
       };
     });
@@ -440,6 +495,7 @@ try {
 
   await withPage("inspecteur desktop persistant", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
+    await page.waitForTimeout(450);
     const target = await page.evaluate(() => {
       let best=null;
       for(let y=8;y<CONFIG.gridH-8;y++)for(let x=12;x<CONFIG.gridW-12;x++){

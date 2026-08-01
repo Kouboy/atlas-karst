@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17o · contrôleur de terrain</title>
+<title>Atlas Karst ASCII v0.17p · contrôleur des sources</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1297,7 +1297,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17o</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17p</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -1832,7 +1832,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17o";
+const APP_VERSION = "0.17p";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2053,6 +2053,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
   checks.push(debugCheckResult("Démarrage réseau étagé",startupRuntime.ready&&startupRuntime.maxConcurrent<=STARTUP_DATA_CONCURRENCY,`${startupRuntime.completed}/${startupRuntime.total} tâches · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.visibilityPauses} pauses`));
   checks.push(debugCheckResult("Contrôleur de terrain",fieldworkRuntime.ready&&fieldworkRuntime.bound,`${fieldworkRuntime.locationSuccesses}/${fieldworkRuntime.locationRequests} localisations · ${fieldworkRuntime.houseChanges} maisons · ${fieldworkRuntime.observationsAdded}/${fieldworkRuntime.observationsRemoved} observations +/− · ${fieldworkRuntime.loreAdded}/${fieldworkRuntime.loreRemoved} mémoires +/−`));
+  checks.push(debugCheckResult("Contrôleur des sources",sourceControllerRuntime.ready&&sourceControllerRuntime.bound,`${sourceControllerRuntime.operations} actions · ${sourceControllerRuntime.imports} imports · ${sourceControllerRuntime.clears} effacements · ${sourceControllerRuntime.retries} relances · dernière : ${sourceControllerRuntime.lastAction}`));
   const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -2081,6 +2082,7 @@ function createDebugReport(){
     `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,
     `Démarrage réseau : ${startupRuntime.completed}/${startupRuntime.total} tâches · ${startupRuntime.failed} échecs · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.idleYields} créneaux libres · ${startupRuntime.visibilityPauses} pauses`,
     `Terrain : ${fieldworkRuntime.bound?"lié":"absent"} · localisations ${fieldworkRuntime.locationSuccesses}/${fieldworkRuntime.locationRequests} (${fieldworkRuntime.locationErrors} échecs) · maisons ${fieldworkRuntime.houseChanges} · observations ${fieldworkRuntime.observationsAdded}/${fieldworkRuntime.observationsRemoved} +/− · mémoires ${fieldworkRuntime.loreAdded}/${fieldworkRuntime.loreRemoved} +/−`,
+    `Sources : ${sourceControllerRuntime.bound?"liées":"absentes"} · ${sourceControllerRuntime.operations} actions · ${sourceControllerRuntime.imports} imports · ${sourceControllerRuntime.clears} effacements · ${sourceControllerRuntime.filterChanges} filtres · ${sourceControllerRuntime.retries} relances · dernière ${sourceControllerRuntime.lastAction}`,
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
@@ -6885,6 +6887,93 @@ function runStartupDataLoad(){
   return startupRuntime.promise;
 }
 
+const sourceControllerRuntime={ready:true,bound:false,operations:0,imports:0,clears:0,retries:0,filterChanges:0,lastAction:"initialisation"};
+
+function accountSourceAction(action){
+  sourceControllerRuntime.operations++;
+  sourceControllerRuntime.lastAction=action;
+}
+function openSourceFilePicker(input,source){
+  accountSourceAction(`sélection ${source}`);
+  input.click();
+}
+async function importSourceFile(file,source,importer){
+  if(!file)return;
+  accountSourceAction(`import ${source}`);
+  sourceControllerRuntime.imports++;
+  await importer(file);
+}
+function resetBssSource(){
+  accountSourceAction("réinitialisation BSS");sourceControllerRuntime.clears++;
+  try{localStorage.removeItem(BSS_LOCAL_KEY);localStorage.removeItem("atlas-karst-bss-v09b")}catch{}
+  state.bss=mergeBssItems(BSS_EMBEDDED_LOCAL);
+  updateBssUI("Couche réinitialisée sur les 736 ouvrages BRGM embarqués.");
+  els.layerBss.checked=true;state.layerBss=true;
+  render("bss-reset");
+}
+function clearCartofrichesSource(){
+  accountSourceAction("effacement Cartofriches");sourceControllerRuntime.clears++;
+  state.cartofriches=[];
+  try{localStorage.removeItem(CARTOFRICHES_KEY)}catch{}
+  updateCartofrichesUI("Couche locale vidée.");
+  render("cartofriches-clear");
+}
+async function retryAllDataSources(){
+  accountSourceAction("relance générale");sourceControllerRuntime.retries++;
+  state.allowNetwork=true;
+  if(els.offlineNotice)els.offlineNotice.style.display="none";
+  els.retryData.textContent="↻ recharger toutes les données";
+  try{
+    ["atlas-karst-address-v06","atlas-karst-cadastre-v06","atlas-karst-cavities-v06","atlas-karst-elevation-v06","atlas-karst-elevation-v09d"]
+      .forEach(key=>localStorage.removeItem(key));
+  }catch{}
+  await syncOsmNow();
+  Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation()]);
+}
+function bindSourceAction(element,eventName,action,handler){
+  element.addEventListener(eventName,event=>{
+    accountSourceAction(action);
+    return handler(event);
+  });
+}
+function bindSourceController(){
+  if(sourceControllerRuntime.bound)return;
+  sourceControllerRuntime.bound=true;
+
+  bindSourceAction(els.syncOsm,"click","synchronisation OSM",syncOsmNow);
+  bindSourceAction(els.testOsm,"click","test OSM",testOsmServers);
+  bindSourceAction(els.openOsmQuery,"click","ouverture Overpass",openCurrentOverpassQuery);
+  els.importOsmJson.addEventListener("click",()=>openSourceFilePicker(els.osmFile,"OSM"));
+  els.osmFile.addEventListener("change",event=>importSourceFile(event.target.files?.[0],"OSM",importOsmJsonFile));
+
+  bindSourceAction(els.syncPiezo,"click","synchronisation BSS",syncHubeauPiezo);
+  bindSourceAction(els.openBssDownload,"click","téléchargement BSS",()=>window.open(BSS_DOWNLOAD_URL,"_blank","noopener"));
+  els.importBss.addEventListener("click",()=>openSourceFilePicker(els.bssFile,"BSS"));
+  els.bssFile.addEventListener("change",event=>importSourceFile(event.target.files?.[0],"BSS",importBssFile));
+  els.clearBss.addEventListener("click",resetBssSource);
+
+  bindSourceAction(els.syncCartofriches,"click","synchronisation Cartofriches",syncCartofriches);
+  bindSourceAction(els.downloadCartofriches,"click","téléchargement Cartofriches",()=>window.open(CARTOFRICHES_DOWNLOAD,"_blank","noopener"));
+  els.importCartofriches.addEventListener("click",()=>openSourceFilePicker(els.cartofrichesFile,"Cartofriches"));
+  els.cartofrichesFile.addEventListener("change",event=>importSourceFile(event.target.files?.[0],"Cartofriches",importCartofrichesFile));
+  els.clearCartofriches.addEventListener("click",clearCartofrichesSource);
+  els.cartofrichesReconverted.addEventListener("change",event=>{
+    accountSourceAction("filtre Cartofriches");sourceControllerRuntime.filterChanges++;
+    state.cartofrichesIncludeReconverted=event.target.checked;
+    saveCartofriches();updateCartofrichesUI();render("cartofriches-filter");
+  });
+
+  const heritageToggleBindings={heritageMonuments:"monument",heritageGardens:"garden",heritageHomes:"house",heritageMuseums:"museum",heritageWikipedia:"wikipedia"};
+  for(const [id,key] of Object.entries(heritageToggleBindings))els[id].addEventListener("change",event=>{
+    accountSourceAction(`filtre patrimoine ${key}`);sourceControllerRuntime.filterChanges++;
+    state.heritageEnabled[key]=event.target.checked;saveHeritage();updateHeritageUI();render("heritage-filter");
+  });
+  bindSourceAction(els.syncCultureHeritage,"click","synchronisation patrimoine",syncCultureHeritage);
+  bindSourceAction(els.syncWikipediaHeritage,"click","synchronisation Wikipédia",syncWikipediaHeritage);
+  bindSourceAction(els.clearHeritage,"click","effacement patrimoine",()=>{sourceControllerRuntime.clears++;clearHeritage()});
+  els.retryData.addEventListener("click",retryAllDataSources);
+}
+
 const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,loreAdded:0,loreRemoved:0};
 
 function geolocationErrorLabel(err,context={}){
@@ -9417,38 +9506,8 @@ bindInputController();
 bindSnapshotManager();
 bindUiShell();
 bindFieldworkController();
+bindSourceController();
 
-els.syncOsm.addEventListener("click",syncOsmNow);
-els.testOsm.addEventListener("click",testOsmServers);
-els.openOsmQuery.addEventListener("click",openCurrentOverpassQuery);
-els.importOsmJson.addEventListener("click",()=>els.osmFile.click());
-els.osmFile.addEventListener("change",e=>importOsmJsonFile(e.target.files?.[0]));
-
-els.syncPiezo.addEventListener("click",syncHubeauPiezo);
-els.openBssDownload.addEventListener("click",()=>window.open(BSS_DOWNLOAD_URL,"_blank","noopener"));
-els.importBss.addEventListener("click",()=>els.bssFile.click());
-els.bssFile.addEventListener("change",e=>importBssFile(e.target.files?.[0]));
-els.clearBss.addEventListener("click",()=>{
-  try{localStorage.removeItem(BSS_LOCAL_KEY);localStorage.removeItem("atlas-karst-bss-v09b")}catch{}
-  state.bss=mergeBssItems(BSS_EMBEDDED_LOCAL);
-  updateBssUI("Couche réinitialisée sur les 736 ouvrages BRGM embarqués.");
-  els.layerBss.checked=true;state.layerBss=true;
-  render();
-});
-els.syncCartofriches.addEventListener("click",syncCartofriches);
-els.downloadCartofriches.addEventListener("click",()=>window.open(CARTOFRICHES_DOWNLOAD,"_blank","noopener"));
-els.importCartofriches.addEventListener("click",()=>els.cartofrichesFile.click());
-els.cartofrichesFile.addEventListener("change",e=>importCartofrichesFile(e.target.files?.[0]));
-els.clearCartofriches.addEventListener("click",()=>{
-  state.cartofriches=[];
-  try{localStorage.removeItem(CARTOFRICHES_KEY)}catch{}
-  updateCartofrichesUI("Couche locale vidée.");
-  render();
-});
-els.cartofrichesReconverted.addEventListener("change",e=>{
-  state.cartofrichesIncludeReconverted=e.target.checked;
-  saveCartofriches();updateCartofrichesUI();render();
-});
 els.readoutSheetHandle.addEventListener("click",cycleReadoutSheet);
 document.addEventListener("click",e=>{
   const focus=e.target.closest?.("[data-poi-focus]");
@@ -9478,28 +9537,11 @@ els.guidedTourNext.addEventListener("click",()=>focusGuidedTourStep(state.guided
 els.guidedTourRecenter.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep,{announce:false}));
 els.guidedTourStop.addEventListener("click",stopGuidedTour);
 
-const heritageToggleBindings={heritageMonuments:"monument",heritageGardens:"garden",heritageHomes:"house",heritageMuseums:"museum",heritageWikipedia:"wikipedia"};
-for(const [id,key] of Object.entries(heritageToggleBindings))els[id].addEventListener("change",e=>{state.heritageEnabled[key]=e.target.checked;saveHeritage();updateHeritageUI();render()});
-els.syncCultureHeritage.addEventListener("click",syncCultureHeritage);
-els.syncWikipediaHeritage.addEventListener("click",syncWikipediaHeritage);
-els.clearHeritage.addEventListener("click",clearHeritage);
-
 els.recenterSelected.addEventListener("click",()=>{
   if(!state.selectedCell){setReadoutContent("<strong>Aucune case mémorisée.</strong><br>Clique d’abord un point de la carte.",{title:"Aucune sélection",sheet:"peek"});return}
   state.center=clampCenter(state.selectedCell.coord,currentZoom());render();
 });
 els.exportBtn.addEventListener("click",exportTxt);
-els.retryData.addEventListener("click",async()=>{
-  state.allowNetwork=true;
-  if(els.offlineNotice)els.offlineNotice.style.display="none";
-  els.retryData.textContent="↻ recharger toutes les données";
-  try{
-    ["atlas-karst-address-v06","atlas-karst-cadastre-v06","atlas-karst-cavities-v06","atlas-karst-elevation-v06","atlas-karst-elevation-v09d"]
-      .forEach(k=>localStorage.removeItem(k));
-  }catch{}
-  await syncOsmNow();
-  Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation()]);
-});
 els.scenario.addEventListener("change",e=>{state.scenario=e.target.value;hypothesisModelCache.clear();render()});
 els.renderModeSymbolic?.addEventListener("click",()=>setRenderMode("symbolic"));
 els.renderModeAscii?.addEventListener("click",()=>setRenderMode("ascii"));

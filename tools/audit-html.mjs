@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "fieldwork-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -107,6 +107,17 @@ check("contrôleur de terrain isolé", () =>
   !sourceByName["main.js"].includes("async function locateUser") &&
   !sourceByName["main.js"].includes("function saveHousePosition") &&
   !sourceByName["main.js"].includes("els.addLocalMarker.addEventListener")
+);
+check("contrôleur des sources isolé", () =>
+  sourceByName["source-controller.js"].includes("function bindSourceController") &&
+  sourceByName["source-controller.js"].includes("function resetBssSource") &&
+  sourceByName["source-controller.js"].includes("function clearCartofrichesSource") &&
+  sourceByName["source-controller.js"].includes("async function retryAllDataSources") &&
+  sourceByName["source-controller.js"].includes('els.osmFile.addEventListener("change"') &&
+  sourceByName["main.js"].includes("bindSourceController()") &&
+  !sourceByName["main.js"].includes("els.syncOsm.addEventListener") &&
+  !sourceByName["main.js"].includes("els.syncCartofriches.addEventListener") &&
+  !sourceByName["main.js"].includes("els.retryData.addEventListener")
 );
 check("services applicatifs ordonnés", () =>
   sourceByName["audio.js"].includes("const retroAudio") &&
