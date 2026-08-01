@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "fieldwork-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -96,6 +96,17 @@ check("démarrage réseau étagé", () =>
   sourceByName["startup-loader.js"].includes("function runStartupDataLoad") &&
   sourceByName["main.js"].includes("runStartupDataLoad()") &&
   !sourceByName["main.js"].includes("Promise.allSettled([fetchOverpass()")
+);
+check("contrôleur de terrain isolé", () =>
+  sourceByName["fieldwork-controller.js"].includes("function bindFieldworkController") &&
+  sourceByName["fieldwork-controller.js"].includes("async function locateUser") &&
+  sourceByName["fieldwork-controller.js"].includes("function saveHousePosition") &&
+  sourceByName["fieldwork-controller.js"].includes('els.addLocalMarker.addEventListener("click"') &&
+  sourceByName["fieldwork-controller.js"].includes('els.addLoreItem.addEventListener("click"') &&
+  sourceByName["main.js"].includes("bindFieldworkController()") &&
+  !sourceByName["main.js"].includes("async function locateUser") &&
+  !sourceByName["main.js"].includes("function saveHousePosition") &&
+  !sourceByName["main.js"].includes("els.addLocalMarker.addEventListener")
 );
 check("services applicatifs ordonnés", () =>
   sourceByName["audio.js"].includes("const retroAudio") &&
