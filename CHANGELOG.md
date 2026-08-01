@@ -7,6 +7,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - Arrêt automatique des animations plein écran après une courte impulsion de rendu.
 - Mise en pause immédiate lorsque la fenêtre perd le focus ou devient invisible.
 - Suppression des déplacements continus du grain ASCII et de la grille vectorielle.
+- Suppression complète des balayages lumineux vectoriel et CRT.
 - Suppression du filtre animé appliqué au halo vectoriel plein écran.
 - Plafonnement adaptatif du bitmap Canvas à 8 millions de pixels sur desktop et 3,5 millions sur mobile.
 - Nouveau module `performance.js` et diagnostic du budget Canvas.

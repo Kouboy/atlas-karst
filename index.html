@@ -1639,9 +1639,7 @@ body[data-effective-render="ascii"] #viewport::after{display:none!important}
   linear-gradient(#c9bb7d,#c9bb7d) 7px calc(100% - 7px)/1px 24px no-repeat,
   linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) calc(100% - 7px)/24px 1px no-repeat,
   linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) calc(100% - 7px)/1px 24px no-repeat}
-@keyframes fxVectorSweep{0%{transform:translateX(-135%)}100%{transform:translateX(535%)}}
 @keyframes fxVectorPulse{0%,100%{opacity:.50}50%{opacity:.94}}
-@keyframes fxAsciiRefresh{0%{transform:translateY(0)}100%{transform:translateY(650%)}}
 @keyframes fxAsciiPulse{0%,100%{opacity:.68}48%{opacity:.88}49%{opacity:.58}50%{opacity:.92}}
 body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.52;background:
   repeating-linear-gradient(90deg,rgba(99,255,190,.045) 0 1px,transparent 1px 12px),
@@ -1649,7 +1647,6 @@ body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.52;background:
 body[data-effective-render="symbolic"] .fx-vector-bloom{opacity:.74;background:
   radial-gradient(circle at 50% 45%,rgba(95,255,190,.14),transparent 52%),
   radial-gradient(circle at 50% 50%,transparent 0 61%,rgba(0,0,0,.14) 86%,rgba(0,0,0,.31) 100%);mix-blend-mode:screen;animation:fxVectorPulse 3.1s ease-in-out infinite}
-body[data-effective-render="symbolic"] .fx-vector-sweep{inset:-10% auto -10% -18%;width:18%;opacity:.92;background:linear-gradient(90deg,transparent,rgba(130,255,205,.05) 22%,rgba(220,255,239,.22) 50%,rgba(89,221,255,.07) 78%,transparent);filter:blur(.6px);mix-blend-mode:screen;animation:fxVectorSweep 7.2s linear infinite}
 body[data-effective-render="ascii"] .fx-ascii-mask{opacity:.88;background:
   repeating-linear-gradient(180deg,rgba(213,255,226,.10) 0 1px,rgba(0,0,0,.06) 1px 3px),
   repeating-linear-gradient(90deg,rgba(255,42,42,.025) 0 1px,rgba(38,255,129,.032) 1px 2px,rgba(54,117,255,.025) 2px 3px,transparent 3px 6px),
@@ -1658,13 +1655,10 @@ body[data-effective-render="ascii"] .fx-ascii-mask{opacity:.88;background:
 body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
   radial-gradient(circle,rgba(217,255,228,.18) 0 .55px,transparent .75px) 0 0/7px 5px,
   radial-gradient(circle,rgba(78,255,139,.10) 0 .5px,transparent .7px) 0 0/11px 9px;mix-blend-mode:screen;animation:none}
-body[data-effective-render="ascii"] .fx-ascii-refresh{inset:-18% 0 auto;height:18%;opacity:.96;background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.025) 25%,rgba(226,255,235,.15) 50%,rgba(164,255,194,.03) 76%,transparent 100%);mix-blend-mode:screen;will-change:transform;animation:fxAsciiRefresh 6.4s linear infinite}
 .terminal-wrap.panning .render-fx-layer>div,.terminal-wrap:has(#mapCanvas.pinching) .render-fx-layer>div{animation-play-state:paused!important}
 @media(max-width:700px){
   body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.32;animation:none}
-  body[data-effective-render="symbolic"] .fx-vector-sweep{animation-duration:10s;opacity:.64}
   body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.16}
-  body[data-effective-render="ascii"] .fx-ascii-refresh{display:none}
 }
 @media(prefers-reduced-motion:reduce){.render-fx-layer>div{animation:none!important}}
 .render-fx-layer.fx-restart>div{animation-name:none!important}
@@ -2141,10 +2135,8 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
     <div class="render-fx-layer" id="renderFxLayer" aria-hidden="true">
       <div class="fx-vector-grid"></div>
       <div class="fx-vector-bloom"></div>
-      <div class="fx-vector-sweep"></div>
       <div class="fx-ascii-mask"></div>
       <div class="fx-ascii-grain"></div>
-      <div class="fx-ascii-refresh"></div>
       <div class="fx-instrument-frame"></div>
     </div>
     <div class="canvas-cell-marker" id="canvasHoverMarker" aria-hidden="true"></div>

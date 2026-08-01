@@ -52,6 +52,7 @@ check("diagnostic entièrement enregistré", () => [
 ].every((id) => registeredIds.includes(id)));
 check("pipeline Canvas final vérifié", () => html.includes('recordCanvasStage("fx-final")'));
 check("repos graphique borné", () => html.includes("pulseRenderFxActivity") && html.includes("render-fx-layer.fx-active") && html.includes("adaptiveCanvasDpr"));
+check("balayages CRT supprimés", () => !html.includes("fx-vector-sweep") && !html.includes("fx-ascii-refresh") && !html.includes("fxVectorSweep") && !html.includes("fxAsciiRefresh"));
 check("révision OSM propagée", () => html.includes('markMapDataRevision("osm")'));
 check("dernière vue OSM reprise", () => html.includes("osmEnsurePending") && html.includes("scheduleOsmEnsure(0)"));
 check("Canvas accessible au clavier", () => /<canvas[^>]+id="mapCanvas"[^>]+tabindex="0"/.test(html));
