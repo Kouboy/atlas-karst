@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17h — Gestes unifiés
+
+- Extraction du déplacement, de la molette, du pincement, du zoom, de la profondeur et des raccourcis dans `input-controller.js`.
+- État temporaire des pointeurs centralisé afin qu’un seul contrôleur possède le drag et le pincement sur desktop comme sur mobile.
+- Conservation de l’aperçu GPU pendant le drag, suivie d’un unique rendu cartographique au relâchement.
+- Nettoyage vérifié des captures, transformations et classes tactiles après chaque geste.
+- Compteurs de déplacements, pincements et molettes ajoutés au diagnostic et à son rapport.
+- Deux scénarios navigateur dédiés au drag sans rafale et au pincement tactile autour de son point central.
+- Réduction de `main.js` d’environ 2 020 à 1 670 lignes sans modifier le livrable autonome.
+
 ## 0.17g — Démarrage regroupé
 
 - Premier affichage conservé immédiatement, mais suppression du second rendu identique lors du chargement d’un instantané.
