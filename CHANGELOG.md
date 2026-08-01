@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17j — Sauvegardes vérifiables
+
+- Extraction de la validation, de la restauration IndexedDB, des exports JSON, texte et HTML autonome dans `snapshot-manager.js`.
+- Acceptation explicite des schémas historiques 1 et 2, avec refus lisible des instantanés provenant d’une version future incompatible.
+- Limite d’import à 64 Mo afin qu’un fichier accidentellement énorme ne puisse pas saturer la session.
+- Téléchargements déclenchés par un lien temporairement attaché au document pour une meilleure compatibilité mobile.
+- Compteurs de constructions, restaurations, imports, exports et opérations IndexedDB ajoutés au diagnostic.
+- Scénario navigateur de round-trip couvrant l’état cartographique, IndexedDB et le rejet d’un schéma futur.
+- Réduction de `main.js` d’environ 950 à 820 lignes ; il ne contient plus les détails du format de sauvegarde.
+
 ## 0.17i — Inspecteur unifié
 
 - Extraction de la conversion pointeur/cellule, de la sélection assistée, du survol et des fiches documentaires dans `cell-inspector.js`.
