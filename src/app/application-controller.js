@@ -19,6 +19,7 @@ function bindApplicationController(){
   bindExperienceController();
   bindViewController();
   bindLifecycleController();
+  bindSessionHealth();
   els.readoutSheetHandle.addEventListener("click",()=>{accountApplicationAction("bascule de la fiche");cycleReadoutSheet()});
   document.addEventListener("click",handleDocumentNavigation);
   els.exportBtn.addEventListener("click",()=>{accountApplicationAction("export texte");exportTxt()});

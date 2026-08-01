@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17u — Santé des sessions longues
+
+- Plafonds explicites pour les caches de styles Canvas, d’hypothèses souterraines et de relations documentaires.
+- Conservation limitée aux 18 fenêtres OSM locales les plus récentes.
+- Entretien opportuniste pendant les périodes d’inactivité, sans boucle périodique permanente.
+- Suspension réelle du contexte audio lorsque la page est masquée.
+- Libération des requêtes, gestes, temporisateurs et animations transitoires lors de `pagehide`, avec restauration depuis le cache de navigation.
+- Compteurs de santé de session intégrés au diagnostic et scénario navigateur de saturation/nettoyage.
+
 ## 0.17t — Orchestrateur applicatif
 
 - Déplacement du démarrage complet dans `application-controller.js` avec état, durée, mode et erreur observables.

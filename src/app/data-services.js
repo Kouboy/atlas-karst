@@ -34,7 +34,7 @@ function cacheGet(key){
   }catch{return null}
 }
 function cacheSet(key,value){
-  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),value}))}catch{}
+  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),value}));if(key.startsWith("atlas-karst-osm-v010d-"))scheduleSessionMaintenance("cache OSM")}catch{}
 }
 
 function expandExtentBox(e,factor=1.18){

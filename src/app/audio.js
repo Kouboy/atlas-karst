@@ -303,6 +303,10 @@ const retroAudio=(()=>{
     encounterThemePulse();encounterThemeTimer=setInterval(encounterThemePulse,2350);
   }
   function silence(){stopPanVoice();stopEncounterTheme();panActive=false}
+  function suspend(){
+    silence();
+    if(ctx?.state==="running"){try{ctx.suspend()?.catch?.(()=>{})}catch{}}
+  }
   function setEnabled(value,{chime=true}={}){
     enabled=!!value;
     if(!enabled)silence();
@@ -312,7 +316,7 @@ const retroAudio=(()=>{
   }
   function toggle(){setEnabled(!enabled)}
   function init(){updateButton()}
-  return {init,play,unlock,panStart,panMove,panEnd,silence,toggle,setEnabled,startEncounterTheme,stopEncounterTheme,get enabled(){return enabled}};
+  return {init,play,unlock,panStart,panMove,panEnd,silence,suspend,toggle,setEnabled,startEncounterTheme,stopEncounterTheme,get enabled(){return enabled}};
 })();
 
 const operationSoundWatches=new Map();
