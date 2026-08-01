@@ -239,9 +239,10 @@ function syncCanvasSize(){
   if(!CANVAS_RENDERER||!els.mapCanvas)return null;
   const m=measureCanvasLayout();
   const compact=matchMedia("(max-width:700px)").matches;
-  const dpr=Math.min(window.devicePixelRatio||1,compact?1.25:1.75);
+  const dpr=adaptiveCanvasDpr(m.width,m.height,compact);
   const displayScale=1,displayWidth=Math.round(m.width),displayHeight=Math.round(m.height);
   const pixelW=Math.max(1,Math.round(m.width*dpr)),pixelH=Math.max(1,Math.round(m.height*dpr));
+  performanceRuntime.canvasPixels=pixelW*pixelH;
   const bitmapChanged=els.mapCanvas.width!==pixelW||els.mapCanvas.height!==pixelH;
   const cssChanged=els.mapCanvas.style.width!==`${displayWidth}px`||els.mapCanvas.style.height!==`${displayHeight}px`;
   if(els.mapCanvas.width!==pixelW)els.mapCanvas.width=pixelW;
@@ -371,6 +372,7 @@ function finalizeCanvasFrame(ctx,m,mode,reason="direct",frame=renderPipelineRunt
     els.renderFxLayer.dataset.osmRevision=String(renderPipelineRuntime.osmRevision);
   }
   if(fxNeedsRestart){restartRenderFxAnimations();renderPipelineRuntime.lastFxOsmRevision=renderPipelineRuntime.osmRevision}
+  pulseRenderFxActivity(reason==="boot"?1200:900,reason);
 }
 
 function drawAsciiCanvasMap(grid=state.lastGrid,reason="direct"){
@@ -5414,10 +5416,7 @@ function renderUndergroundBase(g){
   }
 }
 
-const AMBIENT_PREF_KEY="atlas-karst-ambient-motion-v1";
-const reducedMotionQuery=window.matchMedia?.("(prefers-reduced-motion: reduce)");
 let depthTransitionTimer=0;
-function ambientAllowed(){return !!state.ambientMotion&&!reducedMotionQuery?.matches}
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
   clearTimeout(depthTransitionTimer);
@@ -7298,7 +7297,10 @@ els.renderModeAscii?.addEventListener("click",()=>setRenderMode("ascii"));
   els[id].addEventListener("change",e=>{
     state[id]=e.target.checked;
     if(id==="layerHydrology")hypothesisModelCache.clear();
-    if(id==="ambientMotion"){try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}}
+    if(id==="ambientMotion"){
+      try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}
+      syncAmbientMotionState({pulse:state.ambientMotion,reason:"preference"});
+    }
     render();
   });
 });
@@ -7344,7 +7346,13 @@ window.addEventListener("keydown",e=>{
 // Les navigateurs mobiles n’autorisent Web Audio qu’après un geste explicite.
 // On arme donc le moteur dès le premier contact, avant les gestionnaires métier.
 document.addEventListener("pointerdown",()=>retroAudio.unlock(),{capture:true,passive:true});
-document.addEventListener("visibilitychange",()=>{if(document.hidden)retroAudio.silence()});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){retroAudio.silence();setRenderFxActivity(false,"hidden")}
+  else pulseRenderFxActivity(650,"visible");
+});
+window.addEventListener("blur",()=>setRenderFxActivity(false,"blur"));
+window.addEventListener("focus",()=>pulseRenderFxActivity(650,"focus"));
+reducedMotionQuery?.addEventListener?.("change",()=>syncAmbientMotionState({pulse:false,reason:"system-preference"}));
 document.addEventListener("touchstart",()=>retroAudio.unlock(),{capture:true,passive:true});
 document.addEventListener("keydown",()=>retroAudio.unlock(),{capture:true});
 document.addEventListener("toggle",ev=>{

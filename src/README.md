@@ -5,6 +5,7 @@
 - `index.template.html` contient la structure et les textes de l’interface.
 - `styles/atlas.css` contient la feuille de style complète.
 - `app/runtime.js` initialise le contexte global et la version.
+- `app/performance.js` borne la résolution du Canvas et met les effets animés au repos.
 - `app/debug.js` porte le diagnostic et l’auto-vérification.
 - `app/main.js` contient encore le moteur historique. Il sera réduit par extractions successives.
 
