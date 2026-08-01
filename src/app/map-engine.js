@@ -542,6 +542,25 @@ function hashString(s){
 }
 function mulberry32(a){return function(){let t=a+=0x6D2B79F5;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function scenarioFactor(){return state.scenario==="prudent"?0.72:state.scenario==="extensive"?1.35:1}
+function undergroundVisualContract(depth=currentDepth()){
+  if(depth>=-3)return {base:"#101d1a",grid:"rgba(119,176,155,.055)",rock:"#172722",ground:"#172722",groundMark:"#5c7f72",fracture:"rgba(140,189,170,.18)",fractureText:"#759b8d",high:"rgba(151,122,184,.72)",med:"rgba(126,99,159,.50)",low:"rgba(100,76,126,.30)",highText:"#d9a5f8",medText:"#b579d6",lowText:"#805d91",edge:"#d5bce6",water:"#59cde6",pillar:"#e9bd78",ghost:"rgba(157,191,172,.18)"};
+  if(depth>=-8)return {base:"#0d191b",grid:"rgba(112,153,176,.05)",rock:"#18252a",ground:"#18252a",groundMark:"#597682",fracture:"rgba(117,161,178,.18)",fractureText:"#6f919d",high:"rgba(137,124,190,.72)",med:"rgba(109,98,159,.50)",low:"rgba(82,73,122,.30)",highText:"#cfc2ff",medText:"#a99cdd",lowText:"#776d9f",edge:"#c4beec",water:"#58cce9",pillar:"#e8b879",ghost:"rgba(147,182,187,.17)"};
+  if(depth>=-14)return {base:"#10151d",grid:"rgba(124,133,184,.05)",rock:"#1c2130",ground:"#1c2130",groundMark:"#626b91",fracture:"rgba(133,139,184,.18)",fractureText:"#747ca4",high:"rgba(130,112,184,.70)",med:"rgba(103,85,153,.48)",low:"rgba(79,64,116,.29)",highText:"#c7b5ec",medText:"#9d89c9",lowText:"#71618f",edge:"#c7b5e7",water:"#56bfdf",pillar:"#ddb079",ghost:"rgba(144,160,190,.16)"};
+  if(depth>=-22)return {base:"#171418",grid:"rgba(170,130,112,.045)",rock:"#292126",ground:"#292126",groundMark:"#80665f",fracture:"rgba(178,134,118,.16)",fractureText:"#967369",high:"rgba(145,102,155,.68)",med:"rgba(113,78,126,.46)",low:"rgba(85,58,95,.28)",highText:"#d8a9d3",medText:"#aa7fa9",lowText:"#795b78",edge:"#dca9ca",water:"#4cb7d5",pillar:"#dba36f",ghost:"rgba(177,151,137,.15)"};
+  return {base:"#1b1511",grid:"rgba(183,132,91,.045)",rock:"#30231d",ground:"#30231d",groundMark:"#8d6956",fracture:"rgba(190,139,96,.16)",fractureText:"#a07860",high:"rgba(157,103,128,.66)",med:"rgba(123,78,101,.44)",low:"rgba(91,57,74,.27)",highText:"#dfa9bc",medText:"#b17e93",lowText:"#7e5a68",edge:"#e2a8b3",water:"#43aac8",pillar:"#d99a65",ghost:"rgba(183,145,117,.14)"};
+}
+let appliedUndergroundDepth=null;
+function applyUndergroundVisualContract(depth=currentDepth()){
+  if(depth===0||depth===appliedUndergroundDepth)return;
+  appliedUndergroundDepth=depth;const visual=undergroundVisualContract(depth),style=document.body.style;
+  for(const [name,value] of Object.entries({
+    "--ug-base":visual.base,"--ug-ground":visual.ground,"--ug-ground-mark":visual.groundMark,
+    "--ug-fracture":visual.fractureText,"--ug-high":visual.highText,"--ug-med":visual.medText,
+    "--ug-low":visual.lowText,"--ug-edge":visual.edge,"--ug-water":visual.water,
+    "--ug-pillar":visual.pillar,"--ug-ghost":visual.ghost
+  }))style.setProperty(name,value);
+  canvasRuntime.styleCache.clear();
+}
 const hypothesisModelCache=new Map();
 function hypothesisDepthProfile(c){
   const type=cavityType(c),measured=documentedCavityDepth(c);
@@ -641,7 +660,7 @@ function hypothesisModelIntersects(c,model,e){
 }
 function drawWorldLine(g,c,line,info){
   const pts=line.points.map(p=>offsetToGrid(c,p.x,p.y,g.extent));
-  const cls=line.water?"c-water-underground":confidenceClass(line.conf);
+  const cls=line.water?"c-water-underground c-underground-line":`${confidenceClass(line.conf)} c-underground-line${line.dashed?" c-underground-dashed":""}`;
   if(line.dashed){
     for(let i=1;i<pts.length;i++){
       let n=0;
@@ -658,7 +677,7 @@ function drawWorldPolygon(g,c,poly,info){
   const pts=poly.points.map(p=>offsetToGrid(c,p.x,p.y,g.extent));
   const minX=Math.min(...pts.map(p=>p.x)),maxX=Math.max(...pts.map(p=>p.x));
   const minY=Math.min(...pts.map(p=>p.y)),maxY=Math.max(...pts.map(p=>p.y));
-  const cls=confidenceClass(poly.conf),glyph=confidenceGlyph(poly.conf);
+  const cls=`${confidenceClass(poly.conf)} c-underground-volume`,glyph=confidenceGlyph(poly.conf);
   if(maxX-minX<1&&maxY-minY<1){
     const center=offsetToGrid(c,
       poly.points.reduce((s,p)=>s+p.x,0)/poly.points.length,
@@ -669,10 +688,26 @@ function drawWorldPolygon(g,c,poly,info){
     return;
   }
   polygonFill(g,pts,glyph,cls,11,info);
-  lineDraw(g,[...pts,pts[0]],poly.edge||"#","c-wall",13,info,1);
+  lineDraw(g,[...pts,pts[0]],poly.edge||"#","c-wall c-underground-edge",13,info,1);
+}
+function undergroundModelGridSpan(g,c,model){
+  const corners=[
+    {x:model.bounds.minX,y:model.bounds.minY},{x:model.bounds.maxX,y:model.bounds.minY},
+    {x:model.bounds.maxX,y:model.bounds.maxY},{x:model.bounds.minX,y:model.bounds.maxY}
+  ].map(p=>offsetToGrid(c,p.x,p.y,g.extent));
+  return {
+    width:Math.max(...corners.map(p=>p.x))-Math.min(...corners.map(p=>p.x)),
+    height:Math.max(...corners.map(p=>p.y))-Math.min(...corners.map(p=>p.y))
+  };
 }
 function drawHypothesisModel(g,c,model){
   const generic=hypothesisInfo(c,"réseau souterrain extrapolé",model);
+  const span=undergroundModelGridSpan(g,c,model);
+  if(Math.max(span.width,span.height)<3){
+    const p=offsetToGrid(c,0,0,g.extent);
+    put(g,p.x,p.y,"◇","c-underground-locator c-hyp-low",14,{...generic,kind:"emprise souterraine simplifiée à cette échelle"},"low");
+    return;
+  }
   for(const poly of model.polygons){
     drawWorldPolygon(g,c,poly,{...generic,kind:poly.kind});
   }
@@ -681,27 +716,15 @@ function drawHypothesisModel(g,c,model){
   }
   for(const point of model.points){
     const p=offsetToGrid(c,point.x,point.y,g.extent);
-    put(g,p.x,p.y,point.glyph||"O","c-pillar",15,{...generic,kind:point.kind},point.conf);
-  }
-
-  // At very coarse scales, draw the bounds of the same model if every detail
-  // collapses into too few cells. This is a simplification of the same geometry,
-  // not a second hypothesis.
-  if(state.zoomIndex<=1){
-    const corners=[
-      {x:model.bounds.minX,y:model.bounds.minY},
-      {x:model.bounds.maxX,y:model.bounds.minY},
-      {x:model.bounds.maxX,y:model.bounds.maxY},
-      {x:model.bounds.minX,y:model.bounds.maxY}
-    ].map(p=>offsetToGrid(c,p.x,p.y,g.extent));
-    const w=Math.max(...corners.map(p=>p.x))-Math.min(...corners.map(p=>p.x));
-    const h=Math.max(...corners.map(p=>p.y))-Math.min(...corners.map(p=>p.y));
-    if(w>=2||h>=2)lineDraw(g,[...corners,corners[0]],"░","c-hyp-low",10,{...generic,kind:"emprise simplifiée du même modèle"},1);
+    put(g,p.x,p.y,point.glyph||"O","c-pillar c-underground-pillar",15,{...generic,kind:point.kind},point.conf);
   }
 }
 function drawHypotheses(g){
   const depth=currentDepth();
-  if(depth===0||!state.layerHypothesis||!state.cavities.length)return;
+  // Aux deux échelles les plus lointaines, une galerie de quelques dizaines de
+  // mètres tient dans moins d'une cellule. Les repères documentés suffisent :
+  // inventer une empreinte agrandie nuirait à la lecture et au coût du rendu.
+  if(depth===0||state.zoomIndex<=1||!state.layerHypothesis||!state.cavities.length)return;
   const searchExtent=expandExtentBox(g.extent,1.7);
   for(const poi of queryNormalizedPois(searchExtent,"cavity")){
     const c=poi.raw;
@@ -734,25 +757,43 @@ function drawPossibleConnections(g){
     if(bothOutside)continue;
     const confidence=distance<300?"med":"low";
     const info={kind:"connexion possible entre exploitations",name:`${cavityName(a)} ↔ ${cavityName(b)}`,source:`connexion interprétative dans la coupe ${depthSliceLabel(depth)} · aucune continuité attestée`,confidenceLabel:confidence==="med"?"moyenne":"faible"};
-    let n=0;bresenham(pa.x,pa.y,pb.x,pb.y,(x,y)=>{if(n++%3===0)put(g,x,y,"·",confidence==="med"?"c-hyp-med":"c-hyp-low",9,info,confidence)});
+    let n=0;bresenham(pa.x,pa.y,pb.x,pb.y,(x,y)=>{if(n++%3===0)put(g,x,y,"·",`${confidence==="med"?"c-hyp-med":"c-hyp-low"} c-underground-line c-underground-dashed`,9,info,confidence)});
+  }
+}
+
+function renderUndergroundSurfaceGhost(g){
+  const extent=g.extent,detail=semanticZoom(),features=state.osm?queryOsmFeatures(extent):[];
+  for(const feature of features){
+    const tags=feature.tags||{},coords=feature.coords||[];if(coords.length<2)continue;
+    const points=coords.map(([lon,lat])=>coordToGrid(lat,lon,extent));
+    const majorRoad=["motorway","trunk","primary","secondary"].includes(tags.highway);
+    const namedRoad=state.zoomIndex>=3&&tags.highway&&String(tags.name||tags.ref||"").trim();
+    const majorWater=["river","canal"].includes(tags.waterway);
+    if(majorRoad||namedRoad||majorWater){
+      lineDraw(g,points,"·","c-ghost c-underground-ghost",2,{kind:"projection fantôme de la surface",source:"axe principal OpenStreetMap"},1);
+      continue;
+    }
+    if(state.zoomIndex>=4&&tags.building&&detail.osmBuildings&&feature.closed){
+      lineDraw(g,[...points,points[0]],"·","c-ghost c-underground-ghost",2,{kind:"projection fantôme du bâti",source:"OpenStreetMap"},1);
+    }
+  }
+  if(state.zoomIndex>=4&&state.layerCadastreBuildings&&detail.cadastreBuildings){
+    for(const indexed of queryCadastreFeatures(extent,"building")){
+      const points=indexed.feature.coords.map(([lon,lat])=>coordToGrid(lat,lon,extent));
+      lineDraw(g,[...points,points[0]],"·","c-ghost c-underground-ghost",2,{kind:"projection fantôme du bâti",source:"Cadastre Etalab / DGFiP"},1);
+    }
   }
 }
 
 function renderUndergroundBase(g){
   const depth=currentDepth();if(depth===0)return;
-  const baseChar=depth===-3?":":"%";
   const baseCls=depth===-3?"c-soil":"c-rock";
   for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
-    const noise=((x*17+y*31+Math.abs(depth)*13)%29===0);
-    put(g,x,y,noise&&depth<=-8?":":baseChar,noise?"c-fracture":baseCls,1,{kind:depth===-3?"sol et remblais schématiques":"substrat rocheux schématique",source:`fond de coupe ${depthSliceLabel(depth)} · modèle visuel, pas une carte géologique ni un sondage`});
+    const texture=(x*17+y*31+Math.abs(depth)*13)%17===0;
+    const fracture=depth<=-8&&(x*37+y*19+Math.abs(depth)*11)%97===0;
+    put(g,x,y,fracture?"╱":texture?"·":" ",`${fracture?"c-fracture":baseCls} c-underground-base`,1,{kind:depth===-3?"sol et remblais schématiques":"substrat rocheux schématique",source:`fond de coupe ${depthSliceLabel(depth)} · modèle visuel, pas une carte géologique ni un sondage`});
   }
-  if(state.layerSurface){
-    const ghost=createGrid(g.extent);renderSurface(ghost);
-    for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
-      const c=ghost.grid[y][x];
-      if(c.priority>=7&&((x+y)%3===0))put(g,x,y,c.ch,"c-ghost",2,{kind:"projection fantôme de la surface",source:c.feature?.source||"surface"});
-    }
-  }
+  if(state.layerSurface)renderUndergroundSurfaceGhost(g);
 }
 
 function composeMapGrid(extent,depth=currentDepth()){

@@ -73,7 +73,7 @@ function canvasStyleProbe(){
 }
 function transparentColor(value){return !value||value==="transparent"||/rgba\([^)]*,\s*0(?:\.0+)?\)$/.test(value)}
 function canvasVisualFor(classes){
-  const band=document.body.dataset.depthBand||"surface",key=`${band}|${classes}`;
+  const band=document.body.dataset.depthBand||"surface",depth=currentDepth(),key=`${band}|${depth}|${classes}`;
   const cached=canvasRuntime.styleCache.get(key);if(cached)return cached;
   const probe=canvasStyleProbe();probe.className=`cell canvas-style-probe ${classes}`;
   const cs=getComputedStyle(probe);
@@ -94,9 +94,14 @@ function drawGlobalSignalPass(ctx,m,mode){
   if(!els.mapCanvas||!m)return;
   const compact=matchMedia("(max-width:700px)").matches;
   const moving=!!els.viewport?.classList.contains("panning")||!!activeMapSurface()?.classList.contains("pinching");
+  const symbolic=mode==="symbolic";
+  if(currentDepth()<0){
+    const palette=symbolicUndergroundPalette();ctx.save();ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.globalCompositeOperation="screen";
+    const wash=ctx.createLinearGradient(0,0,m.width,m.height);wash.addColorStop(0,`${palette.water}10`);wash.addColorStop(.48,"rgba(196,184,226,.025)");wash.addColorStop(1,`${palette.edge}0d`);
+    ctx.fillStyle=wash;ctx.fillRect(0,0,m.width,m.height);ctx.restore();return;
+  }
   const {canvas:scratch,ctx:sctx}=globalSignalSurface();
   if(!sctx)return;
-  const symbolic=mode==="symbolic";
 
   // Extraction emissive globale : les tons sombres restent presque noirs, tandis
   // que routes, eau, bâtiments, glyphes et contours nourrissent réellement le halo.
@@ -142,9 +147,15 @@ function drawGlobalSignalPass(ctx,m,mode){
 function drawCanvasModeFinish(ctx,m,mode){
   // Post-traitement statique réellement inclus dans le bitmap final.
   // Il est recalculé après chaque redraw, y compris après fusion de données OSM.
-  const symbolic=mode==="symbolic";
+  const symbolic=mode==="symbolic",underground=currentDepth()<0;
   ctx.save();ctx.setTransform(m.dpr,0,0,m.dpr,0,0);ctx.globalCompositeOperation="screen";
-  if(symbolic){
+  if(underground){
+    const palette=symbolicUndergroundPalette();ctx.globalAlpha=.34;ctx.strokeStyle=palette.grid;ctx.lineWidth=.5;ctx.beginPath();
+    const stepX=Math.max(32,Math.round(m.cellW*10)),stepY=Math.max(28,Math.round(m.cellH*7));
+    for(let x=m.padding;x<m.width-m.padding;x+=stepX){ctx.moveTo(x,m.padding);ctx.lineTo(x,m.height-m.padding)}
+    for(let y=m.padding;y<m.height-m.padding;y+=stepY){ctx.moveTo(m.padding,y);ctx.lineTo(m.width-m.padding,y)}
+    ctx.stroke();
+  }else if(symbolic){
     ctx.globalAlpha=.075;ctx.strokeStyle="#8fffd0";ctx.lineWidth=.5;ctx.beginPath();
     const stepX=Math.max(24,Math.round(m.cellW*12)),stepY=Math.max(22,Math.round(m.cellH*8));
     for(let x=m.padding;x<m.width-m.padding;x+=stepX){ctx.moveTo(x,m.padding);ctx.lineTo(x,m.height-m.padding)}
@@ -158,7 +169,7 @@ function drawCanvasModeFinish(ctx,m,mode){
   }
   ctx.globalCompositeOperation="source-over";ctx.globalAlpha=1;
   const vignette=ctx.createRadialGradient(m.width*.5,m.height*.47,Math.min(m.width,m.height)*.18,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.72);
-  vignette.addColorStop(0,"rgba(0,0,0,0)");vignette.addColorStop(.72,"rgba(0,0,0,.025)");vignette.addColorStop(1,symbolic?"rgba(0,8,5,.24)":"rgba(0,5,2,.30)");
+  vignette.addColorStop(0,"rgba(0,0,0,0)");vignette.addColorStop(.72,"rgba(0,0,0,.025)");vignette.addColorStop(1,underground?"rgba(1,3,9,.27)":symbolic?"rgba(0,8,5,.24)":"rgba(0,5,2,.30)");
   ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);ctx.restore();
 }
 function syncRenderFxGeometry(m=canvasRuntime.metrics){
@@ -199,17 +210,21 @@ function drawAsciiCanvasMap(grid=state.lastGrid,reason="direct"){
   const mapCore=getComputedStyle(document.body).getPropertyValue("--map-core").trim()||"#06110c";
   ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.fillStyle=mapCore;ctx.fillRect(0,0,m.width,m.height);
   ctx.textBaseline="top";ctx.textAlign="left";ctx.fontKerning="none";
-  let visiblePoiCount=0;
+  const underground=currentDepth()<0;let visiblePoiCount=0;
   // Fonds de relief, groupés horizontalement pour limiter les appels de dessin.
-  for(let y=0;y<CONFIG.gridH;y++){
-    let runStart=0,runBg=null;
-    const flushBg=x=>{if(runBg&&!transparentColor(runBg))ctx.fillRect(m.padding+runStart*m.cellW,m.padding+y*m.cellH,(x-runStart)*m.cellW,m.cellH)};
-    for(let x=0;x<=CONFIG.gridW;x++){
-      const c=x<CONFIG.gridW?grid.grid[y][x]:null;
-      const shade=c&&state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
-      const visual=c?canvasVisualFor(`${c.cls||""}${shade}`):null;
-      const bg=visual?.background||null;
-      if(x===0){runBg=bg;runStart=0}else if(bg!==runBg){flushBg(x);runStart=x;runBg=bg}
+  if(underground){
+    ctx.fillStyle=symbolicUndergroundPalette().ground;ctx.fillRect(m.padding,m.padding,CONFIG.gridW*m.cellW,CONFIG.gridH*m.cellH);
+  }else{
+    for(let y=0;y<CONFIG.gridH;y++){
+      let runStart=0,runBg=null;
+      const flushBg=x=>{if(runBg&&!transparentColor(runBg))ctx.fillRect(m.padding+runStart*m.cellW,m.padding+y*m.cellH,(x-runStart)*m.cellW,m.cellH)};
+      for(let x=0;x<=CONFIG.gridW;x++){
+        const c=x<CONFIG.gridW?grid.grid[y][x]:null;
+        const shade=c&&state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
+        const visual=c?canvasVisualFor(`${c.cls||""}${shade}`):null;
+        const bg=visual?.background||null;
+        if(x===0){runBg=bg;runStart=0}else if(bg!==runBg){flushBg(x);runStart=x;runBg=bg}
+      }
     }
   }
   // Glyphes, groupés par style. Les POI sont dessinés seuls avec un léger halo statique.
@@ -218,8 +233,9 @@ function drawAsciiCanvasMap(grid=state.lastGrid,reason="direct"){
     const flush=()=>{if(!text||!lastVisual)return;ctx.globalAlpha=lastVisual.opacity;ctx.fillStyle=lastVisual.color;ctx.shadowBlur=0;ctx.font=`${lastVisual.fontWeight} ${m.fontSize}px ${canvasFontFamily()}`;ctx.fillText(text,m.padding+startX*m.cellW,m.padding+y*m.cellH);text=""};
     for(let x=0;x<CONFIG.gridW;x++){
       const c=grid.grid[y][x],shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
-      const visual=canvasVisualFor(`${c.cls||""}${shade}`),key=`${visual.color}|${visual.fontWeight}|${visual.opacity}`;
       const poi=poiEffectKind(c);
+      if(c.ch===" "&&!poi){flush();lastKey="";lastVisual=null;startX=x+1;continue}
+      const visual=canvasVisualFor(`${c.cls||""}${shade}`),key=`${visual.color}|${visual.fontWeight}|${visual.opacity}`;
       if(poi){
         flush();visiblePoiCount++;ctx.globalAlpha=visual.opacity;ctx.fillStyle=visual.color;ctx.font=`${visual.fontWeight} ${m.fontSize}px ${canvasFontFamily()}`;ctx.shadowColor=visual.color;ctx.shadowBlur=Math.max(2,m.fontSize*.34);ctx.fillText(c.ch,m.padding+x*m.cellW,m.padding+y*m.cellH);ctx.shadowBlur=0;lastKey="";lastVisual=null;startX=x+1;continue;
       }
@@ -641,11 +657,7 @@ function selectSymbolicPoi(poi,note="Balise cartographique sélectionnée"){
    couleurs distinguent clairement donnée documentée et volume interprétatif.
    La géométrie reste celle du modèle maître commun aux profondeurs. */
 function symbolicUndergroundPalette(depth=currentDepth()){
-  if(depth>=-3)return {base:"#101d1a",grid:"rgba(119,176,155,.055)",rock:"#172722",fracture:"rgba(140,189,170,.18)",high:"rgba(151,122,184,.72)",med:"rgba(126,99,159,.50)",low:"rgba(100,76,126,.30)",edge:"rgba(213,188,230,.58)",water:"#59cde6",pillar:"#e9bd78"};
-  if(depth>=-8)return {base:"#0d191b",grid:"rgba(112,153,176,.05)",rock:"#18252a",fracture:"rgba(117,161,178,.18)",high:"rgba(137,124,190,.72)",med:"rgba(109,98,159,.50)",low:"rgba(82,73,122,.30)",edge:"rgba(196,190,236,.58)",water:"#58cce9",pillar:"#e8b879"};
-  if(depth>=-14)return {base:"#10151d",grid:"rgba(124,133,184,.05)",rock:"#1c2130",fracture:"rgba(133,139,184,.18)",high:"rgba(130,112,184,.70)",med:"rgba(103,85,153,.48)",low:"rgba(79,64,116,.29)",edge:"rgba(199,181,231,.56)",water:"#56bfdf",pillar:"#ddb079"};
-  if(depth>=-22)return {base:"#171418",grid:"rgba(170,130,112,.045)",rock:"#292126",fracture:"rgba(178,134,118,.16)",high:"rgba(145,102,155,.68)",med:"rgba(113,78,126,.46)",low:"rgba(85,58,95,.28)",edge:"rgba(220,169,202,.54)",water:"#4cb7d5",pillar:"#dba36f"};
-  return {base:"#1b1511",grid:"rgba(183,132,91,.045)",rock:"#30231d",fracture:"rgba(190,139,96,.16)",high:"rgba(157,103,128,.66)",med:"rgba(123,78,101,.44)",low:"rgba(91,57,74,.27)",edge:"rgba(226,168,179,.52)",water:"#43aac8",pillar:"#d99a65"};
+  return undergroundVisualContract(depth);
 }
 function symbolicUndergroundConfidence(cell){
   const cls=String(cell?.cls||"");
@@ -653,6 +665,11 @@ function symbolicUndergroundConfidence(cell){
   if(cls.includes("c-hyp-med"))return "med";
   if(cls.includes("c-hyp-low"))return "low";
   return "";
+}
+function symbolicUndergroundHasClass(cell,name){return String(cell?.cls||"").includes(name)}
+function symbolicUndergroundFeatureKey(cell){
+  const feature=cell?.feature||{};
+  return String(feature.hypothesisModel||feature.poiId||feature.id||feature.name||feature.kind||"");
 }
 function symbolicDrawUndergroundBase(ctx,grid,m){
   const palette=symbolicUndergroundPalette();
@@ -676,15 +693,21 @@ function symbolicDrawUndergroundBase(ctx,grid,m){
 }
 function symbolicDrawUndergroundVolumes(ctx,grid,m){
   const palette=symbolicUndergroundPalette(),fills={high:palette.high,med:palette.med,low:palette.low};
-  // Remplissage continu des volumes. Un léger chevauchement évite les coutures
-  // entre cellules sans utiliser de filtre flou coûteux.
-  for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
-    const conf=symbolicUndergroundConfidence(grid.grid[y][x]);if(!conf)continue;
-    ctx.fillStyle=fills[conf];ctx.fillRect(m.padding+x*m.cellW-.35,m.padding+y*m.cellH-.35,m.cellW+.7,m.cellH+.7);
+  // Les volumes contigus sont remplis par bandes horizontales. Le résultat est
+  // identique cellule par cellule, avec beaucoup moins d'appels Canvas.
+  for(let y=0;y<CONFIG.gridH;y++){
+    let start=0,last="";
+    const flush=x=>{if(last){ctx.fillStyle=fills[last];ctx.fillRect(m.padding+start*m.cellW-.35,m.padding+y*m.cellH-.35,(x-start)*m.cellW+.7,m.cellH+.7)}};
+    for(let x=0;x<=CONFIG.gridW;x++){
+      const cell=x<CONFIG.gridW?grid.grid[y][x]:null;
+      const conf=cell&&symbolicUndergroundHasClass(cell,"c-underground-volume")?symbolicUndergroundConfidence(cell):"";
+      if(x===0){last=conf;start=0}else if(conf!==last){flush(x);last=conf;start=x}
+    }
   }
-  // Un contour unique entoure les volumes, sans redessiner chaque cellule.
-  ctx.strokeStyle=palette.edge;ctx.lineWidth=Math.max(.75,m.fontSize*.06);ctx.beginPath();
-  const isVolume=(x,y)=>x>=0&&y>=0&&x<CONFIG.gridW&&y<CONFIG.gridH&&!!symbolicUndergroundConfidence(grid.grid[y][x]);
+  // Un contour discret entoure les remplissages ; les murs réels sont redessinés
+  // séparément afin de ne plus disparaître en mode symbolique.
+  ctx.save();ctx.globalAlpha=.48;ctx.strokeStyle=palette.edge;ctx.lineWidth=Math.max(.55,m.fontSize*.045);ctx.beginPath();
+  const isVolume=(x,y)=>x>=0&&y>=0&&x<CONFIG.gridW&&y<CONFIG.gridH&&symbolicUndergroundHasClass(grid.grid[y][x],"c-underground-volume");
   for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
     if(!isVolume(x,y))continue;
     const l=m.padding+x*m.cellW,t=m.padding+y*m.cellH,r=l+m.cellW,b=t+m.cellH;
@@ -693,7 +716,41 @@ function symbolicDrawUndergroundVolumes(ctx,grid,m){
     if(!isVolume(x,y+1)){ctx.moveTo(r,b);ctx.lineTo(l,b)}
     if(!isVolume(x-1,y)){ctx.moveTo(l,b);ctx.lineTo(l,t)}
   }
-  ctx.stroke();
+  ctx.stroke();ctx.restore();
+}
+function symbolicDrawUndergroundNetwork(ctx,grid,m,className,{colors,lineWidth,dashed=false,requireDashed=null}={}){
+  const neighbors=[[1,0],[0,1],[1,1],[-1,1]];
+  for(const confidence of ["low","med","high"]){
+    ctx.save();ctx.strokeStyle=colors?.[confidence]||colors?.default||"#c7b5e7";ctx.lineWidth=lineWidth;ctx.lineCap="round";ctx.lineJoin="round";ctx.setLineDash(dashed?[2.2,3.4]:[]);ctx.beginPath();
+    for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
+      const cell=grid.grid[y][x];
+      const cellDashed=symbolicUndergroundHasClass(cell,"c-underground-dashed");
+      if(!symbolicUndergroundHasClass(cell,className)||symbolicUndergroundConfidence(cell)!==confidence||(requireDashed!==null&&cellDashed!==requireDashed))continue;
+      const key=symbolicUndergroundFeatureKey(cell),cx=m.padding+(x+.5)*m.cellW,cy=m.padding+(y+.5)*m.cellH;let linked=false;
+      for(const [dx,dy] of neighbors){
+        const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=CONFIG.gridW||ny>=CONFIG.gridH)continue;
+        const next=grid.grid[ny][nx],nextDashed=symbolicUndergroundHasClass(next,"c-underground-dashed");if(!symbolicUndergroundHasClass(next,className)||(requireDashed!==null&&nextDashed!==requireDashed))continue;
+        const nextKey=symbolicUndergroundFeatureKey(next);if(key&&nextKey&&key!==nextKey)continue;
+        ctx.moveTo(cx,cy);ctx.lineTo(m.padding+(nx+.5)*m.cellW,m.padding+(ny+.5)*m.cellH);linked=true;
+      }
+      if(!linked){ctx.moveTo(cx-.6,cy);ctx.lineTo(cx+.6,cy)}
+    }
+    ctx.stroke();ctx.restore();
+  }
+}
+function symbolicDrawUndergroundLinesAndEdges(ctx,grid,m){
+  const palette=symbolicUndergroundPalette(),confidenceColors={high:palette.highText,med:palette.medText,low:palette.lowText};
+  symbolicDrawUndergroundNetwork(ctx,grid,m,"c-underground-line",{colors:confidenceColors,lineWidth:Math.max(1.1,m.fontSize*.085),requireDashed:false});
+  symbolicDrawUndergroundNetwork(ctx,grid,m,"c-underground-line",{colors:confidenceColors,lineWidth:Math.max(1,m.fontSize*.075),dashed:true,requireDashed:true});
+  ctx.save();ctx.strokeStyle=palette.edge;ctx.lineWidth=Math.max(.85,m.fontSize*.065);ctx.lineCap="round";ctx.lineJoin="round";ctx.beginPath();
+  const neighbors=[[1,0],[0,1],[1,1],[-1,1]];
+  for(let y=0;y<CONFIG.gridH;y++)for(let x=0;x<CONFIG.gridW;x++){
+    const cell=grid.grid[y][x];if(!symbolicUndergroundHasClass(cell,"c-underground-edge"))continue;
+    const key=symbolicUndergroundFeatureKey(cell),cx=m.padding+(x+.5)*m.cellW,cy=m.padding+(y+.5)*m.cellH;let linked=false;
+    for(const [dx,dy] of neighbors){const nx=x+dx,ny=y+dy;if(nx<0||ny<0||nx>=CONFIG.gridW||ny>=CONFIG.gridH)continue;const next=grid.grid[ny][nx];if(!symbolicUndergroundHasClass(next,"c-underground-edge"))continue;const nextKey=symbolicUndergroundFeatureKey(next);if(key&&nextKey&&key!==nextKey)continue;ctx.moveTo(cx,cy);ctx.lineTo(m.padding+(nx+.5)*m.cellW,m.padding+(ny+.5)*m.cellH);linked=true}
+    if(!linked){ctx.moveTo(cx-.5,cy);ctx.lineTo(cx+.5,cy)}
+  }
+  ctx.stroke();ctx.restore();
 }
 function symbolicDrawUndergroundWater(ctx,grid,m){
   const palette=symbolicUndergroundPalette(),isWater=(x,y)=>x>=0&&y>=0&&x<CONFIG.gridW&&y<CONFIG.gridH&&String(grid.grid[y][x]?.cls||"").includes("c-water-underground");
@@ -712,8 +769,10 @@ function symbolicDrawUndergroundPillarsAndGhosts(ctx,grid,m){
     const c=grid.grid[y][x],cls=String(c?.cls||""),cx=m.padding+(x+.5)*m.cellW,cy=m.padding+(y+.5)*m.cellH;
     if(cls.includes("c-pillar")){
       const r=Math.max(2,Math.min(m.cellW,m.cellH)*.28);ctx.fillStyle="rgba(18,13,8,.9)";ctx.strokeStyle=palette.pillar;ctx.lineWidth=Math.max(1,m.fontSize*.07);ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();ctx.stroke();
+    }else if(cls.includes("c-underground-locator")){
+      const r=Math.max(2.2,Math.min(m.cellW,m.cellH)*.34);ctx.fillStyle=palette.low;ctx.strokeStyle=palette.edge;ctx.lineWidth=Math.max(.8,m.fontSize*.055);ctx.beginPath();ctx.moveTo(cx,cy-r);ctx.lineTo(cx+r,cy);ctx.lineTo(cx,cy+r);ctx.lineTo(cx-r,cy);ctx.closePath();ctx.fill();ctx.stroke();
     }else if(cls.includes("c-ghost")&&((x+y)%3===0)){
-      ctx.fillStyle="rgba(157,191,172,.18)";ctx.fillRect(cx-.6,cy-.6,1.2,1.2);
+      ctx.fillStyle=palette.ghost;ctx.fillRect(cx-.6,cy-.6,1.2,1.2);
     }
   }
   ctx.restore();
@@ -721,6 +780,7 @@ function symbolicDrawUndergroundPillarsAndGhosts(ctx,grid,m){
 function drawSymbolicUndergroundMap(grid,m,ctx){
   symbolicDrawUndergroundBase(ctx,grid,m);
   symbolicDrawUndergroundVolumes(ctx,grid,m);
+  symbolicDrawUndergroundLinesAndEdges(ctx,grid,m);
   symbolicDrawUndergroundWater(ctx,grid,m);
   symbolicDrawUndergroundPillarsAndGhosts(ctx,grid,m);
   symbolicDrawInstrumentFrame(ctx,m);
@@ -1008,7 +1068,7 @@ function updateRenderModeControls(){
   els.renderModeSymbolic?.classList.toggle("active",symbolic);els.renderModeAscii?.classList.toggle("active",!symbolic);
   els.renderModeSymbolic?.setAttribute("aria-pressed",String(symbolic));els.renderModeAscii?.setAttribute("aria-pressed",String(!symbolic));
   els.renderModeSymbolic?.setAttribute("aria-disabled","false");
-  if(els.renderModeHelp)els.renderModeHelp.textContent=symbolic?(underground?"Coupe symbolique active : les mêmes volumes maîtres sont comparés entre profondeurs ; couleur et opacité indiquent le degré d’interprétation.":"Surface symbolique active : les repères utilisent des balises géographiques stables, une seule icône par lieu et des cartouches documentaires séparés. Routes et cours d’eau utilisent une hiérarchie nettoyée : doublons, aires routières et branchements utilitaires parasites sont filtrés au rendu."):"Rendu ASCII historique actif à toutes les profondeurs.";
+  if(els.renderModeHelp)els.renderModeHelp.textContent=symbolic?(underground?"Coupe symbolique active : volumes, conduits, murs, piliers et eau supposée suivent le même contrat de profondeur et de confiance que l’ASCII.":"Surface symbolique active : les repères utilisent des balises géographiques stables, une seule icône par lieu et des cartouches documentaires séparés. Routes et cours d’eau utilisent une hiérarchie nettoyée : doublons, aires routières et branchements utilitaires parasites sont filtrés au rendu."):(underground?"Coupe ASCII active : fond minéral calme, surface fantôme simplifiée et mêmes niveaux de confiance que le mode symbolique.":"Rendu ASCII historique actif en surface.");
 }
 function setRenderMode(mode){
   state.renderMode=mode==="ascii"?"ascii":"symbolic";try{localStorage.setItem(RENDER_MODE_PREF_KEY,state.renderMode)}catch{};canvasRuntime.styleCache.clear();render("render-mode");

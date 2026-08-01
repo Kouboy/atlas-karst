@@ -6,6 +6,9 @@
   --natural:#7ee1cb;--anthropic:#ffb36b;--civil:#b8b7ff;--danger:#ff7e82;
   --map-core:#06110c;--map-edge:#030806;--map-haze:rgba(48,108,77,.12);
   --selection:#ffdf7d;--selection-soft:rgba(255,223,125,.25);
+  --ug-base:#10151d;--ug-ground:#1c2130;--ug-ground-mark:#626b91;--ug-fracture:#747ca4;
+  --ug-high:#c7b5ec;--ug-med:#9d89c9;--ug-low:#71618f;--ug-edge:#c7b5e7;
+  --ug-water:#56bfdf;--ug-pillar:#ddb079;--ug-ghost:rgba(144,160,190,.16);
   /* Le viseur natif conserve un point chaud exact dans Firefox, Chrome et les
      configurations Windows à facteur d’échelle élevé. */
   --atlas-crosshair:crosshair;
@@ -346,12 +349,15 @@ body.renderer-canvas #mapCanvas{display:block}
 .c-road{color:var(--road)}.c-path{color:#9e9278}.c-building{color:var(--building);font-weight:800}
 .c-label{color:#f0e8cc;font-weight:800;text-shadow:0 0 5px #000}
 .c-house{color:#ff7784;font-weight:900;text-shadow:0 0 7px rgba(255,119,132,.75)}
-.c-contour{color:#81998e}.c-rock{color:#66776e}.c-soil{color:#9a7659}
+.c-contour{color:#81998e}.c-rock,.c-soil{color:var(--ug-ground-mark)}
+.c-underground-base{background:var(--ug-ground)}
 .c-doc-natural{color:var(--natural);font-weight:900}.c-doc-anthropic{color:var(--anthropic);font-weight:900}
 .c-doc-civil{color:var(--civil);font-weight:900}.c-doc-unknown{color:var(--warn);font-weight:900}.c-doc-local{color:#ff8bd8;font-weight:900}
-.c-hyp-high{color:#d9a5f8}.c-hyp-med{color:#b579d6}.c-hyp-low{color:#805d91}
-.c-water-underground{color:var(--water);font-weight:800}.c-pillar{color:#ffc172;font-weight:900}
-.c-wall{color:#c3afcb}.c-fracture{color:#8a6a59}.c-ghost{color:#3c5046}
+.c-hyp-high{color:var(--ug-high)}.c-hyp-med{color:var(--ug-med)}.c-hyp-low{color:var(--ug-low)}
+.c-underground-line{font-weight:800}.c-underground-dashed{opacity:.72}.c-underground-volume{font-weight:700}
+.c-water-underground{color:var(--ug-water);font-weight:800}.c-pillar{color:var(--ug-pillar);font-weight:900}
+.c-wall{color:var(--ug-edge)}.c-fracture{color:var(--ug-fracture)}.c-ghost{color:var(--ug-ghost)}
+.c-underground-locator{color:var(--ug-low);font-weight:900}.c-underground-ghost{opacity:.58}
 .shade0{background:rgba(0,0,0,0)}.shade1{background:rgba(51,86,65,.055)}
 .shade2{background:rgba(62,102,76,.085)}.shade3{background:rgba(73,118,87,.12)}
 .shade4{background:rgba(84,134,98,.15)}.shade5{background:rgba(95,150,109,.18)}
