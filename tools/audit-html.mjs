@@ -5,10 +5,11 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
+const sourceByName = Object.fromEntries(sourceScripts.map(({ name, source }) => [name, source]));
 const failures = [];
 
 function check(label, test) {
@@ -53,6 +54,14 @@ check("diagnostic entièrement enregistré", () => [
 check("pipeline Canvas final vérifié", () => html.includes('recordCanvasStage("fx-final")'));
 check("repos graphique borné", () => html.includes("pulseRenderFxActivity") && html.includes("render-fx-layer.fx-active") && html.includes("adaptiveCanvasDpr"));
 check("balayages CRT supprimés", () => !html.includes("fx-vector-sweep") && !html.includes("fx-ascii-refresh") && !html.includes("fxVectorSweep") && !html.includes("fxAsciiRefresh"));
+check("moteur Canvas isolé", () =>
+  sourceByName["canvas-renderer.js"].includes("function drawAsciiCanvasMap") &&
+  sourceByName["canvas-renderer.js"].includes("function drawSymbolicCanvasMap") &&
+  sourceByName["canvas-renderer.js"].includes("function finalizeCanvasFrame") &&
+  sourceByName["canvas-renderer.js"].includes("const renderPipelineRuntime") &&
+  !sourceByName["main.js"].includes("function drawSymbolicCanvasMap") &&
+  !sourceByName["main.js"].includes("const canvasRuntime")
+);
 check("révision OSM propagée", () => html.includes('markMapDataRevision("osm")'));
 check("dernière vue OSM reprise", () => html.includes("osmEnsurePending") && html.includes("scheduleOsmEnsure(0)"));
 check("Canvas accessible au clavier", () => /<canvas[^>]+id="mapCanvas"[^>]+tabindex="0"/.test(html));

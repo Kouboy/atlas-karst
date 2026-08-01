@@ -2,6 +2,13 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17c — Moteur Canvas isolé
+
+- Séparation de l’initialisation, du moteur Canvas et de l’orchestration applicative.
+- Regroupement du pipeline ASCII et symbolique dans `canvas-renderer.js`, sans changer son ordre d’exécution.
+- Ajout d’un audit d’architecture qui empêche le retour silencieux du rendu dans le fichier principal.
+- Conservation du livrable HTML autonome et du moteur DOM de secours.
+
 ## 0.17b — Repos graphique économe
 
 - Arrêt automatique des animations plein écran après une courte impulsion de rendu.
