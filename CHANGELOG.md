@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17n — Démarrage réseau étagé
+
+- Remplacement du lancement simultané de cinq services par une file limitée à deux synchronisations concurrentes.
+- Chaque nouvelle tâche attend un créneau libre du navigateur afin que l’affichage et les interactions restent prioritaires.
+- Les tâches non encore lancées restent en attente lorsque l’onglet est masqué et reprennent à son retour.
+- Un échec de service reste isolé et n’empêche pas les autres sources de terminer leur chargement.
+- Compteurs de tâches, concurrence, créneaux libres, pauses de visibilité et échecs ajoutés au diagnostic exportable.
+- Scénario navigateur déterministe couvrant l’ordre initial, la limite de concurrence et la poursuite après erreur.
+
 ## 0.17m — Peau visuelle consolidée
 
 - Fusion de cinq générations successives de styles cartographiques en une seule définition finale pour chaque mode.

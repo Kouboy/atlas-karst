@@ -13,6 +13,7 @@
 - `app/exploration-model.js` regroupe la géométrie commune, les index spatiaux et l’inventaire de proximité.
 - `app/experiences.js` porte les rencontres locales, le codex et les parcours guidés.
 - `app/data-services.js` regroupe les synchronisations, caches et conversions des sources cartographiques.
+- `app/startup-loader.js` étale les synchronisations initiales dans une file bornée qui respecte les créneaux libres et la visibilité de la page.
 - `app/map-engine.js` construit la grille et ses couches de surface ou souterraines selon leur contrat visuel partagé.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.

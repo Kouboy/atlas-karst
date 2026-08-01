@@ -88,6 +88,7 @@ function runAtlasSelfCheck(){
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
+  checks.push(debugCheckResult("Démarrage réseau étagé",startupRuntime.ready&&startupRuntime.maxConcurrent<=STARTUP_DATA_CONCURRENCY,`${startupRuntime.completed}/${startupRuntime.total} tâches · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.visibilityPauses} pauses`));
   const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -114,6 +115,7 @@ function createDebugReport(){
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
     `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,
+    `Démarrage réseau : ${startupRuntime.completed}/${startupRuntime.total} tâches · ${startupRuntime.failed} échecs · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.idleYields} créneaux libres · ${startupRuntime.visibilityPauses} pauses`,
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,

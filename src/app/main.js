@@ -465,7 +465,7 @@ prepareSidebarCards();
   }else{
     if(els.offlineNotice)els.offlineNotice.style.display="none";
     render("boot-online");
-    Promise.allSettled([fetchOverpass(),fetchAddress(),fetchCadastre(),fetchCavities(),fetchElevation()]).then(()=>updateSnapshotUI());
+    runStartupDataLoad();
   }
   scheduleFrameFit();updateSnapshotUI();
   if(debugState.enabled)setTimeout(runAtlasSelfCheck,180);
