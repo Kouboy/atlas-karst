@@ -287,8 +287,7 @@ function relationZoomForDistance(distance){
   if(distance<=180)return 5;if(distance<=480)return 4;if(distance<=1050)return 3;if(distance<=2400)return 2;if(distance<=5200)return 1;return 0;
 }
 function gridCellClientRect(x,y){
-  if(CANVAS_RENDERER)return canvasCellRect(x,y);
-  return els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`)?.getBoundingClientRect()||null;
+  return canvasCellRect(x,y);
 }
 function clearActiveRelation(){
   clearTimeout(relationRuntime.timer);relationRuntime.timer=0;state.activeRelation=null;
@@ -487,9 +486,7 @@ function updateGuidedTourMarker(){
   if(!marker||!state.guidedTourActive||!tour||!state.lastGrid||drag){marker?.classList.remove("visible");return}
   const poi=tour.steps[state.guidedTourStep];if(!poi||!inExtent(poi.lat,poi.lon,state.lastGrid.extent)){marker.classList.remove("visible");return}
   const p=coordToGrid(poi.lat,poi.lon,state.lastGrid.extent);marker.dataset.step=String(state.guidedTourStep+1);
-  if(CANVAS_RENDERER){positionCanvasMarker(marker,p.x,p.y,true);return}
-  const r=gridCellClientRect(p.x,p.y),vr=els.viewport.getBoundingClientRect();if(!r){marker.classList.remove("visible");return}
-  marker.style.left=`${r.left-vr.left+els.viewport.scrollLeft}px`;marker.style.top=`${r.top-vr.top+els.viewport.scrollTop}px`;marker.style.width=`${r.width}px`;marker.style.height=`${r.height}px`;marker.classList.add("visible");
+  positionCanvasMarker(marker,p.x,p.y,true);
 }
 function updateGuidedTourUI(){
   const catalogChanged=rebuildGuidedTours();

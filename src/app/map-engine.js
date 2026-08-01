@@ -841,20 +841,3 @@ function composeMapGrid(extent,depth=currentDepth()){
   }
   return {grid,gridMs,layersMs:performance.now()-layersStarted};
 }
-
-function renderDomMap(grid){
-  let html="",visiblePoiCount=0;
-  for(let y=0;y<CONFIG.gridH;y++){
-    for(let x=0;x<CONFIG.gridW;x++){
-      const cell=grid.grid[y][x],shade=state.layerRelief&&Number.isFinite(cell.elev)?` shade${cell.shade||0}`:"";
-      const attrs=`data-x="${x}" data-y="${y}"`,glyph=cell.ch;
-      const poiKind=poiEffectKind(cell),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
-      if(poiKind)visiblePoiCount++;
-      const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-      html+=`<span class="cell ${cell.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
-    }
-    html+="\n";
-  }
-  els.map.innerHTML=html;
-  return visiblePoiCount;
-}

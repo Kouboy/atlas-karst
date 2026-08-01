@@ -112,21 +112,17 @@ function applyPanPreview(dx,dy){
   const safeY=clamp(Number(dy)||0,-window.innerHeight*1.5,window.innerHeight*1.5);
   const transform=`translate3d(${safeX.toFixed(2)}px,${safeY.toFixed(2)}px,0)`;
   surface.style.transform=transform;
-  if(CANVAS_RENDERER&&els.renderFxLayer)els.renderFxLayer.style.transform=transform;
+  if(els.renderFxLayer)els.renderFxLayer.style.transform=transform;
 }
 function clearPanPreview(){
   const surface=activeMapSurface();if(surface)surface.style.transform="";
   if(els.renderFxLayer)els.renderFxLayer.style.transform="translateZ(0)";
 }
 function panGeographicPixelSpan(){
-  if(CANVAS_RENDERER){
-    const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();
-    if(!m||!r)return {width:1,height:1};
-    const scaleX=m.width?Math.abs(r.width/m.width):1,scaleY=m.height?Math.abs(r.height/m.height):1;
-    return {width:Math.max(1,(CONFIG.gridW-1)*m.cellW*scaleX),height:Math.max(1,(CONFIG.gridH-1)*m.cellH*scaleY)};
-  }
-  const m=mapGridMetrics();
-  return m?{width:Math.max(1,(CONFIG.gridW-1)*m.pitchX),height:Math.max(1,(CONFIG.gridH-1)*m.pitchY)}:{width:1,height:1};
+  const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();
+  if(!m||!r)return {width:1,height:1};
+  const scaleX=m.width?Math.abs(r.width/m.width):1,scaleY=m.height?Math.abs(r.height/m.height):1;
+  return {width:Math.max(1,(CONFIG.gridW-1)*m.cellW*scaleX),height:Math.max(1,(CONFIG.gridH-1)*m.cellH*scaleY)};
 }
 function isPanPointer(ev){return ev.isPrimary!==false&&(ev.pointerType!=="mouse"||ev.button===0)}
 function pointerDistance(a,b){return Math.hypot(b.x-a.x,b.y-a.y)}
@@ -200,7 +196,7 @@ function handleMapPointerMove(ev){
     touchPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
     if(handlePinchMove(ev)){ev.preventDefault();return}
   }
-  if(CANVAS_RENDERER&&ev.pointerType==="mouse"&&!drag&&!pinch&&!state.placingHouse){const pos=mapPositionFromClient(ev.clientX,ev.clientY);if(pos)scheduleCanvasHover(pos,ev)}
+  if(ev.pointerType==="mouse"&&!drag&&!pinch&&!state.placingHouse){const pos=mapPositionFromClient(ev.clientX,ev.clientY);if(pos)scheduleCanvasHover(pos,ev)}
   if(!drag||ev.pointerId!==drag.pointerId)return;
   drag.lastX=ev.clientX;drag.lastY=ev.clientY;
   const dx=drag.lastX-drag.x,dy=drag.lastY-drag.y,threshold=drag.pointerType==="touch"?8:4;
@@ -230,7 +226,7 @@ function endDrag(ev){
     }
   }
   clearPanPreview();activeMapSurface()?.classList.remove("dragging");els.viewport.classList.remove("panning");
-  if(CANVAS_RENDERER){syncSelectionDom();updateWorldBoundaryFrame()}
+  syncSelectionDom();updateWorldBoundaryFrame();
 }
 function finishMapPointer(ev){
   if(ev.pointerType==="touch")touchPointers.delete(ev.pointerId);
@@ -275,8 +271,6 @@ function bindInputController(){
   surface.addEventListener("dblclick",handleMapDoubleClick);
   els.viewport.addEventListener("wheel",handleMapWheel,{passive:false});
   surface.addEventListener("pointerdown",handleMapPointerDown);
-  surface.addEventListener("pointerover",ev=>{if(CANVAS_RENDERER||ev.pointerType!=="mouse"||drag||pinch||state.placingHouse)return;const target=ev.target?.closest?.(".cell");if(target&&els.map.contains(target))scheduleHover(target,ev)});
-  surface.addEventListener("pointerout",ev=>{if(CANVAS_RENDERER||ev.pointerType!=="mouse")return;const from=ev.target?.closest?.(".cell"),to=ev.relatedTarget?.closest?.(".cell");if(from&&from!==to)hideHover()});
   surface.addEventListener("pointermove",handleMapPointerMove);
   surface.addEventListener("pointerleave",ev=>{if(!drag&&ev.pointerType==="mouse")hideHover()});
   surface.addEventListener("pointerup",finishMapPointer);

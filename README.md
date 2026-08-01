@@ -24,8 +24,7 @@ Paramètres utiles dans l’URL :
 
 - `?debug` active le diagnostic au démarrage ;
 - `?offline` force la démonstration hors ligne ;
-- `?online` autorise une actualisation réseau depuis un instantané ;
-- `?renderer=dom` active l’ancien moteur DOM de secours.
+- `?online` autorise une actualisation réseau depuis un instantané.
 
 ## Données et prudence d’interprétation
 
@@ -78,7 +77,7 @@ GitHub Actions répète ces contrôles sur chaque pull request et sur chaque mod
 
 Les effets CRT animés ne tournent plus indéfiniment : seule une légère respiration s’active brièvement après un rendu ou une interaction, puis passe au repos. Les balayages lumineux ont été supprimés. La case « Animations de l’interface et des points d’intérêt » permet toujours de désactiver complètement les animations restantes.
 
-Le moteur Canvas est le mode normal. Le moteur DOM reste un filet de sécurité pendant la phase de stabilisation et pourra être retiré après comparaison fonctionnelle.
+Canvas est désormais l’unique moteur cartographique : les modes symbolique et ASCII partagent ainsi exactement la même géométrie, les mêmes interactions et le même pipeline d’effets. Si Canvas n’est pas disponible, l’application affiche une incompatibilité explicite au lieu de proposer un rendu partiel trompeur. Les anciens liens contenant `?renderer=dom` restent ouvrables et utilisent simplement Canvas.
 
 ## Historique
 

@@ -3,11 +3,11 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17k";
+const APP_VERSION = "0.17l";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
-const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
-const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
-document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
+const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
+document.body.classList.add("renderer-canvas");
+if(!CANVAS_RENDERER)document.body.classList.add("canvas-unsupported");
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={

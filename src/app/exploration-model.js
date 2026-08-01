@@ -127,14 +127,7 @@ function updateWorldBoundaryFrame(){
   if(!active)return;
 
   const vr=els.viewport.getBoundingClientRect();
-  let first,last;
-  if(CANVAS_RENDERER){
-    first=canvasCellRect(0,0);last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
-  }else{
-    const a=els.map.querySelector('.cell[data-x="0"][data-y="0"]')?.getBoundingClientRect();
-    const b=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`)?.getBoundingClientRect();
-    if(a&&b)first={left:a.left,top:a.top,right:a.right,bottom:a.bottom},last={left:b.left,top:b.top,right:b.right,bottom:b.bottom};
-  }
+  const first=canvasCellRect(0,0),last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
   if(!first||!last){frame.classList.remove("visible");return}
 
   // La fiche mobile peut recouvrir le bas du viewport. Le cadre est alors

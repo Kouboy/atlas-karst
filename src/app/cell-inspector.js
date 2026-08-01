@@ -79,61 +79,13 @@ function collapseReadoutForPlainCell(cell,x,y){
   setReadoutContent(plainCellSummaryHtml(cell,x,y),{title,sheet:"full",kind:"plain"});
 }
 
-function cellElementAtClient(clientX,clientY){
-  if(CANVAS_RENDERER)return null;
-  const hit=document.elementFromPoint?.(clientX,clientY),cell=hit?.closest?.(".cell");
-  return cell&&els.map.contains(cell)?cell:null;
-}
-function mapGridMetrics(){
-  const cells=els.map?.children;
-  const expected=CONFIG.gridW*CONFIG.gridH;
-  if(!cells||cells.length<expected)return null;
-  const first=cells[0],nextX=CONFIG.gridW>1?cells[1]:null,nextY=CONFIG.gridH>1?cells[CONFIG.gridW]:null;
-  if(!first)return null;
-  const a=first.getBoundingClientRect();
-  const centerX=a.left+a.width/2,centerY=a.top+a.height/2;
-  let pitchX=nextX?(nextX.getBoundingClientRect().left+nextX.getBoundingClientRect().width/2-centerX):a.width;
-  let pitchY=nextY?(nextY.getBoundingClientRect().top+nextY.getBoundingClientRect().height/2-centerY):a.height;
-  if(!Number.isFinite(pitchX)||Math.abs(pitchX)<.1)pitchX=a.width||1;
-  if(!Number.isFinite(pitchY)||Math.abs(pitchY)<.1){
-    const cs=getComputedStyle(els.map);
-    pitchY=(parseFloat(cs.fontSize)||12)*(parseFloat(cs.lineHeight)||1.04);
-  }
-  return {centerX,centerY,pitchX:Math.abs(pitchX),pitchY:Math.abs(pitchY)};
-}
 function mapPositionFromClient(clientX,clientY){
   if(!state.lastGrid)return null;
-  if(CANVAS_RENDERER){
-    const d=canvasDisplayMetrics();if(!d)return null;
-    // Les glyphes sont dessinés à l'origine de chaque case. Pour convertir le
-    // pointeur en indice de cellule, on travaille toutefois par rapport au CENTRE
-    // des cases. Sans ce demi-pas, le centre visuel de la case x était arrondi vers
-    // x+1 : la croix se retrouvait dans le coin supérieur gauche de la surbrillance.
-    const gridX=(clientX-d.r.left-d.paddingX)/d.cellW-.5;
-    const gridY=(clientY-d.r.top-d.paddingY)/d.cellH-.5;
-    const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
-    const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
-    const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
-    if(debugState.enabled){debugState.lastPointer=`${x}, ${y} · ${result.coord.lat.toFixed(5)} / ${result.coord.lon.toFixed(5)}`;updateDebugPanel()}
-    return result;
-  }
-  const metrics=mapGridMetrics();
-  let gridX,gridY;
-  if(metrics){
-    // Convert from the real centres of the rendered glyph cells. This excludes
-    // <pre> padding and remains exact when the panoramic grid or font size changes.
-    gridX=(clientX-metrics.centerX)/metrics.pitchX;
-    gridY=(clientY-metrics.centerY)/metrics.pitchY;
-  }else{
-    // Conservative fallback based on the content box rather than the padded box.
-    const r=els.map.getBoundingClientRect(),cs=getComputedStyle(els.map);
-    if(!r.width||!r.height)return null;
-    const padL=parseFloat(cs.paddingLeft)||0,padR=parseFloat(cs.paddingRight)||0;
-    const padT=parseFloat(cs.paddingTop)||0,padB=parseFloat(cs.paddingBottom)||0;
-    const width=Math.max(1,r.width-padL-padR),height=Math.max(1,r.height-padT-padB);
-    const fx0=clamp((clientX-r.left-padL)/width,0,1),fy0=clamp((clientY-r.top-padT)/height,0,1);
-    gridX=fx0*(CONFIG.gridW-1);gridY=fy0*(CONFIG.gridH-1);
-  }
+  const d=canvasDisplayMetrics();if(!d)return null;
+  // Les glyphes sont dessinés à l'origine de chaque case. La conversion du
+  // pointeur travaille par rapport au centre afin de conserver l'alignement.
+  const gridX=(clientX-d.r.left-d.paddingX)/d.cellW-.5;
+  const gridY=(clientY-d.r.top-d.paddingY)/d.cellH-.5;
   const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
   const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
   const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
@@ -141,13 +93,6 @@ function mapPositionFromClient(clientX,clientY){
   return result;
 }
 function eventMapPosition(ev){
-  if(!state.lastGrid)return null;
-  if(CANVAS_RENDERER)return mapPositionFromClient(ev.clientX,ev.clientY);
-  const cell=cellElementAtClient(ev.clientX,ev.clientY)||ev.target.closest?.(".cell");
-  if(cell&&els.map.contains(cell)){
-    const x=+cell.dataset.x,y=+cell.dataset.y;
-    return {coord:gridToCoord(x,y,state.lastGrid.extent),fx:x/(CONFIG.gridW-1),fy:y/(CONFIG.gridH-1),x,y};
-  }
   return mapPositionFromClient(ev.clientX,ev.clientY);
 }
 function coarsePointer(){
@@ -175,15 +120,7 @@ function assistedCell(x,y,radius=2){
   }
   return best?{x:best.x,y:best.y,snapped:true}:{x,y,snapped:false};
 }
-let selectedDomCell=null,selectionNeighborDomCells=[];
-function mapCellElement(x,y){
-  if(CANVAS_RENDERER||!els.map||x<0||y<0||x>=CONFIG.gridW||y>=CONFIG.gridH)return null;
-  return els.map.children[y*CONFIG.gridW+x]||null;
-}
 function clearSelectionDom(){
-  if(selectedDomCell)selectedDomCell.classList.remove("selected");
-  for(const el of selectionNeighborDomCells)el?.classList.remove("selection-neighbor");
-  selectedDomCell=null;selectionNeighborDomCells=[];
   els.canvasSelectionMarker?.classList.remove("visible");
 }
 function syncSelectionDom(){
@@ -197,13 +134,7 @@ function syncSelectionDom(){
   state.selectedCell.x=x;state.selectedCell.y=y;
   const selectedPoi=state.selectedCell.poiUid?normalizedPoiByUid(state.selectedCell.poiUid):null;
   state.selectedCell.feature=selectedPoi?symbolicPoiFeatureInfo(selectedPoi):(state.lastGrid.grid[y]?.[x]?.feature||null);
-  if(CANVAS_RENDERER){positionCanvasMarker(els.canvasSelectionMarker,x,y,true);els.viewport?.classList.add("selection-active");return true}
-  const target=mapCellElement(x,y);
-  if(!target){els.viewport?.classList.remove("selection-active");return false}
-  target.classList.add("selected");selectedDomCell=target;
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-    if(!dx&&!dy)continue;const neighbor=mapCellElement(x+dx,y+dy);if(neighbor){neighbor.classList.add("selection-neighbor");selectionNeighborDomCells.push(neighbor)}
-  }
+  positionCanvasMarker(els.canvasSelectionMarker,x,y,true);
   els.viewport?.classList.add("selection-active");return true;
 }
 function closeSelectionAssist(){
@@ -257,14 +188,8 @@ function applyPendingPoiSelectionFeedback(){
   const pending=pendingPoiFeedback;if(!pending||!state.lastGrid)return;
   const remaining=pending.expires-performance.now();if(remaining<=0){pendingPoiFeedback=null;els.canvasPoiMarker?.classList.remove("active","visible");return}
   const p=coordToGrid(pending.coord.lat,pending.coord.lon,state.lastGrid.extent),x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
-  if(CANVAS_RENDERER){
-    const marker=els.canvasPoiMarker;positionCanvasMarker(marker,x,y,true);marker.dataset.poiKind=pending.kind;marker.classList.remove("active");void marker.offsetWidth;marker.classList.add("active");
-    clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;marker.classList.remove("active","visible");delete marker.dataset.poiKind},Math.max(80,remaining));return;
-  }
-  const glyph=mapCellElement(x,y);if(!glyph)return;
-  els.map.querySelectorAll(".cell.poi-hit-active").forEach(el=>{el.classList.remove("poi-hit-active");delete el.dataset.poiKind});
-  glyph.dataset.poiKind=pending.kind;glyph.classList.remove("poi-hit-active");void glyph.offsetWidth;glyph.classList.add("poi-hit-active");
-  clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;glyph.classList.remove("poi-hit-active");delete glyph.dataset.poiKind},Math.max(80,remaining));
+  const marker=els.canvasPoiMarker;positionCanvasMarker(marker,x,y,true);marker.dataset.poiKind=pending.kind;marker.classList.remove("active");void marker.offsetWidth;marker.classList.add("active");
+  clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;marker.classList.remove("active","visible");delete marker.dataset.poiKind},Math.max(80,remaining));
 }
 function triggerPoiSelectionFeedback(cell,x,y,coordOverride=null){
   const selectionKind=poiSelectionKind(cell);
