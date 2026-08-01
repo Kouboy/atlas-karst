@@ -10,6 +10,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - Compteur local des demandes, rendus réellement exécutés et rafales regroupées dans le diagnostic et son rapport exporté.
 - Autocontrôle relancé après la dernière rafale afin que le diagnostic reflète l’image stabilisée plutôt qu’un état intermédiaire du démarrage.
 - Scénario navigateur dédié aux rafales et au recouvrement par une interaction.
+- Budgets de diagnostic séparés : premier rendu à froid sous 140 ms, puis rendus stabilisés sous 80 ms.
 - Sur l’instantané synchronisé de contrôle : passage de 8 à 3 rendus au démarrage, soit environ 144 à 62 ms de CPU cartographique cumulé.
 
 ## 0.17f — Sous-sol harmonisé

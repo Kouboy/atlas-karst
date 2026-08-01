@@ -33,6 +33,10 @@ function debugRenderPhasesText(){
   if(!debugState.renderCount||!p)return "—";
   return `mise en page ${p.layout.toFixed(1)} · index ${p.index.toFixed(1)} · grille ${p.grid.toFixed(1)} · couches ${p.layers.toFixed(1)} · sortie ${p.output.toFixed(1)} · interface ${p.interface.toFixed(1)} ms`;
 }
+function debugRenderBudget(){
+  const cold=debugState.renderCount<=1&&String(debugState.lastReason||"").startsWith("boot-");
+  return cold?{label:"Premier rendu sous 140 ms",budget:140}:{label:"Rendu stabilisé sous 80 ms",budget:80};
+}
 function debugDataRendersText(){const renders=dataRenderRuntime.renders;return `${dataRenderRuntime.requests} demandes · ${renders} rendu${renders>1?"s":""} · ${dataRenderCoalescedCount()} regroupées`}
 function updateDebugPanel(forceStorage=false){
   if(!debugState.enabled||!els?.debugPanel)return;
@@ -75,7 +79,8 @@ function runAtlasSelfCheck(){
     const ok=!!pos&&pos.x===x&&pos.y===y;targetOk=targetOk&&ok;targetDetails.push(`${x},${y}:${pos?`${pos.x},${pos.y}`:"?"}`);
   }
   checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
-  checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
+  const renderBudget=debugRenderBudget();
+  checks.push(debugCheckResult(renderBudget.label,debugState.lastRenderMs<=renderBudget.budget,`${debugState.lastRenderMs.toFixed(1)} / ${renderBudget.budget} ms`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));

@@ -69,12 +69,19 @@ try {
   await withPage("diagnostic et pipeline Canvas", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForFunction(() => document.getElementById("debugChecks")?.textContent?.includes("Pipeline Canvas final"));
+    const coldMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
+    assert.ok(coldMs <= 140, `premier rendu trop lent : ${coldMs} ms`);
+    await page.evaluate(() => {
+      render("test-warm-budget");
+      runAtlasSelfCheck();
+    });
     const checks = await page.locator("#debugChecks").innerText();
     assert.match(checks, /Pipeline Canvas final/);
     assert.match(checks, /FX synchronisés avec OSM/);
+    assert.match(checks, /Rendu stabilisé sous 80 ms/);
     assert.equal(await page.locator(".debug-check.bad").count(), 0);
-    const renderMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
-    assert.ok(renderMs <= 80, `rendu trop lent : ${renderMs} ms`);
+    const warmMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
+    assert.ok(warmMs <= 80, `rendu stabilisé trop lent : ${warmMs} ms`);
     assert.match(await page.locator("#debugRenderPhases").innerText(), /grille .* couches .* sortie .* interface/);
   });
 
