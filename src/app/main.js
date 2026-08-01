@@ -66,6 +66,7 @@ bindFieldworkController();
 bindSourceController();
 bindExperienceController();
 bindViewController();
+bindLifecycleController();
 
 els.readoutSheetHandle.addEventListener("click",cycleReadoutSheet);
 document.addEventListener("click",e=>{
@@ -76,53 +77,6 @@ document.addEventListener("click",e=>{
 });
 
 els.exportBtn.addEventListener("click",exportTxt);
-
-// Les navigateurs mobiles n’autorisent Web Audio qu’après un geste explicite.
-// On arme donc le moteur dès le premier contact, avant les gestionnaires métier.
-document.addEventListener("pointerdown",()=>retroAudio.unlock(),{capture:true,passive:true});
-document.addEventListener("visibilitychange",()=>{
-  if(document.hidden){retroAudio.silence();setRenderFxActivity(false,"hidden")}
-  else pulseRenderFxActivity(650,"visible");
-});
-window.addEventListener("blur",()=>setRenderFxActivity(false,"blur"));
-window.addEventListener("focus",()=>pulseRenderFxActivity(650,"focus"));
-reducedMotionQuery?.addEventListener?.("change",()=>syncAmbientMotionState({pulse:false,reason:"system-preference"}));
-document.addEventListener("touchstart",()=>retroAudio.unlock(),{capture:true,passive:true});
-document.addEventListener("keydown",()=>retroAudio.unlock(),{capture:true});
-document.addEventListener("toggle",ev=>{
-  if(ev.target instanceof HTMLDetailsElement)retroAudio.play(ev.target.open?"panelOpen":"panelClose");
-},true);
-
-const syncSoundTargets={
-  syncOsm:()=>[els.osmStatus],
-  syncCultureHeritage:()=>[els.heritageStatus],
-  syncWikipediaHeritage:()=>[els.heritageStatus],
-  syncCartofriches:()=>[els.cartofrichesStatus],
-  syncPiezo:()=>[els.bssStatus],
-  retryData:()=>[els.osmStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus]
-};
-const quietButtonIds=new Set([
-  "audioToggle","mapZoomOut","mapZoomIn","zoomOut","zoomIn","mapDepthUp","mapDepthDown","depthUp","depthDown",
-  "selectionUp","selectionDown","selectionLeft","selectionRight","locateMe","mapLocate","debugToggle","runSelfCheck","exportDebugReport","guidedTourStart","guidedTourPrev","guidedTourNext","guidedTourRecenter","guidedTourStop","observeSurroundings","openCodex","encounterClose"
-]);
-document.addEventListener("click",ev=>{
-  const button=ev.target.closest?.("button");
-  if(!button||button.disabled||quietButtonIds.has(button.id)||button.dataset.audioQuiet!==undefined||button.dataset.zoom!==undefined||button.dataset.depth!==undefined||button.dataset.panX!==undefined)return;
-  const syncTargets=syncSoundTargets[button.id]?.()||null;
-  if(syncTargets){retroAudio.play("sync");syncTargets.forEach(status=>armOperationSound(status));return}
-  if(["mapHome","homeBtn","recenterSelected","selectionCenter"].includes(button.id)){retroAudio.play("home");return}
-  if(/export|download|openHistory|openBssDownload|openOsmQuery/i.test(button.id)){retroAudio.play("export");return}
-  if(/clear|remove|reset/i.test(button.id)){retroAudio.play("delete");return}
-  if(["sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","selectionAssistClose"].includes(button.id)){retroAudio.play("panel");return}
-  retroAudio.play("button");
-},true);
-document.addEventListener("change",ev=>{
-  const control=ev.target;
-  if(control?.matches?.('input[type="checkbox"],select'))retroAudio.play("toggle");
-});
-els.audioToggle.addEventListener("click",()=>retroAudio.toggle());
-[els.osmStatus,els.heritageStatus,els.cartofrichesStatus,els.bssStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus]
-  .filter(Boolean).forEach(status=>operationStatusObserver.observe(status,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]}));
 
 async function bootAtlas(){
   retroAudio.init();

@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -138,6 +138,16 @@ check("contrôleur de vue isolé", () =>
   !sourceByName["main.js"].includes("els.scenario.addEventListener") &&
   !sourceByName["main.js"].includes("els.cavitySelect.addEventListener") &&
   !sourceByName["main.js"].includes("els.runSelfCheck.addEventListener")
+);
+check("cycle de vie applicatif isolé", () =>
+  sourceByName["lifecycle-controller.js"].includes("function bindLifecycleController") &&
+  sourceByName["lifecycle-controller.js"].includes("function handleLifecycleVisibility") &&
+  sourceByName["lifecycle-controller.js"].includes("function unlockAudioFromGesture") &&
+  sourceByName["lifecycle-controller.js"].includes("function handleGlobalActionSound") &&
+  sourceByName["main.js"].includes("bindLifecycleController()") &&
+  !sourceByName["main.js"].includes('document.addEventListener("visibilitychange"') &&
+  !sourceByName["main.js"].includes("operationStatusObserver.observe") &&
+  !sourceByName["main.js"].includes("quietButtonIds")
 );
 check("services applicatifs ordonnés", () =>
   sourceByName["audio.js"].includes("const retroAudio") &&
