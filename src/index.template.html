@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17k · coque responsive isolée</title>
+<title>Atlas Karst ASCII v0.17l · moteur Canvas unique</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -25,7 +25,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17k</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17l</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -473,6 +473,11 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="badge warn" id="truthBadge">surface vectorielle en chargement</div>
   </div>
 
+  <div class="canvas-compatibility" id="canvasUnsupported" role="alert" hidden>
+    <strong>Ce navigateur ne peut pas afficher la carte.</strong>
+    Atlas Karst utilise Canvas pour garantir un rendu identique en mode symbolique et ASCII. Ouvre ce fichier avec une version récente de Firefox, Chrome, Edge ou Safari.
+  </div>
+
   <div class="terminal-wrap map-bound" id="viewport">
     <div class="map-top-overlay">
       <div class="north">N ↑</div>
@@ -485,7 +490,6 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
         <button id="mapDepthDown" type="button" title="Descendre d’un niveau" aria-label="Descendre d’un niveau">v</button>
       </div>
     </div>
-    <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
     <canvas id="mapCanvas" aria-label="Carte interactive rendue sur Canvas" aria-describedby="mapTip" role="group" tabindex="0">Carte interactive : utilisez les flèches pour vous déplacer, plus et moins pour changer d’échelle.</canvas>
     <canvas id="zoomTransitionCanvas" class="zoom-transition-canvas" aria-hidden="true"></canvas>
     <div class="render-fx-layer" id="renderFxLayer" aria-hidden="true">

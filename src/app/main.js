@@ -16,13 +16,7 @@ function render(reason="direct"){
   if(depth<0)applyUndergroundVisualContract(depth);
   state.lastGrid=g;
   const outputStarted=performance.now();
-  let visiblePoiCount=0;
-  if(CANVAS_RENDERER){
-    visiblePoiCount=drawCanvasMap(g,reason);
-    els.map.textContent="";
-  }else{
-    visiblePoiCount=renderDomMap(g);
-  }
+  const visiblePoiCount=drawCanvasMap(g,reason);
   const outputMs=performance.now()-outputStarted;
   const interfaceStarted=performance.now();
   syncSelectionDom();
@@ -33,7 +27,7 @@ function render(reason="direct"){
     const loc=state.userLocation;
     els.locationBadge.textContent=state.locationLoading?"recherche…":loc?`± ${Math.round(loc.accuracy||0)} m`:"non localisée";
   }
-  els.mapTip.textContent=coarsePointer()?`pause 0,3 s = détail · toucher = sélectionner · glisser = déplacement · ⌖ = position${CANVAS_RENDERER?" · Canvas":""}`:`pause 0,3 s = détail · clic = sélectionner · glisser = déplacement · molette = zoom${CANVAS_RENDERER?" · Canvas":""}`;
+  els.mapTip.textContent=coarsePointer()?"pause 0,3 s = détail · toucher = sélectionner · glisser = déplacement · ⌖ = position · Canvas":"pause 0,3 s = détail · clic = sélectionner · glisser = déplacement · molette = zoom · Canvas";
   els.zoomLabel.textContent=z.label;
   els.depthLabel.textContent=depthSliceLabel(depth);
   const cellX=z.widthKm*1000/CONFIG.gridW,cellY=z.heightKm*1000/CONFIG.gridH;
@@ -400,6 +394,11 @@ els.audioToggle.addEventListener("click",()=>retroAudio.toggle());
 async function bootAtlas(){
   retroAudio.init();
   setDebugEnabled(DEBUG_REQUESTED);
+  if(!CANVAS_RENDERER){
+    if(els.canvasUnsupported)els.canvasUnsupported.hidden=false;
+    if(els.viewport)els.viewport.hidden=true;
+    return;
+  }
   try{state.ambientMotion=localStorage.getItem(AMBIENT_PREF_KEY)!=="off"}catch{}
   try{const savedMode=localStorage.getItem(RENDER_MODE_PREF_KEY);if(savedMode==="ascii"||savedMode==="symbolic")state.renderMode=savedMode}catch{}
   if(els.ambientMotion)els.ambientMotion.checked=state.ambientMotion;

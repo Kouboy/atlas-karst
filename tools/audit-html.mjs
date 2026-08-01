@@ -89,10 +89,17 @@ check("services applicatifs ordonnés", () =>
 );
 check("moteur cartographique isolé et mesuré", () =>
   sourceByName["map-engine.js"].includes("function composeMapGrid") &&
-  sourceByName["map-engine.js"].includes("function renderDomMap") &&
   sourceByName["main.js"].includes("debugState.lastRenderPhases=") &&
   !sourceByName["main.js"].includes("function renderSurface") &&
   !sourceByName["main.js"].includes("function renderUndergroundBase")
+);
+check("moteur Canvas exclusif", () =>
+  sourceByName["runtime.js"].includes('const CANVAS_RENDERER = !!document.createElement("canvas").getContext') &&
+  sourceByName["canvas-renderer.js"].includes("function activeMapSurface(){return els.mapCanvas}") &&
+  !sourceByName["map-engine.js"].includes("function renderDomMap") &&
+  !sourceByName["runtime.js"].includes("RENDERER_MODE") &&
+  !html.includes('id="map"') &&
+  !html.includes("renderer-dom")
 );
 check("contrôleur de navigation isolé", () =>
   sourceByName["input-controller.js"].includes("function bindInputController") &&

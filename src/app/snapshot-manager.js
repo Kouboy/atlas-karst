@@ -161,8 +161,7 @@ async function importSnapshotFile(file){
 
 function exportStandaloneHtml(){
   const snapshot=buildAtlasSnapshot(),clone=document.documentElement.cloneNode(true);
-  const map=clone.querySelector("#map");if(map)map.textContent="";
-  const tip=clone.querySelector("#hoverTip");if(tip)tip.textContent="";
+    const tip=clone.querySelector("#hoverTip");if(tip)tip.textContent="";
   const assist=clone.querySelector("#selectionAssist");if(assist)assist.setAttribute("hidden","");
   const snapTag=clone.querySelector("#atlas-snapshot");
   snapTag.textContent=JSON.stringify(snapshot).replace(/</g,"\\u003c");

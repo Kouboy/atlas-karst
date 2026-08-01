@@ -66,14 +66,14 @@ function runAtlasSelfCheck(){
   const ids=[...document.querySelectorAll("[id]")].map(el=>el.id);
   const duplicates=ids.filter((id,i)=>ids.indexOf(id)!==i);
   checks.push(debugCheckResult("Identifiants HTML uniques",duplicates.length===0,duplicates.length?duplicates.join(", "): `${ids.length} identifiants`));
-  const cellCount=CANVAS_RENDERER?CONFIG.gridW*CONFIG.gridH:(els.map?.querySelectorAll(".cell").length||0);
-  checks.push(debugCheckResult(CANVAS_RENDERER?"Cellules virtuelles Canvas":"Nombre de cellules",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
+  const cellCount=CONFIG.gridW*CONFIG.gridH;
+  checks.push(debugCheckResult("Cellules virtuelles Canvas",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
   checks.push(debugCheckResult("Centre géographique valide",Number.isFinite(state.center?.lat)&&Number.isFinite(state.center?.lon),`${state.center?.lat} / ${state.center?.lon}`));
   checks.push(debugCheckResult("Grille en mémoire",!!state.lastGrid&&state.lastGrid.grid?.length===CONFIG.gridH,state.lastGrid?`${state.lastGrid.grid.length} lignes`:"absente"));
   const expectedCorners=[[0,0],[CONFIG.gridW-1,0],[0,CONFIG.gridH-1],[CONFIG.gridW-1,CONFIG.gridH-1]];
   let targetOk=true,targetDetails=[];
   for(const [x,y] of expectedCorners){
-    const r=CANVAS_RENDERER?canvasCellRect(x,y):els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`)?.getBoundingClientRect();
+    const r=canvasCellRect(x,y);
     if(!r){targetOk=false;targetDetails.push(`${x},${y}: absent`);continue}
     const pos=mapPositionFromClient(r.left+r.width/2,r.top+r.height/2);
     const ok=!!pos&&pos.x===x&&pos.y===y;targetOk=targetOk&&ok;targetDetails.push(`${x},${y}:${pos?`${pos.x},${pos.y}`:"?"}`);
@@ -88,8 +88,8 @@ function runAtlasSelfCheck(){
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
-  const canvasBudgetOk=!CANVAS_RENDERER||performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
-  checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,CANVAS_RENDERER?`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`:"moteur DOM"));
+  const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
+  checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
   checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
   checks.push(debugCheckResult("Pipeline Canvas final",renderPipelineRuntime.lastStages.at(-1)==="fx-final"&&renderPipelineRuntime.lastFinalizedFrame===renderPipelineRuntime.frame,`${renderPipelineRuntime.lastStages.join(" → ")} · frame ${renderPipelineRuntime.lastFinalizedFrame}`));

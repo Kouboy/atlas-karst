@@ -335,10 +335,11 @@ try {
     });
   }
 
-  await withPage("moteur DOM de secours", { width: 1280, height: 720 }, async (page) => {
+  await withPage("moteur Canvas unique", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page, "?offline&renderer=dom");
-    assert.match(await page.locator("body").getAttribute("class"), /renderer-dom/);
-    assert.equal(await page.locator("#map .cell").count(), 120 * 44);
+    assert.match(await page.locator("body").getAttribute("class"), /renderer-canvas/);
+    assert.equal(await page.locator("#map").count(), 0,"l’ancienne surface DOM existe encore");
+    assert.ok(await page.locator("#mapCanvas").evaluate((canvas) => canvas.width > 0 && canvas.height > 0),"le Canvas n’a pas été initialisé");
   });
 
   await withPage("navigation clavier", { width: 1280, height: 720 }, async (page) => {

@@ -1,4 +1,4 @@
-function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
+function activeMapSurface(){return els.mapCanvas}
 const canvasRuntime={metrics:null,layoutSignature:"",styleCache:new Map(),probe:null,lastGrid:null,dpr:1,ctx:null,measureCanvas:null,measureCtx:null,signalCanvas:null,signalCtx:null};
 const renderPipelineRuntime={
   frame:0,dataRevision:0,osmRevision:0,fxRevision:0,lastFxOsmRevision:-1,

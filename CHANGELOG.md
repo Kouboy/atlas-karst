@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17l — Moteur Canvas unique
+
+- Retrait du moteur DOM de secours après comparaison fonctionnelle : il ne couvrait ni le rendu symbolique, ni les marqueurs, ni le pipeline visuel complet.
+- Unification du rendu, du survol, de la sélection, du déplacement, des relations, des parcours et du cadre géographique sur la géométrie Canvas.
+- Suppression de la grille de plusieurs milliers de nœuds DOM et des styles, mesures et événements qui lui étaient réservés.
+- Compatibilité conservée avec les anciens liens `?renderer=dom`, désormais ignorés au profit du moteur Canvas.
+- Message d’incompatibilité explicite pour les navigateurs sans Canvas, afin d’éviter un mode dégradé incomplet.
+- Contrats statiques et scénario navigateur dédiés au caractère exclusif du moteur Canvas.
+
 ## 0.17k — Coque responsive isolée
 
 - Extraction des panneaux, accordéons, statuts latéraux et signaux documentaires dans `ui-shell.js`.

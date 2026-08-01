@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17k · coque responsive isolée</title>
+<title>Atlas Karst ASCII v0.17l · moteur Canvas unique</title>
 <style>
 :root{
   color-scheme:dark;
@@ -79,17 +79,12 @@ select{width:100%}
   background:radial-gradient(ellipse at center,var(--map-core) 0,var(--map-edge) 72%);border-radius:12px;overflow:auto;box-shadow:inset 0 0 45px rgba(0,0,0,.5),inset 0 0 110px var(--map-haze);transition:background .45s ease,box-shadow .45s ease
 }
 .terminal-wrap.map-centered{text-align:center}
-.terminal-wrap.map-centered #map{text-align:left}
 @media (max-width:940px){
   .terminal-wrap.map-centered{display:flex;align-items:flex-start;justify-content:center}
-  .terminal-wrap.map-centered #mapCanvas,.terminal-wrap.map-centered #map{flex:0 0 auto}
+  .terminal-wrap.map-centered #mapCanvas{flex:0 0 auto}
 }
-#map{margin:0;padding:var(--map-padding);display:inline-block;white-space:pre;font-size:var(--map-font-size);line-height:1.04;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:paint style}
-#map.dragging{cursor:grabbing;transition:none}.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
-#map.placing-house{cursor:var(--atlas-crosshair)}
-#mapCanvas{position:relative;z-index:2;display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
-body.renderer-canvas #map{display:none!important}
-body.renderer-canvas #mapCanvas{display:block}
+#mapCanvas{position:relative;z-index:2;display:block;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
+.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
 .terminal-wrap.map-centered #mapCanvas{margin-inline:auto}
 #mapCanvas.dragging{cursor:grabbing;transition:none;will-change:transform}
 .terminal-wrap.panning .canvas-cell-marker{opacity:0!important;visibility:hidden!important}
@@ -108,9 +103,8 @@ body.renderer-canvas #mapCanvas{display:block}
 @keyframes canvasPoiBurst{0%{opacity:0;transform:scale(.45)}20%{opacity:1}100%{opacity:0;transform:scale(3.1)}}
 .canvas-style-probe{position:fixed!important;left:-10000px!important;top:-10000px!important;visibility:hidden!important;animation:none!important;transition:none!important;pointer-events:none!important}
 @media (prefers-reduced-motion:reduce){#canvasSelectionMarker,#canvasPoiMarker{animation:none!important}}
-/* Le survol vit dans un calque fixe indépendant. Il ne modifie plus les milliers
-   de cellules du <pre> et suit le pointeur au rythme de requestAnimationFrame. */
-.cell.hovered{position:relative;z-index:3;outline:1px solid rgba(121,226,171,.85);outline-offset:-1px;background:rgba(121,226,171,.17)}
+/* Le survol vit dans un calque fixe indépendant et suit le pointeur au rythme
+   de requestAnimationFrame. */
 .hover-cell-indicator{
   position:fixed;left:0;top:0;z-index:999;box-sizing:border-box;pointer-events:none;
   opacity:0;visibility:hidden;border:1px solid rgba(121,226,171,.94);
@@ -119,15 +113,8 @@ body.renderer-canvas #mapCanvas{display:block}
   transition:opacity .06s linear
 }
 .hover-cell-indicator.visible{opacity:1;visibility:visible}
-/* Le repère de cellule est désormais confié au moteur CSS : il suit le pointeur
-   sans JavaScript, sans mesure de géométrie et sans retard perceptible. */
 @media (hover:hover) and (pointer:fine){
   .selection-assist{display:none!important}
-  #map:not(.dragging) .cell:hover{
-    position:relative;z-index:3;outline:1px solid rgba(121,226,171,.9);outline-offset:-1px;
-    background:rgba(121,226,171,.17);filter:brightness(1.12)
-  }
-  #map:not(.dragging) .cell.selected:hover{outline-color:#fff5c9;background:rgba(255,223,125,.38)}
 }
 
 /* Limites de l’emprise navigable. Le cadre est placé sur les centres réels des
@@ -166,13 +153,6 @@ body.renderer-canvas #mapCanvas{display:block}
   .world-boundary-side.edge-west span{left:-18px}
   .world-boundary-side.edge-east span{right:-18px}
 }
-.cell.selection-neighbor{filter:brightness(.62) saturate(.72);opacity:.78;background:rgba(0,0,0,.18)}
-.cell.selected{
-  position:relative;z-index:5;outline:2px solid var(--selection);outline-offset:-2px;
-  background:var(--selection-soft);color:#fff8d8!important;font-weight:950;
-  filter:brightness(1.35) saturate(1.08);text-shadow:0 0 5px rgba(255,223,125,.82),0 0 10px rgba(255,223,125,.3)
-}
-.cell.selected.hovered{outline-color:#fff5c9;background:rgba(255,223,125,.38)}
 #viewport.selection-active{box-shadow:inset 0 0 45px rgba(0,0,0,.5),inset 0 0 110px var(--map-haze),0 0 0 1px rgba(255,223,125,.16)}
 .selection-assist{
   position:absolute;right:10px;bottom:38px;z-index:12;width:164px;padding:8px;
@@ -279,10 +259,8 @@ body.renderer-canvas #mapCanvas{display:block}
 .poi-selection-fx[data-kind="natural"]{--poi-hit:#7ee1cb;border-radius:45% 55% 52% 48%}
 .poi-selection-fx[data-kind="home"]{--poi-hit:#ff9aa6;border-radius:35%}
 .poi-selection-fx[data-kind="location"]{--poi-hit:#fff48b;border-style:dashed}
-.cell.poi-select-burst{position:relative;z-index:19;display:inline-block;animation:poiGlyphBurst .78s cubic-bezier(.16,.92,.2,1) both}
 @keyframes poiSelectionRing{0%{opacity:0;scale:.35}14%{opacity:1}52%{opacity:.95}100%{opacity:0;scale:3.9}}
 @keyframes poiSelectionEcho{0%{width:10px;height:10px;opacity:1}100%{width:78px;height:78px;opacity:0}}
-@keyframes poiGlyphBurst{0%{transform:scale(.72);filter:brightness(1)}26%{transform:scale(1.95);filter:brightness(2.2)}58%{transform:scale(1.18);filter:brightness(1.5)}100%{transform:scale(1);filter:brightness(1.16)}}
 .heritage-sources{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}
 .heritage-sources label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .heritage-source-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
@@ -337,10 +315,7 @@ body.renderer-canvas #mapCanvas{display:block}
 /* Les sols restent volontairement statiques. Les anciennes animations d’eau,
    forêt, prairie et champ ont été supprimées afin de préserver la lisibilité
    et la fluidité, surtout sur mobile. */
-#map{position:relative;z-index:1}
 .c-road-far{font-weight:600;color:#c4b27e}
-@keyframes selectedBreath{0%,100%{box-shadow:inset 0 0 0 rgba(255,223,125,0)}50%{box-shadow:inset 0 0 8px rgba(255,223,125,.42)}}
-.cell.selected{animation:selectedBreath 1.7s ease-in-out infinite}
 .depth-transition{position:absolute;inset:0;z-index:11;pointer-events:none;overflow:hidden;border-radius:12px}
 .depth-transition::before,.depth-transition::after{content:"";position:absolute;inset:-20%;opacity:0}
 .depth-transition.down.active::before{background:linear-gradient(to bottom,rgba(8,16,12,0),rgba(76,113,94,.22) 35%,rgba(0,0,0,.82));animation:depthDownVeil .62s ease-out}
@@ -768,7 +743,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   #mainAttribution{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-    .cell.selected,.depth-transition.active::before,.depth-transition.active::after,.card.card-awake>h2,.poi-fx,.c-user-position,.poi-selection-fx,.poi-selection-fx::before,.poi-selection-fx::after,.cell.poi-select-burst{animation:none!important}
+    .depth-transition.active::before,.depth-transition.active::after,.card.card-awake>h2,.poi-fx,.c-user-position,.poi-selection-fx,.poi-selection-fx::before,.poi-selection-fx::after{animation:none!important}
 }
 @media(max-width:520px){
   main{padding:6px;--map-font-size:11px;--map-padding:12px}
@@ -791,58 +766,9 @@ body.debug-mode section.debug-only{display:block!important}
 @media(max-width:520px){.debug-kpis{grid-template-columns:1fr}}
 
 
-/* V0.12f — sélection détachée, survol différé et limites du monde.
-   Le détail n’apparaît qu’après une courte pause du pointeur afin de ne plus
-   effectuer de mesures de mise en page pendant les déplacements rapides.
-
-   Héritage de la V0.12e :
-   Le feedback de point d’intérêt reste ancré à la cellule elle-même.
-
-   V0.12d — feedback de point d’intérêt ancré à la cellule elle-même.
-   L’ancien calque absolu est masqué : il dépendait du scroll du viewport et
-   pouvait dériver après redimensionnement, zoom ou déplacement. */
+/* L'ancien calque de feedback absolu reste masqué ; le repère Canvas dédié
+   porte désormais seul cette animation. */
 #poiSelectionFx{display:none!important}
-.cell.poi-hit-active{
-  --poi-hit:#ffe07d;--poi-rotate:0deg;
-  position:relative;z-index:22;display:inline-block;isolation:isolate;
-  animation:poiGlyphBurst .82s cubic-bezier(.16,.92,.2,1) both
-}
-.cell.poi-hit-active::before,.cell.poi-hit-active::after{
-  content:"";position:absolute;left:50%;top:50%;width:.82em;height:.82em;
-  box-sizing:border-box;border:2px solid var(--poi-hit);border-radius:50%;
-  transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.35);
-  transform-origin:center;pointer-events:none;opacity:0;z-index:-1;
-  filter:drop-shadow(0 0 6px var(--poi-hit))
-}
-.cell.poi-hit-active::before{animation:poiCellRing .9s cubic-bezier(.12,.86,.24,1) both}
-.cell.poi-hit-active::after{animation:poiCellEcho .9s .14s ease-out both}
-.cell.poi-hit-active[data-poi-kind="cavity"]{--poi-hit:#d89aff}
-.cell.poi-hit-active[data-poi-kind="bss"]{--poi-hit:#ffd866}
-.cell.poi-hit-active[data-poi-kind="bss"]::before,.cell.poi-hit-active[data-poi-kind="bss"]::after{border-style:dashed;border-radius:2px}
-.cell.poi-hit-active[data-poi-kind="heritage"]{--poi-hit:#ffe08a;--poi-rotate:45deg}
-.cell.poi-hit-active[data-poi-kind="heritage"]::before,.cell.poi-hit-active[data-poi-kind="heritage"]::after{border-radius:2px}
-.cell.poi-hit-active[data-poi-kind="memory"]{--poi-hit:#ffb6df}
-.cell.poi-hit-active[data-poi-kind="memory"]::before,.cell.poi-hit-active[data-poi-kind="memory"]::after{border-style:dotted}
-.cell.poi-hit-active[data-poi-kind="industrial"]{--poi-hit:#ffad72}
-.cell.poi-hit-active[data-poi-kind="industrial"]::before,.cell.poi-hit-active[data-poi-kind="industrial"]::after{border-style:dashed;border-radius:1px}
-.cell.poi-hit-active[data-poi-kind="natural"]{--poi-hit:#7ee1cb}
-.cell.poi-hit-active[data-poi-kind="natural"]::before,.cell.poi-hit-active[data-poi-kind="natural"]::after{border-radius:43% 57% 51% 49%}
-.cell.poi-hit-active[data-poi-kind="home"]{--poi-hit:#ff9aa6}
-.cell.poi-hit-active[data-poi-kind="home"]::before,.cell.poi-hit-active[data-poi-kind="home"]::after{border-radius:35%}
-.cell.poi-hit-active[data-poi-kind="location"]{--poi-hit:#fff48b}
-.cell.poi-hit-active[data-poi-kind="location"]::before,.cell.poi-hit-active[data-poi-kind="location"]::after{border-style:dashed}
-@keyframes poiCellRing{
-  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.32)}
-  15%{opacity:1}55%{opacity:.95}
-  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(3.2)}
-}
-@keyframes poiCellEcho{
-  0%{opacity:.95;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.55)}
-  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(4.8)}
-}
-@media (prefers-reduced-motion:reduce){
-  .cell.poi-hit-active,.cell.poi-hit-active::before,.cell.poi-hit-active::after{animation:none!important}
-}
 
 
 /* V0.14b — proximité et relations entre lieux */
@@ -1668,7 +1594,8 @@ body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
 }
 @media(prefers-reduced-motion:reduce){.render-fx-layer>div{animation:none!important}}
 .render-fx-layer.fx-restart>div{animation-name:none!important}
-body:not(.renderer-canvas) .render-fx-layer{display:none!important}
+.canvas-compatibility{margin:12px;padding:14px;border:1px solid var(--danger);border-radius:10px;background:#211012;color:#ffe3e4;line-height:1.55}
+.canvas-compatibility strong{display:block;margin-bottom:4px;color:#ffb3b7}
 </style>
 </head>
 <body data-depth-band="surface">
@@ -1677,7 +1604,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17k</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17l</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2125,6 +2052,11 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
     <div class="badge warn" id="truthBadge">surface vectorielle en chargement</div>
   </div>
 
+  <div class="canvas-compatibility" id="canvasUnsupported" role="alert" hidden>
+    <strong>Ce navigateur ne peut pas afficher la carte.</strong>
+    Atlas Karst utilise Canvas pour garantir un rendu identique en mode symbolique et ASCII. Ouvre ce fichier avec une version récente de Firefox, Chrome, Edge ou Safari.
+  </div>
+
   <div class="terminal-wrap map-bound" id="viewport">
     <div class="map-top-overlay">
       <div class="north">N ↑</div>
@@ -2137,7 +2069,6 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
         <button id="mapDepthDown" type="button" title="Descendre d’un niveau" aria-label="Descendre d’un niveau">v</button>
       </div>
     </div>
-    <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
     <canvas id="mapCanvas" aria-label="Carte interactive rendue sur Canvas" aria-describedby="mapTip" role="group" tabindex="0">Carte interactive : utilisez les flèches pour vous déplacer, plus et moins pour changer d’échelle.</canvas>
     <canvas id="zoomTransitionCanvas" class="zoom-transition-canvas" aria-hidden="true"></canvas>
     <div class="render-fx-layer" id="renderFxLayer" aria-hidden="true">
@@ -2208,11 +2139,11 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17k";
+const APP_VERSION = "0.17l";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
-const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
-const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
-document.body.classList.add(CANVAS_RENDERER?"renderer-canvas":"renderer-dom");
+const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
+document.body.classList.add("renderer-canvas");
+if(!CANVAS_RENDERER)document.body.classList.add("canvas-unsupported");
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
@@ -2404,14 +2335,14 @@ function runAtlasSelfCheck(){
   const ids=[...document.querySelectorAll("[id]")].map(el=>el.id);
   const duplicates=ids.filter((id,i)=>ids.indexOf(id)!==i);
   checks.push(debugCheckResult("Identifiants HTML uniques",duplicates.length===0,duplicates.length?duplicates.join(", "): `${ids.length} identifiants`));
-  const cellCount=CANVAS_RENDERER?CONFIG.gridW*CONFIG.gridH:(els.map?.querySelectorAll(".cell").length||0);
-  checks.push(debugCheckResult(CANVAS_RENDERER?"Cellules virtuelles Canvas":"Nombre de cellules",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
+  const cellCount=CONFIG.gridW*CONFIG.gridH;
+  checks.push(debugCheckResult("Cellules virtuelles Canvas",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
   checks.push(debugCheckResult("Centre géographique valide",Number.isFinite(state.center?.lat)&&Number.isFinite(state.center?.lon),`${state.center?.lat} / ${state.center?.lon}`));
   checks.push(debugCheckResult("Grille en mémoire",!!state.lastGrid&&state.lastGrid.grid?.length===CONFIG.gridH,state.lastGrid?`${state.lastGrid.grid.length} lignes`:"absente"));
   const expectedCorners=[[0,0],[CONFIG.gridW-1,0],[0,CONFIG.gridH-1],[CONFIG.gridW-1,CONFIG.gridH-1]];
   let targetOk=true,targetDetails=[];
   for(const [x,y] of expectedCorners){
-    const r=CANVAS_RENDERER?canvasCellRect(x,y):els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`)?.getBoundingClientRect();
+    const r=canvasCellRect(x,y);
     if(!r){targetOk=false;targetDetails.push(`${x},${y}: absent`);continue}
     const pos=mapPositionFromClient(r.left+r.width/2,r.top+r.height/2);
     const ok=!!pos&&pos.x===x&&pos.y===y;targetOk=targetOk&&ok;targetDetails.push(`${x},${y}:${pos?`${pos.x},${pos.y}`:"?"}`);
@@ -2426,8 +2357,8 @@ function runAtlasSelfCheck(){
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
-  const canvasBudgetOk=!CANVAS_RENDERER||performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
-  checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,CANVAS_RENDERER?`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`:"moteur DOM"));
+  const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
+  checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
   checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
   checks.push(debugCheckResult("Pipeline Canvas final",renderPipelineRuntime.lastStages.at(-1)==="fx-final"&&renderPipelineRuntime.lastFinalizedFrame===renderPipelineRuntime.frame,`${renderPipelineRuntime.lastStages.join(" → ")} · frame ${renderPipelineRuntime.lastFinalizedFrame}`));
@@ -2656,7 +2587,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "map","mapCanvas","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
@@ -2667,7 +2598,7 @@ els = Object.fromEntries([
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 
-function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
+function activeMapSurface(){return els.mapCanvas}
 const canvasRuntime={metrics:null,layoutSignature:"",styleCache:new Map(),probe:null,lastGrid:null,dpr:1,ctx:null,measureCanvas:null,measureCtx:null,signalCanvas:null,signalCtx:null};
 const renderPipelineRuntime={
   frame:0,dataRevision:0,osmRevision:0,fxRevision:0,lastFxOsmRevision:-1,
@@ -4228,14 +4159,7 @@ function updateWorldBoundaryFrame(){
   if(!active)return;
 
   const vr=els.viewport.getBoundingClientRect();
-  let first,last;
-  if(CANVAS_RENDERER){
-    first=canvasCellRect(0,0);last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
-  }else{
-    const a=els.map.querySelector('.cell[data-x="0"][data-y="0"]')?.getBoundingClientRect();
-    const b=els.map.querySelector(`.cell[data-x="${CONFIG.gridW-1}"][data-y="${CONFIG.gridH-1}"]`)?.getBoundingClientRect();
-    if(a&&b)first={left:a.left,top:a.top,right:a.right,bottom:a.bottom},last={left:b.left,top:b.top,right:b.right,bottom:b.bottom};
-  }
+  const first=canvasCellRect(0,0),last=canvasCellRect(CONFIG.gridW-1,CONFIG.gridH-1);
   if(!first||!last){frame.classList.remove("visible");return}
 
   // La fiche mobile peut recouvrir le bas du viewport. Le cadre est alors
@@ -4838,8 +4762,7 @@ function relationZoomForDistance(distance){
   if(distance<=180)return 5;if(distance<=480)return 4;if(distance<=1050)return 3;if(distance<=2400)return 2;if(distance<=5200)return 1;return 0;
 }
 function gridCellClientRect(x,y){
-  if(CANVAS_RENDERER)return canvasCellRect(x,y);
-  return els.map?.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`)?.getBoundingClientRect()||null;
+  return canvasCellRect(x,y);
 }
 function clearActiveRelation(){
   clearTimeout(relationRuntime.timer);relationRuntime.timer=0;state.activeRelation=null;
@@ -5038,9 +4961,7 @@ function updateGuidedTourMarker(){
   if(!marker||!state.guidedTourActive||!tour||!state.lastGrid||drag){marker?.classList.remove("visible");return}
   const poi=tour.steps[state.guidedTourStep];if(!poi||!inExtent(poi.lat,poi.lon,state.lastGrid.extent)){marker.classList.remove("visible");return}
   const p=coordToGrid(poi.lat,poi.lon,state.lastGrid.extent);marker.dataset.step=String(state.guidedTourStep+1);
-  if(CANVAS_RENDERER){positionCanvasMarker(marker,p.x,p.y,true);return}
-  const r=gridCellClientRect(p.x,p.y),vr=els.viewport.getBoundingClientRect();if(!r){marker.classList.remove("visible");return}
-  marker.style.left=`${r.left-vr.left+els.viewport.scrollLeft}px`;marker.style.top=`${r.top-vr.top+els.viewport.scrollTop}px`;marker.style.width=`${r.width}px`;marker.style.height=`${r.height}px`;marker.classList.add("visible");
+  positionCanvasMarker(marker,p.x,p.y,true);
 }
 function updateGuidedTourUI(){
   const catalogChanged=rebuildGuidedTours();
@@ -8035,23 +7956,6 @@ function composeMapGrid(extent,depth=currentDepth()){
   return {grid,gridMs,layersMs:performance.now()-layersStarted};
 }
 
-function renderDomMap(grid){
-  let html="",visiblePoiCount=0;
-  for(let y=0;y<CONFIG.gridH;y++){
-    for(let x=0;x<CONFIG.gridW;x++){
-      const cell=grid.grid[y][x],shade=state.layerRelief&&Number.isFinite(cell.elev)?` shade${cell.shade||0}`:"";
-      const attrs=`data-x="${x}" data-y="${y}"`,glyph=cell.ch;
-      const poiKind=poiEffectKind(cell),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
-      if(poiKind)visiblePoiCount++;
-      const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-      html+=`<span class="cell ${cell.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
-    }
-    html+="\n";
-  }
-  els.map.innerHTML=html;
-  return visiblePoiCount;
-}
-
 const cellInspectorRuntime={ready:true,selections:0,touchSelections:0,poiSelections:0,plainSelections:0,hoverReveals:0,lastInput:"—"};
 function mobileReadoutMode(){return matchMedia?.("(max-width:940px)")?.matches}
 let readoutFitTimer=0;
@@ -8133,61 +8037,13 @@ function collapseReadoutForPlainCell(cell,x,y){
   setReadoutContent(plainCellSummaryHtml(cell,x,y),{title,sheet:"full",kind:"plain"});
 }
 
-function cellElementAtClient(clientX,clientY){
-  if(CANVAS_RENDERER)return null;
-  const hit=document.elementFromPoint?.(clientX,clientY),cell=hit?.closest?.(".cell");
-  return cell&&els.map.contains(cell)?cell:null;
-}
-function mapGridMetrics(){
-  const cells=els.map?.children;
-  const expected=CONFIG.gridW*CONFIG.gridH;
-  if(!cells||cells.length<expected)return null;
-  const first=cells[0],nextX=CONFIG.gridW>1?cells[1]:null,nextY=CONFIG.gridH>1?cells[CONFIG.gridW]:null;
-  if(!first)return null;
-  const a=first.getBoundingClientRect();
-  const centerX=a.left+a.width/2,centerY=a.top+a.height/2;
-  let pitchX=nextX?(nextX.getBoundingClientRect().left+nextX.getBoundingClientRect().width/2-centerX):a.width;
-  let pitchY=nextY?(nextY.getBoundingClientRect().top+nextY.getBoundingClientRect().height/2-centerY):a.height;
-  if(!Number.isFinite(pitchX)||Math.abs(pitchX)<.1)pitchX=a.width||1;
-  if(!Number.isFinite(pitchY)||Math.abs(pitchY)<.1){
-    const cs=getComputedStyle(els.map);
-    pitchY=(parseFloat(cs.fontSize)||12)*(parseFloat(cs.lineHeight)||1.04);
-  }
-  return {centerX,centerY,pitchX:Math.abs(pitchX),pitchY:Math.abs(pitchY)};
-}
 function mapPositionFromClient(clientX,clientY){
   if(!state.lastGrid)return null;
-  if(CANVAS_RENDERER){
-    const d=canvasDisplayMetrics();if(!d)return null;
-    // Les glyphes sont dessinés à l'origine de chaque case. Pour convertir le
-    // pointeur en indice de cellule, on travaille toutefois par rapport au CENTRE
-    // des cases. Sans ce demi-pas, le centre visuel de la case x était arrondi vers
-    // x+1 : la croix se retrouvait dans le coin supérieur gauche de la surbrillance.
-    const gridX=(clientX-d.r.left-d.paddingX)/d.cellW-.5;
-    const gridY=(clientY-d.r.top-d.paddingY)/d.cellH-.5;
-    const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
-    const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
-    const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
-    if(debugState.enabled){debugState.lastPointer=`${x}, ${y} · ${result.coord.lat.toFixed(5)} / ${result.coord.lon.toFixed(5)}`;updateDebugPanel()}
-    return result;
-  }
-  const metrics=mapGridMetrics();
-  let gridX,gridY;
-  if(metrics){
-    // Convert from the real centres of the rendered glyph cells. This excludes
-    // <pre> padding and remains exact when the panoramic grid or font size changes.
-    gridX=(clientX-metrics.centerX)/metrics.pitchX;
-    gridY=(clientY-metrics.centerY)/metrics.pitchY;
-  }else{
-    // Conservative fallback based on the content box rather than the padded box.
-    const r=els.map.getBoundingClientRect(),cs=getComputedStyle(els.map);
-    if(!r.width||!r.height)return null;
-    const padL=parseFloat(cs.paddingLeft)||0,padR=parseFloat(cs.paddingRight)||0;
-    const padT=parseFloat(cs.paddingTop)||0,padB=parseFloat(cs.paddingBottom)||0;
-    const width=Math.max(1,r.width-padL-padR),height=Math.max(1,r.height-padT-padB);
-    const fx0=clamp((clientX-r.left-padL)/width,0,1),fy0=clamp((clientY-r.top-padT)/height,0,1);
-    gridX=fx0*(CONFIG.gridW-1);gridY=fy0*(CONFIG.gridH-1);
-  }
+  const d=canvasDisplayMetrics();if(!d)return null;
+  // Les glyphes sont dessinés à l'origine de chaque case. La conversion du
+  // pointeur travaille par rapport au centre afin de conserver l'alignement.
+  const gridX=(clientX-d.r.left-d.paddingX)/d.cellW-.5;
+  const gridY=(clientY-d.r.top-d.paddingY)/d.cellH-.5;
   const x=clamp(Math.round(gridX),0,CONFIG.gridW-1),y=clamp(Math.round(gridY),0,CONFIG.gridH-1);
   const fx=clamp(gridX/Math.max(1,CONFIG.gridW-1),0,1),fy=clamp(gridY/Math.max(1,CONFIG.gridH-1),0,1);
   const result={coord:{lon:state.lastGrid.extent.west+fx*(state.lastGrid.extent.east-state.lastGrid.extent.west),lat:state.lastGrid.extent.north-fy*(state.lastGrid.extent.north-state.lastGrid.extent.south)},fx,fy,x,y};
@@ -8195,13 +8051,6 @@ function mapPositionFromClient(clientX,clientY){
   return result;
 }
 function eventMapPosition(ev){
-  if(!state.lastGrid)return null;
-  if(CANVAS_RENDERER)return mapPositionFromClient(ev.clientX,ev.clientY);
-  const cell=cellElementAtClient(ev.clientX,ev.clientY)||ev.target.closest?.(".cell");
-  if(cell&&els.map.contains(cell)){
-    const x=+cell.dataset.x,y=+cell.dataset.y;
-    return {coord:gridToCoord(x,y,state.lastGrid.extent),fx:x/(CONFIG.gridW-1),fy:y/(CONFIG.gridH-1),x,y};
-  }
   return mapPositionFromClient(ev.clientX,ev.clientY);
 }
 function coarsePointer(){
@@ -8229,15 +8078,7 @@ function assistedCell(x,y,radius=2){
   }
   return best?{x:best.x,y:best.y,snapped:true}:{x,y,snapped:false};
 }
-let selectedDomCell=null,selectionNeighborDomCells=[];
-function mapCellElement(x,y){
-  if(CANVAS_RENDERER||!els.map||x<0||y<0||x>=CONFIG.gridW||y>=CONFIG.gridH)return null;
-  return els.map.children[y*CONFIG.gridW+x]||null;
-}
 function clearSelectionDom(){
-  if(selectedDomCell)selectedDomCell.classList.remove("selected");
-  for(const el of selectionNeighborDomCells)el?.classList.remove("selection-neighbor");
-  selectedDomCell=null;selectionNeighborDomCells=[];
   els.canvasSelectionMarker?.classList.remove("visible");
 }
 function syncSelectionDom(){
@@ -8251,13 +8092,7 @@ function syncSelectionDom(){
   state.selectedCell.x=x;state.selectedCell.y=y;
   const selectedPoi=state.selectedCell.poiUid?normalizedPoiByUid(state.selectedCell.poiUid):null;
   state.selectedCell.feature=selectedPoi?symbolicPoiFeatureInfo(selectedPoi):(state.lastGrid.grid[y]?.[x]?.feature||null);
-  if(CANVAS_RENDERER){positionCanvasMarker(els.canvasSelectionMarker,x,y,true);els.viewport?.classList.add("selection-active");return true}
-  const target=mapCellElement(x,y);
-  if(!target){els.viewport?.classList.remove("selection-active");return false}
-  target.classList.add("selected");selectedDomCell=target;
-  for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-    if(!dx&&!dy)continue;const neighbor=mapCellElement(x+dx,y+dy);if(neighbor){neighbor.classList.add("selection-neighbor");selectionNeighborDomCells.push(neighbor)}
-  }
+  positionCanvasMarker(els.canvasSelectionMarker,x,y,true);
   els.viewport?.classList.add("selection-active");return true;
 }
 function closeSelectionAssist(){
@@ -8311,14 +8146,8 @@ function applyPendingPoiSelectionFeedback(){
   const pending=pendingPoiFeedback;if(!pending||!state.lastGrid)return;
   const remaining=pending.expires-performance.now();if(remaining<=0){pendingPoiFeedback=null;els.canvasPoiMarker?.classList.remove("active","visible");return}
   const p=coordToGrid(pending.coord.lat,pending.coord.lon,state.lastGrid.extent),x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1);
-  if(CANVAS_RENDERER){
-    const marker=els.canvasPoiMarker;positionCanvasMarker(marker,x,y,true);marker.dataset.poiKind=pending.kind;marker.classList.remove("active");void marker.offsetWidth;marker.classList.add("active");
-    clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;marker.classList.remove("active","visible");delete marker.dataset.poiKind},Math.max(80,remaining));return;
-  }
-  const glyph=mapCellElement(x,y);if(!glyph)return;
-  els.map.querySelectorAll(".cell.poi-hit-active").forEach(el=>{el.classList.remove("poi-hit-active");delete el.dataset.poiKind});
-  glyph.dataset.poiKind=pending.kind;glyph.classList.remove("poi-hit-active");void glyph.offsetWidth;glyph.classList.add("poi-hit-active");
-  clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;glyph.classList.remove("poi-hit-active");delete glyph.dataset.poiKind},Math.max(80,remaining));
+  const marker=els.canvasPoiMarker;positionCanvasMarker(marker,x,y,true);marker.dataset.poiKind=pending.kind;marker.classList.remove("active");void marker.offsetWidth;marker.classList.add("active");
+  clearTimeout(poiFeedbackTimer);const serial=pending.serial;poiFeedbackTimer=setTimeout(()=>{if(pendingPoiFeedback?.serial!==serial)return;pendingPoiFeedback=null;marker.classList.remove("active","visible");delete marker.dataset.poiKind},Math.max(80,remaining));
 }
 function triggerPoiSelectionFeedback(cell,x,y,coordOverride=null){
   const selectionKind=poiSelectionKind(cell);
@@ -9024,17 +8853,18 @@ function alignRenderedCenterToVisibleViewport(){
 
 function fitMapFrame(){
   uiShellRuntime.fitRuns++;
+  if(!CANVAS_RENDERER)return;
   const main=uiShellMain||document.querySelector("main"),surface=activeMapSurface();if(!main||!surface||!els.viewport)return;
   const compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches;
   const baseFont=compact?11:12,basePadding=compact?12:17;
   setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);
   const availableWidth=Math.max(280,main.clientWidth);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
   if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
-  const previousSignature=canvasRuntime.layoutSignature,m=CANVAS_RENDERER?syncCanvasSize():null;
-  const finalWidth=Math.ceil(m?.displayWidth||els.map.scrollWidth+2),frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
+  const previousSignature=canvasRuntime.layoutSignature,m=syncCanvasSize();
+  const finalWidth=Math.ceil(m?.displayWidth||availableWidth),frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
   setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
-  if(CANVAS_RENDERER&&state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
-  else if(CANVAS_RENDERER)syncRenderFxGeometry(m);
+  if(state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
+  else syncRenderFxGeometry(m);
   requestAnimationFrame(()=>{
     syncRenderFxGeometry(canvasRuntime.metrics);alignRenderedCenterToVisibleViewport();syncSelectionDom();
     if(pendingPoiFeedback)applyPendingPoiSelectionFeedback();
@@ -9211,21 +9041,17 @@ function applyPanPreview(dx,dy){
   const safeY=clamp(Number(dy)||0,-window.innerHeight*1.5,window.innerHeight*1.5);
   const transform=`translate3d(${safeX.toFixed(2)}px,${safeY.toFixed(2)}px,0)`;
   surface.style.transform=transform;
-  if(CANVAS_RENDERER&&els.renderFxLayer)els.renderFxLayer.style.transform=transform;
+  if(els.renderFxLayer)els.renderFxLayer.style.transform=transform;
 }
 function clearPanPreview(){
   const surface=activeMapSurface();if(surface)surface.style.transform="";
   if(els.renderFxLayer)els.renderFxLayer.style.transform="translateZ(0)";
 }
 function panGeographicPixelSpan(){
-  if(CANVAS_RENDERER){
-    const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();
-    if(!m||!r)return {width:1,height:1};
-    const scaleX=m.width?Math.abs(r.width/m.width):1,scaleY=m.height?Math.abs(r.height/m.height):1;
-    return {width:Math.max(1,(CONFIG.gridW-1)*m.cellW*scaleX),height:Math.max(1,(CONFIG.gridH-1)*m.cellH*scaleY)};
-  }
-  const m=mapGridMetrics();
-  return m?{width:Math.max(1,(CONFIG.gridW-1)*m.pitchX),height:Math.max(1,(CONFIG.gridH-1)*m.pitchY)}:{width:1,height:1};
+  const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();
+  if(!m||!r)return {width:1,height:1};
+  const scaleX=m.width?Math.abs(r.width/m.width):1,scaleY=m.height?Math.abs(r.height/m.height):1;
+  return {width:Math.max(1,(CONFIG.gridW-1)*m.cellW*scaleX),height:Math.max(1,(CONFIG.gridH-1)*m.cellH*scaleY)};
 }
 function isPanPointer(ev){return ev.isPrimary!==false&&(ev.pointerType!=="mouse"||ev.button===0)}
 function pointerDistance(a,b){return Math.hypot(b.x-a.x,b.y-a.y)}
@@ -9299,7 +9125,7 @@ function handleMapPointerMove(ev){
     touchPointers.set(ev.pointerId,{x:ev.clientX,y:ev.clientY});
     if(handlePinchMove(ev)){ev.preventDefault();return}
   }
-  if(CANVAS_RENDERER&&ev.pointerType==="mouse"&&!drag&&!pinch&&!state.placingHouse){const pos=mapPositionFromClient(ev.clientX,ev.clientY);if(pos)scheduleCanvasHover(pos,ev)}
+  if(ev.pointerType==="mouse"&&!drag&&!pinch&&!state.placingHouse){const pos=mapPositionFromClient(ev.clientX,ev.clientY);if(pos)scheduleCanvasHover(pos,ev)}
   if(!drag||ev.pointerId!==drag.pointerId)return;
   drag.lastX=ev.clientX;drag.lastY=ev.clientY;
   const dx=drag.lastX-drag.x,dy=drag.lastY-drag.y,threshold=drag.pointerType==="touch"?8:4;
@@ -9329,7 +9155,7 @@ function endDrag(ev){
     }
   }
   clearPanPreview();activeMapSurface()?.classList.remove("dragging");els.viewport.classList.remove("panning");
-  if(CANVAS_RENDERER){syncSelectionDom();updateWorldBoundaryFrame()}
+  syncSelectionDom();updateWorldBoundaryFrame();
 }
 function finishMapPointer(ev){
   if(ev.pointerType==="touch")touchPointers.delete(ev.pointerId);
@@ -9374,8 +9200,6 @@ function bindInputController(){
   surface.addEventListener("dblclick",handleMapDoubleClick);
   els.viewport.addEventListener("wheel",handleMapWheel,{passive:false});
   surface.addEventListener("pointerdown",handleMapPointerDown);
-  surface.addEventListener("pointerover",ev=>{if(CANVAS_RENDERER||ev.pointerType!=="mouse"||drag||pinch||state.placingHouse)return;const target=ev.target?.closest?.(".cell");if(target&&els.map.contains(target))scheduleHover(target,ev)});
-  surface.addEventListener("pointerout",ev=>{if(CANVAS_RENDERER||ev.pointerType!=="mouse")return;const from=ev.target?.closest?.(".cell"),to=ev.relatedTarget?.closest?.(".cell");if(from&&from!==to)hideHover()});
   surface.addEventListener("pointermove",handleMapPointerMove);
   surface.addEventListener("pointerleave",ev=>{if(!drag&&ev.pointerType==="mouse")hideHover()});
   surface.addEventListener("pointerup",finishMapPointer);
@@ -9565,8 +9389,7 @@ async function importSnapshotFile(file){
 
 function exportStandaloneHtml(){
   const snapshot=buildAtlasSnapshot(),clone=document.documentElement.cloneNode(true);
-  const map=clone.querySelector("#map");if(map)map.textContent="";
-  const tip=clone.querySelector("#hoverTip");if(tip)tip.textContent="";
+    const tip=clone.querySelector("#hoverTip");if(tip)tip.textContent="";
   const assist=clone.querySelector("#selectionAssist");if(assist)assist.setAttribute("hidden","");
   const snapTag=clone.querySelector("#atlas-snapshot");
   snapTag.textContent=JSON.stringify(snapshot).replace(/</g,"\\u003c");
@@ -9625,13 +9448,7 @@ function render(reason="direct"){
   if(depth<0)applyUndergroundVisualContract(depth);
   state.lastGrid=g;
   const outputStarted=performance.now();
-  let visiblePoiCount=0;
-  if(CANVAS_RENDERER){
-    visiblePoiCount=drawCanvasMap(g,reason);
-    els.map.textContent="";
-  }else{
-    visiblePoiCount=renderDomMap(g);
-  }
+  const visiblePoiCount=drawCanvasMap(g,reason);
   const outputMs=performance.now()-outputStarted;
   const interfaceStarted=performance.now();
   syncSelectionDom();
@@ -9642,7 +9459,7 @@ function render(reason="direct"){
     const loc=state.userLocation;
     els.locationBadge.textContent=state.locationLoading?"recherche…":loc?`± ${Math.round(loc.accuracy||0)} m`:"non localisée";
   }
-  els.mapTip.textContent=coarsePointer()?`pause 0,3 s = détail · toucher = sélectionner · glisser = déplacement · ⌖ = position${CANVAS_RENDERER?" · Canvas":""}`:`pause 0,3 s = détail · clic = sélectionner · glisser = déplacement · molette = zoom${CANVAS_RENDERER?" · Canvas":""}`;
+  els.mapTip.textContent=coarsePointer()?"pause 0,3 s = détail · toucher = sélectionner · glisser = déplacement · ⌖ = position · Canvas":"pause 0,3 s = détail · clic = sélectionner · glisser = déplacement · molette = zoom · Canvas";
   els.zoomLabel.textContent=z.label;
   els.depthLabel.textContent=depthSliceLabel(depth);
   const cellX=z.widthKm*1000/CONFIG.gridW,cellY=z.heightKm*1000/CONFIG.gridH;
@@ -10009,6 +9826,11 @@ els.audioToggle.addEventListener("click",()=>retroAudio.toggle());
 async function bootAtlas(){
   retroAudio.init();
   setDebugEnabled(DEBUG_REQUESTED);
+  if(!CANVAS_RENDERER){
+    if(els.canvasUnsupported)els.canvasUnsupported.hidden=false;
+    if(els.viewport)els.viewport.hidden=true;
+    return;
+  }
   try{state.ambientMotion=localStorage.getItem(AMBIENT_PREF_KEY)!=="off"}catch{}
   try{const savedMode=localStorage.getItem(RENDER_MODE_PREF_KEY);if(savedMode==="ascii"||savedMode==="symbolic")state.renderMode=savedMode}catch{}
   if(els.ambientMotion)els.ambientMotion.checked=state.ambientMotion;

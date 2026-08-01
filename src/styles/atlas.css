@@ -71,17 +71,12 @@ select{width:100%}
   background:radial-gradient(ellipse at center,var(--map-core) 0,var(--map-edge) 72%);border-radius:12px;overflow:auto;box-shadow:inset 0 0 45px rgba(0,0,0,.5),inset 0 0 110px var(--map-haze);transition:background .45s ease,box-shadow .45s ease
 }
 .terminal-wrap.map-centered{text-align:center}
-.terminal-wrap.map-centered #map{text-align:left}
 @media (max-width:940px){
   .terminal-wrap.map-centered{display:flex;align-items:flex-start;justify-content:center}
-  .terminal-wrap.map-centered #mapCanvas,.terminal-wrap.map-centered #map{flex:0 0 auto}
+  .terminal-wrap.map-centered #mapCanvas{flex:0 0 auto}
 }
-#map{margin:0;padding:var(--map-padding);display:inline-block;white-space:pre;font-size:var(--map-font-size);line-height:1.04;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;will-change:transform;backface-visibility:hidden;contain:paint style}
-#map.dragging{cursor:grabbing;transition:none}.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
-#map.placing-house{cursor:var(--atlas-crosshair)}
-#mapCanvas{position:relative;z-index:2;display:none;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
-body.renderer-canvas #map{display:none!important}
-body.renderer-canvas #mapCanvas{display:block}
+#mapCanvas{position:relative;z-index:2;display:block;margin:0;user-select:none;cursor:var(--atlas-crosshair);touch-action:none;transform-origin:0 0;background:var(--map-core);isolation:isolate;contain:layout paint style}
+.terminal-wrap.panning{cursor:grabbing}.terminal-wrap.panning .map-tip{opacity:.35}
 .terminal-wrap.map-centered #mapCanvas{margin-inline:auto}
 #mapCanvas.dragging{cursor:grabbing;transition:none;will-change:transform}
 .terminal-wrap.panning .canvas-cell-marker{opacity:0!important;visibility:hidden!important}
@@ -100,9 +95,8 @@ body.renderer-canvas #mapCanvas{display:block}
 @keyframes canvasPoiBurst{0%{opacity:0;transform:scale(.45)}20%{opacity:1}100%{opacity:0;transform:scale(3.1)}}
 .canvas-style-probe{position:fixed!important;left:-10000px!important;top:-10000px!important;visibility:hidden!important;animation:none!important;transition:none!important;pointer-events:none!important}
 @media (prefers-reduced-motion:reduce){#canvasSelectionMarker,#canvasPoiMarker{animation:none!important}}
-/* Le survol vit dans un calque fixe indépendant. Il ne modifie plus les milliers
-   de cellules du <pre> et suit le pointeur au rythme de requestAnimationFrame. */
-.cell.hovered{position:relative;z-index:3;outline:1px solid rgba(121,226,171,.85);outline-offset:-1px;background:rgba(121,226,171,.17)}
+/* Le survol vit dans un calque fixe indépendant et suit le pointeur au rythme
+   de requestAnimationFrame. */
 .hover-cell-indicator{
   position:fixed;left:0;top:0;z-index:999;box-sizing:border-box;pointer-events:none;
   opacity:0;visibility:hidden;border:1px solid rgba(121,226,171,.94);
@@ -111,15 +105,8 @@ body.renderer-canvas #mapCanvas{display:block}
   transition:opacity .06s linear
 }
 .hover-cell-indicator.visible{opacity:1;visibility:visible}
-/* Le repère de cellule est désormais confié au moteur CSS : il suit le pointeur
-   sans JavaScript, sans mesure de géométrie et sans retard perceptible. */
 @media (hover:hover) and (pointer:fine){
   .selection-assist{display:none!important}
-  #map:not(.dragging) .cell:hover{
-    position:relative;z-index:3;outline:1px solid rgba(121,226,171,.9);outline-offset:-1px;
-    background:rgba(121,226,171,.17);filter:brightness(1.12)
-  }
-  #map:not(.dragging) .cell.selected:hover{outline-color:#fff5c9;background:rgba(255,223,125,.38)}
 }
 
 /* Limites de l’emprise navigable. Le cadre est placé sur les centres réels des
@@ -158,13 +145,6 @@ body.renderer-canvas #mapCanvas{display:block}
   .world-boundary-side.edge-west span{left:-18px}
   .world-boundary-side.edge-east span{right:-18px}
 }
-.cell.selection-neighbor{filter:brightness(.62) saturate(.72);opacity:.78;background:rgba(0,0,0,.18)}
-.cell.selected{
-  position:relative;z-index:5;outline:2px solid var(--selection);outline-offset:-2px;
-  background:var(--selection-soft);color:#fff8d8!important;font-weight:950;
-  filter:brightness(1.35) saturate(1.08);text-shadow:0 0 5px rgba(255,223,125,.82),0 0 10px rgba(255,223,125,.3)
-}
-.cell.selected.hovered{outline-color:#fff5c9;background:rgba(255,223,125,.38)}
 #viewport.selection-active{box-shadow:inset 0 0 45px rgba(0,0,0,.5),inset 0 0 110px var(--map-haze),0 0 0 1px rgba(255,223,125,.16)}
 .selection-assist{
   position:absolute;right:10px;bottom:38px;z-index:12;width:164px;padding:8px;
@@ -271,10 +251,8 @@ body.renderer-canvas #mapCanvas{display:block}
 .poi-selection-fx[data-kind="natural"]{--poi-hit:#7ee1cb;border-radius:45% 55% 52% 48%}
 .poi-selection-fx[data-kind="home"]{--poi-hit:#ff9aa6;border-radius:35%}
 .poi-selection-fx[data-kind="location"]{--poi-hit:#fff48b;border-style:dashed}
-.cell.poi-select-burst{position:relative;z-index:19;display:inline-block;animation:poiGlyphBurst .78s cubic-bezier(.16,.92,.2,1) both}
 @keyframes poiSelectionRing{0%{opacity:0;scale:.35}14%{opacity:1}52%{opacity:.95}100%{opacity:0;scale:3.9}}
 @keyframes poiSelectionEcho{0%{width:10px;height:10px;opacity:1}100%{width:78px;height:78px;opacity:0}}
-@keyframes poiGlyphBurst{0%{transform:scale(.72);filter:brightness(1)}26%{transform:scale(1.95);filter:brightness(2.2)}58%{transform:scale(1.18);filter:brightness(1.5)}100%{transform:scale(1);filter:brightness(1.16)}}
 .heritage-sources{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:8px}
 .heritage-sources label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
 .heritage-source-list{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
@@ -329,10 +307,7 @@ body.renderer-canvas #mapCanvas{display:block}
 /* Les sols restent volontairement statiques. Les anciennes animations d’eau,
    forêt, prairie et champ ont été supprimées afin de préserver la lisibilité
    et la fluidité, surtout sur mobile. */
-#map{position:relative;z-index:1}
 .c-road-far{font-weight:600;color:#c4b27e}
-@keyframes selectedBreath{0%,100%{box-shadow:inset 0 0 0 rgba(255,223,125,0)}50%{box-shadow:inset 0 0 8px rgba(255,223,125,.42)}}
-.cell.selected{animation:selectedBreath 1.7s ease-in-out infinite}
 .depth-transition{position:absolute;inset:0;z-index:11;pointer-events:none;overflow:hidden;border-radius:12px}
 .depth-transition::before,.depth-transition::after{content:"";position:absolute;inset:-20%;opacity:0}
 .depth-transition.down.active::before{background:linear-gradient(to bottom,rgba(8,16,12,0),rgba(76,113,94,.22) 35%,rgba(0,0,0,.82));animation:depthDownVeil .62s ease-out}
@@ -760,7 +735,7 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   #mainAttribution{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-    .cell.selected,.depth-transition.active::before,.depth-transition.active::after,.card.card-awake>h2,.poi-fx,.c-user-position,.poi-selection-fx,.poi-selection-fx::before,.poi-selection-fx::after,.cell.poi-select-burst{animation:none!important}
+    .depth-transition.active::before,.depth-transition.active::after,.card.card-awake>h2,.poi-fx,.c-user-position,.poi-selection-fx,.poi-selection-fx::before,.poi-selection-fx::after{animation:none!important}
 }
 @media(max-width:520px){
   main{padding:6px;--map-font-size:11px;--map-padding:12px}
@@ -783,58 +758,9 @@ body.debug-mode section.debug-only{display:block!important}
 @media(max-width:520px){.debug-kpis{grid-template-columns:1fr}}
 
 
-/* V0.12f — sélection détachée, survol différé et limites du monde.
-   Le détail n’apparaît qu’après une courte pause du pointeur afin de ne plus
-   effectuer de mesures de mise en page pendant les déplacements rapides.
-
-   Héritage de la V0.12e :
-   Le feedback de point d’intérêt reste ancré à la cellule elle-même.
-
-   V0.12d — feedback de point d’intérêt ancré à la cellule elle-même.
-   L’ancien calque absolu est masqué : il dépendait du scroll du viewport et
-   pouvait dériver après redimensionnement, zoom ou déplacement. */
+/* L'ancien calque de feedback absolu reste masqué ; le repère Canvas dédié
+   porte désormais seul cette animation. */
 #poiSelectionFx{display:none!important}
-.cell.poi-hit-active{
-  --poi-hit:#ffe07d;--poi-rotate:0deg;
-  position:relative;z-index:22;display:inline-block;isolation:isolate;
-  animation:poiGlyphBurst .82s cubic-bezier(.16,.92,.2,1) both
-}
-.cell.poi-hit-active::before,.cell.poi-hit-active::after{
-  content:"";position:absolute;left:50%;top:50%;width:.82em;height:.82em;
-  box-sizing:border-box;border:2px solid var(--poi-hit);border-radius:50%;
-  transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.35);
-  transform-origin:center;pointer-events:none;opacity:0;z-index:-1;
-  filter:drop-shadow(0 0 6px var(--poi-hit))
-}
-.cell.poi-hit-active::before{animation:poiCellRing .9s cubic-bezier(.12,.86,.24,1) both}
-.cell.poi-hit-active::after{animation:poiCellEcho .9s .14s ease-out both}
-.cell.poi-hit-active[data-poi-kind="cavity"]{--poi-hit:#d89aff}
-.cell.poi-hit-active[data-poi-kind="bss"]{--poi-hit:#ffd866}
-.cell.poi-hit-active[data-poi-kind="bss"]::before,.cell.poi-hit-active[data-poi-kind="bss"]::after{border-style:dashed;border-radius:2px}
-.cell.poi-hit-active[data-poi-kind="heritage"]{--poi-hit:#ffe08a;--poi-rotate:45deg}
-.cell.poi-hit-active[data-poi-kind="heritage"]::before,.cell.poi-hit-active[data-poi-kind="heritage"]::after{border-radius:2px}
-.cell.poi-hit-active[data-poi-kind="memory"]{--poi-hit:#ffb6df}
-.cell.poi-hit-active[data-poi-kind="memory"]::before,.cell.poi-hit-active[data-poi-kind="memory"]::after{border-style:dotted}
-.cell.poi-hit-active[data-poi-kind="industrial"]{--poi-hit:#ffad72}
-.cell.poi-hit-active[data-poi-kind="industrial"]::before,.cell.poi-hit-active[data-poi-kind="industrial"]::after{border-style:dashed;border-radius:1px}
-.cell.poi-hit-active[data-poi-kind="natural"]{--poi-hit:#7ee1cb}
-.cell.poi-hit-active[data-poi-kind="natural"]::before,.cell.poi-hit-active[data-poi-kind="natural"]::after{border-radius:43% 57% 51% 49%}
-.cell.poi-hit-active[data-poi-kind="home"]{--poi-hit:#ff9aa6}
-.cell.poi-hit-active[data-poi-kind="home"]::before,.cell.poi-hit-active[data-poi-kind="home"]::after{border-radius:35%}
-.cell.poi-hit-active[data-poi-kind="location"]{--poi-hit:#fff48b}
-.cell.poi-hit-active[data-poi-kind="location"]::before,.cell.poi-hit-active[data-poi-kind="location"]::after{border-style:dashed}
-@keyframes poiCellRing{
-  0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.32)}
-  15%{opacity:1}55%{opacity:.95}
-  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(3.2)}
-}
-@keyframes poiCellEcho{
-  0%{opacity:.95;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(.55)}
-  100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--poi-rotate)) scale(4.8)}
-}
-@media (prefers-reduced-motion:reduce){
-  .cell.poi-hit-active,.cell.poi-hit-active::before,.cell.poi-hit-active::after{animation:none!important}
-}
 
 
 /* V0.14b — proximité et relations entre lieux */
@@ -1660,4 +1586,5 @@ body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
 }
 @media(prefers-reduced-motion:reduce){.render-fx-layer>div{animation:none!important}}
 .render-fx-layer.fx-restart>div{animation-name:none!important}
-body:not(.renderer-canvas) .render-fx-layer{display:none!important}
+.canvas-compatibility{margin:12px;padding:14px;border:1px solid var(--danger);border-radius:10px;background:#211012;color:#ffe3e4;line-height:1.55}
+.canvas-compatibility strong{display:block;margin-bottom:4px;color:#ffb3b7}

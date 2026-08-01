@@ -233,17 +233,18 @@ function alignRenderedCenterToVisibleViewport(){
 
 function fitMapFrame(){
   uiShellRuntime.fitRuns++;
+  if(!CANVAS_RENDERER)return;
   const main=uiShellMain||document.querySelector("main"),surface=activeMapSurface();if(!main||!surface||!els.viewport)return;
   const compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches;
   const baseFont=compact?11:12,basePadding=compact?12:17;
   setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);
   const availableWidth=Math.max(280,main.clientWidth);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
   if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
-  const previousSignature=canvasRuntime.layoutSignature,m=CANVAS_RENDERER?syncCanvasSize():null;
-  const finalWidth=Math.ceil(m?.displayWidth||els.map.scrollWidth+2),frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
+  const previousSignature=canvasRuntime.layoutSignature,m=syncCanvasSize();
+  const finalWidth=Math.ceil(m?.displayWidth||availableWidth),frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
   setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
-  if(CANVAS_RENDERER&&state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
-  else if(CANVAS_RENDERER)syncRenderFxGeometry(m);
+  if(state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
+  else syncRenderFxGeometry(m);
   requestAnimationFrame(()=>{
     syncRenderFxGeometry(canvasRuntime.metrics);alignRenderedCenterToVisibleViewport();syncSelectionDom();
     if(pendingPoiFeedback)applyPendingPoiSelectionFeedback();
