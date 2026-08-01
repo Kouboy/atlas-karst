@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17o — Contrôleur de terrain
+
+- Extraction de la géolocalisation ponctuelle et de ses messages de permission dans un contrôleur dédié.
+- Centralisation du placement de la maison, de la saisie de coordonnées et de l’alignement cadastral dans ce même contrôleur.
+- Regroupement des ajouts et suppressions d’observations et de mémoires locales, sans modifier leur stockage existant.
+- Branchement idempotent des commandes de terrain pour éviter les doubles écouteurs lors d’une évolution du démarrage.
+- Compteurs de localisations, placements et contributions locales ajoutés au diagnostic exportable.
+- Scénario navigateur couvrant localisation simulée, maison, observation, mémoire locale et effacement de la position.
+- Réduction de `main.js` à environ 18 Ko ; l’orchestrateur ne possède plus la logique du travail de terrain.
+
 ## 0.17n — Démarrage réseau étagé
 
 - Remplacement du lancement simultané de cinq services par une file limitée à deux synchronisations concurrentes.

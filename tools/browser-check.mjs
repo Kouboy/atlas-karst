@@ -176,6 +176,52 @@ try {
     assert.equal(result.runtime.visibilityPauses,1);
   });
 
+  await withPage("contrôleur de terrain local", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.evaluate(() => {
+      Object.defineProperty(navigator,"permissions",{configurable:true,value:{query:async()=>({state:"granted"})}});
+      Object.defineProperty(navigator,"geolocation",{configurable:true,value:{
+        getCurrentPosition:(success)=>setTimeout(()=>success({
+          coords:{latitude:CONFIG.house.lat+.00003,longitude:CONFIG.house.lon-.00002,accuracy:7,altitude:null,heading:null,speed:null},
+          timestamp:Date.now()
+        }),0)
+      }});
+      document.getElementById("locateMe").click();
+    });
+    await page.waitForFunction(() => fieldworkRuntime.locationSuccesses===1&&!!state.userLocation);
+    const result=await page.evaluate(async()=>{
+      const before={observations:state.observations.length,lore:state.loreItems.length,house:{...CONFIG.house}};
+      selectGridCell(Math.floor(CONFIG.gridW/2),Math.floor(CONFIG.gridH/2),{note:"test terrain"});
+      document.getElementById("placeHouse").click();
+      document.getElementById("localName").value="Observation de terrain test";
+      document.getElementById("addLocalMarker").click();
+      document.getElementById("loreName").value="Mémoire locale test";
+      document.getElementById("loreSource").value="Scénario navigateur";
+      document.getElementById("addLoreItem").click();
+      document.getElementById("clearLocation").click();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const checks=runAtlasSelfCheck();
+      return {
+        before,
+        after:{observations:state.observations.length,lore:state.loreItems.length,house:{...CONFIG.house},userLocation:state.userLocation},
+        persisted:{house:!!localStorage.getItem("atlas-karst-house-v06"),observations:JSON.parse(localStorage.getItem("atlas-karst-observations-v06")||"[]").length,lore:JSON.parse(localStorage.getItem(LORE_KEY)||"[]").length},
+        runtime:{...fieldworkRuntime},
+        badChecks:checks.filter(check=>check.ok===false).map(check=>check.name)
+      };
+    });
+    assert.equal(result.after.userLocation,null,"la position ponctuelle n’a pas été effacée");
+    assert.equal(result.after.observations,result.before.observations+1);
+    assert.equal(result.after.lore,result.before.lore+1);
+    assert.notDeepEqual(result.after.house,result.before.house,"le repère maison n’a pas été déplacé");
+    assert.equal(result.persisted.house,true);
+    assert.equal(result.persisted.observations,result.after.observations);
+    assert.equal(result.persisted.lore,result.after.lore);
+    assert.equal(result.runtime.ready,true);assert.equal(result.runtime.bound,true);
+    assert.deepEqual({requests:result.runtime.locationRequests,successes:result.runtime.locationSuccesses,errors:result.runtime.locationErrors},{requests:1,successes:1,errors:0});
+    assert.equal(result.runtime.houseChanges,1);assert.equal(result.runtime.observationsAdded,1);assert.equal(result.runtime.loreAdded,1);
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec après travail de terrain : ${result.badChecks.join(", ")}`);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {
