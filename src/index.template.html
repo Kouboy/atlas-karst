@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atlas Karst ASCII v0.17a · sources structurées</title>
+<!-- @atlas-source-guard:start -->
+<script>
+if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
+  const target = new URL("../index.html", location.href);
+  target.search = location.search;
+  target.hash = location.hash;
+  location.replace(target.href);
+}
+</script>
+<noscript><p><a href="../index.html">Ouvrir le livrable Atlas Karst</a></p></noscript>
+<!-- @atlas-source-guard:end -->
+<style>
+/* @atlas-inline:styles */
+</style>
+</head>
+<body data-depth-band="surface">
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+<div class="app">
+<aside id="sidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-title-copy">
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17a</div>
+      <h1>ATLAS KARST ASCII</h1>
+      <div class="sub">Exploration · archive · interprétation · savoir local</div>
+      <div class="sidebar-tools">
+        <button id="collapseCards" type="button">− replier</button>
+        <button id="expandCards" type="button">＋ déployer</button>
+      </div>
+    </div>
+    <button id="sidebarClose" class="sidebar-close" type="button" title="Fermer le panneau">✕</button>
+  </div>
+
+  <section class="card" data-panel-kind="navigation">
+    <h2>Ma position</h2>
+    <div class="grid2">
+      <button id="locateMe" type="button">⌖ me localiser</button>
+      <button id="clearLocation" type="button" disabled>× masquer</button>
+    </div>
+    <label class="switch"><input id="centerOnLocation" type="checkbox" checked> Recentrer la carte sur ma position</label>
+    <div class="small" id="locationHelp">La position n’est demandée qu’au clic et n’est pas suivie en continu. Sur mobile, un fichier ouvert en <code>file://</code> peut être bloqué sans même afficher de demande ; une copie servie en HTTPS est alors nécessaire.</div>
+  </section>
+
+  <section class="card" data-panel-kind="navigation">
+    <h2>Autour de moi</h2>
+    <div class="around-controls">
+      <label class="field-label">Rayon
+        <select id="aroundRadius">
+          <option value="100">100 m</option>
+          <option value="250">250 m</option>
+          <option value="500" selected>500 m</option>
+          <option value="1000">1 km</option>
+          <option value="2000">2 km</option>
+        </select>
+      </label>
+      <button id="refreshAround" type="button">⌖ actualiser</button>
+    </div>
+    <div class="around-results">
+      <div class="around-summary" id="aroundSummary">Localise-toi pour dresser l’inventaire des lieux proches.</div>
+      <div class="around-list" id="aroundList"></div>
+    </div>
+    <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
+  </section>
+
+  <section class="card" data-panel-kind="navigation">
+    <h2>Rencontres locales</h2>
+    <label class="switch"><input id="encounterEnabled" type="checkbox" checked> Mode rencontre activé</label>
+    <div class="encounter-controls">
+      <button id="observeSurroundings" type="button" disabled>⚔ observer</button>
+      <button id="testEncounter" type="button">🧪 test</button>
+      <button id="openCodex" type="button">▣ codex</button>
+    </div>
+    <div class="encounter-summary" id="encounterStatus">Localise-toi, puis observe les alentours pour provoquer une rencontre documentaire.</div>
+    <div class="encounter-progress" aria-label="Progression du codex"><i id="encounterProgressBar"></i></div>
+    <div class="small" style="margin-top:7px">Les rencontres sont ludiques : elles signalent une espèce ou une curiosité compatible avec le milieu, jamais une observation réelle à cet endroit.</div>
+  </section>
+
+  <section class="card guided-tour-card" data-panel-kind="navigation">
+    <h2>Parcours guidés</h2>
+    <div class="guided-tour-controls">
+      <label class="field-label">Parcours
+        <select id="guidedTourSelect"><option value="">Préparation des parcours…</option></select>
+      </label>
+      <button id="guidedTourStart" type="button">▶ commencer</button>
+    </div>
+    <div class="guided-tour-intro" id="guidedTourIntro">Les parcours sont composés localement à partir des repères actuellement chargés. Ils n’ajoutent aucune donnée et signalent les limites de leurs rapprochements.</div>
+    <div class="guided-tour-panel" id="guidedTourPanel">
+      <div class="guided-tour-progress-head"><span id="guidedTourProgressText">Étape 1</span><span id="guidedTourDistance"></span></div>
+      <div class="guided-tour-track"><i id="guidedTourProgressBar"></i></div>
+      <div class="guided-tour-step" id="guidedTourStep"></div>
+      <div class="guided-tour-actions">
+        <button id="guidedTourPrev" type="button" title="Étape précédente">←</button>
+        <button id="guidedTourRecenter" type="button" title="Revenir à l’étape">◎</button>
+        <button id="guidedTourNext" type="button" title="Étape suivante">→</button>
+        <button id="guidedTourStop" class="tour-stop" type="button">■ quitter</button>
+      </div>
+    </div>
+    <div class="small" style="margin-top:7px">Les étapes dépendent des données embarquées ou synchronisées. Une proximité ou une ressemblance n’établit pas à elle seule une relation historique, hydrologique ou souterraine.</div>
+  </section>
+
+  <section class="card demo-notice" id="offlineNotice" style="display:none">
+    <strong>Mode hors ligne explicite.</strong><br>
+    La surface locale est immédiatement disponible au zoom Site. Quelques balises orange purement synthétiques servent à tester l’avatar et le brouillard de connaissance. Elles ne décrivent aucun lieu réel. Les forages BSS ne sont pas requis pour cette démonstration.
+  </section>
+
+  <section class="card">
+    <h2>Échelle géographique</h2>
+    <div class="grid4" id="zoomButtons"></div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="zoomOut">− reculer</button>
+      <button id="zoomIn">+ approcher</button>
+    </div>
+    <div class="small" id="zoomHelp" style="margin-top:8px"></div>
+  </section>
+
+  <section class="card">
+    <h2>Profondeur</h2>
+    <div class="grid2" id="depthButtons"></div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="depthUp">[ remonter</button>
+      <button id="depthDown">] descendre</button>
+    </div>
+    <div class="small depth-compliance-note" id="depthComplianceNote" style="margin-top:8px">
+      Les niveaux souterrains sont des <strong>coupes interprétatives approximatives</strong>. Sauf profondeur explicitement fournie par une source, ≈ −3 m, −8 m, −14 m, −22 m et −35 m ne sont pas des mesures locales.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Couches</h2>
+    <div class="render-mode-panel" role="group" aria-label="Style de rendu de la carte">
+      <button id="renderModeSymbolic" type="button" aria-pressed="true">▰ symbolique</button>
+      <button id="renderModeAscii" type="button" aria-pressed="false">⌁ ASCII</button>
+    </div>
+    <div class="render-mode-note" id="renderModeHelp">Le mode symbolique couvre maintenant la surface et les coupes souterraines. Les volumes gardent une géométrie commune entre profondeurs ; l’ASCII reste disponible comme lecture alternative.</div>
+    <label class="switch"><input id="layerSurface" type="checkbox" checked> Surface / fantôme de surface</label>
+    <label class="switch"><input id="layerRelief" type="checkbox" checked> Relief et courbes de niveau</label>
+    <label class="switch"><input id="layerCadastreBuildings" type="checkbox" checked> Bâtiments cadastraux</label>
+    <label class="switch"><input id="layerParcels" type="checkbox"> Limites de parcelles au zoom proche</label>
+    <label class="switch"><input id="layerBss" type="checkbox" checked> Forages et ouvrages BSS</label>
+    <label class="switch"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
+    <label class="switch"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
+    <label class="switch"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
+    <label class="switch"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
+    <label class="switch"><input id="layerCavities" type="checkbox" checked> Repères de cavités documentés</label>
+    <label class="switch"><input id="layerHypothesis" type="checkbox" checked> Volumes souterrains extrapolés · coupes cohérentes</label>
+    <label class="switch"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée · confiance très faible</label>
+    <label class="switch"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
+    <label class="switch"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
+    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Animations de l’interface et des points d’intérêt</label>
+    <label class="switch">Scénario
+      <select id="scenario">
+        <option value="prudent">prudent</option>
+        <option value="median" selected>médian</option>
+        <option value="extensive">extensif</option>
+      </select>
+    </label>
+  </section>
+
+  <section class="card">
+    <h2>Navigation géographique</h2>
+    <div class="pan-grid" aria-label="Déplacer la carte">
+      <span></span><button type="button" data-pan-x="0" data-pan-y="1" title="Déplacer vers le nord">↑ N</button><span></span>
+      <button type="button" data-pan-x="-1" data-pan-y="0" title="Déplacer vers l’ouest">← O</button><button type="button" class="pan-home" id="homeBtn" title="Revenir à la maison">⌂</button><button type="button" data-pan-x="1" data-pan-y="0" title="Déplacer vers l’est">E →</button>
+      <span></span><button type="button" data-pan-x="0" data-pan-y="-1" title="Déplacer vers le sud">↓ S</button><span></span>
+    </div>
+    <div class="grid2">
+      <button id="recenterSelected">◎ centrer la case</button>
+      <button id="exportBtn">⇩ exporter .txt</button>
+    </div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="placeHouse">⌖ maison sur la sélection</button>
+      <button id="resetHouse">↶ coordonnées connues</button>
+    </div>
+    <div class="grid2" style="margin-top:7px">
+      <label class="field-label">Latitude<input id="houseLat" type="number" step="0.000001"></label>
+      <label class="field-label">Longitude<input id="houseLon" type="number" step="0.000001"></label>
+    </div>
+    <button id="applyHouseCoords" style="width:100%;margin-top:7px">Appliquer ces coordonnées</button>
+    <div class="grid2" style="margin-top:7px">
+      <button id="geocodeHouse">⌖ chercher l’adresse</button>
+      <button id="snapHouseBuilding">▣ bâtiment cadastral</button>
+    </div>
+    <button id="openHistory" style="width:100%;margin-top:7px">◫ comparer les photos aériennes anciennes</button>
+    <div class="small" id="houseHelp" style="margin-top:8px">Clique n’importe quelle case pour faire apparaître le cadre jaune, puis utilise <strong>⌖ maison sur la sélection</strong>. Les champs numériques restent disponibles si la souris boude.</div>
+    <div class="small" style="margin-top:8px"><strong>Navigation :</strong> immobiliser brièvement le pointeur sur un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
+  </section>
+
+  <section class="card">
+    <h2>Mémoire de l’Atlas</h2>
+    <div class="snapshot-summary" id="snapshotStatus">
+      <span>Préparation de l’inventaire embarqué…</span>
+    </div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="exportSnapshotJson" type="button">⇩ sauvegarde .atlas.json</button>
+      <button id="importSnapshotJson" type="button">＋ charger une sauvegarde</button>
+    </div>
+    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".json,.atlas.json,application/json">
+    <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
+    <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">↶ oublier la sauvegarde locale au prochain démarrage</button>
+    <div class="snapshot-note" id="snapshotHelp">Le JSON reste réimportable dans les versions futures. L’HTML autonome contient l’état courant et démarre sans requête réseau, sauf si tu demandes explicitement une actualisation.</div>
+  </section>
+
+  <section class="card">
+    <h2>Aller à une cavité</h2>
+    <select id="cavitySelect"><option value="">Chargement des coordonnées…</option></select>
+    <div class="small" id="cavityHelp" style="margin-top:7px">La recherche couvre désormais toute l’emprise navigable, y compris les communes voisines. Une position connue ne constitue pas un plan de galeries.</div>
+  </section>
+
+  <section class="card">
+    <h2>Observations de terrain</h2>
+    <div class="grid2">
+      <label class="field-label">Forme
+        <select id="observationMode">
+          <option value="point">point / entrée</option>
+          <option value="zone">zone approximative</option>
+          <option value="sight">visée depuis la maison</option>
+        </select>
+      </label>
+      <label class="field-label">Confiance
+        <select id="observationConfidence">
+          <option value="low">faible</option>
+          <option value="med" selected>moyenne</option>
+          <option value="high">forte</option>
+        </select>
+      </label>
+    </div>
+    <label class="field-label" style="margin-top:7px">Nature
+      <select id="localType">
+        <option value="A>">A&gt; entrée artificielle observée</option>
+        <option value="N>">N&gt; entrée naturelle observée</option>
+        <option value="Av">Av puits / ouverture verticale artificielle</option>
+        <option value="Nv">Nv ouverture verticale naturelle</option>
+        <option value="?o">?o origine indéterminée</option>
+      </select>
+    </label>
+    <div class="grid2" style="margin-top:7px">
+      <label class="field-label">Rayon de zone (m)<input id="observationRadius" type="number" value="80" min="10" max="1000" step="10"></label>
+      <label class="field-label">Saison / date<input id="observationSeason" type="text" placeholder="hiver 2026"></label>
+    </div>
+    <label class="field-label" style="margin-top:7px">Nom ou note<input id="localName" type="text" placeholder="ex. plusieurs ouvertures visibles sans feuillage"></label>
+    <div class="grid2" style="margin-top:7px">
+      <button id="addLocalMarker">＋ enregistrer l’observation</button>
+      <button id="removeLocalMarker">✕ supprimer l’observation</button>
+    </div>
+    <div class="small" id="localHelp" style="margin-top:8px">Sélectionne une case. Une visée dessine une direction depuis la maison ; une zone exprime une localisation imprécise sans inventer un point exact.</div>
+  </section>
+
+  <section class="card">
+    <h2>Cartofriches · Cerema</h2>
+    <div class="grid2">
+      <div>
+        <div class="carto-count" id="cartofrichesCount">0</div>
+        <div class="small">sites chargés dans l’emprise de l’Atlas</div>
+      </div>
+      <div class="small" id="cartofrichesSummary">Aucune donnée locale chargée.</div>
+    </div>
+    <div class="grid2" style="margin-top:9px">
+      <button id="syncCartofriches">↻ synchroniser l’API</button>
+      <button id="downloadCartofriches">⇩ télécharger le CSV</button>
+    </div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="importCartofriches">＋ importer le CSV</button>
+      <button id="clearCartofriches">✕ vider la couche</button>
+    </div>
+    <input class="file-input-hidden" id="cartofrichesFile" type="file" accept=".csv,text/csv">
+    <label class="switch"><input id="cartofrichesReconverted" type="checkbox"> Inclure aussi les sites déjà reconvertis</label>
+    <div class="small" id="cartofrichesHelp" style="margin-top:8px">
+      Le fichier de juin 2026 contient des coordonnées dont l’ordre peut différer selon le champ. L’importeur teste désormais les deux orientations, privilégie une position cohérente avec la France et le code INSEE, puis signale chaque inversion corrigée.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Patrimoine &amp; curiosités synchronisés</h2>
+    <div class="grid2">
+      <div>
+        <div class="carto-count" id="heritageCount">0</div>
+        <div class="small">lieux documentés dans l’emprise de l’Atlas</div>
+      </div>
+      <div class="small" id="heritageSummary">Aucune source patrimoniale synchronisée.</div>
+    </div>
+    <div class="heritage-sources">
+      <label><input id="heritageMonuments" type="checkbox" checked> Monuments historiques</label>
+      <label><input id="heritageGardens" type="checkbox" checked> Jardins remarquables</label>
+      <label><input id="heritageHomes" type="checkbox" checked> Maisons des Illustres</label>
+      <label><input id="heritageMuseums" type="checkbox" checked> Musées de France</label>
+      <label><input id="heritageWikipedia" type="checkbox" checked> Wikipédia géolocalisée</label>
+    </div>
+    <div class="grid2" style="margin-top:9px">
+      <button id="syncCultureHeritage">↻ ministère de la Culture</button>
+      <button id="syncWikipediaHeritage">↻ curiosités Wikipédia</button>
+    </div>
+    <button id="clearHeritage" style="width:100%;margin-top:7px">✕ vider la couche synchronisée</button>
+    <div class="small" id="heritageHelp" style="margin-top:8px">
+      Les sources officielles apportent les protections et labels culturels. Chaque catalogue du ministère utilise désormais son propre adaptateur API v2.1 ; Wikipédia complète avec des lieux possédant une page géolocalisée et fournit souvent un court récit. Les résultats sont mémorisés localement et intégrés aux exports autonomes.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Repères patrimoine &amp; mystère</h2>
+    <div class="grid2">
+      <label class="field-label">Catégorie
+        <select id="loreCategory">
+          <option value="historic">HI bâtiment historique / patrimoine</option>
+          <option value="ruin">RU maison en ruine / ruines</option>
+          <option value="friche">FR friche industrielle / artisanale</option>
+          <option value="abandoned">AB urbanisme abandonné / infrastructure oubliée</option>
+          <option value="anecdote">AN anecdote locale / récit</option>
+          <option value="mystery">MY lieu mystérieux / ambiance étrange</option>
+          <option value="view">VP curiosité paysagère / point de vue</option>
+        </select>
+      </label>
+      <label class="field-label">Période / époque<input id="lorePeriod" type="text" placeholder="XIXe s., années 1950…"></label>
+    </div>
+    <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
+    <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
+    <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
+    <div class="grid2" style="margin-top:7px">
+      <button id="addLoreItem">＋ enregistrer le repère</button>
+      <button id="removeLoreItem">✕ supprimer le repère</button>
+    </div>
+    <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
+  </section>
+
+  <section class="card">
+    <h2>Forages BSS &amp; piézomètres</h2>
+    <div class="grid2">
+      <div>
+        <div class="carto-count" id="bssCount">0</div>
+        <div class="small">ouvrages chargés localement</div>
+      </div>
+      <div class="small" id="bssSummary">Couche facultative, actuellement vide.</div>
+    </div>
+    <div class="grid2" style="margin-top:9px">
+      <button id="syncPiezo">≈ charger Hub’Eau</button>
+      <button id="openBssDownload">⇩ CSV BSS Charente</button>
+    </div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="importBss">＋ importer le CSV</button>
+      <button id="clearBss">✕ vider la couche</button>
+    </div>
+    <input class="file-input-hidden" id="bssFile" type="file" accept=".csv,text/csv">
+    <div class="small" id="bssHelp" style="margin-top:8px">
+      736 ouvrages issus du CSV BSS Charente sont déjà embarqués. Hub’Eau peut enrichir certains points avec leur statut piézométrique ; l’import CSV reste disponible pour une future mise à jour.
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Données</h2>
+    <div class="data-status">
+      <div class="status-line"><span>Surface cartographique</span><strong id="osmStatus" class="pending">chargement</strong></div>
+      <div class="status-line"><span>Adresse officielle</span><strong id="addressStatus" class="pending">chargement</strong></div>
+      <div class="status-line"><span>Cadastre</span><strong id="cadastreStatus" class="pending">chargement</strong></div>
+      <div class="status-line"><span>Cavités</span><strong id="cavityStatus" class="pending">chargement</strong></div>
+      <div class="status-line"><span>Cartofriches</span><strong id="cartofrichesStatus" class="pending">à charger</strong></div>
+      <div class="status-line"><span>Patrimoine & curiosités</span><strong id="heritageStatus" class="pending">à synchroniser</strong></div>
+      <div class="status-line"><span>BSS / piézomètres</span><strong id="bssStatus" class="pending">non chargé · optionnel</strong></div>
+      <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
+    </div>
+    <div class="progress"><span id="loadProgress"></span></div>
+    <div class="grid2" style="margin-top:8px">
+      <button id="syncOsm" type="button">↻ synchroniser OSM</button>
+      <button id="testOsm" type="button">⌁ tester les serveurs</button>
+    </div>
+    <div class="grid2" style="margin-top:7px">
+      <button id="openOsmQuery" type="button">↗ requête Overpass</button>
+      <button id="importOsmJson" type="button">＋ importer JSON OSM</button>
+    </div>
+    <input class="file-input-hidden" id="osmFile" type="file" accept=".json,application/json">
+    <div class="small" id="osmHelp" style="margin-top:8px">OSM est chargé par petites fenêtres autour de la vue. Pendant l’attente, un chrono et l’étape active sont affichés ; le même bouton permet d’annuler sans perdre les données déjà reçues.</div>
+    <button id="retryData" style="width:100%;margin-top:8px">↻ recharger toutes les données</button>
+    <div class="source-note" id="sourceNote" style="margin-top:8px">Les services en ligne sont facultatifs. Une copie ouverte en HTTPS peut synchroniser directement les sources ; une page locale <code>file://</code> peut être limitée par les politiques CORS de certains serveurs.</div>
+  </section>
+
+  <section class="card debug-only" id="debugPanel">
+    <h2>Diagnostic</h2>
+    <div class="small">Activé par <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span>. Les mesures restent locales.</div>
+    <div class="debug-kpis">
+      <div class="debug-kpi"><span>Dernier rendu</span><strong id="debugRenderTime">—</strong></div>
+      <div class="debug-kpi"><span>Moyenne</span><strong id="debugRenderAverage">—</strong></div>
+      <div class="debug-kpi"><span>Grille</span><strong id="debugGrid">—</strong></div>
+      <div class="debug-kpi"><span>Points visibles</span><strong id="debugPoiCount">—</strong></div>
+      <div class="debug-kpi"><span>Cache local</span><strong id="debugStorage">—</strong></div>
+      <div class="debug-kpi"><span>Pointeur</span><strong id="debugPointer">—</strong></div>
+    </div>
+    <div class="grid2">
+      <button id="runSelfCheck" type="button">✓ lancer les contrôles</button>
+      <button id="exportDebugReport" type="button">⇩ exporter le rapport</button>
+    </div>
+    <div id="debugChecks" class="debug-log">Aucun contrôle lancé.</div>
+    <div id="debugErrors" class="debug-log" style="display:none"></div>
+  </section>
+
+  <section class="card">
+    <h2>Légende lisible</h2>
+    <div class="legend-section" style="border-top:0;margin-top:0;padding-top:0">
+      <div class="legend-title">Surface</div>
+      <div class="legend">
+        <div><code>T</code> bois</div><div><code>.</code> champ</div>
+        <div><code>,</code> prairie</div><div><code>≈</code> eau</div>
+        <div><code>═</code> axe majeur</div><div><code>─</code> voie locale</div>
+        <div><code>·</code> chemin</div><div><code>█</code> bâtiment cadastral</div>
+        <div><code>┄</code> limite de parcelle</div><div><code>B•</code> forage / ouvrage BSS</div><div><code>P≈</code> piézomètre Hub’Eau</div>
+        <div><code>q</code> carrière à ciel ouvert</div><div><code>░</code> bâti / terrain dégagé</div>
+      </div>
+    </div>
+    <div class="legend-section">
+      <div class="legend-title">Cavités et accès documentés</div>
+      <div class="legend">
+        <div><code>No</code> naturelle, forme inconnue</div><div><code>Ns</code> source / résurgence</div>
+        <div><code>N&gt;</code> accès naturel horizontal attesté</div><div><code>Nv</code> accès naturel vertical attesté</div>
+        <div><code>A#</code> carrière souterraine</div><div><code>Av</code> puits anthropique</div>
+        <div><code>A=</code> galerie / souterrain</div><div><code>O=</code> ouvrage civil</div>
+        <div class="wide"><code>?o</code> type ou morphologie insuffisamment documenté</div><div class="wide"><code>A&gt; / N&gt;</code> entrée observée localement, non validée</div>
+      </div>
+    </div>
+    <div class="legend-section">
+      <div class="legend-title">Observations locales</div>
+      <div class="legend">
+        <div><code>◎</code> zone approximative</div><div><code>▷</code> cible d’une visée</div>
+        <div><code>· · ·</code> direction observée</div><div><code>A&gt;/N&gt;</code> entrée ponctuelle</div>
+      </div>
+    </div>
+    <div class="legend-section">
+      <div class="legend-title">Cartofriches · source officielle</div>
+      <div class="legend">
+        <div><code>Fi</code> friche industrielle</div><div><code>Fc</code> commerciale</div>
+        <div><code>Fh</code> habitat</div><div><code>Ft</code> tertiaire</div>
+        <div><code>Fe</code> équipement / service public</div><div><code>Ff</code> ferroviaire</div>
+        <div><code>Fm</code> militaire</div><div><code>F?</code> type non précisé</div>
+        <div class="wide">orange : sans projet · jaune : avec projet · brun : potentielle · gris : reconvertie</div>
+      </div>
+    </div>
+    <div class="legend-section">
+      <div class="legend-title">Repères patrimoine &amp; mystère</div>
+      <div class="legend">
+        <div><code>HI</code> bâtiment historique / patrimoine</div><div><code>RU</code> ruine / maison ruinée</div>
+        <div><code>FR</code> friche industrielle / artisanale</div><div><code>AB</code> urbanisme abandonné / ouvrage oublié</div>
+        <div><code>AN</code> anecdote locale / récit</div><div><code>MY</code> lieu mystérieux / ambiance étrange</div>
+        <div><code>VP</code> curiosité paysagère / point de vue</div><div class="wide">repères ajoutés localement dans le navigateur, sans prétention d’inventaire officiel</div>
+      </div>
+    </div>
+    <div class="legend-section">
+      <div class="legend-title">Sous-sol extrapolé</div>
+      <div class="legend">
+        <div><code>▓</code> plausible forte</div><div><code>▒</code> plausible moyenne</div>
+        <div><code>░</code> plausible faible</div><div><code>O</code> pilier supposé</div>
+        <div><code>≈</code> eau possible</div><div><code>?</code> branche très incertaine</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card warning"><strong>Lecture prudente :</strong> le cadastre améliore le placement du bâti mais ne fournit ni propriétaire ni diagnostic de stabilité. Le relief reste un modèle global densifié, pas encore du LiDAR HD. Les forages BSS sont des points documentaires, pas des preuves de galerie. Les profondeurs souterraines précédées de ≈ sont des tranches de visualisation ; les volumes affichés sont des projections cohérentes entre niveaux, pas des plans levés ni des profondeurs attestées.</section>
+</aside>
+
+<main>
+  <div class="statusbar map-bound">
+    <button id="sidebarToggle" class="toolbar-button sidebar-toggle" type="button" title="Afficher ou masquer le panneau">☰ panneau</button>
+    <button id="infoToggle" class="toolbar-button info-toggle" type="button" title="Afficher ou masquer les informations">ⓘ infos</button>
+    <button id="audioToggle" class="toolbar-button audio-toggle" type="button" aria-pressed="true" title="Activer ou couper les petits effets sonores">♪ sons</button>
+    <button id="debugToggle" class="toolbar-button debug-only" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
+    <div class="badge">position <strong id="locationBadge">non localisée</strong></div>
+    <div class="badge">échelle <strong id="zoomLabel">commune</strong></div>
+    <div class="badge">niveau <strong id="depthLabel">surface</strong></div>
+    <div class="badge secondary">cellule <strong id="cellSizeLabel">≈ 50 m</strong></div>
+    <div class="badge secondary">centre <strong id="centerLabel">45.59805 / 0.14719</strong></div>
+    <div class="badge warn" id="truthBadge">surface vectorielle en chargement</div>
+  </div>
+
+  <div class="terminal-wrap map-bound" id="viewport">
+    <div class="map-top-overlay">
+      <div class="north">N ↑</div>
+      <div class="map-actions" aria-label="Commandes rapides de la carte">
+        <button id="mapDepthUp" type="button" title="Remonter d’un niveau" aria-label="Remonter d’un niveau">^</button>
+        <button id="mapZoomOut" type="button" title="Reculer">−</button>
+        <button id="mapHome" type="button" title="Revenir à la maison">⌂</button>
+        <button id="mapLocate" type="button" title="Afficher ma position" aria-label="Afficher ma position">⌖</button>
+        <button id="mapZoomIn" type="button" title="Approcher">＋</button>
+        <button id="mapDepthDown" type="button" title="Descendre d’un niveau" aria-label="Descendre d’un niveau">v</button>
+      </div>
+    </div>
+    <pre id="map" aria-label="Carte ASCII interactive, déplaçable par glisser-déposer"></pre>
+    <canvas id="mapCanvas" aria-label="Carte interactive rendue sur Canvas" aria-describedby="mapTip" role="group" tabindex="0">Carte interactive : utilisez les flèches pour vous déplacer, plus et moins pour changer d’échelle.</canvas>
+    <canvas id="zoomTransitionCanvas" class="zoom-transition-canvas" aria-hidden="true"></canvas>
+    <div class="render-fx-layer" id="renderFxLayer" aria-hidden="true">
+      <div class="fx-vector-grid"></div>
+      <div class="fx-vector-bloom"></div>
+      <div class="fx-vector-sweep"></div>
+      <div class="fx-ascii-mask"></div>
+      <div class="fx-ascii-grain"></div>
+      <div class="fx-ascii-refresh"></div>
+      <div class="fx-instrument-frame"></div>
+    </div>
+    <div class="canvas-cell-marker" id="canvasHoverMarker" aria-hidden="true"></div>
+    <div class="canvas-cell-marker" id="canvasSelectionMarker" aria-hidden="true"></div>
+    <div class="canvas-cell-marker" id="canvasPoiMarker" aria-hidden="true"></div>
+    <div class="canvas-cell-marker" id="tourMarker" aria-hidden="true" data-step="1"></div>
+    <svg class="relation-overlay" id="relationOverlay" aria-hidden="true">
+      <line id="relationLine" x1="0" y1="0" x2="0" y2="0"></line>
+      <circle id="relationStart" cx="0" cy="0" r="5"></circle>
+      <circle id="relationEnd" cx="0" cy="0" r="5"></circle>
+      <text id="relationLabel" x="0" y="0"></text>
+    </svg>
+    <div class="world-boundary-frame" id="worldBoundaryFrame" aria-hidden="true">
+      <div class="world-boundary-side edge-north"><span>Fin de l’Atlas · Terra incognita</span></div>
+      <div class="world-boundary-side edge-east"><span>Terra incognita</span></div>
+      <div class="world-boundary-side edge-south"><span>Fin de l’Atlas · Terra incognita</span></div>
+      <div class="world-boundary-side edge-west"><span>Terra incognita</span></div>
+    </div>
+    <div class="depth-transition" id="depthTransition" aria-hidden="true"></div>
+    <div class="poi-selection-fx" id="poiSelectionFx" aria-hidden="true"></div>
+    <div class="selection-assist" id="selectionAssist" hidden aria-label="Ajuster précisément la cellule sélectionnée">
+      <button id="selectionAssistClose" class="selection-assist-close" type="button" title="Valider et fermer" aria-label="Valider la sélection et fermer le panneau">✓</button>
+      <div class="selection-loupe" id="selectionLoupe" aria-hidden="true"></div>
+      <div class="selection-nudge">
+        <span></span><button id="selectionUp" type="button" aria-label="Sélectionner la cellule au nord">↑</button><span></span>
+        <button id="selectionLeft" type="button" aria-label="Sélectionner la cellule à l’ouest">←</button><button id="selectionCenter" class="selection-center" type="button" aria-label="Centrer la carte sur la sélection">◎</button><button id="selectionRight" type="button" aria-label="Sélectionner la cellule à l’est">→</button>
+        <span></span><button id="selectionDown" type="button" aria-label="Sélectionner la cellule au sud">↓</button><span></span>
+      </div>
+      <div class="selection-assist-text" id="selectionAssistText">Ajustement case par case</div>
+    </div>
+    <div class="map-tip" id="mapTip">pause 0,3 s = détail · clic/toucher = sélectionner · glisser = déplacement · ⌖ = position</div>
+  </div>
+  <div class="hover-cell-indicator" id="hoverCellIndicator" aria-hidden="true"></div>
+  <div class="hover-tip" id="hoverTip" role="tooltip"></div>
+
+  <section class="card readout map-bound" id="readout" data-sheet-state="peek">
+    <button class="readout-sheet-handle" id="readoutSheetHandle" type="button" aria-label="Déployer ou réduire la fiche de cellule">
+      <span class="readout-sheet-grip" aria-hidden="true"></span>
+      <span class="readout-sheet-label" id="readoutSheetLabel">Mode d’emploi</span>
+      <span class="readout-sheet-chevron" aria-hidden="true">⌃</span>
+    </button>
+    <div class="readout-body" id="readoutBody">
+      <strong>Mode d’emploi :</strong> immobilise brièvement le pointeur sur un symbole pour sa fiche courte, ou touche une case pour ouvrir sa lecture. Le zoom sémantique révèle progressivement les détails. La fiche basse possède désormais deux états : bandeau replié ou lecture ouverte.
+    </div>
+  </section>
+
+  <div class="source-note map-bound" id="mainAttribution">Attribution : © contributeurs OpenStreetMap ; Cadastre Etalab / DGFiP ; Géoplateforme / BAN ; BRGM InfoTerre et BSS ; inventaire BDCavités/Géorisques ; Cartofriches / Cerema, Licence Ouverte 2.0 ; Ministère de la Culture / POP et labels nationaux, Licence Ouverte 2.0 (API tabulaire data.gouv.fr prioritaire, portails Culture en repli) ; Wikipédia, CC BY-SA ; relief IGN RGE ALTI, avec Open‑Meteo / Copernicus en solution de repli. Le repère de maison et les observations locales restent privés dans le navigateur tant que le fichier n’est pas publié avec ces informations.</div>
+</main>
+</div>
+
+<div class="encounter-overlay" id="encounterOverlay" aria-hidden="true">
+  <section class="dq-window" id="encounterWindow" role="dialog" aria-modal="true" aria-labelledby="encounterDialogTitle">
+    <div class="dq-topbar"><span id="encounterDialogTitle">Rencontre locale</span><button class="dq-close" id="encounterClose" type="button" data-audio-quiet>✕</button></div>
+    <div class="dq-body" id="encounterBody"></div>
+  </section>
+</div>
+<script type="application/json" id="atlas-snapshot">{}</script>
+<script>
+/* @atlas-inline:scripts */
+</script>
+</body>
+</html>

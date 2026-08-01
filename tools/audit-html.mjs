@@ -5,6 +5,10 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
+const sourceScripts = ["runtime.js", "debug.js", "main.js"].map((name) => ({
+  name,
+  source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
+}));
 const failures = [];
 
 function check(label, test) {
@@ -27,6 +31,7 @@ const missingRegisteredIds = registeredIds.filter((id) => !ids.includes(id));
 const classicScripts = [...html.matchAll(/<script(?![^>]*type="application\/json")[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
 
 check("version visible cohérente", () => Boolean(atlasVersion) && html.includes(`v${atlasVersion}`) && html.includes(`const APP_VERSION = "${atlasVersion}"`));
+check("livrable autonome généré", () => html.includes("Fichier généré par npm run build") && !html.includes("@atlas-inline:"));
 check("identifiants HTML uniques", () => duplicateIds.length === 0);
 check("fonctions nommées uniques", () => duplicateFunctions.length === 0);
 check("registre des éléments détecté", () => Boolean(registeredBlock));
@@ -58,6 +63,16 @@ for (const [index, source] of classicScripts.entries()) {
   } catch (error) {
     failures.push(`syntaxe du script ${index + 1}: ${error.message}`);
     console.error(`× syntaxe du script ${index + 1}`);
+  }
+}
+
+for (const { name, source } of sourceScripts) {
+  try {
+    new vm.Script(source, { filename: `src/app/${name}` });
+    console.log(`✓ syntaxe de la source ${name}`);
+  } catch (error) {
+    failures.push(`syntaxe de la source ${name}: ${error.message}`);
+    console.error(`× syntaxe de la source ${name}`);
   }
 }
 

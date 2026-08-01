@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17a — Sources structurées
+
+- Séparation du gabarit HTML, des styles et du JavaScript applicatif dans `src/`.
+- Isolation du diagnostic comme premier module logique distinct du moteur historique.
+- Ajout d’une reconstruction déterministe qui conserve `index.html` comme livrable autonome.
+- Blocage des contrôles si le fichier autonome n’est plus synchronisé avec ses sources.
+- Version des tests navigateur dérivée automatiquement des métadonnées du projet.
+- Vérification navigateur de l’ouverture directe du livrable en `file://`.
+- Redirection automatique du gabarit de source vers le livrable lorsqu’il est ouvert par erreur.
+
 ## 0.16s — Filet de sécurité automatisé
 
 - Ajout de tests navigateur reproductibles pour les rendus symbolique, ASCII et DOM.

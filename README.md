@@ -37,7 +37,13 @@ Les données personnelles ajoutées par l’utilisateur restent dans son navigat
 
 ## Développement
 
-Le livrable principal demeure un fichier HTML autonome. Aucun paquet tiers n’est requis pour les contrôles du dépôt.
+Le livrable principal demeure un fichier HTML autonome. Les sources maintenables vivent désormais dans `src/` et `index.html` est reconstruit à partir de celles-ci :
+
+```text
+npm run build
+```
+
+Le dépôt conserve le fichier généré afin qu’il puisse toujours être ouvert directement, sans installation ni serveur. Il faut ouvrir [`index.html`](index.html), jamais le gabarit `src/index.template.html` ; celui-ci redirige désormais vers le bon fichier s’il est ouvert par erreur. Les responsabilités des fichiers sources sont détaillées dans [`src/README.md`](src/README.md).
 
 ```text
 npm test
@@ -45,7 +51,9 @@ npm test
 
 Cette commande vérifie notamment :
 
+- que `index.html` correspond exactement aux sources ;
 - la syntaxe JavaScript embarquée ;
+- la syntaxe de chaque module de source ;
 - l’unicité des identifiants HTML ;
 - l’absence de fonctions nommées dupliquées ;
 - la cohérence du registre central des éléments d’interface ;
@@ -58,13 +66,15 @@ npx playwright install chromium
 npm run test:browser
 ```
 
+Ils vérifient également l’ouverture directe du livrable autonome en `file://`.
+
 Pour lancer tous les contrôles locaux :
 
 ```text
 npm run test:all
 ```
 
-GitHub Actions répète ces contrôles sur chaque pull request et sur chaque modification de `main`. En cas d’échec navigateur, le rapport conserve les éléments utiles au diagnostic.
+GitHub Actions répète ces contrôles sur chaque pull request et sur chaque modification de `main`. En cas d’échec navigateur, une capture ciblée est conservée pour le diagnostic.
 
 Le moteur Canvas est le mode normal. Le moteur DOM reste un filet de sécurité pendant la phase de stabilisation et pourra être retiré après comparaison fonctionnelle.
 
