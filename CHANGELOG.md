@@ -2,6 +2,14 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17e — Moteur cartographique mesuré
+
+- Extraction de la construction de grille, du relief et des couches de surface ou souterraines dans `map-engine.js`.
+- Déplacement du moteur DOM de secours dans le même module cartographique.
+- Mesure séparée de la mise en page, de l’indexation, de la grille, des couches, de la sortie et de l’interface.
+- Affichage des principaux temps CPU dans le diagnostic et ajout au rapport exporté.
+- Aucun minuteur périodique ni travail supplémentaire lorsque l’Atlas est au repos.
+
 ## 0.17d — Services applicatifs isolés
 
 - Regroupement des accès OSM, cadastre, patrimoine, relief et BSS dans `data-services.js`.

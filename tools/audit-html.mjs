@@ -5,7 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -42,6 +42,7 @@ check("diagnostic entièrement enregistré", () => [
   "debugToggle",
   "debugRenderTime",
   "debugRenderAverage",
+  "debugRenderPhases",
   "debugGrid",
   "debugPoiCount",
   "debugStorage",
@@ -78,6 +79,13 @@ check("services applicatifs ordonnés", () =>
   sourceByName["experiences.js"].includes("function startGuidedTour") &&
   !sourceByName["main.js"].includes("const retroAudio") &&
   !sourceByName["main.js"].includes("function startLocalEncounter")
+);
+check("moteur cartographique isolé et mesuré", () =>
+  sourceByName["map-engine.js"].includes("function composeMapGrid") &&
+  sourceByName["map-engine.js"].includes("function renderDomMap") &&
+  sourceByName["main.js"].includes("debugState.lastRenderPhases=") &&
+  !sourceByName["main.js"].includes("function renderSurface") &&
+  !sourceByName["main.js"].includes("function renderUndergroundBase")
 );
 check("révision OSM propagée", () => html.includes('markMapDataRevision("osm")'));
 check("dernière vue OSM reprise", () => html.includes("osmEnsurePending") && html.includes("scheduleOsmEnsure(0)"));
