@@ -96,15 +96,25 @@ try {
         const style = getComputedStyle(element);
         return style.display !== "none" && style.opacity !== "0" && style.animationName !== "none" && style.animationPlayState === "running";
       }).map((element) => element.className);
+      const visibleAnimations = document.getAnimations().filter((animation) => {
+        if(animation.playState!=="running")return false;
+        const target=animation.effect?.target;
+        if(!(target instanceof Element))return false;
+        const rect=target.getBoundingClientRect(),style=getComputedStyle(target);
+        return style.display!=="none"&&style.visibility!=="hidden"&&rect.width>0&&rect.height>0;
+      }).map((animation)=>`${animation.animationName||"transition"}:${animation.effect?.target?.id||animation.effect?.target?.className||"élément"}`);
       const renderCount = Number.parseInt(document.getElementById("debugRenderAverage")?.textContent?.match(/(\d+) rendus/)?.[1] || "0", 10);
-      return { motionState: fx.dataset.motionState, running, renderCount, largeScreenDpr: adaptiveCanvasDpr(3200, 2000, false) };
+      return { motionState: fx.dataset.motionState, running, visibleAnimations, renderCount, largeScreenDpr: adaptiveCanvasDpr(3200, 2000, false) };
     });
     assert.equal(idle.motionState, "idle");
     assert.deepEqual(idle.running, [], `animations encore actives au repos : ${idle.running.join(", ")}`);
+    assert.deepEqual(idle.visibleAnimations, [], `animations visibles encore actives au repos : ${idle.visibleAnimations.join(", ")}`);
     assert.ok(idle.largeScreenDpr <= 1.12, `DPR grand écran trop élevé : ${idle.largeScreenDpr}`);
     await page.waitForTimeout(600);
     const renderCountAfter = await page.evaluate(() => Number.parseInt(document.getElementById("debugRenderAverage")?.textContent?.match(/(\d+) rendus/)?.[1] || "0", 10));
     assert.equal(renderCountAfter, idle.renderCount, "nouveau rendu JavaScript pendant le repos");
+    await page.locator("#ambientMotion").uncheck();
+    assert.ok(await page.evaluate(() => document.body.classList.contains("motion-disabled")),"la préférence d’animation ne gouverne pas l’interface");
   });
 
   await withPage("rafales de données regroupées", { width: 1280, height: 720 }, async (page) => {

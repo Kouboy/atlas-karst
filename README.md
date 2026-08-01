@@ -75,7 +75,7 @@ npm run test:all
 
 GitHub Actions répète ces contrôles sur chaque pull request et sur chaque modification de `main`. En cas d’échec navigateur, une capture ciblée est conservée pour le diagnostic.
 
-Les effets CRT animés ne tournent plus indéfiniment : seule une légère respiration s’active brièvement après un rendu ou une interaction, puis passe au repos. Les balayages lumineux ont été supprimés. La case « Animations de l’interface et des points d’intérêt » permet toujours de désactiver complètement les animations restantes.
+Les effets CRT animés ne tournent plus indéfiniment : seule une légère respiration s’active brièvement après un rendu ou une interaction, puis passe au repos. Les anciennes générations de balayages ont été retirées de la feuille de style. La case « Animations de l’interface et des points d’intérêt » désactive également les marqueurs, chargements et ornements documentaires animés restants.
 
 Canvas est désormais l’unique moteur cartographique : les modes symbolique et ASCII partagent ainsi exactement la même géométrie, les mêmes interactions et le même pipeline d’effets. Si Canvas n’est pas disponible, l’application affiche une incompatibilité explicite au lieu de proposer un rendu partiel trompeur. Les anciens liens contenant `?renderer=dom` restent ouvrables et utilisent simplement Canvas.
 

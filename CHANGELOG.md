@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17m — Peau visuelle consolidée
+
+- Fusion de cinq générations successives de styles cartographiques en une seule définition finale pour chaque mode.
+- Suppression de huit anciennes animations de balayage, scintillement et dérive qui restaient déclarées derrière des pseudo-calques masqués.
+- Conservation de l’apparence finale symbolique et ASCII ainsi que du calque FX Canvas borné à une brève respiration.
+- Réduction de la feuille CSS d’environ 14 Ko et retrait des pseudo-calques cartographiques devenus inutiles.
+- La préférence « animations » gouverne maintenant aussi les marqueurs, chargements et ornements documentaires restants.
+- Audit statique renforcé sur l’unicité des peaux et test navigateur étendu à toutes les animations visibles au repos.
+
 ## 0.17l — Moteur Canvas unique
 
 - Retrait du moteur DOM de secours après comparaison fonctionnelle : il ne couvrait ni le rendu symbolique, ni les marqueurs, ni le pipeline visuel complet.

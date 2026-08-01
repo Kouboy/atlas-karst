@@ -89,6 +89,7 @@ function setRenderFxActivity(active, reason = "idle") {
   clearTimeout(renderFxIdleTimer);
   renderFxIdleTimer = 0;
   const running = !!active && ambientAllowed() && !document.hidden;
+  document.body.classList.toggle("motion-disabled", !ambientAllowed());
   performanceRuntime.fxActive = running;
   performanceRuntime.fxReason = reason;
   if (!fx) return;
