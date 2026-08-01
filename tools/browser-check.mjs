@@ -354,8 +354,8 @@ try {
     await openOfflineAtlas(page);
     const result=await page.evaluate(async()=>{
       const before={...lifecycleControllerRuntime},calls=[];
-      const originalAudio={unlock:retroAudio.unlock,silence:retroAudio.silence,play:retroAudio.play,toggle:retroAudio.toggle};
-      retroAudio.unlock=()=>calls.push("unlock");retroAudio.silence=()=>calls.push("silence");retroAudio.play=name=>calls.push(name);retroAudio.toggle=()=>calls.push("toggle-audio");
+      const originalAudio={unlock:retroAudio.unlock,silence:retroAudio.silence,suspend:retroAudio.suspend,play:retroAudio.play,toggle:retroAudio.toggle};
+      retroAudio.unlock=()=>calls.push("unlock");retroAudio.silence=()=>calls.push("silence");retroAudio.suspend=()=>calls.push("suspend");retroAudio.play=name=>calls.push(name);retroAudio.toggle=()=>calls.push("toggle-audio");
       document.dispatchEvent(new Event("pointerdown",{bubbles:true}));
       document.dispatchEvent(new Event("touchstart",{bubbles:true}));
       document.dispatchEvent(new KeyboardEvent("keydown",{key:"a",bubbles:true}));
@@ -382,7 +382,7 @@ try {
     assert.equal(result.after.focusChanges-result.before.focusChanges,2);
     assert.equal(result.after.motionPreferenceChanges-result.before.motionPreferenceChanges,1);
     assert.equal(result.after.audioActions-result.before.audioActions,4);
-    assert.deepEqual(result.calls,["unlock","unlock","unlock","unlock","silence","panelClose","button","toggle","toggle-audio"]);
+    assert.deepEqual(result.calls,["unlock","unlock","unlock","unlock","suspend","panelClose","button","toggle","toggle-audio"]);
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après le cycle de vie : ${result.badChecks.join(", ")}`);
   });
 
@@ -409,6 +409,33 @@ try {
     assert.equal(result.after.documentActions-result.before.documentActions,4,"l’orchestrateur a doublé un branchement documentaire");
     assert.deepEqual(result.calls,["focus:POI-TEST","relation:A:B:test","export"]);
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après l’orchestration : ${result.badChecks.join(", ")}`);
+  });
+
+  await withPage("stabilité d’une session longue", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const before={...sessionHealthRuntime},suspends=[];
+      const originalSuspend=retroAudio.suspend;retroAudio.suspend=()=>suspends.push("audio");
+      for(let index=0;index<SESSION_CACHE_LIMITS.canvasStyles+24;index++)canvasRuntime.styleCache.set(`test-style-${index}`,index);
+      for(let index=0;index<SESSION_CACHE_LIMITS.hypotheses+24;index++)hypothesisModelCache.set(`test-hypothesis-${index}`,index);
+      for(let index=0;index<SESSION_CACHE_LIMITS.relations+24;index++)relationRuntime.cache.set(`test-relation-${index}`,index);
+      for(let index=0;index<SESSION_CACHE_LIMITS.osmStorage+7;index++)localStorage.setItem(`atlas-karst-osm-v010d-test-${index}`,JSON.stringify({savedAt:index+1,value:{index}}));
+      const maintenance=runSessionMaintenance("test saturation");
+      const controller=new AbortController();state.osmAbortController=controller;
+      window.dispatchEvent(new PageTransitionEvent("pagehide",{persisted:true}));
+      const aborted=controller.signal.aborted;
+      window.dispatchEvent(new PageTransitionEvent("pageshow",{persisted:true}));
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      retroAudio.suspend=originalSuspend;
+      const osmKeys=[];for(let index=0;index<localStorage.length;index++){const key=localStorage.key(index);if(key?.startsWith("atlas-karst-osm-v010d-"))osmKeys.push(key)}
+      const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
+      return {before,after:{...sessionHealthRuntime},maintenance,sizes:{styles:canvasRuntime.styleCache.size,hypotheses:hypothesisModelCache.size,relations:relationRuntime.cache.size,osm:osmKeys.length},aborted,suspends,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+    });
+    assert.ok(result.maintenance.cacheEvictions>=72);assert.equal(result.maintenance.storageEvictions,7);
+    assert.ok(result.sizes.styles<=192);assert.ok(result.sizes.hypotheses<=480);assert.ok(result.sizes.relations<=240);assert.ok(result.sizes.osm<=18);
+    assert.equal(result.aborted,true);assert.deepEqual(result.suspends,["audio"]);
+    assert.equal(result.after.suspensions-result.before.suspensions,1);assert.equal(result.after.resumes-result.before.resumes,1);assert.equal(result.after.transientClears-result.before.transientClears,1);
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec après entretien prolongé : ${result.badChecks.join(", ")}`);
   });
 
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {

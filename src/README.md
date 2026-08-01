@@ -20,6 +20,7 @@
 - `app/view-controller.js` porte les modes de rendu, couches, scénarios, sélections documentaires et commandes de diagnostic.
 - `app/lifecycle-controller.js` coordonne visibilité, focus, préférences système, déverrouillage mobile et retours sonores globaux.
 - `app/application-controller.js` assemble les contrôleurs, porte le démarrage idempotent et les actions documentaires globales.
+- `app/session-health.js` borne les caches de longue durée et libère les ressources transitoires lors du gel ou de la restauration de page.
 - `app/main.js` ne contient plus que la boucle de rendu mesurée ; `app/map-engine.js` construit la grille et ses couches de surface ou souterraines selon leur contrat visuel partagé.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.

@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js", "application-controller.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -158,6 +158,15 @@ check("orchestrateur applicatif isolé", () =>
   !sourceByName["main.js"].includes("bootAtlas") &&
   !sourceByName["main.js"].includes("addEventListener") &&
   !sourceByName["main.js"].includes("bindInputController")
+);
+check("sessions longues bornées", () =>
+  sourceByName["session-health.js"].includes("const SESSION_CACHE_LIMITS=") &&
+  sourceByName["session-health.js"].includes("function runSessionMaintenance") &&
+  sourceByName["session-health.js"].includes("function clearTransientSessionResources") &&
+  sourceByName["session-health.js"].includes('window.addEventListener("pagehide"') &&
+  sourceByName["application-controller.js"].includes("bindSessionHealth()") &&
+  sourceByName["audio.js"].includes("function suspend()") &&
+  sourceByName["main.js"].includes('scheduleSessionMaintenance("rendu")')
 );
 check("services applicatifs ordonnés", () =>
   sourceByName["audio.js"].includes("const retroAudio") &&

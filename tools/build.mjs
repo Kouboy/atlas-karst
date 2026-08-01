@@ -28,6 +28,7 @@ const scriptUrls = [
   new URL("src/app/input-controller.js", root),
   new URL("src/app/snapshot-manager.js", root),
   new URL("src/app/main.js", root),
+  new URL("src/app/session-health.js", root),
   new URL("src/app/application-controller.js", root)
 ];
 

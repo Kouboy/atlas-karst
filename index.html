@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17t · orchestrateur applicatif</title>
+<title>Atlas Karst ASCII v0.17u · santé des sessions longues</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1297,7 +1297,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17t</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17u</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -1832,7 +1832,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17t";
+const APP_VERSION = "0.17u";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2058,6 +2058,8 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Contrôleur de vue",viewControllerRuntime.ready&&viewControllerRuntime.bound,`${viewControllerRuntime.modeChanges} modes · ${viewControllerRuntime.scenarioChanges} scénarios · ${viewControllerRuntime.layerChanges} couches · ${viewControllerRuntime.cavitySelections} cavités · ${viewControllerRuntime.debugActions} diagnostics`));
   checks.push(debugCheckResult("Cycle de vie applicatif",lifecycleControllerRuntime.ready&&lifecycleControllerRuntime.bound&&lifecycleControllerRuntime.statusObservers>0,`${lifecycleControllerRuntime.visibilityChanges} visibilités · ${lifecycleControllerRuntime.focusChanges} focus · ${lifecycleControllerRuntime.audioActions} sons · ${lifecycleControllerRuntime.statusObservers} statuts observés`));
   checks.push(debugCheckResult("Orchestrateur applicatif",applicationControllerRuntime.ready&&applicationControllerRuntime.bound&&applicationControllerRuntime.bootCompleted&&!applicationControllerRuntime.lastError,`${applicationControllerRuntime.bootStarts} démarrage · ${applicationControllerRuntime.bootMode} · ${applicationControllerRuntime.bootMs.toFixed(1)} ms · ${applicationControllerRuntime.documentActions} actions`));
+  const sessionCachesOk=canvasRuntime.styleCache.size<=SESSION_CACHE_LIMITS.canvasStyles&&hypothesisModelCache.size<=SESSION_CACHE_LIMITS.hypotheses&&relationRuntime.cache.size<=SESSION_CACHE_LIMITS.relations;
+  checks.push(debugCheckResult("Santé de session",sessionHealthRuntime.ready&&sessionHealthRuntime.bound&&sessionCachesOk,`${sessionHealthRuntime.maintenanceRuns} entretiens · ${sessionHealthRuntime.cacheEvictions} caches + ${sessionHealthRuntime.storageEvictions} stockages libérés · ${sessionHealthRuntime.suspensions}/${sessionHealthRuntime.resumes} suspensions/reprises`));
   const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -2091,6 +2093,7 @@ function createDebugReport(){
     `Vue : ${viewControllerRuntime.bound?"liée":"absente"} · ${viewControllerRuntime.modeChanges} modes · ${viewControllerRuntime.scenarioChanges} scénarios · ${viewControllerRuntime.layerChanges} couches · ${viewControllerRuntime.cavitySelections} cavités · ${viewControllerRuntime.recenters} recentrages · ${viewControllerRuntime.debugActions} diagnostics · dernière ${viewControllerRuntime.lastAction}`,
     `Cycle de vie : ${lifecycleControllerRuntime.bound?"lié":"absent"} · ${lifecycleControllerRuntime.unlockAttempts} déverrouillages · ${lifecycleControllerRuntime.visibilityChanges} visibilités · ${lifecycleControllerRuntime.focusChanges} focus · ${lifecycleControllerRuntime.motionPreferenceChanges} préférences · ${lifecycleControllerRuntime.audioActions} sons · ${lifecycleControllerRuntime.statusObservers} statuts · dernier ${lifecycleControllerRuntime.lastEvent}`,
     `Orchestrateur : ${applicationControllerRuntime.bound?"lié":"absent"} · ${applicationControllerRuntime.bootStarts} démarrage · terminé ${applicationControllerRuntime.bootCompleted?"oui":"non"} · mode ${applicationControllerRuntime.bootMode} · ${applicationControllerRuntime.bootMs.toFixed(2)} ms · ${applicationControllerRuntime.documentActions} actions · erreur ${applicationControllerRuntime.lastError||"aucune"}`,
+    `Santé de session : ${sessionHealthRuntime.bound?"liée":"absente"} · ${sessionHealthRuntime.maintenanceRuns}/${sessionHealthRuntime.scheduledRuns} entretiens/exécutions planifiées · ${sessionHealthRuntime.cacheEvictions} caches + ${sessionHealthRuntime.storageEvictions} stockages libérés · ${sessionHealthRuntime.suspensions}/${sessionHealthRuntime.resumes} suspensions/reprises · ${sessionHealthRuntime.transientClears} nettoyages transitoires · dernière ${sessionHealthRuntime.lastReason}`,
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
@@ -3704,6 +3707,10 @@ const retroAudio=(()=>{
     encounterThemePulse();encounterThemeTimer=setInterval(encounterThemePulse,2350);
   }
   function silence(){stopPanVoice();stopEncounterTheme();panActive=false}
+  function suspend(){
+    silence();
+    if(ctx?.state==="running"){try{ctx.suspend()?.catch?.(()=>{})}catch{}}
+  }
   function setEnabled(value,{chime=true}={}){
     enabled=!!value;
     if(!enabled)silence();
@@ -3713,7 +3720,7 @@ const retroAudio=(()=>{
   }
   function toggle(){setEnabled(!enabled)}
   function init(){updateButton()}
-  return {init,play,unlock,panStart,panMove,panEnd,silence,toggle,setEnabled,startEncounterTheme,stopEncounterTheme,get enabled(){return enabled}};
+  return {init,play,unlock,panStart,panMove,panEnd,silence,suspend,toggle,setEnabled,startEncounterTheme,stopEncounterTheme,get enabled(){return enabled}};
 })();
 
 const operationSoundWatches=new Map();
@@ -4755,7 +4762,7 @@ function cacheGet(key){
   }catch{return null}
 }
 function cacheSet(key,value){
-  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),value}))}catch{}
+  try{localStorage.setItem(key,JSON.stringify({savedAt:Date.now(),value}));if(key.startsWith("atlas-karst-osm-v010d-"))scheduleSessionMaintenance("cache OSM")}catch{}
 }
 
 function expandExtentBox(e,factor=1.18){
@@ -7249,8 +7256,8 @@ function unlockAudioFromGesture(event){
 }
 function handleLifecycleVisibility(){
   lifecycleControllerRuntime.visibilityChanges++;
-  if(document.hidden){accountLifecycleEvent("page masquée");retroAudio.silence();setRenderFxActivity(false,"hidden")}
-  else{accountLifecycleEvent("page visible");pulseRenderFxActivity(650,"visible")}
+  if(document.hidden){accountLifecycleEvent("page masquée");suspendSessionResources("hidden")}
+  else{accountLifecycleEvent("page visible");resumeSessionResources("visible")}
 }
 function handleLifecycleBlur(){lifecycleControllerRuntime.focusChanges++;accountLifecycleEvent("fenêtre inactive");setRenderFxActivity(false,"blur")}
 function handleLifecycleFocus(){lifecycleControllerRuntime.focusChanges++;accountLifecycleEvent("fenêtre active");pulseRenderFxActivity(650,"focus")}
@@ -9672,7 +9679,96 @@ function render(reason="direct"){
   debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
   debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
   updateDebugPanel();
+  scheduleSessionMaintenance("rendu");
   if(debugState.enabled&&String(reason).startsWith("data-batch:"))requestAnimationFrame(runAtlasSelfCheck);
+}
+
+const SESSION_CACHE_LIMITS={canvasStyles:192,hypotheses:480,relations:240,osmStorage:18};
+const sessionHealthRuntime={ready:true,bound:false,maintenanceRuns:0,scheduledRuns:0,cacheEvictions:0,storageEvictions:0,suspensions:0,resumes:0,transientClears:0,lastReason:"initialisation",lastRunAt:0};
+let sessionMaintenanceHandle=0,sessionMaintenanceKind="";
+
+function trimSessionMap(map,limit){
+  let removed=0;
+  while(map.size>limit){const oldest=map.keys().next().value;map.delete(oldest);removed++}
+  return removed;
+}
+function pruneOsmStorage(limit=SESSION_CACHE_LIMITS.osmStorage){
+  const entries=[];let removed=0;
+  try{
+    for(let index=0;index<localStorage.length;index++){
+      const key=localStorage.key(index);
+      if(!key?.startsWith("atlas-karst-osm-v010d-"))continue;
+      let savedAt=0;
+      try{savedAt=Number(JSON.parse(localStorage.getItem(key)||"{}").savedAt)||0}catch{}
+      entries.push({key,savedAt});
+    }
+    entries.sort((a,b)=>b.savedAt-a.savedAt);
+    for(const entry of entries.slice(limit)){localStorage.removeItem(entry.key);removed++}
+  }catch{}
+  return removed;
+}
+function pruneOperationSoundWatches(now=Date.now()){
+  let removed=0;
+  for(const [status,watch] of operationSoundWatches){if(!status.isConnected||now>watch.until){operationSoundWatches.delete(status);removed++}}
+  return removed;
+}
+function runSessionMaintenance(reason="manual"){
+  if(sessionMaintenanceHandle){
+    if(sessionMaintenanceKind==="idle"&&typeof cancelIdleCallback==="function")cancelIdleCallback(sessionMaintenanceHandle);else clearTimeout(sessionMaintenanceHandle);
+    sessionMaintenanceHandle=0;sessionMaintenanceKind="";
+  }
+  const cacheEvictions=trimSessionMap(canvasRuntime.styleCache,SESSION_CACHE_LIMITS.canvasStyles)
+    +trimSessionMap(hypothesisModelCache,SESSION_CACHE_LIMITS.hypotheses)
+    +trimSessionMap(relationRuntime.cache,SESSION_CACHE_LIMITS.relations)
+    +pruneOperationSoundWatches();
+  const storageEvictions=pruneOsmStorage();
+  sessionHealthRuntime.maintenanceRuns++;sessionHealthRuntime.cacheEvictions+=cacheEvictions;sessionHealthRuntime.storageEvictions+=storageEvictions;
+  sessionHealthRuntime.lastReason=reason;sessionHealthRuntime.lastRunAt=performance.now();
+  return {cacheEvictions,storageEvictions};
+}
+function scheduleSessionMaintenance(reason="activity"){
+  if(sessionMaintenanceHandle||performance.now()-sessionHealthRuntime.lastRunAt<30000)return;
+  sessionHealthRuntime.scheduledRuns++;sessionHealthRuntime.lastReason=`planifié : ${reason}`;
+  const run=()=>{sessionMaintenanceHandle=0;sessionMaintenanceKind="";runSessionMaintenance(reason)};
+  if(typeof requestIdleCallback==="function"){sessionMaintenanceKind="idle";sessionMaintenanceHandle=requestIdleCallback(run,{timeout:1800})}
+  else{sessionMaintenanceKind="timer";sessionMaintenanceHandle=setTimeout(run,900)}
+}
+function clearTransientSessionResources(){
+  clearTimeout(osmEnsureTimer);osmEnsureTimer=0;
+  clearTimeout(navigationRenderTimer);navigationRenderTimer=0;
+  clearZoomTransition();zoomFxTimer=0;
+  clearTimeout(zoomCorrectionTimer);zoomCorrectionTimer=0;
+  hideHover();hoverDwellTimer=0;
+  clearTimeout(poiFeedbackTimer);poiFeedbackTimer=0;pendingPoiFeedback=null;
+  clearTimeout(readoutFitTimer);readoutFitTimer=0;
+  clearTimeout(frameFitTimer);frameFitTimer=0;
+  clearTimeout(depthTransitionTimer);depthTransitionTimer=0;if(els.depthTransition)els.depthTransition.className="depth-transition";
+  clearTimeout(renderFxIdleTimer);renderFxIdleTimer=0;
+  clearTimeout(dataRenderRuntime.timer);dataRenderRuntime.timer=0;
+  dataRenderRuntime.reasons.clear();dataRenderRuntime.pendingRequests=0;dataRenderRuntime.batchStarted=0;
+  clearTimeout(relationRuntime.timer);relationRuntime.timer=0;state.activeRelation=null;
+  if(frameFitRaf){cancelAnimationFrame(frameFitRaf);frameFitRaf=0}
+  if(scheduledRenderFrame){cancelAnimationFrame(scheduledRenderFrame);scheduledRenderFrame=0;scheduledRenderReason=""}
+  clearPanPreview();activeMapSurface()?.classList.remove("dragging","pinching");els.viewport?.classList.remove("panning");
+  touchPointers.clear();drag=null;pinch=null;pinchConsumed=false;osmEnsurePending=false;
+  state.osmAbortController?.abort();
+  sessionHealthRuntime.transientClears++;
+}
+function suspendSessionResources(reason="hidden",{release=false}={}){
+  sessionHealthRuntime.suspensions++;sessionHealthRuntime.lastReason=reason;
+  retroAudio.suspend();setRenderFxActivity(false,reason);runSessionMaintenance(reason);
+  if(release)clearTransientSessionResources();
+}
+function resumeSessionResources(reason="visible",{restore=false}={}){
+  sessionHealthRuntime.resumes++;sessionHealthRuntime.lastReason=reason;
+  if(restore){render("session-restore");scheduleOsmEnsure(120)}
+  else pulseRenderFxActivity(650,reason);
+}
+function bindSessionHealth(){
+  if(sessionHealthRuntime.bound)return;
+  sessionHealthRuntime.bound=true;
+  window.addEventListener("pagehide",event=>suspendSessionResources("pagehide",{release:true,persisted:!!event.persisted}));
+  window.addEventListener("pageshow",event=>{if(event.persisted)resumeSessionResources("pageshow",{restore:true})});
 }
 
 const applicationControllerRuntime={ready:true,bound:false,bootStarts:0,bootCompleted:false,bootMode:"pending",bootMs:0,documentActions:0,lastAction:"initialisation",lastError:""};
@@ -9696,6 +9792,7 @@ function bindApplicationController(){
   bindExperienceController();
   bindViewController();
   bindLifecycleController();
+  bindSessionHealth();
   els.readoutSheetHandle.addEventListener("click",()=>{accountApplicationAction("bascule de la fiche");cycleReadoutSheet()});
   document.addEventListener("click",handleDocumentNavigation);
   els.exportBtn.addEventListener("click",()=>{accountApplicationAction("export texte");exportTxt()});

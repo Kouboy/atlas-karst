@@ -18,8 +18,8 @@ function unlockAudioFromGesture(event){
 }
 function handleLifecycleVisibility(){
   lifecycleControllerRuntime.visibilityChanges++;
-  if(document.hidden){accountLifecycleEvent("page masquée");retroAudio.silence();setRenderFxActivity(false,"hidden")}
-  else{accountLifecycleEvent("page visible");pulseRenderFxActivity(650,"visible")}
+  if(document.hidden){accountLifecycleEvent("page masquée");suspendSessionResources("hidden")}
+  else{accountLifecycleEvent("page visible");resumeSessionResources("visible")}
 }
 function handleLifecycleBlur(){lifecycleControllerRuntime.focusChanges++;accountLifecycleEvent("fenêtre inactive");setRenderFxActivity(false,"blur")}
 function handleLifecycleFocus(){lifecycleControllerRuntime.focusChanges++;accountLifecycleEvent("fenêtre active");pulseRenderFxActivity(650,"focus")}
