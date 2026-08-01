@@ -9,6 +9,10 @@
 - `app/debug.js` porte le diagnostic et l’auto-vérification.
 - `app/bootstrap.js` charge les données embarquées, la configuration et l’état partagé.
 - `app/canvas-renderer.js` contient le pipeline de rendu ASCII et symbolique, jusqu’aux effets finaux du bitmap.
+- `app/audio.js` porte les retours sonores et leur cycle de vie.
+- `app/exploration-model.js` regroupe la géométrie commune, les index spatiaux et l’inventaire de proximité.
+- `app/experiences.js` porte les rencontres locales, le codex et les parcours guidés.
+- `app/data-services.js` regroupe les synchronisations, caches et conversions des sources cartographiques.
 - `app/main.js` orchestre les fonctions applicatives qui restent à extraire progressivement.
 
 Le générateur concatène les sources JavaScript dans cet ordre et les embarque avec les styles dans un unique fichier HTML classique. Ce choix conserve pour l’instant la portée globale et l’ordre d’initialisation de l’application, tout en permettant de réduire le monolithe sans migration brutale.

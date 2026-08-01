@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17d — Services applicatifs isolés
+
+- Regroupement des accès OSM, cadastre, patrimoine, relief et BSS dans `data-services.js`.
+- Séparation des retours sonores, du modèle d’exploration et des rencontres/parcours guidés.
+- Conservation stricte de l’ordre historique dans le fichier autonome généré.
+- Conservation des caches, délais d’attente, imports locaux et reprises de synchronisation existants.
+- Réduction du fichier applicatif principal à environ 2 700 lignes sans modifier le livrable autonome.
+- Ajout d’un audit empêchant les principaux services réseau de revenir dans `main.js`.
+
 ## 0.17c — Moteur Canvas isolé
 
 - Séparation de l’initialisation, du moteur Canvas et de l’orchestration applicative.

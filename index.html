@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17c · moteur Canvas isolé</title>
+<title>Atlas Karst ASCII v0.17d · services applicatifs isolés</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1671,7 +1671,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17c</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17d</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2200,7 +2200,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17c";
+const APP_VERSION = "0.17d";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
@@ -4404,7 +4404,6 @@ function updateAroundMe(){
   }
   els.aroundList.innerHTML=displayed.map(({poi,distance,bearing})=>`<button class="poi-nav-button" type="button" data-poi-focus="${escAttr(poi.uid)}"><span class="poi-nav-head"><span class="poi-nav-title">${esc(poi.title)}</span><span class="poi-nav-distance">${distance<50?"< 50 m":`${Math.round(distance/10)*10} m`}</span></span><span class="poi-nav-meta">${esc(poiCategoryLabel(poi.category))} · ${esc(cardinalDirection(bearing))}</span></button>`).join("");
 }
-
 
 const ENCOUNTER_PREF_KEY="atlas-karst-encounters-enabled-v1";
 const ENCOUNTER_COLLECTION_KEY="atlas-karst-encounters-v1";
@@ -7047,6 +7046,7 @@ async function fetchBss(){
   if(!state.bss.length)setStatus("bss","pending","non chargé · optionnel");
   return state.bss;
 }
+
 function bearingDegrees(a,b){
   const p1=rad(a.lat),p2=rad(b.lat),dl=rad(b.lon-a.lon);const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }

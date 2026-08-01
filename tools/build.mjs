@@ -12,6 +12,10 @@ const scriptUrls = [
   new URL("src/app/debug.js", root),
   new URL("src/app/bootstrap.js", root),
   new URL("src/app/canvas-renderer.js", root),
+  new URL("src/app/audio.js", root),
+  new URL("src/app/exploration-model.js", root),
+  new URL("src/app/experiences.js", root),
+  new URL("src/app/data-services.js", root),
   new URL("src/app/main.js", root)
 ];
 

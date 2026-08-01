@@ -5,7 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -61,6 +61,23 @@ check("moteur Canvas isolé", () =>
   sourceByName["canvas-renderer.js"].includes("const renderPipelineRuntime") &&
   !sourceByName["main.js"].includes("function drawSymbolicCanvasMap") &&
   !sourceByName["main.js"].includes("const canvasRuntime")
+);
+check("services de données isolés", () =>
+  sourceByName["data-services.js"].includes("async function overpassRequest") &&
+  sourceByName["data-services.js"].includes("async function fetchCadastre") &&
+  sourceByName["data-services.js"].includes("async function syncCultureHeritage") &&
+  sourceByName["data-services.js"].includes("async function fetchElevation") &&
+  sourceByName["data-services.js"].includes("async function fetchBss") &&
+  !sourceByName["main.js"].includes("async function overpassRequest") &&
+  !sourceByName["main.js"].includes("async function fetchCadastre")
+);
+check("services applicatifs ordonnés", () =>
+  sourceByName["audio.js"].includes("const retroAudio") &&
+  sourceByName["exploration-model.js"].includes("function ensureSpatialIndexes") &&
+  sourceByName["experiences.js"].includes("function startLocalEncounter") &&
+  sourceByName["experiences.js"].includes("function startGuidedTour") &&
+  !sourceByName["main.js"].includes("const retroAudio") &&
+  !sourceByName["main.js"].includes("function startLocalEncounter")
 );
 check("révision OSM propagée", () => html.includes('markMapDataRevision("osm")'));
 check("dernière vue OSM reprise", () => html.includes("osmEnsurePending") && html.includes("scheduleOsmEnsure(0)"));
