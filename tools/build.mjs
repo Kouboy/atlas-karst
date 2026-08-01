@@ -16,6 +16,7 @@ const scriptUrls = [
   new URL("src/app/exploration-model.js", root),
   new URL("src/app/experiences.js", root),
   new URL("src/app/data-services.js", root),
+  new URL("src/app/map-engine.js", root),
   new URL("src/app/main.js", root)
 ];
 

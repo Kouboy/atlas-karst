@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17d · services applicatifs isolés</title>
+<title>Atlas Karst ASCII v0.17e · moteur cartographique mesuré</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1671,7 +1671,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17d</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17e</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2028,6 +2028,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
     <div class="debug-kpis">
       <div class="debug-kpi"><span>Dernier rendu</span><strong id="debugRenderTime">—</strong></div>
       <div class="debug-kpi"><span>Moyenne</span><strong id="debugRenderAverage">—</strong></div>
+      <div class="debug-kpi"><span>Phases CPU</span><strong id="debugRenderPhases">—</strong></div>
       <div class="debug-kpi"><span>Grille</span><strong id="debugGrid">—</strong></div>
       <div class="debug-kpi"><span>Points visibles</span><strong id="debugPoiCount">—</strong></div>
       <div class="debug-kpi"><span>Cache local</span><strong id="debugStorage">—</strong></div>
@@ -2200,7 +2201,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17d";
+const APP_VERSION = "0.17e";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
@@ -2210,6 +2211,7 @@ const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
   enabled:DEBUG_REQUESTED,
   renderCount:0,totalRenderMs:0,lastRenderMs:0,maxRenderMs:0,lastPoiCount:0,
+  lastRenderPhases:{layout:0,index:0,grid:0,layers:0,output:0,interface:0},
   lastPointer:"—",lastSelection:"—",lastReason:"initialisation",lastStorageScan:0,
   storageBytes:0,storageKeys:0,errors:[],bootStarted:performance.now()
 };
@@ -2298,12 +2300,18 @@ function setDebugEnabled(enabled){
 function debugStatusText(id){
   const el=els?.[id];return el?`${el.textContent.trim()} [${el.className||"sans classe"}]`:"absent";
 }
+function debugRenderPhasesText(){
+  const p=debugState.lastRenderPhases;
+  if(!debugState.renderCount||!p)return "—";
+  return `mise en page ${p.layout.toFixed(1)} · index ${p.index.toFixed(1)} · grille ${p.grid.toFixed(1)} · couches ${p.layers.toFixed(1)} · sortie ${p.output.toFixed(1)} · interface ${p.interface.toFixed(1)} ms`;
+}
 function updateDebugPanel(forceStorage=false){
   if(!debugState.enabled||!els?.debugPanel)return;
   debugScanStorage(forceStorage);
   const average=debugState.renderCount?debugState.totalRenderMs/debugState.renderCount:0;
   if(els.debugRenderTime)els.debugRenderTime.textContent=debugState.renderCount?`${debugState.lastRenderMs.toFixed(1)} ms · max ${debugState.maxRenderMs.toFixed(1)}`:"—";
   if(els.debugRenderAverage)els.debugRenderAverage.textContent=debugState.renderCount?`${average.toFixed(1)} ms · ${debugState.renderCount} rendus`:"—";
+  if(els.debugRenderPhases)els.debugRenderPhases.textContent=debugRenderPhasesText();
   if(els.debugGrid){
     const bitmap=canvasRuntime.metrics?` · bitmap ${els.mapCanvas.width} × ${els.mapCanvas.height} @${canvasRuntime.metrics.dpr}`:"";
     els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m${bitmap}`;
@@ -2338,6 +2346,8 @@ function runAtlasSelfCheck(){
   }
   checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
+  const phaseValues=Object.values(debugState.lastRenderPhases||{});
+  checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   const canvasBudgetOk=!CANVAS_RENDERER||performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,CANVAS_RENDERER?`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`:"moteur DOM"));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -2363,6 +2373,7 @@ function createDebugReport(){
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · coupe ${depthSliceLabel()}`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
+    `Phases CPU : ${debugRenderPhasesText()}`,
     `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
     `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
     `Points d’intérêt visibles : ${debugState.lastPoiCount} · normalisés : ${spatialRuntime.normalizedPois.length}`,
@@ -2570,7 +2581,7 @@ els = Object.fromEntries([
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
-  "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
+  "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 
 function activeMapSurface(){return CANVAS_RENDERER?els.mapCanvas:els.map}
@@ -7804,6 +7815,49 @@ function renderUndergroundBase(g){
   }
 }
 
+function composeMapGrid(extent,depth=currentDepth()){
+  const gridStarted=performance.now();
+  const grid=createGrid(extent);
+  const gridMs=performance.now()-gridStarted;
+  const layersStarted=performance.now();
+  if(depth===0){
+    if(state.layerSurface)renderSurface(grid);
+    applyRelief(grid);
+    drawBss(grid);
+    drawObservations(grid);
+    drawHeritage(grid);
+    drawLore(grid);
+    drawCavities(grid);
+    drawCartofriches(grid);
+    drawOfflineDemoPoints(grid);
+    drawUserLocation(grid);
+  }else{
+    renderUndergroundBase(grid);
+    drawHypotheses(grid);
+    drawBss(grid);
+    drawCavities(grid);
+    drawUserLocation(grid);
+  }
+  return {grid,gridMs,layersMs:performance.now()-layersStarted};
+}
+
+function renderDomMap(grid){
+  let html="",visiblePoiCount=0;
+  for(let y=0;y<CONFIG.gridH;y++){
+    for(let x=0;x<CONFIG.gridW;x++){
+      const cell=grid.grid[y][x],shade=state.layerRelief&&Number.isFinite(cell.elev)?` shade${cell.shade||0}`:"";
+      const attrs=`data-x="${x}" data-y="${y}"`,glyph=cell.ch;
+      const poiKind=poiEffectKind(cell),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
+      if(poiKind)visiblePoiCount++;
+      const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
+      html+=`<span class="cell ${cell.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
+    }
+    html+="\n";
+  }
+  els.map.innerHTML=html;
+  return visiblePoiCount;
+}
+
 let depthTransitionTimer=0;
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
@@ -7842,53 +7896,29 @@ function scheduleRender(reason="scheduled"){
 }
 function render(reason="direct"){
   const renderStarted=performance.now();
+  let phaseStarted=renderStarted;
   hideHover();
   if(debugState.enabled)debugState.lastReason=reason;
   if(!drag)clearPanPreview();
   const responsiveMain=document.querySelector("main");
   if(responsiveMain)applyResponsiveGridProfile(responsiveMain);
   const z=currentZoom(),depth=currentDepth(),extent=extentFor();
+  phaseStarted=performance.now();const layoutMs=phaseStarted-renderStarted;
   spatialRuntime.lastQueryCandidates=0;spatialRuntime.lastQueryResults=0;ensureSpatialIndexes();
-  const g=createGrid(extent);
+  const indexMs=performance.now()-phaseStarted;
+  const composed=composeMapGrid(extent,depth),g=composed.grid;
   document.body.dataset.depthBand=depth===0?"surface":depth>=-5?"shallow":depth>=-15?"middle":"deep";
-  if(depth===0){
-    if(state.layerSurface)renderSurface(g);
-    applyRelief(g);
-    drawBss(g);
-    drawObservations(g);
-    drawHeritage(g);
-    drawLore(g);
-    drawCavities(g);
-    drawCartofriches(g);
-    drawOfflineDemoPoints(g);
-    drawUserLocation(g);
-  }else{
-    renderUndergroundBase(g);
-    drawHypotheses(g);
-    drawBss(g);
-    drawCavities(g);
-    drawUserLocation(g);
-  }
   state.lastGrid=g;
+  const outputStarted=performance.now();
   let visiblePoiCount=0;
   if(CANVAS_RENDERER){
     visiblePoiCount=drawCanvasMap(g,reason);
     els.map.textContent="";
   }else{
-    let out="";
-    for(let y=0;y<CONFIG.gridH;y++){
-      for(let x=0;x<CONFIG.gridW;x++){
-        const c=g.grid[y][x],shade=state.layerRelief&&Number.isFinite(c.elev)?` shade${c.shade||0}`:"";
-        const attrs=`data-x="${x}" data-y="${y}"`,glyph=c.ch;
-        const poiKind=poiEffectKind(c),poiClass=poiKind?` poi-fx poi-${poiKind}`:"";
-        if(poiKind)visiblePoiCount++;
-        const poiStyle=poiKind?` style="--poi-phase:${Math.abs((x+1)*7+(y+1)*11)%7}"`:"";
-        out+=`<span class="cell ${c.cls||""}${shade}${poiClass}" ${attrs}${poiStyle}>${esc(glyph)}</span>`;
-      }
-      out+="\n";
-    }
-    els.map.innerHTML=out;
+    visiblePoiCount=renderDomMap(g);
   }
+  const outputMs=performance.now()-outputStarted;
+  const interfaceStarted=performance.now();
   syncSelectionDom();
   if(pendingPoiFeedback)requestAnimationFrame(applyPendingPoiSelectionFeedback);
   updateSelectionAssist();
@@ -7914,15 +7944,17 @@ function render(reason="direct"){
   els.depthUp.disabled=state.depthIndex===0;els.depthDown.disabled=state.depthIndex===CONFIG.depths.length-1;
   els.mapDepthUp.disabled=state.depthIndex===0;els.mapDepthDown.disabled=state.depthIndex===CONFIG.depths.length-1;
   updateSnapshotUI();
-  const renderElapsed=performance.now()-renderStarted;
-  debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
-  debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
-  updateDebugPanel();
   requestAnimationFrame(()=>{alignRenderedCenterToVisibleViewport();syncSelectionDom();updateWorldBoundaryFrame();updateRelationOverlay();updateGuidedTourMarker()});
   updateSidebarClusterStatus();
   updateAroundMe();
   updateGuidedTourUI();
   scheduleFrameFit();
+  const interfaceMs=performance.now()-interfaceStarted;
+  const renderElapsed=performance.now()-renderStarted;
+  debugState.lastRenderPhases={layout:layoutMs,index:indexMs,grid:composed.gridMs,layers:composed.layersMs,output:outputMs,interface:interfaceMs};
+  debugState.renderCount++;debugState.lastRenderMs=renderElapsed;debugState.totalRenderMs+=renderElapsed;
+  debugState.maxRenderMs=Math.max(debugState.maxRenderMs,renderElapsed);debugState.lastPoiCount=visiblePoiCount;
+  updateDebugPanel();
 }
 
 

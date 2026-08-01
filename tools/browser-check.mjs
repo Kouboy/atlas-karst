@@ -75,6 +75,7 @@ try {
     assert.equal(await page.locator(".debug-check.bad").count(), 0);
     const renderMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
     assert.ok(renderMs <= 80, `rendu trop lent : ${renderMs} ms`);
+    assert.match(await page.locator("#debugRenderPhases").innerText(), /grille .* couches .* sortie .* interface/);
   });
 
   await withPage("repos graphique économe", { width: 1280, height: 720 }, async (page) => {
