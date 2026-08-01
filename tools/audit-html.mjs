@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -118,6 +118,16 @@ check("contrôleur des sources isolé", () =>
   !sourceByName["main.js"].includes("els.syncOsm.addEventListener") &&
   !sourceByName["main.js"].includes("els.syncCartofriches.addEventListener") &&
   !sourceByName["main.js"].includes("els.retryData.addEventListener")
+);
+check("contrôleur des expériences isolé", () =>
+  sourceByName["experience-controller.js"].includes("function bindExperienceController") &&
+  sourceByName["experience-controller.js"].includes("function startEncounterFromControl") &&
+  sourceByName["experience-controller.js"].includes("function openCodexFromControl") &&
+  sourceByName["experience-controller.js"].includes("function moveGuidedTour") &&
+  sourceByName["main.js"].includes("bindExperienceController()") &&
+  !sourceByName["main.js"].includes("els.testEncounter.addEventListener") &&
+  !sourceByName["main.js"].includes("els.guidedTourStart.addEventListener") &&
+  !sourceByName["main.js"].includes("els.encounterBody.addEventListener")
 );
 check("services applicatifs ordonnés", () =>
   sourceByName["audio.js"].includes("const retroAudio") &&

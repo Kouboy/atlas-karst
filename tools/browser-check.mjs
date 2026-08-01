@@ -276,6 +276,47 @@ try {
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après gestion des sources : ${result.badChecks.join(", ")}`);
   });
 
+  await withPage("contrôleur des expériences", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.waitForFunction(()=>experienceControllerRuntime.bound&&guidedTourRuntime.tours.length>0);
+    await page.evaluate(()=>document.getElementById("testEncounter").click());
+    await page.waitForFunction(()=>encounterRuntime.screen==="encounter"&&state.encounterSession?.testMode===true);
+    await page.locator('[data-encounter-action="begin"]').click();
+    await page.locator("[data-encounter-choice]").first().click();
+    await page.waitForFunction(()=>!!document.querySelector('[data-encounter-action="continue"]'));
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(()=>encounterRuntime.screen==="closed"&&!document.body.classList.contains("encounter-open"));
+    await page.evaluate(()=>document.getElementById("openCodex").click());
+    await page.waitForFunction(()=>encounterRuntime.screen==="codex"&&document.querySelectorAll("[data-codex-entry]").length===LOCAL_ENCOUNTERS.length);
+    await page.locator("[data-codex-entry]").first().click();
+    await page.locator("#encounterClose").click();
+    await page.waitForFunction(()=>encounterRuntime.screen==="closed");
+    const tour=await page.evaluate(async()=>{
+      document.getElementById("guidedTourStart").click();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const started={id:state.guidedTourId,step:state.guidedTourStep,active:state.guidedTourActive,title:guidedTourCurrent()?.title||""};
+      document.getElementById("guidedTourNext").click();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      const nextStep=state.guidedTourStep;
+      document.getElementById("guidedTourRecenter").click();
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      document.getElementById("guidedTourStop").click();
+      const checks=runAtlasSelfCheck();
+      const functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
+      return {
+        started,nextStep,stopped:{active:state.guidedTourActive,step:state.guidedTourStep,tourClass:document.body.classList.contains("tour-active")},
+        runtime:{...experienceControllerRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)
+      };
+    });
+    assert.equal(tour.started.active,true);assert.equal(tour.started.step,0);assert.ok(tour.started.id&&tour.started.title);
+    assert.equal(tour.nextStep,1);
+    assert.deepEqual(tour.stopped,{active:false,step:0,tourClass:false});
+    assert.equal(tour.runtime.ready,true);assert.equal(tour.runtime.bound,true);
+    assert.equal(tour.runtime.encounterStarts,1);assert.equal(tour.runtime.codexOpens,1);assert.equal(tour.runtime.encounterActions,3);assert.equal(tour.runtime.encounterCloses,2);
+    assert.equal(tour.runtime.tourStarts,1);assert.equal(tour.runtime.tourMoves,2);assert.equal(tour.runtime.tourStops,1);
+    assert.deepEqual(tour.badChecks,[],`diagnostic en échec après les expériences : ${tour.badChecks.join(", ")}`);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {

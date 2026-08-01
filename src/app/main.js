@@ -64,6 +64,7 @@ bindSnapshotManager();
 bindUiShell();
 bindFieldworkController();
 bindSourceController();
+bindExperienceController();
 
 els.readoutSheetHandle.addEventListener("click",cycleReadoutSheet);
 document.addEventListener("click",e=>{
@@ -72,27 +73,6 @@ document.addEventListener("click",e=>{
   const relation=e.target.closest?.("[data-relation-from][data-relation-to]");
   if(relation){e.preventDefault();framePoiRelation(relation.dataset.relationFrom,relation.dataset.relationTo,relation.dataset.relationLabel||"relation")}
 });
-
-
-els.encounterEnabled.addEventListener("change",e=>{state.encounterEnabled=e.target.checked;saveEncounterCollection();updateEncounterUI();retroAudio.play("toggle")});
-els.observeSurroundings.addEventListener("click",()=>startLocalEncounter());
-els.testEncounter.addEventListener("click",()=>startLocalEncounter({testMode:true}));
-els.openCodex.addEventListener("click",()=>openCodex());
-els.encounterClose.addEventListener("click",closeEncounterOverlay);
-els.encounterBody.addEventListener("click",handleEncounterClick);
-els.encounterOverlay.addEventListener("click",e=>{if(e.target===els.encounterOverlay)closeEncounterOverlay()});
-window.addEventListener("keydown",e=>{if(e.key==="Escape"&&els.encounterOverlay.classList.contains("active")){e.preventDefault();closeEncounterOverlay()}});
-
-els.guidedTourSelect.addEventListener("change",e=>{
-  state.guidedTourId=e.target.value;state.guidedTourStep=0;
-  if(state.guidedTourActive)focusGuidedTourStep(0);else updateGuidedTourUI();
-  retroAudio.play("toggle");
-});
-els.guidedTourStart.addEventListener("click",startGuidedTour);
-els.guidedTourPrev.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep-1));
-els.guidedTourNext.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep+1));
-els.guidedTourRecenter.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep,{announce:false}));
-els.guidedTourStop.addEventListener("click",stopGuidedTour);
 
 els.recenterSelected.addEventListener("click",()=>{
   if(!state.selectedCell){setReadoutContent("<strong>Aucune case mémorisée.</strong><br>Clique d’abord un point de la carte.",{title:"Aucune sélection",sheet:"peek"});return}
