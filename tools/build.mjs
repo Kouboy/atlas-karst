@@ -27,7 +27,8 @@ const scriptUrls = [
   new URL("src/app/ui-shell.js", root),
   new URL("src/app/input-controller.js", root),
   new URL("src/app/snapshot-manager.js", root),
-  new URL("src/app/main.js", root)
+  new URL("src/app/main.js", root),
+  new URL("src/app/application-controller.js", root)
 ];
 
 const STYLE_MARKER = "/* @atlas-inline:styles */";

@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17t — Orchestrateur applicatif
+
+- Déplacement du démarrage complet dans `application-controller.js` avec état, durée, mode et erreur observables.
+- Assemblage idempotent de tous les contrôleurs depuis un point d’entrée unique.
+- Regroupement des actions documentaires globales : fiche mobile, navigation entre POI, relations et export texte.
+- Réduction de `main.js` à la seule boucle de rendu mesurée, environ 4,3 Ko.
+- Auto-diagnostic et audit structurel renforcés pour empêcher le retour d’écouteurs ou du démarrage dans le moteur de rendu.
+- Scénario navigateur couvrant le démarrage unique et la délégation documentaire sans double branchement.
+
 ## 0.17s — Cycle de vie applicatif
 
 - Extraction des événements globaux de visibilité, focus et préférence système dans `lifecycle-controller.js`.

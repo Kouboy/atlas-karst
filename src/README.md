@@ -19,7 +19,8 @@
 - `app/experience-controller.js` relie les rencontres, le codex et les parcours guidés à leurs commandes d’interface.
 - `app/view-controller.js` porte les modes de rendu, couches, scénarios, sélections documentaires et commandes de diagnostic.
 - `app/lifecycle-controller.js` coordonne visibilité, focus, préférences système, déverrouillage mobile et retours sonores globaux.
-- `app/map-engine.js` construit la grille et ses couches de surface ou souterraines selon leur contrat visuel partagé.
+- `app/application-controller.js` assemble les contrôleurs, porte le démarrage idempotent et les actions documentaires globales.
+- `app/main.js` ne contient plus que la boucle de rendu mesurée ; `app/map-engine.js` construit la grille et ses couches de surface ou souterraines selon leur contrat visuel partagé.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.

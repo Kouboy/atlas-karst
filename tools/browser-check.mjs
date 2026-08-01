@@ -386,6 +386,31 @@ try {
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après le cycle de vie : ${result.badChecks.join(", ")}`);
   });
 
+  await withPage("orchestrateur et démarrage unique", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const before={...applicationControllerRuntime},calls=[];
+      const originalFocus=focusNormalizedPoi,originalRelation=framePoiRelation,originalExport=exportTxt;
+      focusNormalizedPoi=uid=>calls.push(`focus:${uid}`);
+      framePoiRelation=(from,to,label)=>calls.push(`relation:${from}:${to}:${label}`);
+      exportTxt=()=>calls.push("export");
+      bindApplicationController();
+      await Promise.all([startAtlasApplication(),startAtlasApplication()]);
+      document.getElementById("readoutSheetHandle").click();
+      const focusButton=document.createElement("button");focusButton.dataset.poiFocus="POI-TEST";focusButton.innerHTML="<span>ouvrir</span>";document.body.append(focusButton);focusButton.querySelector("span").click();
+      const relationButton=document.createElement("button");relationButton.dataset.relationFrom="A";relationButton.dataset.relationTo="B";relationButton.dataset.relationLabel="test";relationButton.innerHTML="<span>cadrer</span>";document.body.append(relationButton);relationButton.querySelector("span").click();
+      document.getElementById("exportBtn").click();
+      focusButton.remove();relationButton.remove();
+      focusNormalizedPoi=originalFocus;framePoiRelation=originalRelation;exportTxt=originalExport;
+      const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
+      return {before,after:{...applicationControllerRuntime},calls,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+    });
+    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.bootCompleted,true);assert.equal(result.after.bootMode,"hors-ligne");assert.equal(result.after.bootStarts,1);assert.equal(result.after.lastError,"");assert.ok(result.after.bootMs>=0);
+    assert.equal(result.after.documentActions-result.before.documentActions,4,"l’orchestrateur a doublé un branchement documentaire");
+    assert.deepEqual(result.calls,["focus:POI-TEST","relation:A:B:test","export"]);
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec après l’orchestration : ${result.badChecks.join(", ")}`);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {
