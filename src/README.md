@@ -16,6 +16,7 @@
 - `app/map-engine.js` construit la grille, ses couches de surface ou souterraines, leur contrat visuel partagé et le rendu DOM de secours.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
+- `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, IndexedDB, texte et HTML autonome.
 - `app/main.js` orchestre les fonctions applicatives qui restent à extraire progressivement.
 
 Le générateur concatène les sources JavaScript dans cet ordre et les embarque avec les styles dans un unique fichier HTML classique. Ce choix conserve pour l’instant la portée globale et l’ordre d’initialisation de l’application, tout en permettant de réduire le monolithe sans migration brutale.

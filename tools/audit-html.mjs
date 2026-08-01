@@ -5,7 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "input-controller.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -111,6 +111,15 @@ check("inspecteur de cellule isolé", () =>
   !sourceByName["main.js"].includes("function selectGridCell") &&
   !sourceByName["main.js"].includes("function hoverDescription") &&
   !sourceByName["canvas-renderer.js"].includes("function selectSymbolicPoi")
+);
+check("gestionnaire d’instantanés isolé", () =>
+  sourceByName["snapshot-manager.js"].includes("function validateAtlasSnapshot") &&
+  sourceByName["snapshot-manager.js"].includes("function buildAtlasSnapshot") &&
+  sourceByName["snapshot-manager.js"].includes("async function saveSnapshotToDb") &&
+  sourceByName["snapshot-manager.js"].includes("function exportStandaloneHtml") &&
+  sourceByName["main.js"].includes("bindSnapshotManager()") &&
+  !sourceByName["main.js"].includes("function applyAtlasSnapshot") &&
+  !sourceByName["main.js"].includes("function openSnapshotDb")
 );
 check("contrat souterrain harmonisé", () =>
   sourceByName["map-engine.js"].includes("function undergroundVisualContract") &&

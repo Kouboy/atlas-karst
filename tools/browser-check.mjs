@@ -78,6 +78,7 @@ try {
     const checks = await page.locator("#debugChecks").innerText();
     assert.match(checks, /Pipeline Canvas final/);
     assert.match(checks, /FX synchronisés avec OSM/);
+    assert.match(checks, /Gestionnaire d’instantanés/);
     assert.match(checks, /Rendu stabilisé sous 80 ms/);
     assert.equal(await page.locator(".debug-check.bad").count(), 0);
     const warmMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
@@ -133,6 +134,64 @@ try {
     assert.ok(result.covered>=1,"le rendu direct n’a pas couvert la donnée en attente");
     assert.equal(result.maxBatch,3);
     assert.equal(result.lastReason,"test-direct-interaction");
+  });
+
+  await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result = await page.evaluate(async () => {
+      await deleteSnapshotFromDb();
+      state.zoomIndex=4;state.depthIndex=2;state.renderMode="ascii";state.layerHydrology=false;
+      state.center=clampCenter({lat:CONFIG.house.lat+.00021,lon:CONFIG.house.lon-.00017},CONFIG.zooms[state.zoomIndex]);
+      state.observations=[...state.observations,{id:"OBS-ROUNDTRIP",mode:"point",glyph:"◎",name:"Test round-trip",lat:state.center.lat,lon:state.center.lon,confidence:"high",source:"test"}];
+      const expected={zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length};
+      const snapshot=buildAtlasSnapshot();
+      await saveSnapshotToDb(snapshot);
+      state.zoomIndex=0;state.depthIndex=0;state.renderMode="symbolic";state.layerHydrology=true;state.center={...CONFIG.house};state.observations=[];
+      const loaded=await loadSnapshotFromDb();
+      applyAtlasSnapshot(loaded,{source:"test IndexedDB",renderNow:true});
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      let futureError="";
+      try{validateAtlasSnapshot({...snapshot,schema:SNAPSHOT_SCHEMA_VERSION+1})}catch(error){futureError=String(error.message||error)}
+      const legacy={...snapshot};delete legacy.schema;
+      const legacyAccepted=validateAtlasSnapshot(legacy)===legacy&&snapshotRuntime.lastSchema===1;
+      validateAtlasSnapshot(loaded);
+      const checks=runAtlasSelfCheck();
+      await deleteSnapshotFromDb();
+      return {
+        expected,
+        restored:{zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length},
+        loadedSchema:loaded.schema,futureError,legacyAccepted,badChecks:checks.filter(check=>check.ok===false).map(check=>check.name),
+        runtime:{bound:snapshotRuntime.bound,applied:snapshotRuntime.applied,dbSaves:snapshotRuntime.dbSaves,dbLoads:snapshotRuntime.dbLoads,dbDeletes:snapshotRuntime.dbDeletes,lastError:snapshotRuntime.lastError}
+      };
+    });
+    assert.deepEqual(result.restored,result.expected,"l’état restauré diffère de l’instantané enregistré");
+    assert.equal(result.loadedSchema,2);
+    assert.match(result.futureError,/plus récent/);
+    assert.equal(result.legacyAccepted,true,"un instantané historique sans schéma n’est plus accepté");
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec après restauration : ${result.badChecks.join(", ")}`);
+    assert.equal(result.runtime.bound,true);
+    assert.ok(result.runtime.applied>=1&&result.runtime.dbSaves>=1&&result.runtime.dbLoads>=1&&result.runtime.dbDeletes>=2);
+    assert.equal(result.runtime.lastError,"");
+    await page.evaluate(()=>document.getElementById("exportSnapshotJson").click());
+    await page.waitForFunction(()=>snapshotRuntime.exports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".atlas.json")));
+    const exportedJson=await page.evaluate(async()=>{
+      const link=[...document.querySelectorAll("a[download]")].find(item=>item.download.endsWith(".atlas.json"));
+      const parsed=JSON.parse(await (await fetch(link.href)).text());
+      return {filename:link.download,format:parsed.format,schema:parsed.schema};
+    });
+    assert.match(exportedJson.filename,/\.atlas\.json$/);
+    assert.equal(exportedJson.format,"atlas-karst-snapshot");
+    assert.equal(exportedJson.schema,2);
+    await page.evaluate(()=>document.getElementById("exportStandaloneHtml").click());
+    await page.waitForFunction(()=>snapshotRuntime.standaloneExports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".html")));
+    const exportedHtml=await page.evaluate(async()=>{
+      const link=[...document.querySelectorAll("a[download]")].find(item=>item.download.endsWith(".html"));
+      const text=await (await fetch(link.href)).text();
+      return {filename:link.download,hasSnapshot:text.includes('"format":"atlas-karst-snapshot"'),hasTitle:text.includes(`Atlas Karst ASCII ${APP_VERSION} · instantané autonome`)};
+    });
+    assert.match(exportedHtml.filename,/\.html$/);
+    assert.equal(exportedHtml.hasSnapshot,true,"l’export HTML ne contient pas l’instantané");
+    assert.equal(exportedHtml.hasTitle,true,"l’export HTML n’est pas identifié comme instantané autonome");
   });
 
   await withPage("rendus symbolique et ASCII", { width: 1280, height: 720 }, async (page) => {
