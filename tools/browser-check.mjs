@@ -350,6 +350,42 @@ try {
     assert.deepEqual(diagnostic.badChecks,[],`diagnostic en échec après les réglages de vue : ${diagnostic.badChecks.join(", ")}`);
   });
 
+  await withPage("cycle de vie et retours audio", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const before={...lifecycleControllerRuntime},calls=[];
+      const originalAudio={unlock:retroAudio.unlock,silence:retroAudio.silence,play:retroAudio.play,toggle:retroAudio.toggle};
+      retroAudio.unlock=()=>calls.push("unlock");retroAudio.silence=()=>calls.push("silence");retroAudio.play=name=>calls.push(name);retroAudio.toggle=()=>calls.push("toggle-audio");
+      document.dispatchEvent(new Event("pointerdown",{bubbles:true}));
+      document.dispatchEvent(new Event("touchstart",{bubbles:true}));
+      document.dispatchEvent(new KeyboardEvent("keydown",{key:"a",bubbles:true}));
+      bindLifecycleController();
+      document.dispatchEvent(new Event("pointerdown",{bubbles:true}));
+      Object.defineProperty(document,"hidden",{configurable:true,value:true});document.dispatchEvent(new Event("visibilitychange"));
+      Object.defineProperty(document,"hidden",{configurable:true,value:false});document.dispatchEvent(new Event("visibilitychange"));
+      delete document.hidden;
+      window.dispatchEvent(new Event("blur"));window.dispatchEvent(new Event("focus"));
+      reducedMotionQuery?.dispatchEvent?.(new Event("change"));
+      const details=document.createElement("details");document.body.append(details);details.dispatchEvent(new Event("toggle",{bubbles:true}));
+      const button=document.createElement("button");button.id="lifecycleTestButton";document.body.append(button);button.click();
+      const checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.id="lifecycleTestCheckbox";document.body.append(checkbox);checkbox.dispatchEvent(new Event("change",{bubbles:true}));
+      document.getElementById("audioToggle").click();
+      details.remove();button.remove();checkbox.remove();
+      Object.assign(retroAudio,originalAudio);
+      await new Promise(resolve=>requestAnimationFrame(resolve));
+      const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
+      return {before,after:{...lifecycleControllerRuntime},calls,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+    });
+    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,8);
+    assert.equal(result.after.unlockAttempts-result.before.unlockAttempts,4,"le branchement idempotent a doublé les gestes");
+    assert.equal(result.after.visibilityChanges-result.before.visibilityChanges,2);
+    assert.equal(result.after.focusChanges-result.before.focusChanges,2);
+    assert.equal(result.after.motionPreferenceChanges-result.before.motionPreferenceChanges,1);
+    assert.equal(result.after.audioActions-result.before.audioActions,4);
+    assert.deepEqual(result.calls,["unlock","unlock","unlock","unlock","silence","panelClose","button","toggle","toggle-audio"]);
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec après le cycle de vie : ${result.badChecks.join(", ")}`);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {

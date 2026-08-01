@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17s — Cycle de vie applicatif
+
+- Extraction des événements globaux de visibilité, focus et préférence système dans `lifecycle-controller.js`.
+- Centralisation du déverrouillage Web Audio après un geste explicite sur desktop et mobile.
+- Regroupement des sons d’actions, bascule audio et observateurs de statuts asynchrones.
+- Liaison idempotente empêchant les doubles écouteurs lors d’une réinitialisation applicative.
+- Compteurs de cycle de vie et d’audio ajoutés au diagnostic et au rapport exportable.
+- Scénario navigateur couvrant gestes, focus, visibilité, préférence d’animation et routage sonore.
+
 ## 0.17r — Contrôleur de vue
 
 - Extraction des modes symbolique/ASCII, scénarios souterrains et couches cartographiques dans `view-controller.js`.

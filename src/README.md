@@ -18,6 +18,7 @@
 - `app/fieldwork-controller.js` porte la localisation ponctuelle, le repère maison, les observations et les mémoires locales.
 - `app/experience-controller.js` relie les rencontres, le codex et les parcours guidés à leurs commandes d’interface.
 - `app/view-controller.js` porte les modes de rendu, couches, scénarios, sélections documentaires et commandes de diagnostic.
+- `app/lifecycle-controller.js` coordonne visibilité, focus, préférences système, déverrouillage mobile et retours sonores globaux.
 - `app/map-engine.js` construit la grille et ses couches de surface ou souterraines selon leur contrat visuel partagé.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.
