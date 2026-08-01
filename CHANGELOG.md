@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17r — Contrôleur de vue
+
+- Extraction des modes symbolique/ASCII, scénarios souterrains et couches cartographiques dans `view-controller.js`.
+- Centralisation de la préférence d’animation ambiante et de sa persistance locale.
+- Déplacement de la sélection documentaire des cavités et du recentrage sur la case mémorisée.
+- Regroupement des commandes et du raccourci clavier de diagnostic dans le même contrôleur idempotent.
+- Compteurs de modes, scénarios, couches, cavités, recentrages et diagnostics ajoutés au rapport exportable.
+- Scénario navigateur couvrant mode de rendu, hydrologie, animation, scénario, cavité, sélection et diagnostic.
+- Réduction de `main.js` à son noyau de rendu, de démarrage et de retours sonores globaux.
+
 ## 0.17q — Contrôleur des expériences
 
 - Extraction des commandes de rencontres locales, du codex et des parcours guidés dans `experience-controller.js`.

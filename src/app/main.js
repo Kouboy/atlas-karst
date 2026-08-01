@@ -65,6 +65,7 @@ bindUiShell();
 bindFieldworkController();
 bindSourceController();
 bindExperienceController();
+bindViewController();
 
 els.readoutSheetHandle.addEventListener("click",cycleReadoutSheet);
 document.addEventListener("click",e=>{
@@ -74,39 +75,7 @@ document.addEventListener("click",e=>{
   if(relation){e.preventDefault();framePoiRelation(relation.dataset.relationFrom,relation.dataset.relationTo,relation.dataset.relationLabel||"relation")}
 });
 
-els.recenterSelected.addEventListener("click",()=>{
-  if(!state.selectedCell){setReadoutContent("<strong>Aucune case mémorisée.</strong><br>Clique d’abord un point de la carte.",{title:"Aucune sélection",sheet:"peek"});return}
-  state.center=clampCenter(state.selectedCell.coord,currentZoom());render();
-});
 els.exportBtn.addEventListener("click",exportTxt);
-els.scenario.addEventListener("change",e=>{state.scenario=e.target.value;hypothesisModelCache.clear();render()});
-els.renderModeSymbolic?.addEventListener("click",()=>setRenderMode("symbolic"));
-els.renderModeAscii?.addEventListener("click",()=>setRenderMode("ascii"));
-["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"].forEach(id=>{
-  els[id].addEventListener("change",e=>{
-    state[id]=e.target.checked;
-    if(id==="layerHydrology")hypothesisModelCache.clear();
-    if(id==="ambientMotion"){
-      try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}
-      syncAmbientMotionState({pulse:state.ambientMotion,reason:"preference"});
-    }
-    render();
-  });
-});
-els.cavitySelect.addEventListener("change",e=>{
-  const c=state.cavities.find(v=>v.id===e.target.value);
-  if(!c||!Number.isFinite(c.lat))return;
-  state.zoomIndex=2;state.center=clampCenter({lat:c.lat,lon:c.lon},currentZoom());state.selectedCavity=c.id;render();
-  setReadoutContent(`<strong>${esc(cavityName(c))}</strong><br>${esc(cavityMarker(c).label)} · ${esc(c.id)}${c.commune?` · ${esc(c.commune)}`:""}<br>La carte est recentrée sur le point inventorié. Descends à −8 m ou −14 m pour voir les scénarios, sans confondre leur dessin avec une topographie réelle.`,{title:cavityName(c),sheet:"full"});
-});
-if(els.debugToggle)els.debugToggle.addEventListener("click",()=>setDebugEnabled(!debugState.enabled));
-if(els.runSelfCheck)els.runSelfCheck.addEventListener("click",runAtlasSelfCheck);
-if(els.exportDebugReport)els.exportDebugReport.addEventListener("click",exportDebugReport);
-window.addEventListener("keydown",e=>{
-  if(e.ctrlKey&&e.shiftKey&&e.key.toLowerCase()==="d"){
-    e.preventDefault();setDebugEnabled(!debugState.enabled);
-  }
-});
 
 // Les navigateurs mobiles n’autorisent Web Audio qu’après un geste explicite.
 // On arme donc le moteur dès le premier contact, avant les gestionnaires métier.

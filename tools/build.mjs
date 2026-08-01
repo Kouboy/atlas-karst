@@ -20,6 +20,7 @@ const scriptUrls = [
   new URL("src/app/source-controller.js", root),
   new URL("src/app/fieldwork-controller.js", root),
   new URL("src/app/experience-controller.js", root),
+  new URL("src/app/view-controller.js", root),
   new URL("src/app/map-engine.js", root),
   new URL("src/app/cell-inspector.js", root),
   new URL("src/app/ui-shell.js", root),
