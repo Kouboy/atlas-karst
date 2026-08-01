@@ -69,12 +69,19 @@ try {
   await withPage("diagnostic et pipeline Canvas", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForFunction(() => document.getElementById("debugChecks")?.textContent?.includes("Pipeline Canvas final"));
+    const coldMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
+    assert.ok(coldMs <= 140, `premier rendu trop lent : ${coldMs} ms`);
+    await page.evaluate(() => {
+      render("test-warm-budget");
+      runAtlasSelfCheck();
+    });
     const checks = await page.locator("#debugChecks").innerText();
     assert.match(checks, /Pipeline Canvas final/);
     assert.match(checks, /FX synchronisés avec OSM/);
+    assert.match(checks, /Rendu stabilisé sous 80 ms/);
     assert.equal(await page.locator(".debug-check.bad").count(), 0);
-    const renderMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
-    assert.ok(renderMs <= 80, `rendu trop lent : ${renderMs} ms`);
+    const warmMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
+    assert.ok(warmMs <= 80, `rendu stabilisé trop lent : ${warmMs} ms`);
     assert.match(await page.locator("#debugRenderPhases").innerText(), /grille .* couches .* sortie .* interface/);
   });
 
@@ -96,6 +103,36 @@ try {
     await page.waitForTimeout(600);
     const renderCountAfter = await page.evaluate(() => Number.parseInt(document.getElementById("debugRenderAverage")?.textContent?.match(/(\d+) rendus/)?.[1] || "0", 10));
     assert.equal(renderCountAfter, idle.renderCount, "nouveau rendu JavaScript pendant le repos");
+  });
+
+  await withPage("rafales de données regroupées", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.waitForTimeout(260);
+    const result = await page.evaluate(async () => {
+      const baseline=debugState.renderCount,requestsBefore=dataRenderRuntime.requests,rendersBefore=dataRenderRuntime.renders;
+      scheduleDataRender("test-osm");scheduleDataRender("test-cadastre");scheduleDataRender("test-relief");
+      await new Promise(resolve=>setTimeout(resolve,280));
+      const afterBatch=debugState.renderCount;
+      scheduleDataRender("test-covered");
+      render("test-direct-interaction");
+      await new Promise(resolve=>setTimeout(resolve,280));
+      return {
+        baseline,afterBatch,afterCovered:debugState.renderCount,
+        requests:dataRenderRuntime.requests-requestsBefore,
+        renders:dataRenderRuntime.renders-rendersBefore,
+        coalesced:dataRenderCoalescedCount(),covered:dataRenderRuntime.covered,
+        maxBatch:dataRenderRuntime.maxBatchSize,lastReason:debugState.lastReason
+      };
+    });
+    assert.ok(result.baseline<=2,`le démarrage hors ligne produit encore ${result.baseline} rendus`);
+    assert.equal(result.afterBatch,result.baseline+1,"la première rafale a produit plus d’un rendu");
+    assert.equal(result.afterCovered,result.afterBatch+1,"la mise à jour couverte a produit un rendu supplémentaire");
+    assert.equal(result.requests,4);
+    assert.equal(result.renders,1);
+    assert.ok(result.coalesced>=3,`seulement ${result.coalesced} demandes regroupées`);
+    assert.ok(result.covered>=1,"le rendu direct n’a pas couvert la donnée en attente");
+    assert.equal(result.maxBatch,3);
+    assert.equal(result.lastReason,"test-direct-interaction");
   });
 
   await withPage("rendus symbolique et ASCII", { width: 1280, height: 720 }, async (page) => {

@@ -255,7 +255,7 @@ async function ensureOsmForCurrentView(force=false){
       const r=await loadOsmWindow("base",baseExtent,force);
       if(r.cached)fromCache++;
       setStatus("osm","pending",`${state.osm?.length||0} objets · détails…`);
-      render("osm-base-refresh");
+      scheduleDataRender("osm-base-refresh");
     }
     if(needDetail){
       state.osmAttemptLabel="recherche des bâtiments";updateOsmActivity();
@@ -269,7 +269,7 @@ async function ensureOsmForCurrentView(force=false){
     setStatus("osm","ok",`${state.osm?.length||0} objets${fromCache?" · cache":""}${skipped?` · ${skipped} trous ignorés`:""}`);
     els.osmHelp.textContent=`Synchronisation réussie via ${host}${state.osmMeta?.method?` (${state.osmMeta.method})`:""}. Les géométries sont limitées à la fenêtre visible pour alléger la réponse.${parseNote}`;
     els.sourceNote.textContent=`Surface OSM chargée par fenêtres locales via ${host}. Les bâtiments ne sont demandés qu’aux zooms Site, Parcelle et Détail.${parseNote}`;
-    render("osm-sync-complete");
+    scheduleDataRender("osm-sync-complete");
     return true;
   }catch(err){
     const cancelled=err?.name==="AbortError"&&state.osmAbortRequested;
@@ -278,7 +278,7 @@ async function ensureOsmForCurrentView(force=false){
       if(state.osm?.length)setStatus("osm","ok",`${state.osm.length} objets · synchro annulée`);
       else setStatus("osm","pending","synchronisation annulée");
       els.osmHelp.textContent="Synchronisation OSM annulée. Les données déjà reçues restent disponibles.";
-      render("osm-sync-cancelled");return false;
+      scheduleDataRender("osm-sync-cancelled");return false;
     }
     if(state.osm?.length)setStatus("osm","ok",`${state.osm.length} objets · mise à jour échouée`);
     else setStatus("osm","bad","échec OSM · diagnostic disponible");
@@ -289,7 +289,7 @@ async function ensureOsmForCurrentView(force=false){
     els.osmHelp.innerHTML=`<strong>Échec OSM.</strong> ${esc(state.osmLastError)}${esc(localHint)}`;
     els.sourceNote.innerHTML=`OSM n’a pas répondu pour cette fenêtre. ${esc(localHint||"Le diagnostic des serveurs permet de distinguer surcharge, refus HTTP et blocage CORS.")}`;
     console.warn("OSM indisponible",err);
-    render("osm-sync-error");
+    scheduleDataRender("osm-sync-error");
     return false;
   }finally{
     clearInterval(osmActivityTimer);osmActivityTimer=0;
@@ -316,7 +316,7 @@ async function fetchOverpass(){
       mergeOsmFeatures(legacy.data);
       state.osmMeta=legacy.meta||null;
       setStatus("osm","pending",`${state.osm.length} objets anciens · actualisation…`);
-      render("osm-legacy-cache");
+      scheduleDataRender("osm-legacy-cache");
     }
   }
   return ensureOsmForCurrentView(false);
@@ -1354,7 +1354,7 @@ async function fetchCavities(){
     state.cavityInventoryOnly=false;
     state.load.cavities="ok";
     refreshCavities();
-    render();
+    scheduleDataRender("cavities-cache");
     return;
   }
   const base="https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/G%C3%A9orisques___inventaire_des_cavit%C3%A9s_souterraines__France_enti%C3%A8re_/FeatureServer/1/query";
@@ -1388,7 +1388,7 @@ async function fetchCavities(){
     console.warn("Cavités géolocalisées indisponibles",err);
   }
   refreshCavities();
-  render();
+  scheduleDataRender("cavities-sync");
 }
 function normalizeCavityRecord(c){
   if(!c||typeof c!=="object")return null;
@@ -1482,7 +1482,7 @@ async function fetchElevation(){
   if(cached){
     state.elevation=cached;
     setStatus("elevation","ok",`cache ${cached.source||"local"}`);
-    render();
+    scheduleDataRender("elevation-cache");
     return;
   }
   const e=largestExtent(),cols=23,rows=17,points=[];
@@ -1519,7 +1519,7 @@ async function fetchElevation(){
       openMeteo:openMeteoError?.message||openMeteoError
     });
   }
-  render();
+  scheduleDataRender("elevation-sync");
 }
 
 function elevationAt(lat,lon){
@@ -1566,7 +1566,7 @@ function normalizeCadastre(fc,kind){
 }
 async function fetchCadastre(){
   const cached=cacheGet("atlas-karst-cadastre-v06");
-  if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();render();return}
+  if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();scheduleDataRender("cadastre-cache");return}
   const root="https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/16/16418";
   try{
     const [buildingsFc,parcelsFc]=await Promise.all([
@@ -1579,7 +1579,7 @@ async function fetchCadastre(){
     setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${state.cadastreParcels.length} parc.`);
     autoSnapHouse();
   }catch(err){setStatus("cadastre","bad","indisponible");console.warn("Cadastre indisponible",err)}
-  render();
+  scheduleDataRender("cadastre-sync");
 }
 function polygonCentroid(coords){
   let x=0,y=0,a=0;
@@ -1619,7 +1619,7 @@ function autoSnapHouse(){
 }
 async function fetchAddress(force=false){
   const cached=!force&&cacheGet("atlas-karst-address-v06");
-  if(cached){state.address=cached;setStatus("address","ok",`cache · score ${Math.round((cached.score||0)*100)} %`);if(!HOUSE_WAS_SAVED){CONFIG.house={lat:cached.lat,lon:cached.lon};autoSnapHouse();render()}return cached}
+  if(cached){state.address=cached;setStatus("address","ok",`cache · score ${Math.round((cached.score||0)*100)} %`);if(!HOUSE_WAS_SAVED){CONFIG.house={lat:cached.lat,lon:cached.lon};autoSnapHouse();scheduleDataRender("address-cache")}return cached}
   const q=encodeURIComponent("42 rue de la Falaise 16400 Vœuil-et-Giget");
   const url=`https://data.geopf.fr/geocodage/search?q=${q}&index=address&limit=5`;
   try{
@@ -1627,7 +1627,7 @@ async function fetchAddress(force=false){
     const f=j.features?.[0];const c=f?.geometry?.coordinates;if(!Array.isArray(c)||!Number.isFinite(+c[0])||!Number.isFinite(+c[1]))throw new Error("Adresse non trouvée");
     state.address={lon:+c[0],lat:+c[1],label:f.properties?.label||"42 rue de la Falaise",score:+f.properties?.score||0,id:f.properties?.id||"",source:"Géoplateforme / Base Adresse Nationale"};
     cacheSet("atlas-karst-address-v06",state.address);setStatus("address","ok",`score ${Math.round(state.address.score*100)} %`);
-    if(force||!HOUSE_WAS_SAVED){CONFIG.house={lat:state.address.lat,lon:state.address.lon};if(force)HOUSE_WAS_SAVED=false;autoSnapHouse();render()}
+    if(force||!HOUSE_WAS_SAVED){CONFIG.house={lat:state.address.lat,lon:state.address.lon};if(force)HOUSE_WAS_SAVED=false;autoSnapHouse();scheduleDataRender("address-sync")}
     return state.address;
   }catch(err){setStatus("address","bad","non trouvée");console.warn("Adresse officielle indisponible",err);return null}
 }
