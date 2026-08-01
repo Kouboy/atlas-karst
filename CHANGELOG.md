@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17i — Inspecteur unifié
+
+- Extraction de la conversion pointeur/cellule, de la sélection assistée, du survol et des fiches documentaires dans `cell-inspector.js`.
+- Rattachement au même inspecteur du chemin spécial des balises symboliques, auparavant encore déclenché depuis le moteur Canvas.
+- Conservation géographique de la sélection lors des changements d’échelle, avec resynchronisation du marqueur si elle reste dans l’emprise.
+- Fiche mobile ouverte directement après un toucher, sans pointeur ni classe de déplacement résiduelle.
+- Compteurs des sélections de terrain, points d’intérêt, interactions tactiles et survols ajoutés au diagnostic.
+- Deux scénarios navigateur dédiés au parcours survol → clic → zoom clavier et à la sélection tactile mobile.
+- Réduction de `main.js` d’environ 1 670 à 950 lignes ; le moteur Canvas ne possède plus la logique de sélection symbolique.
+
 ## 0.17h — Gestes unifiés
 
 - Extraction du déplacement, de la molette, du pincement, du zoom, de la profondeur et des raccourcis dans `input-controller.js`.

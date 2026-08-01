@@ -14,6 +14,7 @@
 - `app/experiences.js` porte les rencontres locales, le codex et les parcours guidés.
 - `app/data-services.js` regroupe les synchronisations, caches et conversions des sources cartographiques.
 - `app/map-engine.js` construit la grille, ses couches de surface ou souterraines, leur contrat visuel partagé et le rendu DOM de secours.
+- `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
 - `app/main.js` orchestre les fonctions applicatives qui restent à extraire progressivement.
 

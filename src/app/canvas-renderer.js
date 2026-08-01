@@ -642,16 +642,6 @@ function symbolicPoiHitFromClient(clientX,clientY,multiplier=1){
   }
   return best;
 }
-function selectSymbolicPoi(poi,note="Balise cartographique sélectionnée"){
-  if(!poi||!state.lastGrid)return false;
-  const p=coordToGrid(poi.lat,poi.lon,state.lastGrid.extent),x=clamp(p.x,0,CONFIG.gridW-1),y=clamp(p.y,0,CONFIG.gridH-1),base=state.lastGrid.grid[y]?.[x];if(!base)return false;
-  const feature=symbolicPoiFeatureInfo(poi),cell={...base,feature,cls:`${base.cls||""} c-symbolic-poi`};
-  state.selectedCell={x,y,coord:{lat:poi.lat,lon:poi.lon},feature,poiUid:poi.uid};state.selectionSnapNote=note;state.selectionAssistVisible=false;
-  debugState.lastSelection=`${x}, ${y} · ${poi.title}`;playCellSelectionSound(cell,{snapped:true});syncSelectionDom();updateSelectionAssist();triggerPoiSelectionFeedback(cell,x,y,{lat:poi.lat,lon:poi.lon});
-  presentCellDescription(cell,x,y,{note,title:poi.title||poi.kind||"Point d’intérêt",sheet:"full"});return true;
-}
-
-
 /* V0.16c — profondeur symbolique cohérente.
    Les tranches utilisent la même grammaire visuelle que la surface, mais les
    couleurs distinguent clairement donnée documentée et volume interprétatif.
