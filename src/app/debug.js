@@ -82,6 +82,7 @@ function runAtlasSelfCheck(){
   const renderBudget=debugRenderBudget();
   checks.push(debugCheckResult(renderBudget.label,debugState.lastRenderMs<=renderBudget.budget,`${debugState.lastRenderMs.toFixed(1)} / ${renderBudget.budget} ms`));
   checks.push(debugCheckResult("Contrôleur de navigation",inputRuntime.bound,`${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · dernier : ${inputRuntime.lastGesture}`));
+  checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
@@ -112,6 +113,7 @@ function createDebugReport(){
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
     `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
+    `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Phases CPU : ${debugRenderPhasesText()}`,
     `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
     `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,

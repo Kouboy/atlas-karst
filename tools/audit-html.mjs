@@ -5,7 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "input-controller.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "input-controller.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -101,6 +101,16 @@ check("contrôleur de navigation isolé", () =>
   sourceByName["main.js"].includes("bindInputController()") &&
   !sourceByName["main.js"].includes("function endDrag") &&
   !sourceByName["main.js"].includes("let drag=")
+);
+check("inspecteur de cellule isolé", () =>
+  sourceByName["cell-inspector.js"].includes("function mapPositionFromClient") &&
+  sourceByName["cell-inspector.js"].includes("function selectGridCell") &&
+  sourceByName["cell-inspector.js"].includes("function selectSymbolicPoi") &&
+  sourceByName["cell-inspector.js"].includes("function presentCellDescription") &&
+  sourceByName["cell-inspector.js"].includes("function scheduleCanvasHover") &&
+  !sourceByName["main.js"].includes("function selectGridCell") &&
+  !sourceByName["main.js"].includes("function hoverDescription") &&
+  !sourceByName["canvas-renderer.js"].includes("function selectSymbolicPoi")
 );
 check("contrat souterrain harmonisé", () =>
   sourceByName["map-engine.js"].includes("function undergroundVisualContract") &&

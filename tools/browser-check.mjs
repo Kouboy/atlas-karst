@@ -253,6 +253,75 @@ try {
     assert.equal(await page.evaluate(() => document.activeElement?.id), "mapCanvas");
   });
 
+  await withPage("inspecteur desktop persistant", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const target = await page.evaluate(() => {
+      let best=null;
+      for(let y=8;y<CONFIG.gridH-8;y++)for(let x=12;x<CONFIG.gridW-12;x++){
+        const cell=state.lastGrid.grid[y]?.[x];
+        if(!cell||(cell.ch===" "&&!cell.feature))continue;
+        const rect=canvasCellRect(x,y);if(!rect)continue;
+        const score=Math.hypot(x-CONFIG.gridW/2,y-CONFIG.gridH/2);
+        if(!best||score<best.score)best={x:rect.left+rect.width/2,y:rect.top+rect.height/2,score};
+      }
+      return best;
+    });
+    assert.ok(target, "aucune cellule dessinée pour l’inspecteur");
+    const {x,y}=target;
+    await page.mouse.move(x, y);
+    await page.locator("#hoverTip.visible").waitFor();
+    const hoverState = await page.evaluate(() => ({ reveals: cellInspectorRuntime.hoverReveals, text: els.hoverTip.textContent.trim() }));
+    assert.ok(hoverState.reveals >= 1, "le survol n’a pas été enregistré");
+    assert.match(hoverState.text, /LOCAL SCAN|SURVOL/);
+    await page.mouse.click(x, y);
+    await page.waitForFunction(() => cellInspectorRuntime.selections >= 1 && !!state.selectedCell);
+    const selected = await page.evaluate(() => ({
+      coord:{...state.selectedCell.coord},kind:els.readout.dataset.readoutKind,
+      sheet:els.readout.dataset.sheetState,text:els.readoutBody.textContent.trim(),
+      marker:els.canvasSelectionMarker.classList.contains("visible"),selections:cellInspectorRuntime.selections
+    }));
+    assert.ok(["plain","poi"].includes(selected.kind));
+    assert.equal(selected.sheet, "full");
+    assert.ok(selected.text.length > 30, "la fiche sélectionnée est vide");
+    assert.equal(selected.marker, true);
+    await page.locator("#mapCanvas").press("+");
+    await page.waitForFunction((zoom) => state.zoomIndex > zoom, 3);
+    const afterZoom = await page.evaluate(() => ({ coord:{...state.selectedCell.coord},marker:els.canvasSelectionMarker.classList.contains("visible"),active:els.viewport.classList.contains("selection-active") }));
+    assert.deepEqual(afterZoom.coord, selected.coord, "la sélection géographique dérive après le zoom clavier");
+    assert.equal(afterZoom.marker, true);
+    assert.equal(afterZoom.active, true);
+  });
+
+  await withPage("inspecteur tactile mobile", { width: 390, height: 844 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result = await page.evaluate(async () => {
+      const surface=activeMapSurface(),rect=surface.getBoundingClientRect();
+      const x=rect.left+rect.width*.36,y=rect.top+rect.height*.42;
+      const before=cellInspectorRuntime.touchSelections;
+      const fire=(type,buttons)=>surface.dispatchEvent(new PointerEvent(type,{
+        bubbles:true,cancelable:true,pointerId:71,pointerType:"touch",isPrimary:true,
+        clientX:x,clientY:y,button:0,buttons
+      }));
+      fire("pointerdown",1);fire("pointerup",0);
+      await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+      return {
+        before,touchSelections:cellInspectorRuntime.touchSelections,selections:cellInspectorRuntime.selections,
+        selected:!!state.selectedCell,kind:els.readout.dataset.readoutKind,sheet:els.readout.dataset.sheetState,
+        infoOpen:!document.body.classList.contains("info-collapsed"),marker:els.canvasSelectionMarker.classList.contains("visible"),
+        touches:touchPointers.size,panning:els.viewport.classList.contains("panning")
+      };
+    });
+    assert.equal(result.touchSelections, result.before + 1, "le toucher n’a pas été identifié comme sélection tactile");
+    assert.ok(result.selections >= 1);
+    assert.equal(result.selected, true);
+    assert.ok(["plain","poi"].includes(result.kind));
+    assert.equal(result.sheet, "full");
+    assert.equal(result.infoOpen, true);
+    assert.equal(result.marker, true);
+    assert.equal(result.touches, 0);
+    assert.equal(result.panning, false);
+  });
+
   await withPage("déplacement direct sans rafale", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const before = await page.evaluate(() => ({ center: { ...state.center }, renders: debugState.renderCount, pans: inputRuntime.panCount }));
