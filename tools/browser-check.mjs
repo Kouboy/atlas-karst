@@ -253,6 +253,60 @@ try {
     assert.equal(await page.evaluate(() => document.activeElement?.id), "mapCanvas");
   });
 
+  await withPage("déplacement direct sans rafale", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const before = await page.evaluate(() => ({ center: { ...state.center }, renders: debugState.renderCount, pans: inputRuntime.panCount }));
+    const box = await page.locator("#mapCanvas").boundingBox();
+    assert.ok(box, "Canvas sans géométrie pour le déplacement");
+    const x = box.x + box.width * .52, y = box.y + box.height * .52;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 120, y + 45, { steps: 5 });
+    await page.mouse.up();
+    await page.waitForFunction((count) => inputRuntime.panCount > count && debugState.lastReason === "pan-release", before.pans);
+    const after = await page.evaluate(() => ({
+      center: { ...state.center }, renders: debugState.renderCount, pans: inputRuntime.panCount,
+      surfaceTransform: activeMapSurface()?.style.transform || "", fxTransform: els.renderFxLayer?.style.transform || ""
+    }));
+    assert.notDeepEqual(after.center, before.center, "le drag n’a pas déplacé le centre");
+    assert.equal(after.pans, before.pans + 1, "le drag a été compté plusieurs fois");
+    assert.equal(after.renders, before.renders + 1, "le drag a produit plusieurs rendus cartographiques");
+    assert.equal(after.surfaceTransform, "", "l’aperçu de déplacement subsiste après le relâchement");
+    assert.match(after.fxTransform, /translateZ\(0(?:px)?\)|translate3d\(0px, 0px, 0px\)|^$/, "les effets ne sont plus alignés après le déplacement");
+  });
+
+  await withPage("pincement tactile unifié", { width: 390, height: 844 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result = await page.evaluate(async () => {
+      const surface=activeMapSurface(),rect=surface.getBoundingClientRect();
+      const cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
+      const before={zoom:state.zoomIndex,renders:debugState.renderCount,pinches:inputRuntime.pinchZoomCount};
+      const fire=(type,pointerId,x,y,isPrimary=false)=>surface.dispatchEvent(new PointerEvent(type,{
+        bubbles:true,cancelable:true,pointerId,pointerType:"touch",isPrimary,clientX:x,clientY:y,
+        button:0,buttons:type==="pointerup"?0:1
+      }));
+      fire("pointerdown",41,cx-42,cy,true);
+      fire("pointerdown",42,cx+42,cy,false);
+      fire("pointermove",41,cx-92,cy,true);
+      fire("pointerup",41,cx-92,cy,true);
+      fire("pointerup",42,cx+42,cy,false);
+      await new Promise(resolve=>setTimeout(resolve,140));
+      return {
+        before,zoom:state.zoomIndex,renders:debugState.renderCount,pinches:inputRuntime.pinchZoomCount,
+        lastGesture:inputRuntime.lastGesture,touches:touchPointers.size,pinchActive:!!pinch,
+        panning:els.viewport.classList.contains("panning"),pinching:surface.classList.contains("pinching")
+      };
+    });
+    assert.equal(result.zoom, result.before.zoom + 1, "le pincement n’a pas augmenté le zoom d’un niveau");
+    assert.equal(result.pinches, result.before.pinches + 1, "le pincement a été compté plusieurs fois");
+    assert.ok(result.renders <= result.before.renders + 2, "le pincement a déclenché une rafale de rendus");
+    assert.equal(result.lastGesture, "pincement");
+    assert.equal(result.touches, 0, "des pointeurs tactiles restent mémorisés");
+    assert.equal(result.pinchActive, false);
+    assert.equal(result.panning, false);
+    assert.equal(result.pinching, false);
+  });
+
   await withPage("livrable autonome file", { width: 1280, height: 720 }, async (page) => {
     await page.goto(standaloneUrl, { waitUntil: "domcontentloaded" });
     assert.match(await page.title(), titleVersionPattern);
