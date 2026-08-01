@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17q — Contrôleur des expériences
+
+- Extraction des commandes de rencontres locales, du codex et des parcours guidés dans `experience-controller.js`.
+- Centralisation des ouvertures, fermetures par bouton, arrière-plan ou clavier et interactions documentaires.
+- Regroupement du choix, du démarrage, du déplacement, du recentrage et de l’arrêt des parcours.
+- Branchement idempotent afin qu’une commande ne puisse pas lancer deux rencontres ou avancer deux étapes.
+- Compteurs d’activité ajoutés à l’auto-diagnostic et au rapport exportable.
+- Scénario navigateur couvrant une rencontre test, une action documentaire, le codex et un parcours complet démarrage → étape → recentrage → arrêt.
+- Réduction supplémentaire de `main.js`, qui ne possède plus les événements propres aux expériences.
+
 ## 0.17p — Contrôleur des sources
 
 - Extraction des commandes OSM, BSS, Cartofriches et patrimoine dans `source-controller.js`.

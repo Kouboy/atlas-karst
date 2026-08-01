@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17p · contrôleur des sources</title>
+<title>Atlas Karst ASCII v0.17q · contrôleur des expériences</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1297,7 +1297,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17p</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17q</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -1832,7 +1832,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17p";
+const APP_VERSION = "0.17q";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2054,6 +2054,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Démarrage réseau étagé",startupRuntime.ready&&startupRuntime.maxConcurrent<=STARTUP_DATA_CONCURRENCY,`${startupRuntime.completed}/${startupRuntime.total} tâches · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.visibilityPauses} pauses`));
   checks.push(debugCheckResult("Contrôleur de terrain",fieldworkRuntime.ready&&fieldworkRuntime.bound,`${fieldworkRuntime.locationSuccesses}/${fieldworkRuntime.locationRequests} localisations · ${fieldworkRuntime.houseChanges} maisons · ${fieldworkRuntime.observationsAdded}/${fieldworkRuntime.observationsRemoved} observations +/− · ${fieldworkRuntime.loreAdded}/${fieldworkRuntime.loreRemoved} mémoires +/−`));
   checks.push(debugCheckResult("Contrôleur des sources",sourceControllerRuntime.ready&&sourceControllerRuntime.bound,`${sourceControllerRuntime.operations} actions · ${sourceControllerRuntime.imports} imports · ${sourceControllerRuntime.clears} effacements · ${sourceControllerRuntime.retries} relances · dernière : ${sourceControllerRuntime.lastAction}`));
+  checks.push(debugCheckResult("Contrôleur des expériences",experienceControllerRuntime.ready&&experienceControllerRuntime.bound,`${experienceControllerRuntime.encounterStarts} rencontres · ${experienceControllerRuntime.codexOpens} codex · ${experienceControllerRuntime.encounterActions} actions · parcours ${experienceControllerRuntime.tourStarts}/${experienceControllerRuntime.tourMoves}/${experienceControllerRuntime.tourStops} début/déplacements/fin`));
   const canvasBudgetOk=performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
   checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
@@ -2083,6 +2084,7 @@ function createDebugReport(){
     `Démarrage réseau : ${startupRuntime.completed}/${startupRuntime.total} tâches · ${startupRuntime.failed} échecs · concurrence max ${startupRuntime.maxConcurrent}/${STARTUP_DATA_CONCURRENCY} · ${startupRuntime.idleYields} créneaux libres · ${startupRuntime.visibilityPauses} pauses`,
     `Terrain : ${fieldworkRuntime.bound?"lié":"absent"} · localisations ${fieldworkRuntime.locationSuccesses}/${fieldworkRuntime.locationRequests} (${fieldworkRuntime.locationErrors} échecs) · maisons ${fieldworkRuntime.houseChanges} · observations ${fieldworkRuntime.observationsAdded}/${fieldworkRuntime.observationsRemoved} +/− · mémoires ${fieldworkRuntime.loreAdded}/${fieldworkRuntime.loreRemoved} +/−`,
     `Sources : ${sourceControllerRuntime.bound?"liées":"absentes"} · ${sourceControllerRuntime.operations} actions · ${sourceControllerRuntime.imports} imports · ${sourceControllerRuntime.clears} effacements · ${sourceControllerRuntime.filterChanges} filtres · ${sourceControllerRuntime.retries} relances · dernière ${sourceControllerRuntime.lastAction}`,
+    `Expériences : ${experienceControllerRuntime.bound?"liées":"absentes"} · ${experienceControllerRuntime.encounterStarts} rencontres · ${experienceControllerRuntime.codexOpens} codex · ${experienceControllerRuntime.encounterActions} actions · ${experienceControllerRuntime.encounterCloses} fermetures · parcours ${experienceControllerRuntime.tourSelections}/${experienceControllerRuntime.tourStarts}/${experienceControllerRuntime.tourMoves}/${experienceControllerRuntime.tourStops} sélection/début/déplacements/fin · dernière ${experienceControllerRuntime.lastAction}`,
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
@@ -7123,6 +7125,56 @@ function bindFieldworkController(){
   els.refreshAround.addEventListener("click",locateUser);
 }
 
+const experienceControllerRuntime={ready:true,bound:false,encounterStarts:0,codexOpens:0,encounterActions:0,encounterCloses:0,tourSelections:0,tourStarts:0,tourMoves:0,tourStops:0,lastAction:"initialisation"};
+
+function accountExperienceAction(action){experienceControllerRuntime.lastAction=action}
+function startEncounterFromControl(testMode=false){
+  experienceControllerRuntime.encounterStarts++;accountExperienceAction(testMode?"rencontre test":"rencontre locale");
+  startLocalEncounter({testMode});
+}
+function openCodexFromControl(){
+  experienceControllerRuntime.codexOpens++;accountExperienceAction("ouverture du codex");openCodex();
+}
+function closeEncounterFromControl(action="fermeture de la rencontre"){
+  experienceControllerRuntime.encounterCloses++;accountExperienceAction(action);closeEncounterOverlay();
+}
+function handleEncounterControlClick(event){
+  if(!event.target.closest?.("[data-encounter-choice],[data-codex-entry],[data-encounter-action]"))return;
+  experienceControllerRuntime.encounterActions++;accountExperienceAction("action dans la rencontre");handleEncounterClick(event);
+}
+function moveGuidedTour(index,{announce=true,action="déplacement dans le parcours"}={}){
+  experienceControllerRuntime.tourMoves++;accountExperienceAction(action);focusGuidedTourStep(index,{announce});
+}
+function bindExperienceController(){
+  if(experienceControllerRuntime.bound)return;
+  experienceControllerRuntime.bound=true;
+
+  els.encounterEnabled.addEventListener("change",event=>{
+    state.encounterEnabled=event.target.checked;saveEncounterCollection();updateEncounterUI();retroAudio.play("toggle");accountExperienceAction("préférence de rencontre");
+  });
+  els.observeSurroundings.addEventListener("click",()=>startEncounterFromControl(false));
+  els.testEncounter.addEventListener("click",()=>startEncounterFromControl(true));
+  els.openCodex.addEventListener("click",openCodexFromControl);
+  els.encounterClose.addEventListener("click",()=>closeEncounterFromControl());
+  els.encounterBody.addEventListener("click",handleEncounterControlClick);
+  els.encounterOverlay.addEventListener("click",event=>{if(event.target===els.encounterOverlay)closeEncounterFromControl("fermeture par l’arrière-plan")});
+  window.addEventListener("keydown",event=>{
+    if(event.key==="Escape"&&els.encounterOverlay.classList.contains("active")){event.preventDefault();closeEncounterFromControl("fermeture au clavier")}
+  });
+
+  els.guidedTourSelect.addEventListener("change",event=>{
+    experienceControllerRuntime.tourSelections++;accountExperienceAction("sélection du parcours");
+    state.guidedTourId=event.target.value;state.guidedTourStep=0;
+    if(state.guidedTourActive)moveGuidedTour(0,{action:"changement de parcours"});else updateGuidedTourUI();
+    retroAudio.play("toggle");
+  });
+  els.guidedTourStart.addEventListener("click",()=>{experienceControllerRuntime.tourStarts++;accountExperienceAction("début du parcours");startGuidedTour()});
+  els.guidedTourPrev.addEventListener("click",()=>moveGuidedTour(state.guidedTourStep-1,{action:"étape précédente"}));
+  els.guidedTourNext.addEventListener("click",()=>moveGuidedTour(state.guidedTourStep+1,{action:"étape suivante"}));
+  els.guidedTourRecenter.addEventListener("click",()=>moveGuidedTour(state.guidedTourStep,{announce:false,action:"recentrage du parcours"}));
+  els.guidedTourStop.addEventListener("click",()=>{experienceControllerRuntime.tourStops++;accountExperienceAction("fin du parcours");stopGuidedTour()});
+}
+
 function bearingDegrees(a,b){
   const p1=rad(a.lat),p2=rad(b.lat),dl=rad(b.lon-a.lon);const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
@@ -9507,6 +9559,7 @@ bindSnapshotManager();
 bindUiShell();
 bindFieldworkController();
 bindSourceController();
+bindExperienceController();
 
 els.readoutSheetHandle.addEventListener("click",cycleReadoutSheet);
 document.addEventListener("click",e=>{
@@ -9515,27 +9568,6 @@ document.addEventListener("click",e=>{
   const relation=e.target.closest?.("[data-relation-from][data-relation-to]");
   if(relation){e.preventDefault();framePoiRelation(relation.dataset.relationFrom,relation.dataset.relationTo,relation.dataset.relationLabel||"relation")}
 });
-
-
-els.encounterEnabled.addEventListener("change",e=>{state.encounterEnabled=e.target.checked;saveEncounterCollection();updateEncounterUI();retroAudio.play("toggle")});
-els.observeSurroundings.addEventListener("click",()=>startLocalEncounter());
-els.testEncounter.addEventListener("click",()=>startLocalEncounter({testMode:true}));
-els.openCodex.addEventListener("click",()=>openCodex());
-els.encounterClose.addEventListener("click",closeEncounterOverlay);
-els.encounterBody.addEventListener("click",handleEncounterClick);
-els.encounterOverlay.addEventListener("click",e=>{if(e.target===els.encounterOverlay)closeEncounterOverlay()});
-window.addEventListener("keydown",e=>{if(e.key==="Escape"&&els.encounterOverlay.classList.contains("active")){e.preventDefault();closeEncounterOverlay()}});
-
-els.guidedTourSelect.addEventListener("change",e=>{
-  state.guidedTourId=e.target.value;state.guidedTourStep=0;
-  if(state.guidedTourActive)focusGuidedTourStep(0);else updateGuidedTourUI();
-  retroAudio.play("toggle");
-});
-els.guidedTourStart.addEventListener("click",startGuidedTour);
-els.guidedTourPrev.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep-1));
-els.guidedTourNext.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep+1));
-els.guidedTourRecenter.addEventListener("click",()=>focusGuidedTourStep(state.guidedTourStep,{announce:false}));
-els.guidedTourStop.addEventListener("click",stopGuidedTour);
 
 els.recenterSelected.addEventListener("click",()=>{
   if(!state.selectedCell){setReadoutContent("<strong>Aucune case mémorisée.</strong><br>Clique d’abord un point de la carte.",{title:"Aucune sélection",sheet:"peek"});return}
