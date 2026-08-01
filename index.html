@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17l · moteur Canvas unique</title>
+<title>Atlas Karst ASCII v0.17m · peau visuelle consolidée</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1048,61 +1048,8 @@ button:active:not(:disabled){transform:translateY(1px);filter:brightness(1.14)}
 }
 .render-mode-panel button[aria-disabled="true"]{opacity:.48}
 .render-mode-note{margin:-2px 0 9px;padding:0 3px;font-size:9px;line-height:1.45;color:#8fa79a}
-body[data-effective-render="symbolic"] #viewport{
-  border-color:#426a57;
-  background:
-    linear-gradient(180deg,rgba(222,207,158,.025),transparent 16%,transparent 84%,rgba(0,0,0,.16)),
-    radial-gradient(ellipse at 46% 42%,#10251a 0,#07110c 72%);
-  box-shadow:
-    inset 0 0 0 1px rgba(218,205,159,.035),
-    inset 0 0 48px rgba(0,0,0,.56),
-    inset 0 0 120px rgba(67,128,88,.11),
-    0 0 0 1px rgba(6,14,10,.75)
-}
-body[data-effective-render="symbolic"] #mapCanvas{
-  image-rendering:auto;
-  filter:saturate(1.04) contrast(1.035)
-}
-body[data-effective-render="symbolic"] .north{
-  border-color:#547763;background:rgba(5,14,9,.94);color:#d9c98f;
-  box-shadow:inset 0 0 0 1px rgba(217,201,143,.035),0 0 10px rgba(121,226,171,.07)
-}
-body[data-effective-render="symbolic"] .map-actions button{
-  border-color:#466d59;background:linear-gradient(180deg,rgba(15,35,25,.96),rgba(6,17,11,.96));
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 0 9px rgba(72,139,96,.045)
-}
-body[data-effective-render="ascii"] #mapCanvas{image-rendering:auto}
 @media(max-width:520px){
   .render-mode-panel button{font-size:9px;padding-inline:5px}
-}
-
-
-
-/* V0.16e — cartographie d’arpenteur.
-   Même moteur, mais une peau plus structurée : relief mat, bâti légèrement
-   embossé, réseau hiérarchisé et finition de carte imprimée/terminal. */
-body[data-effective-render="symbolic"] #viewport{
-  border-color:#587563;
-  background:
-    linear-gradient(180deg,rgba(225,213,170,.035),transparent 14%,transparent 82%,rgba(0,0,0,.22)),
-    radial-gradient(ellipse at 48% 40%,#12291d 0,#07110c 74%);
-  box-shadow:
-    inset 0 0 0 1px rgba(235,222,174,.045),
-    inset 0 0 68px rgba(0,0,0,.64),
-    inset 0 0 150px rgba(52,115,78,.12),
-    0 0 0 1px rgba(3,10,6,.88),
-    0 8px 30px rgba(0,0,0,.16)
-}
-body[data-effective-render="symbolic"] #mapCanvas{
-  filter:saturate(.96) contrast(1.055) brightness(.985);
-}
-body[data-effective-render="symbolic"] .map-tip{
-  border-color:rgba(202,190,143,.28);background:rgba(4,12,8,.91);color:#98aa9e;
-  box-shadow:inset 0 0 0 1px rgba(121,226,171,.025)
-}
-body[data-effective-render="symbolic"] .north,
-body[data-effective-render="symbolic"] .map-actions button{
-  backdrop-filter:none;
 }
 
 
@@ -1141,37 +1088,6 @@ body[data-effective-render="symbolic"] .map-actions button{
   #readout[data-sheet-state="peek"] .readout-body{display:none}
 }
 
-/* Cadre d'arpentage : plus mécanique, moins "carte web". */
-body[data-effective-render="symbolic"] #viewport{
-  border:2px solid #5d715f!important;
-  border-radius:3px!important;
-  background:
-    linear-gradient(90deg,rgba(210,194,137,.025) 1px,transparent 1px),
-    linear-gradient(0deg,rgba(210,194,137,.02) 1px,transparent 1px),
-    linear-gradient(180deg,rgba(225,213,170,.035),transparent 14%,transparent 82%,rgba(0,0,0,.24)),
-    radial-gradient(ellipse at 48% 40%,#12291d 0,#07110c 74%)!important;
-  background-size:32px 32px,32px 32px,auto,auto!important;
-  box-shadow:
-    inset 0 0 0 1px #020805,
-    inset 0 0 0 4px rgba(129,151,124,.10),
-    inset 0 0 72px rgba(0,0,0,.70),
-    inset 0 0 160px rgba(52,115,78,.13),
-    0 0 0 1px rgba(161,151,107,.30),
-    0 10px 36px rgba(0,0,0,.22)!important;
-}
-body[data-effective-render="symbolic"] #viewport::before{
-  content:"";position:absolute;inset:7px;z-index:18;pointer-events:none;
-  background:
-    linear-gradient(#c4b87e,#c4b87e) left top/22px 1px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) left top/1px 22px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) right top/22px 1px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) right top/1px 22px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) left bottom/22px 1px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) left bottom/1px 22px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) right bottom/22px 1px no-repeat,
-    linear-gradient(#c4b87e,#c4b87e) right bottom/1px 22px no-repeat;
-  opacity:.62
-}
 body[data-effective-render="symbolic"] .map-top-overlay::before{
   content:"ATLAS // LOCAL SURVEY";position:absolute;left:68px;top:12px;z-index:12;
   padding:4px 7px;border:1px solid rgba(116,153,130,.42);background:rgba(4,13,8,.88);
@@ -1249,17 +1165,16 @@ body[data-effective-render="symbolic"] .map-tip{
 @media(max-width:940px){
   body[data-effective-render="symbolic"] .map-top-overlay::before,
   body[data-effective-render="symbolic"] .map-top-overlay::after{display:none}
-  body[data-effective-render="symbolic"] #viewport::before{inset:5px;opacity:.42}
 }
 @media(prefers-reduced-motion:reduce){#readout{transition:none!important}}
 
 
 
-/* V0.16l — effets globaux optimisés.
-   Les effets lourds ne sont jamais redessinés cellule par cellule.
-   Symbolique : phosphore de laboratoire. ASCII : tube cathodique statique. */
+/* Peau cartographique consolidée : une seule définition par mode. Les motifs
+   sont statiques ; les seules animations de rendu vivent dans le calque FX
+   borné plus bas. */
 body[data-effective-render="symbolic"] #viewport{
-  border-color:#6c947b!important;
+  border:2px solid #92d8ae!important;border-radius:3px!important;
   background:
     linear-gradient(90deg,rgba(112,255,195,.045) 1px,transparent 1px),
     linear-gradient(0deg,rgba(112,255,195,.035) 1px,transparent 1px),
@@ -1268,22 +1183,15 @@ body[data-effective-render="symbolic"] #viewport{
     radial-gradient(ellipse at 50% 42%,#10271b 0,#07120c 68%,#030805 100%)!important;
   background-size:28px 28px,28px 28px,auto,auto,auto!important;
   box-shadow:
-    inset 0 0 0 1px rgba(160,255,212,.10),
-    inset 0 0 34px rgba(72,221,145,.07),
-    inset 0 0 105px rgba(0,0,0,.67),
-    0 0 0 1px rgba(3,12,7,.95),
-    0 0 20px rgba(86,255,183,.095),
-    0 12px 34px rgba(0,0,0,.25)!important;
-}
-body[data-effective-render="symbolic"] #viewport::after{
-  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  background:
-    radial-gradient(circle at 50% 45%,rgba(107,255,195,.035),transparent 44%),
-    radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.10) 82%,rgba(0,0,0,.24) 100%),
-    linear-gradient(180deg,rgba(145,255,210,.025),transparent 18%,transparent 82%,rgba(83,206,255,.018));
+    inset 0 0 0 1px rgba(200,255,228,.24),
+    inset 0 0 36px rgba(64,255,164,.16),
+    inset 0 0 140px rgba(0,0,0,.58),
+    0 0 0 1px rgba(2,12,7,.96),
+    0 0 42px rgba(70,255,166,.23),
+    0 18px 52px rgba(0,0,0,.36)!important;
 }
 body[data-effective-render="symbolic"] #mapCanvas{
-  filter:saturate(1.14) contrast(1.09) brightness(1.035)!important;
+  filter:saturate(1.38) contrast(1.18) brightness(1.11)!important;
 }
 body[data-effective-render="symbolic"] .map-top-overlay::before{
   color:#b4efd3!important;border-color:rgba(113,240,181,.35)!important;
@@ -1293,38 +1201,30 @@ body[data-effective-render="symbolic"] .map-top-overlay::after{
   color:#78deb1!important;text-shadow:0 0 7px rgba(92,239,170,.20)!important;
 }
 body[data-effective-render="symbolic"] .map-actions button,
-body[data-effective-render="symbolic"] .north{
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 0 0 1px rgba(2,8,5,.82),0 0 10px rgba(101,245,185,.11),0 4px 8px rgba(0,0,0,.20)!important;
+body[data-effective-render="symbolic"] .north,
+body[data-effective-render="symbolic"] .map-tip{
+  border-color:#76b993!important;text-shadow:0 0 7px rgba(164,255,212,.22)!important;
+  backdrop-filter:none;
+  box-shadow:inset 0 0 0 1px rgba(175,255,215,.05),0 0 18px rgba(80,255,173,.20)!important;
 }
 
 body[data-effective-render="ascii"] #viewport{
-  border-color:#566c5b!important;
+  border-color:#88a68e!important;
   background:
     radial-gradient(circle at 50% 44%,rgba(63,116,80,.21),transparent 47%),
     linear-gradient(180deg,rgba(189,255,208,.016),rgba(0,0,0,.13)),
     linear-gradient(0deg,#06110c,#031009 56%,#020805)!important;
   box-shadow:
-    inset 0 0 0 1px rgba(155,221,174,.06),
-    inset 0 0 52px rgba(0,0,0,.72),
-    inset 0 0 118px rgba(72,172,112,.075),
-    0 0 0 1px rgba(2,8,5,.92),
-    0 9px 27px rgba(0,0,0,.28)!important;
-}
-body[data-effective-render="ascii"] #viewport::before{
-  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  background:
-    repeating-linear-gradient(180deg,rgba(204,255,219,.030) 0 1px,transparent 1px 4px),
-    repeating-linear-gradient(90deg,rgba(91,255,150,.010) 0 1px,transparent 1px 9px),
-    radial-gradient(circle at 50% 48%,transparent 0 58%,rgba(0,0,0,.12) 85%,rgba(0,0,0,.25) 100%);
-}
-body[data-effective-render="ascii"] #viewport::after{
-  content:"";position:absolute;inset:0;z-index:9;pointer-events:none;
-  background:linear-gradient(180deg,transparent 0 44%,rgba(205,255,221,.022) 49%,rgba(205,255,221,.035) 50%,transparent 55%);
-  opacity:.52;
+    inset 0 0 0 1px rgba(189,255,207,.16),
+    inset 0 0 56px rgba(66,255,140,.12),
+    inset 0 0 150px rgba(0,0,0,.78),
+    0 0 0 1px rgba(1,8,4,.98),
+    0 0 28px rgba(76,255,139,.16),
+    0 14px 42px rgba(0,0,0,.38)!important;
 }
 body[data-effective-render="ascii"] #mapCanvas{
   image-rendering:auto!important;
-  filter:saturate(1.13) contrast(1.14) brightness(1.035)!important;
+  filter:saturate(1.34) contrast(1.31) brightness(1.09)!important;
 }
 body[data-effective-render="ascii"] .map-top-overlay::before{
   content:"CRT MATRIX // ASCII FIELD"!important;
@@ -1338,227 +1238,13 @@ body[data-effective-render="ascii"] .map-top-overlay::after{
 body[data-effective-render="ascii"] .map-tip,
 body[data-effective-render="ascii"] .north,
 body[data-effective-render="ascii"] .map-actions button{
-  box-shadow:0 0 8px rgba(121,226,171,.065)!important;
-}
-
-@media(max-width:700px){
-  body[data-effective-render="symbolic"] #viewport::after,
-  body[data-effective-render="ascii"] #viewport::before,
-  body[data-effective-render="ascii"] #viewport::after{opacity:.72}
-}
-
-
-
-/* V0.16n — contraste de signal franchement visible, sans travail par cellule.
-   Les deux modes utilisent des overlays CSS globaux et une seule passe emissive
-   post-rendu. Aucun bruit n'est recalculé caractère par caractère. */
-@keyframes vectorSweep{
-  0%{background-position:180% 0}
-  100%{background-position:-80% 0}
-}
-@keyframes crtSweep{
-  0%{transform:translateY(-125%)}
-  100%{transform:translateY(625%)}
-}
-@keyframes crtFlicker{
-  0%,100%{opacity:.92}
-  17%{opacity:.84}
-  18%{opacity:.98}
-  48%{opacity:.89}
-  49%{opacity:.96}
-  73%{opacity:.86}
-  74%{opacity:.94}
-}
-body[data-effective-render="symbolic"] #viewport{
-  border-color:#83c79d!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(181,255,220,.20),
-    inset 0 0 28px rgba(64,255,164,.12),
-    inset 0 0 120px rgba(0,0,0,.62),
-    0 0 0 1px rgba(2,12,7,.96),
-    0 0 28px rgba(70,255,166,.18),
-    0 14px 40px rgba(0,0,0,.30)!important;
-}
-body[data-effective-render="symbolic"] #mapCanvas{
-  filter:saturate(1.28) contrast(1.14) brightness(1.065)!important;
-}
-body[data-effective-render="symbolic"] #viewport::after{
-  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  background:
-    linear-gradient(90deg,transparent 0 38%,rgba(119,255,201,.03) 43%,rgba(167,255,222,.12) 50%,rgba(92,219,255,.045) 57%,transparent 62%),
-    radial-gradient(circle at 50% 42%,rgba(88,255,188,.08),transparent 48%),
-    radial-gradient(circle at 50% 50%,transparent 0 62%,rgba(0,0,0,.14) 88%,rgba(0,0,0,.30) 100%);
-  background-size:220% 100%,100% 100%,100% 100%;
-  mix-blend-mode:screen;
-  animation:vectorSweep 9s linear infinite;
-}
-body[data-effective-render="symbolic"] .map-tip,
-body[data-effective-render="symbolic"] .north,
-body[data-effective-render="symbolic"] .map-actions button{
-  border-color:#6ca888!important;
-  box-shadow:inset 0 0 0 1px rgba(175,255,215,.04),0 0 14px rgba(80,255,173,.16)!important;
-}
-
-body[data-effective-render="ascii"] #viewport{
-  border-color:#76947c!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(189,255,207,.14),
-    inset 0 0 42px rgba(66,255,140,.10),
-    inset 0 0 128px rgba(0,0,0,.74),
-    0 0 0 1px rgba(1,8,4,.98),
-    0 0 22px rgba(76,255,139,.13),
-    0 12px 38px rgba(0,0,0,.34)!important;
-}
-body[data-effective-render="ascii"] #mapCanvas{
-  image-rendering:auto!important;
-  filter:saturate(1.28) contrast(1.25) brightness(1.075)!important;
-}
-body[data-effective-render="ascii"] #viewport::before{
-  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  background:
-    repeating-linear-gradient(180deg,rgba(212,255,224,.080) 0 1px,rgba(0,0,0,.045) 1px 3px),
-    repeating-linear-gradient(90deg,rgba(255,45,45,.018) 0 1px,rgba(35,255,126,.022) 1px 2px,rgba(50,116,255,.018) 2px 3px,transparent 3px 6px),
-    radial-gradient(circle at 50% 46%,rgba(95,255,151,.055),transparent 52%),
-    radial-gradient(circle at 50% 50%,transparent 0 60%,rgba(0,0,0,.15) 86%,rgba(0,0,0,.34) 100%);
-  mix-blend-mode:screen;
-  animation:crtFlicker 2.8s steps(2,end) infinite;
-}
-body[data-effective-render="ascii"] #viewport::after{
-  content:"";position:absolute;left:0;right:0;top:0;height:16%;z-index:9;pointer-events:none;
-  background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.025) 30%,rgba(218,255,230,.095) 52%,rgba(164,255,194,.025) 72%,transparent 100%);
-  mix-blend-mode:screen;
-  animation:crtSweep 8.5s linear infinite;
-}
-body[data-effective-render="ascii"] .map-tip,
-body[data-effective-render="ascii"] .north,
-body[data-effective-render="ascii"] .map-actions button{
-  border-color:#5f866b!important;
-  text-shadow:0 0 5px rgba(124,255,169,.24)!important;
-  box-shadow:inset 0 0 0 1px rgba(139,255,177,.03),0 0 13px rgba(73,255,133,.12)!important;
-}
-@media(max-width:700px){
-  body[data-effective-render="symbolic"] #viewport::after{animation-duration:14s;opacity:.70}
-  body[data-effective-render="ascii"] #viewport::before{opacity:.76;animation:none}
-  body[data-effective-render="ascii"] #viewport::after{display:none}
-}
-@media(prefers-reduced-motion:reduce){
-  body[data-effective-render="symbolic"] #viewport::after,
-  body[data-effective-render="ascii"] #viewport::before,
-  body[data-effective-render="ascii"] #viewport::after{animation:none!important}
-}
-
-
-
-/* V0.16o — pousse la dualité visuelle plus loin et remplit mieux le cadre
-   sur grands écrans sans changer le moteur. Les effets restent globaux et
-   légers : overlays CSS + halo post-rendu unique. */
-@keyframes vectorPulseSoft{0%,100%{opacity:.74}50%{opacity:1}}
-@keyframes vectorGridDrift{0%{background-position:0 0,0 0,0 0}100%{background-position:140px 56px,-120px 0,0 0}}
-@keyframes asciiNoiseDrift{0%{background-position:0 0,0 0,0 0,0 0}100%{background-position:0 3px,6px 0,2px 0,0 0}}
-@keyframes asciiBloomPulse{0%,100%{opacity:.74}50%{opacity:1}}
-@keyframes asciiRefreshJitter{0%,100%{transform:translateY(0)}19%{transform:translateY(0)}20%{transform:translateY(-.45%)}21%{transform:translateY(.28%)}22%{transform:translateY(0)}}
-
-body[data-effective-render="symbolic"] #viewport{
-  border-color:#92d8ae!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(200,255,228,.24),
-    inset 0 0 36px rgba(64,255,164,.16),
-    inset 0 0 140px rgba(0,0,0,.58),
-    0 0 0 1px rgba(2,12,7,.96),
-    0 0 42px rgba(70,255,166,.23),
-    0 18px 52px rgba(0,0,0,.36)!important;
-}
-body[data-effective-render="symbolic"] #mapCanvas{
-  filter:saturate(1.38) contrast(1.18) brightness(1.11)!important;
-}
-body[data-effective-render="symbolic"] #viewport::before{
-  content:"";position:absolute;inset:0;z-index:7;pointer-events:none;
-  background:
-    radial-gradient(circle at 50% 50%,rgba(115,255,197,.07),transparent 56%),
-    repeating-linear-gradient(90deg,rgba(84,255,185,.03) 0 1px,transparent 1px 12px),
-    repeating-linear-gradient(180deg,rgba(132,255,214,.022) 0 1px,transparent 1px 11px);
-  mix-blend-mode:screen;opacity:.78;
-  animation:vectorPulseSoft 3.2s ease-in-out infinite,vectorGridDrift 18s linear infinite;
-}
-body[data-effective-render="symbolic"] #viewport::after{
-  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  background:
-    linear-gradient(90deg,transparent 0 34%,rgba(119,255,201,.04) 40%,rgba(205,255,234,.16) 49%,rgba(92,219,255,.06) 58%,transparent 64%),
-    radial-gradient(circle at 50% 44%,rgba(88,255,188,.14),transparent 49%),
-    radial-gradient(circle at 50% 50%,transparent 0 60%,rgba(0,0,0,.12) 86%,rgba(0,0,0,.30) 100%);
-  background-size:220% 100%,100% 100%,100% 100%;
-  mix-blend-mode:screen;
-  animation:vectorSweep 6.8s linear infinite,vectorPulseSoft 2.8s ease-in-out infinite;
-}
-body[data-effective-render="symbolic"] .map-tip,
-body[data-effective-render="symbolic"] .north,
-body[data-effective-render="symbolic"] .map-actions button{
-  border-color:#76b993!important;
-  text-shadow:0 0 7px rgba(164,255,212,.22)!important;
-  box-shadow:inset 0 0 0 1px rgba(175,255,215,.05),0 0 18px rgba(80,255,173,.20)!important;
-}
-
-body[data-effective-render="ascii"] #viewport{
-  border-color:#88a68e!important;
-  box-shadow:
-    inset 0 0 0 1px rgba(189,255,207,.16),
-    inset 0 0 56px rgba(66,255,140,.12),
-    inset 0 0 150px rgba(0,0,0,.78),
-    0 0 0 1px rgba(1,8,4,.98),
-    0 0 28px rgba(76,255,139,.16),
-    0 14px 42px rgba(0,0,0,.38)!important;
-}
-body[data-effective-render="ascii"] #mapCanvas{
-  image-rendering:auto!important;
-  filter:saturate(1.34) contrast(1.31) brightness(1.09)!important;
-}
-body[data-effective-render="ascii"] #viewport::before{
-  content:"";position:absolute;inset:0;z-index:8;pointer-events:none;
-  background:
-    repeating-linear-gradient(180deg,rgba(212,255,224,.105) 0 1px,rgba(0,0,0,.055) 1px 3px),
-    repeating-linear-gradient(90deg,rgba(255,45,45,.028) 0 1px,rgba(35,255,126,.032) 1px 2px,rgba(50,116,255,.028) 2px 3px,transparent 3px 6px),
-    radial-gradient(circle at 50% 46%,rgba(95,255,151,.075),transparent 52%),
-    radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.18) 84%,rgba(0,0,0,.36) 100%);
-  mix-blend-mode:screen;
-  opacity:.86;
-  animation:crtFlicker 2.4s steps(2,end) infinite,asciiNoiseDrift 1.8s steps(3,end) infinite,asciiBloomPulse 3.1s ease-in-out infinite;
-}
-body[data-effective-render="ascii"] #viewport::after{
-  content:"";position:absolute;left:0;right:0;top:0;height:18%;z-index:9;pointer-events:none;
-  background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.03) 24%,rgba(222,255,233,.13) 50%,rgba(164,255,194,.03) 76%,transparent 100%);
-  mix-blend-mode:screen;
-  animation:crtSweep 7.1s linear infinite,asciiRefreshJitter 2.9s steps(2,end) infinite;
-}
-body[data-effective-render="ascii"] .map-tip,
-body[data-effective-render="ascii"] .north,
-body[data-effective-render="ascii"] .map-actions button{
-  border-color:#6b9778!important;
-  text-shadow:0 0 6px rgba(124,255,169,.32)!important;
+  border-color:#6b9778!important;text-shadow:0 0 6px rgba(124,255,169,.32)!important;
   box-shadow:inset 0 0 0 1px rgba(139,255,177,.04),0 0 16px rgba(73,255,133,.16)!important;
 }
-@media(max-width:700px){
-  body[data-effective-render="symbolic"] #viewport::before{opacity:.64;animation:vectorPulseSoft 3.6s ease-in-out infinite}
-  body[data-effective-render="symbolic"] #viewport::after{animation-duration:10s;opacity:.82}
-  body[data-effective-render="ascii"] #viewport::before{opacity:.82;animation:crtFlicker 2.6s steps(2,end) infinite}
-  body[data-effective-render="ascii"] #viewport::after{display:none}
-}
-@media(prefers-reduced-motion:reduce){
-  body[data-effective-render="symbolic"] #viewport::before,
-  body[data-effective-render="symbolic"] #viewport::after,
-  body[data-effective-render="ascii"] #viewport::before,
-  body[data-effective-render="ascii"] #viewport::after{animation:none!important}
-}
 
 
 
-/* V0.16q — pipeline Canvas consolidé.
-   Les données et le post-traitement statique sont composités dans le Canvas.
-   Le calque animé est strictement calé sur le rectangle réel du Canvas, jamais
-   sur toute la fenêtre de défilement. Les marqueurs et commandes restent devant. */
-body[data-effective-render="symbolic"] #viewport::before,
-body[data-effective-render="symbolic"] #viewport::after,
-body[data-effective-render="ascii"] #viewport::before,
-body[data-effective-render="ascii"] #viewport::after{display:none!important}
+/* Pipeline FX unique, strictement calé sur le rectangle réel du Canvas. */
 .render-fx-layer{position:absolute;left:0;top:0;width:0;height:0;z-index:6;pointer-events:none;overflow:hidden;border-radius:2px;contain:paint;isolation:isolate;transform:translateZ(0)}
 .render-fx-layer>div{position:absolute;inset:0;pointer-events:none;opacity:0;animation-play-state:paused!important}
 .render-fx-layer.fx-active>div{animation-play-state:running!important}
@@ -1594,6 +1280,13 @@ body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
 }
 @media(prefers-reduced-motion:reduce){.render-fx-layer>div{animation:none!important}}
 .render-fx-layer.fx-restart>div{animation-name:none!important}
+body.motion-disabled #canvasSelectionMarker,
+body.motion-disabled #canvasPoiMarker,
+body.motion-disabled #tourMarker,
+body.motion-disabled .c-user-position,
+body.motion-disabled .cell-deferred.is-loading::after,
+body.motion-disabled .dq-vignette::before,
+body.motion-disabled .dq-dialogue::after{animation:none!important}
 .canvas-compatibility{margin:12px;padding:14px;border:1px solid var(--danger);border-radius:10px;background:#211012;color:#ffe3e4;line-height:1.55}
 .canvas-compatibility strong{display:block;margin-bottom:4px;color:#ffb3b7}
 </style>
@@ -1604,7 +1297,7 @@ body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17l</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17m</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2139,7 +1832,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17l";
+const APP_VERSION = "0.17m";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2245,6 +1938,7 @@ function setRenderFxActivity(active, reason = "idle") {
   clearTimeout(renderFxIdleTimer);
   renderFxIdleTimer = 0;
   const running = !!active && ambientAllowed() && !document.hidden;
+  document.body.classList.toggle("motion-disabled", !ambientAllowed());
   performanceRuntime.fxActive = running;
   performanceRuntime.fxReason = reason;
   if (!fx) return;

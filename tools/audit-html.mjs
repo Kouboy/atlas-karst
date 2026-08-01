@@ -5,6 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
+const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
 const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
@@ -61,7 +62,16 @@ check("rafales de données regroupées", () =>
   sourceByName["data-services.js"].includes('scheduleDataRender("osm-sync-complete")') &&
   sourceByName["data-services.js"].includes('scheduleDataRender("cadastre-sync")')
 );
-check("balayages CRT supprimés", () => !html.includes("fx-vector-sweep") && !html.includes("fx-ascii-refresh") && !html.includes("fxVectorSweep") && !html.includes("fxAsciiRefresh"));
+check("peaux cartographiques consolidées", () =>
+  (atlasCss.match(/body\[data-effective-render="symbolic"\] #viewport\{/g)||[]).length===1 &&
+  (atlasCss.match(/body\[data-effective-render="ascii"\] #viewport\{/g)||[]).length===1 &&
+  !atlasCss.includes("#viewport::before") &&
+  !atlasCss.includes("#viewport::after")
+);
+check("balayages CRT supprimés", () => ![
+  "vectorSweep","crtSweep","crtFlicker","vectorPulseSoft","vectorGridDrift",
+  "asciiNoiseDrift","asciiBloomPulse","asciiRefreshJitter","fxVectorSweep","fxAsciiRefresh"
+].some((token)=>atlasCss.includes(token)));
 check("moteur Canvas isolé", () =>
   sourceByName["canvas-renderer.js"].includes("function drawAsciiCanvasMap") &&
   sourceByName["canvas-renderer.js"].includes("function drawSymbolicCanvasMap") &&
