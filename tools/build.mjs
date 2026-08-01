@@ -8,6 +8,7 @@ const outputUrl = new URL("index.html", root);
 const styleUrl = new URL("src/styles/atlas.css", root);
 const scriptUrls = [
   new URL("src/app/runtime.js", root),
+  new URL("src/app/performance.js", root),
   new URL("src/app/debug.js", root),
   new URL("src/app/main.js", root)
 ];

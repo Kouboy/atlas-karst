@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17a · sources structurées</title>
+<title>Atlas Karst ASCII v0.17b · repos graphique économe</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1628,7 +1628,8 @@ body[data-effective-render="symbolic"] #viewport::after,
 body[data-effective-render="ascii"] #viewport::before,
 body[data-effective-render="ascii"] #viewport::after{display:none!important}
 .render-fx-layer{position:absolute;left:0;top:0;width:0;height:0;z-index:6;pointer-events:none;overflow:hidden;border-radius:2px;contain:paint;isolation:isolate;transform:translateZ(0)}
-.render-fx-layer>div{position:absolute;inset:0;pointer-events:none;opacity:0}
+.render-fx-layer>div{position:absolute;inset:0;pointer-events:none;opacity:0;animation-play-state:paused!important}
+.render-fx-layer.fx-active>div{animation-play-state:running!important}
 .fx-instrument-frame{z-index:6!important;opacity:.68!important;background:
   linear-gradient(#c9bb7d,#c9bb7d) 7px 7px/24px 1px no-repeat,
   linear-gradient(#c9bb7d,#c9bb7d) 7px 7px/1px 24px no-repeat,
@@ -1639,14 +1640,12 @@ body[data-effective-render="ascii"] #viewport::after{display:none!important}
   linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) calc(100% - 7px)/24px 1px no-repeat,
   linear-gradient(#c9bb7d,#c9bb7d) calc(100% - 7px) calc(100% - 7px)/1px 24px no-repeat}
 @keyframes fxVectorSweep{0%{transform:translateX(-135%)}100%{transform:translateX(535%)}}
-@keyframes fxVectorPulse{0%,100%{opacity:.50;filter:brightness(.92)}50%{opacity:.94;filter:brightness(1.18)}}
-@keyframes fxVectorDrift{0%{background-position:0 0,0 0}100%{background-position:96px 48px,-72px 36px}}
-@keyframes fxAsciiGrain{0%{background-position:0 0,0 0}25%{background-position:2px -1px,-2px 1px}50%{background-position:-1px 2px,1px -2px}75%{background-position:1px 1px,-1px 0}100%{background-position:0 0,0 0}}
+@keyframes fxVectorPulse{0%,100%{opacity:.50}50%{opacity:.94}}
 @keyframes fxAsciiRefresh{0%{transform:translateY(0)}100%{transform:translateY(650%)}}
 @keyframes fxAsciiPulse{0%,100%{opacity:.68}48%{opacity:.88}49%{opacity:.58}50%{opacity:.92}}
 body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.52;background:
   repeating-linear-gradient(90deg,rgba(99,255,190,.045) 0 1px,transparent 1px 12px),
-  repeating-linear-gradient(180deg,rgba(133,255,215,.033) 0 1px,transparent 1px 11px);mix-blend-mode:screen;animation:fxVectorDrift 20s linear infinite}
+  repeating-linear-gradient(180deg,rgba(133,255,215,.033) 0 1px,transparent 1px 11px);mix-blend-mode:screen;animation:none}
 body[data-effective-render="symbolic"] .fx-vector-bloom{opacity:.74;background:
   radial-gradient(circle at 50% 45%,rgba(95,255,190,.14),transparent 52%),
   radial-gradient(circle at 50% 50%,transparent 0 61%,rgba(0,0,0,.14) 86%,rgba(0,0,0,.31) 100%);mix-blend-mode:screen;animation:fxVectorPulse 3.1s ease-in-out infinite}
@@ -1658,13 +1657,13 @@ body[data-effective-render="ascii"] .fx-ascii-mask{opacity:.88;background:
   radial-gradient(circle at 50% 50%,transparent 0 58%,rgba(0,0,0,.18) 85%,rgba(0,0,0,.37) 100%);mix-blend-mode:screen;animation:fxAsciiPulse 2.6s steps(2,end) infinite}
 body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.28;background:
   radial-gradient(circle,rgba(217,255,228,.18) 0 .55px,transparent .75px) 0 0/7px 5px,
-  radial-gradient(circle,rgba(78,255,139,.10) 0 .5px,transparent .7px) 0 0/11px 9px;mix-blend-mode:screen;animation:fxAsciiGrain .36s steps(2,end) infinite}
+  radial-gradient(circle,rgba(78,255,139,.10) 0 .5px,transparent .7px) 0 0/11px 9px;mix-blend-mode:screen;animation:none}
 body[data-effective-render="ascii"] .fx-ascii-refresh{inset:-18% 0 auto;height:18%;opacity:.96;background:linear-gradient(180deg,transparent 0,rgba(214,255,226,.025) 25%,rgba(226,255,235,.15) 50%,rgba(164,255,194,.03) 76%,transparent 100%);mix-blend-mode:screen;will-change:transform;animation:fxAsciiRefresh 6.4s linear infinite}
 .terminal-wrap.panning .render-fx-layer>div,.terminal-wrap:has(#mapCanvas.pinching) .render-fx-layer>div{animation-play-state:paused!important}
 @media(max-width:700px){
   body[data-effective-render="symbolic"] .fx-vector-grid{opacity:.32;animation:none}
   body[data-effective-render="symbolic"] .fx-vector-sweep{animation-duration:10s;opacity:.64}
-  body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.16;animation-duration:.7s}
+  body[data-effective-render="ascii"] .fx-ascii-grain{opacity:.16}
   body[data-effective-render="ascii"] .fx-ascii-refresh{display:none}
 }
 @media(prefers-reduced-motion:reduce){.render-fx-layer>div{animation:none!important}}
@@ -1678,7 +1677,7 @@ body:not(.renderer-canvas) .render-fx-layer{display:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17a</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · V0.17b</div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
       <div class="sidebar-tools">
@@ -2209,7 +2208,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.17a";
+const APP_VERSION = "0.17b";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const RENDERER_MODE = URL_FLAGS.get("renderer")==="dom" ? "dom" : "canvas";
 const CANVAS_RENDERER = RENDERER_MODE==="canvas" && !!document.createElement("canvas").getContext;
@@ -2222,6 +2221,60 @@ const debugState={
   lastPointer:"—",lastSelection:"—",lastReason:"initialisation",lastStorageScan:0,
   storageBytes:0,storageKeys:0,errors:[],bootStarted:performance.now()
 };
+
+const AMBIENT_PREF_KEY = "atlas-karst-ambient-motion-v1";
+const reducedMotionQuery = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+const performanceRuntime = {
+  canvasPixels: 0,
+  canvasPixelBudget: 0,
+  requestedDpr: 1,
+  effectiveDpr: 1,
+  fxActive: false,
+  fxReason: "initialisation"
+};
+let renderFxIdleTimer = 0;
+
+function ambientAllowed() {
+  return !!state.ambientMotion && !reducedMotionQuery?.matches;
+}
+
+function adaptiveCanvasDpr(width, height, compact = false) {
+  const requested = Math.min(window.devicePixelRatio || 1, compact ? 1.25 : 1.75);
+  const pixelBudget = compact ? 3_500_000 : 8_000_000;
+  const budgetDpr = Math.sqrt(pixelBudget / Math.max(1, width * height));
+  const effective = Math.max(1, Math.min(requested, budgetDpr));
+  performanceRuntime.requestedDpr = requested;
+  performanceRuntime.effectiveDpr = Math.round(effective * 100) / 100;
+  performanceRuntime.canvasPixelBudget = pixelBudget;
+  return performanceRuntime.effectiveDpr;
+}
+
+function setRenderFxActivity(active, reason = "idle") {
+  const fx = els.renderFxLayer;
+  clearTimeout(renderFxIdleTimer);
+  renderFxIdleTimer = 0;
+  const running = !!active && ambientAllowed() && !document.hidden;
+  performanceRuntime.fxActive = running;
+  performanceRuntime.fxReason = reason;
+  if (!fx) return;
+  fx.classList.toggle("fx-active", running);
+  fx.dataset.motionState = running ? "active" : ambientAllowed() ? "idle" : "disabled";
+  fx.dataset.motionReason = reason;
+}
+
+function pulseRenderFxActivity(duration = 900, reason = "render") {
+  if (!ambientAllowed() || document.hidden) {
+    setRenderFxActivity(false, document.hidden ? "hidden" : "disabled");
+    return;
+  }
+  setRenderFxActivity(true, reason);
+  renderFxIdleTimer = setTimeout(() => setRenderFxActivity(false, "idle"), duration);
+}
+
+function syncAmbientMotionState({ pulse = false, reason = "preference" } = {}) {
+  if (pulse) pulseRenderFxActivity(900, reason);
+  else setRenderFxActivity(false, reason);
+}
 
 function debugFormatBytes(bytes){
   if(!Number.isFinite(bytes)||bytes<=0)return "0 o";
@@ -2259,7 +2312,10 @@ function updateDebugPanel(forceStorage=false){
   const average=debugState.renderCount?debugState.totalRenderMs/debugState.renderCount:0;
   if(els.debugRenderTime)els.debugRenderTime.textContent=debugState.renderCount?`${debugState.lastRenderMs.toFixed(1)} ms · max ${debugState.maxRenderMs.toFixed(1)}`:"—";
   if(els.debugRenderAverage)els.debugRenderAverage.textContent=debugState.renderCount?`${average.toFixed(1)} ms · ${debugState.renderCount} rendus`:"—";
-  if(els.debugGrid)els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m`;
+  if(els.debugGrid){
+    const bitmap=canvasRuntime.metrics?` · bitmap ${els.mapCanvas.width} × ${els.mapCanvas.height} @${canvasRuntime.metrics.dpr}`:"";
+    els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m${bitmap}`;
+  }
   if(els.debugPoiCount)els.debugPoiCount.textContent=`${debugState.lastPoiCount} visibles · ${spatialRuntime.normalizedPois.length} indexés`;
   if(els.debugStorage)els.debugStorage.textContent=`${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`;
   if(els.debugPointer)els.debugPointer.textContent=debugState.lastPointer||"—";
@@ -2290,6 +2346,8 @@ function runAtlasSelfCheck(){
   }
   checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
+  const canvasBudgetOk=!CANVAS_RENDERER||performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
+  checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,CANVAS_RENDERER?`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`:"moteur DOM"));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
   checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
   checks.push(debugCheckResult("Pipeline Canvas final",renderPipelineRuntime.lastStages.at(-1)==="fx-final"&&renderPipelineRuntime.lastFinalizedFrame===renderPipelineRuntime.frame,`${renderPipelineRuntime.lastStages.join(" → ")} · frame ${renderPipelineRuntime.lastFinalizedFrame}`));
@@ -2313,6 +2371,8 @@ function createDebugReport(){
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · coupe ${depthSliceLabel()}`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
+    `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
+    `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
     `Points d’intérêt visibles : ${debugState.lastPoiCount} · normalisés : ${spatialRuntime.normalizedPois.length}`,
     `Index spatial : ${spatialRuntime.rebuilds} reconstructions · dernière ${spatialRuntime.lastBuildMs.toFixed(2)} ms · candidats ${spatialRuntime.lastQueryCandidates} / résultats ${spatialRuntime.lastQueryResults}`,
     `Cache local Atlas : ${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`,
@@ -2575,9 +2635,10 @@ function syncCanvasSize(){
   if(!CANVAS_RENDERER||!els.mapCanvas)return null;
   const m=measureCanvasLayout();
   const compact=matchMedia("(max-width:700px)").matches;
-  const dpr=Math.min(window.devicePixelRatio||1,compact?1.25:1.75);
+  const dpr=adaptiveCanvasDpr(m.width,m.height,compact);
   const displayScale=1,displayWidth=Math.round(m.width),displayHeight=Math.round(m.height);
   const pixelW=Math.max(1,Math.round(m.width*dpr)),pixelH=Math.max(1,Math.round(m.height*dpr));
+  performanceRuntime.canvasPixels=pixelW*pixelH;
   const bitmapChanged=els.mapCanvas.width!==pixelW||els.mapCanvas.height!==pixelH;
   const cssChanged=els.mapCanvas.style.width!==`${displayWidth}px`||els.mapCanvas.style.height!==`${displayHeight}px`;
   if(els.mapCanvas.width!==pixelW)els.mapCanvas.width=pixelW;
@@ -2707,6 +2768,7 @@ function finalizeCanvasFrame(ctx,m,mode,reason="direct",frame=renderPipelineRunt
     els.renderFxLayer.dataset.osmRevision=String(renderPipelineRuntime.osmRevision);
   }
   if(fxNeedsRestart){restartRenderFxAnimations();renderPipelineRuntime.lastFxOsmRevision=renderPipelineRuntime.osmRevision}
+  pulseRenderFxActivity(reason==="boot"?1200:900,reason);
 }
 
 function drawAsciiCanvasMap(grid=state.lastGrid,reason="direct"){
@@ -7750,10 +7812,7 @@ function renderUndergroundBase(g){
   }
 }
 
-const AMBIENT_PREF_KEY="atlas-karst-ambient-motion-v1";
-const reducedMotionQuery=window.matchMedia?.("(prefers-reduced-motion: reduce)");
 let depthTransitionTimer=0;
-function ambientAllowed(){return !!state.ambientMotion&&!reducedMotionQuery?.matches}
 function playDepthTransition(direction){
   if(!ambientAllowed()||!els.depthTransition)return;
   clearTimeout(depthTransitionTimer);
@@ -9634,7 +9693,10 @@ els.renderModeAscii?.addEventListener("click",()=>setRenderMode("ascii"));
   els[id].addEventListener("change",e=>{
     state[id]=e.target.checked;
     if(id==="layerHydrology")hypothesisModelCache.clear();
-    if(id==="ambientMotion"){try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}}
+    if(id==="ambientMotion"){
+      try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}
+      syncAmbientMotionState({pulse:state.ambientMotion,reason:"preference"});
+    }
     render();
   });
 });
@@ -9680,7 +9742,13 @@ window.addEventListener("keydown",e=>{
 // Les navigateurs mobiles n’autorisent Web Audio qu’après un geste explicite.
 // On arme donc le moteur dès le premier contact, avant les gestionnaires métier.
 document.addEventListener("pointerdown",()=>retroAudio.unlock(),{capture:true,passive:true});
-document.addEventListener("visibilitychange",()=>{if(document.hidden)retroAudio.silence()});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){retroAudio.silence();setRenderFxActivity(false,"hidden")}
+  else pulseRenderFxActivity(650,"visible");
+});
+window.addEventListener("blur",()=>setRenderFxActivity(false,"blur"));
+window.addEventListener("focus",()=>pulseRenderFxActivity(650,"focus"));
+reducedMotionQuery?.addEventListener?.("change",()=>syncAmbientMotionState({pulse:false,reason:"system-preference"}));
 document.addEventListener("touchstart",()=>retroAudio.unlock(),{capture:true,passive:true});
 document.addEventListener("keydown",()=>retroAudio.unlock(),{capture:true});
 document.addEventListener("toggle",ev=>{

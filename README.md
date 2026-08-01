@@ -76,6 +76,8 @@ npm run test:all
 
 GitHub Actions répète ces contrôles sur chaque pull request et sur chaque modification de `main`. En cas d’échec navigateur, une capture ciblée est conservée pour le diagnostic.
 
+Les effets CRT animés ne tournent plus indéfiniment : ils s’activent brièvement après un rendu ou une interaction, puis passent au repos. La case « Animations de l’interface et des points d’intérêt » permet toujours de les désactiver complètement.
+
 Le moteur Canvas est le mode normal. Le moteur DOM reste un filet de sécurité pendant la phase de stabilisation et pourra être retiré après comparaison fonctionnelle.
 
 ## Historique

@@ -5,7 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "debug.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -51,6 +51,7 @@ check("diagnostic entièrement enregistré", () => [
   "exportDebugReport"
 ].every((id) => registeredIds.includes(id)));
 check("pipeline Canvas final vérifié", () => html.includes('recordCanvasStage("fx-final")'));
+check("repos graphique borné", () => html.includes("pulseRenderFxActivity") && html.includes("render-fx-layer.fx-active") && html.includes("adaptiveCanvasDpr"));
 check("révision OSM propagée", () => html.includes('markMapDataRevision("osm")'));
 check("dernière vue OSM reprise", () => html.includes("osmEnsurePending") && html.includes("scheduleOsmEnsure(0)"));
 check("Canvas accessible au clavier", () => /<canvas[^>]+id="mapCanvas"[^>]+tabindex="0"/.test(html));

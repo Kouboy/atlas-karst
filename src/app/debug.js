@@ -34,7 +34,10 @@ function updateDebugPanel(forceStorage=false){
   const average=debugState.renderCount?debugState.totalRenderMs/debugState.renderCount:0;
   if(els.debugRenderTime)els.debugRenderTime.textContent=debugState.renderCount?`${debugState.lastRenderMs.toFixed(1)} ms · max ${debugState.maxRenderMs.toFixed(1)}`:"—";
   if(els.debugRenderAverage)els.debugRenderAverage.textContent=debugState.renderCount?`${average.toFixed(1)} ms · ${debugState.renderCount} rendus`:"—";
-  if(els.debugGrid)els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m`;
+  if(els.debugGrid){
+    const bitmap=canvasRuntime.metrics?` · bitmap ${els.mapCanvas.width} × ${els.mapCanvas.height} @${canvasRuntime.metrics.dpr}`:"";
+    els.debugGrid.textContent=`${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · ${currentDepth()} m${bitmap}`;
+  }
   if(els.debugPoiCount)els.debugPoiCount.textContent=`${debugState.lastPoiCount} visibles · ${spatialRuntime.normalizedPois.length} indexés`;
   if(els.debugStorage)els.debugStorage.textContent=`${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`;
   if(els.debugPointer)els.debugPointer.textContent=debugState.lastPointer||"—";
@@ -65,6 +68,8 @@ function runAtlasSelfCheck(){
   }
   checks.push(debugCheckResult("Ciblage des quatre coins",targetOk,targetDetails.join(" · ")));
   checks.push(debugCheckResult("Rendu sous 80 ms",debugState.lastRenderMs<=80,`${debugState.lastRenderMs.toFixed(1)} ms`));
+  const canvasBudgetOk=!CANVAS_RENDERER||performanceRuntime.canvasPixels<=performanceRuntime.canvasPixelBudget*1.02;
+  checks.push(debugCheckResult("Budget bitmap Canvas",canvasBudgetOk,CANVAS_RENDERER?`${performanceRuntime.canvasPixels.toLocaleString("fr-FR")} / ${performanceRuntime.canvasPixelBudget.toLocaleString("fr-FR")} pixels · DPR ${performanceRuntime.effectiveDpr}`:"moteur DOM"));
   checks.push(debugCheckResult("Index spatial",spatialRuntime.normalizedPois.length>0,`${spatialRuntime.normalizedPois.length} POI · ${spatialRuntime.osmIndex.count} objets OSM · ${spatialRuntime.cadastreIndex.count} objets cadastraux`));
   checks.push(debugCheckResult("Audio prêt",!!retroAudio,retroAudio?.isEnabled?.()?"activé":"coupé"));
   checks.push(debugCheckResult("Pipeline Canvas final",renderPipelineRuntime.lastStages.at(-1)==="fx-final"&&renderPipelineRuntime.lastFinalizedFrame===renderPipelineRuntime.frame,`${renderPipelineRuntime.lastStages.join(" → ")} · frame ${renderPipelineRuntime.lastFinalizedFrame}`));
@@ -88,6 +93,8 @@ function createDebugReport(){
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · coupe ${depthSliceLabel()}`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
+    `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
+    `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
     `Points d’intérêt visibles : ${debugState.lastPoiCount} · normalisés : ${spatialRuntime.normalizedPois.length}`,
     `Index spatial : ${spatialRuntime.rebuilds} reconstructions · dernière ${spatialRuntime.lastBuildMs.toFixed(2)} ms · candidats ${spatialRuntime.lastQueryCandidates} / résultats ${spatialRuntime.lastQueryResults}`,
     `Cache local Atlas : ${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`,

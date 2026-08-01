@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17b — Repos graphique économe
+
+- Arrêt automatique des animations plein écran après une courte impulsion de rendu.
+- Mise en pause immédiate lorsque la fenêtre perd le focus ou devient invisible.
+- Suppression des déplacements continus du grain ASCII et de la grille vectorielle.
+- Suppression du filtre animé appliqué au halo vectoriel plein écran.
+- Plafonnement adaptatif du bitmap Canvas à 8 millions de pixels sur desktop et 3,5 millions sur mobile.
+- Nouveau module `performance.js` et diagnostic du budget Canvas.
+- Scénario automatisé garantissant l’absence d’animation et de redraw JavaScript au repos.
+
 ## 0.17a — Sources structurées
 
 - Séparation du gabarit HTML, des styles et du JavaScript applicatif dans `src/`.

@@ -77,14 +77,36 @@ try {
     assert.ok(renderMs <= 80, `rendu trop lent : ${renderMs} ms`);
   });
 
+  await withPage("repos graphique économe", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.waitForTimeout(2_200);
+    const idle = await page.evaluate(() => {
+      const fx = document.getElementById("renderFxLayer");
+      const running = [...fx.querySelectorAll(":scope > div")].filter((element) => {
+        const style = getComputedStyle(element);
+        return style.display !== "none" && style.opacity !== "0" && style.animationName !== "none" && style.animationPlayState === "running";
+      }).map((element) => element.className);
+      const renderCount = Number.parseInt(document.getElementById("debugRenderAverage")?.textContent?.match(/(\d+) rendus/)?.[1] || "0", 10);
+      return { motionState: fx.dataset.motionState, running, renderCount, largeScreenDpr: adaptiveCanvasDpr(3200, 2000, false) };
+    });
+    assert.equal(idle.motionState, "idle");
+    assert.deepEqual(idle.running, [], `animations encore actives au repos : ${idle.running.join(", ")}`);
+    assert.ok(idle.largeScreenDpr <= 1.12, `DPR grand écran trop élevé : ${idle.largeScreenDpr}`);
+    await page.waitForTimeout(600);
+    const renderCountAfter = await page.evaluate(() => Number.parseInt(document.getElementById("debugRenderAverage")?.textContent?.match(/(\d+) rendus/)?.[1] || "0", 10));
+    assert.equal(renderCountAfter, idle.renderCount, "nouveau rendu JavaScript pendant le repos");
+  });
+
   await withPage("rendus symbolique et ASCII", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     assert.equal(await page.locator("body").getAttribute("data-effective-render"), "symbolic");
     await page.getByRole("button", { name: "⌁ ASCII", exact: true }).click();
     await page.locator('body[data-effective-render="ascii"]').waitFor();
     assert.equal(await page.locator("#renderModeAscii").getAttribute("aria-pressed"), "true");
+    assert.equal(await page.locator("#renderFxLayer").getAttribute("data-motion-state"), "active");
     await page.getByRole("button", { name: "▰ symbolique", exact: true }).click();
     await page.locator('body[data-effective-render="symbolic"]').waitFor();
+    assert.equal(await page.locator("#renderFxLayer").getAttribute("data-motion-state"), "active");
   });
 
   for (const viewport of [
