@@ -5,7 +5,7 @@ import vm from "node:vm";
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -120,6 +120,15 @@ check("gestionnaire d’instantanés isolé", () =>
   sourceByName["main.js"].includes("bindSnapshotManager()") &&
   !sourceByName["main.js"].includes("function applyAtlasSnapshot") &&
   !sourceByName["main.js"].includes("function openSnapshotDb")
+);
+check("coque d’interface isolée", () =>
+  sourceByName["ui-shell.js"].includes("function bindUiShell") &&
+  sourceByName["ui-shell.js"].includes("function buildSidebarClusters") &&
+  sourceByName["ui-shell.js"].includes("function responsiveGridProfile") &&
+  sourceByName["ui-shell.js"].includes("function scheduleFrameFit") &&
+  sourceByName["main.js"].includes("bindUiShell()") &&
+  !sourceByName["main.js"].includes("function fitMapFrame") &&
+  !sourceByName["main.js"].includes("function prepareSidebarCards")
 );
 check("contrat souterrain harmonisé", () =>
   sourceByName["map-engine.js"].includes("function undergroundVisualContract") &&

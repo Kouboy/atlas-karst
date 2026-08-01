@@ -15,6 +15,7 @@
 - `app/data-services.js` regroupe les synchronisations, caches et conversions des sources cartographiques.
 - `app/map-engine.js` construit la grille, ses couches de surface ou souterraines, leur contrat visuel partagé et le rendu DOM de secours.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
+- `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
 - `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, IndexedDB, texte et HTML autonome.
 - `app/main.js` orchestre les fonctions applicatives qui restent à extraire progressivement.

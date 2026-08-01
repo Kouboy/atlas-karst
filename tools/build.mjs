@@ -18,6 +18,7 @@ const scriptUrls = [
   new URL("src/app/data-services.js", root),
   new URL("src/app/map-engine.js", root),
   new URL("src/app/cell-inspector.js", root),
+  new URL("src/app/ui-shell.js", root),
   new URL("src/app/input-controller.js", root),
   new URL("src/app/snapshot-manager.js", root),
   new URL("src/app/main.js", root)
