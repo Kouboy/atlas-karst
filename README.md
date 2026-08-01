@@ -43,7 +43,7 @@ Le livrable principal demeure un fichier HTML autonome. Les sources maintenables
 npm run build
 ```
 
-Le dépôt conserve le fichier généré afin qu’il puisse toujours être ouvert directement, sans installation ni serveur. Les responsabilités des fichiers sources sont détaillées dans [`src/README.md`](src/README.md).
+Le dépôt conserve le fichier généré afin qu’il puisse toujours être ouvert directement, sans installation ni serveur. Il faut ouvrir [`index.html`](index.html), jamais le gabarit `src/index.template.html` ; celui-ci redirige désormais vers le bon fichier s’il est ouvert par erreur. Les responsabilités des fichiers sources sont détaillées dans [`src/README.md`](src/README.md).
 
 ```text
 npm test

@@ -1,6 +1,6 @@
 # Organisation des sources
 
-`index.html` reste le livrable autonome ouvert par les utilisateurs. Il est généré par `npm run build` et ne doit pas être modifié directement.
+`index.html` reste le livrable autonome ouvert par les utilisateurs. Il est généré par `npm run build` et ne doit pas être modifié directement. Le gabarit `index.template.html` n’est pas le site final ; s’il est ouvert par erreur, il redirige automatiquement vers le livrable.
 
 - `index.template.html` contient la structure et les textes de l’interface.
 - `styles/atlas.css` contient la feuille de style complète.

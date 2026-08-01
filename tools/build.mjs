@@ -14,6 +14,7 @@ const scriptUrls = [
 
 const STYLE_MARKER = "/* @atlas-inline:styles */";
 const SCRIPT_MARKER = "/* @atlas-inline:scripts */";
+const SOURCE_GUARD_PATTERN = /<!-- @atlas-source-guard:start -->[\s\S]*?<!-- @atlas-source-guard:end -->\n?/;
 const GENERATED_NOTICE = "<!-- Fichier généré par npm run build — modifier les sources dans src/. -->";
 
 function readText(url) {
@@ -30,7 +31,11 @@ function replaceSingle(source, marker, replacement) {
 }
 
 export function buildAtlasHtml() {
-  const template = readText(templateUrl);
+  const sourceTemplate = readText(templateUrl);
+  if (!SOURCE_GUARD_PATTERN.test(sourceTemplate)) {
+    throw new Error("La protection d’ouverture directe du gabarit est absente.");
+  }
+  const template = sourceTemplate.replace(SOURCE_GUARD_PATTERN, "");
   const styles = readText(styleUrl).trimEnd();
   const scripts = scriptUrls.map((url) => readText(url).trim()).join("\n\n");
   let html = replaceSingle(template, STYLE_MARKER, styles);

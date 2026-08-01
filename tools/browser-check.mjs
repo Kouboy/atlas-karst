@@ -7,6 +7,7 @@ import { startAtlasServer } from "./serve.mjs";
 
 const outputDirectory = new URL("../test-results/", import.meta.url);
 const standaloneUrl = new URL("../index.html?offline&debug", import.meta.url).href;
+const sourceTemplateUrl = new URL("../src/index.template.html?offline&debug", import.meta.url).href;
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const escapedAtlasVersion = packageMetadata.atlasVersion.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const titleVersionPattern = new RegExp(`Atlas Karst ASCII v${escapedAtlasVersion}`);
@@ -144,6 +145,14 @@ try {
     await page.locator('body[data-effective-render="symbolic"]').waitFor();
     await page.waitForFunction(() => document.getElementById("debugRenderTime")?.textContent !== "—");
     assert.ok(await page.locator("#mapCanvas").isVisible(), "Canvas autonome invisible");
+  });
+
+  await withPage("gabarit redirigé vers le livrable", { width: 1280, height: 720 }, async (page) => {
+    await page.goto(sourceTemplateUrl, { waitUntil: "domcontentloaded" });
+    await page.waitForURL((url) => url.pathname.endsWith("/index.html") && url.searchParams.has("offline"));
+    assert.match(await page.title(), titleVersionPattern);
+    await page.locator('body[data-effective-render="symbolic"]').waitFor();
+    assert.ok(await page.locator("#mapCanvas").isVisible(), "redirection du gabarit incomplète");
   });
 } finally {
   if (browser) await browser.close();

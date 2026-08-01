@@ -10,6 +10,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - Blocage des contrôles si le fichier autonome n’est plus synchronisé avec ses sources.
 - Version des tests navigateur dérivée automatiquement des métadonnées du projet.
 - Vérification navigateur de l’ouverture directe du livrable en `file://`.
+- Redirection automatique du gabarit de source vers le livrable lorsqu’il est ouvert par erreur.
 
 ## 0.16s — Filet de sécurité automatisé
 
