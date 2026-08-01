@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17p — Contrôleur des sources
+
+- Extraction des commandes OSM, BSS, Cartofriches et patrimoine dans `source-controller.js`.
+- Centralisation des sélecteurs de fichiers, imports, synchronisations, effacements et liens de téléchargement.
+- Déplacement de la relance générale des données et de l’invalidation de ses caches hors de l’orchestrateur principal.
+- Branchement idempotent des commandes afin d’empêcher les doubles imports ou synchronisations.
+- Compteurs d’actions, imports, effacements, filtres et relances ajoutés au diagnostic exportable.
+- Scénario navigateur couvrant trois imports locaux réels, leurs sauvegardes, les remises à zéro et une relance réseau simulée.
+- Réduction supplémentaire de `main.js`, désormais consacré au rendu, aux expériences et au démarrage.
+
 ## 0.17o — Contrôleur de terrain
 
 - Extraction de la géolocalisation ponctuelle et de ses messages de permission dans un contrôleur dédié.
