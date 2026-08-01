@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.17k — Coque responsive isolée
+
+- Extraction des panneaux, accordéons, statuts latéraux et signaux documentaires dans `ui-shell.js`.
+- Déplacement dans la même coque du profil de grille responsive, de l’alignement mobile et du recalage du Canvas.
+- Regroupement des demandes d’ajustement concurrentes dans une seule animation, avec compteurs des demandes, exécutions et regroupements.
+- Cache du conteneur principal et conservation d’un unique observateur de redimensionnement pendant toute la session.
+- Branchement centralisé des commandes de panneau, du volet d’information et des réactions au redimensionnement.
+- Diagnostic « Coque responsive » et scénario navigateur dédié aux rafales d’ajustement et aux états desktop/mobile.
+- Réduction de `main.js` d’environ 820 à 470 lignes ; l’orchestrateur ne possède plus le détail de la mise en page.
+
 ## 0.17j — Sauvegardes vérifiables
 
 - Extraction de la validation, de la restauration IndexedDB, des exports JSON, texte et HTML autonome dans `snapshot-manager.js`.

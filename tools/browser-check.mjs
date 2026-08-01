@@ -78,6 +78,7 @@ try {
     const checks = await page.locator("#debugChecks").innerText();
     assert.match(checks, /Pipeline Canvas final/);
     assert.match(checks, /FX synchronisés avec OSM/);
+    assert.match(checks, /Coque responsive/);
     assert.match(checks, /Gestionnaire d’instantanés/);
     assert.match(checks, /Rendu stabilisé sous 80 ms/);
     assert.equal(await page.locator(".debug-check.bad").count(), 0);
@@ -194,6 +195,33 @@ try {
     assert.equal(exportedHtml.hasTitle,true,"l’export HTML n’est pas identifié comme instantané autonome");
   });
 
+  await withPage("coque responsive regroupée", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.waitForTimeout(350);
+    const batching=await page.evaluate(async()=>{
+      const before={requests:uiShellRuntime.fitRequests,runs:uiShellRuntime.fitRuns,coalesced:uiShellRuntime.fitCoalesced};
+      for(let index=0;index<8;index++)scheduleFrameFit();
+      await new Promise(resolve=>setTimeout(resolve,140));
+      return {
+        bound:uiShellRuntime.bound,ready:uiShellRuntime.ready,profile:uiShellRuntime.lastGridProfile,
+        requests:uiShellRuntime.fitRequests-before.requests,runs:uiShellRuntime.fitRuns-before.runs,coalesced:uiShellRuntime.fitCoalesced-before.coalesced,
+        clusters:document.querySelectorAll("#sidebar > .sidebar-cluster").length
+      };
+    });
+    assert.equal(batching.bound,true);assert.equal(batching.ready,true);assert.match(batching.profile,/\d+ × \d+/);
+    assert.ok(batching.requests>=8&&batching.requests<=12,`${batching.requests} demandes pour la rafale étalon`);
+    assert.ok(batching.runs<=2,`${batching.runs} ajustements pour une seule rafale`);
+    assert.ok(batching.coalesced>=batching.requests-batching.runs-1,`seulement ${batching.coalesced} ajustements regroupés`);assert.equal(batching.clusters,4);
+    await page.locator("#sidebarToggle").click();
+    await page.locator("body.sidebar-collapsed").waitFor();
+    await page.locator("#sidebarToggle").click();
+    await page.waitForFunction(()=>!document.body.classList.contains("sidebar-collapsed"));
+    await page.locator("#infoToggle").click();
+    await page.locator("body.info-collapsed").waitFor();
+    await page.locator("#infoToggle").click();
+    await page.waitForFunction(()=>!document.body.classList.contains("info-collapsed"));
+  });
+
   await withPage("rendus symbolique et ASCII", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     assert.equal(await page.locator("body").getAttribute("data-effective-render"), "symbolic");
@@ -273,6 +301,7 @@ try {
           bodyWidth: document.body.scrollWidth,
           viewportWidth: window.innerWidth,
           canvas: { width: canvas.width, height: canvas.height },
+          shell:{bound:uiShellRuntime.bound,sidebarOpen:document.body.classList.contains("sidebar-open"),infoCollapsed:document.body.classList.contains("info-collapsed")},
           controls: [...document.querySelectorAll(".statusbar .toolbar-button,.map-actions button")]
             .filter((element) => {
               const rect = element.getBoundingClientRect();
@@ -287,9 +316,20 @@ try {
       assert.ok(layout.bodyWidth <= layout.viewportWidth, "débordement horizontal");
       assert.ok(layout.canvas.width > 250 && layout.canvas.height > 200, "Canvas trop petit");
       if (viewport.width <= 940) {
+        assert.equal(layout.shell.bound,true);
+        assert.equal(layout.shell.sidebarOpen,false,"le panneau mobile est ouvert au démarrage");
+        assert.equal(layout.shell.infoCollapsed,true,"la fiche mobile occupe la carte au démarrage");
         for (const control of layout.controls) {
           assert.ok(control.height >= 44, `${control.id} mesure moins de 44 px de haut`);
           if (control.id.startsWith("map")) assert.ok(control.width >= 44, `${control.id} mesure moins de 44 px de large`);
+        }
+        if(viewport.name==="mobile portrait"){
+          await page.locator("#sidebarToggle").click();
+          await page.locator("body.sidebar-open").waitFor();
+          await page.locator("#sidebarBackdrop").click({position:{x:385,y:100}});
+          await page.waitForFunction(()=>!document.body.classList.contains("sidebar-open"));
+          await page.locator("#infoToggle").click();
+          await page.waitForFunction(()=>!document.body.classList.contains("info-collapsed"));
         }
       }
     });
