@@ -658,6 +658,31 @@ function hypothesisModelIntersects(c,model,e){
   const ne=offsetToCoord(c,model.bounds.maxX,model.bounds.maxY);
   return !(ne.lon<e.west||sw.lon>e.east||ne.lat<e.south||sw.lat>e.north);
 }
+function expandExtentMeters(e,meters){
+  const centerLat=(e.south+e.north)/2,latPad=meters/111320;
+  const lonPad=meters/(Math.max(.08,kmPerLon(centerLat))*1000);
+  return {west:e.west-lonPad,east:e.east+lonPad,south:e.south-latPad,north:e.north+latPad};
+}
+function hypothesisOriginSearchPaddingMeters(){
+  // Borne supérieure prudente des modèles générés : conduit naturel maximal,
+  // prolongement hydrologique compris. Le filtre exact par emprise intervient ensuite.
+  const scale=clamp(scenarioFactor(),.6,1.5);
+  return Math.ceil(100+64*10*scale+140*scale);
+}
+function visibleHypothesisPois(extent){
+  const searchExtent=expandExtentMeters(extent,hypothesisOriginSearchPaddingMeters());
+  return queryNormalizedPois(searchExtent,"cavity").sort((a,b)=>String(a.uid).localeCompare(String(b.uid)));
+}
+function segmentIntersectsExtent(a,b,e){
+  if(inExtent(a.lat,a.lon,e)||inExtent(b.lat,b.lon,e))return true;
+  let t0=0,t1=1;const dx=b.lon-a.lon,dy=b.lat-a.lat;
+  for(const [p,q] of [[-dx,a.lon-e.west],[dx,e.east-a.lon],[-dy,a.lat-e.south],[dy,e.north-a.lat]]){
+    if(p===0){if(q<0)return false;continue}
+    const r=q/p;
+    if(p<0){if(r>t1)return false;t0=Math.max(t0,r)}else{if(r<t0)return false;t1=Math.min(t1,r)}
+  }
+  return true;
+}
 function drawWorldLine(g,c,line,info){
   const pts=line.points.map(p=>offsetToGrid(c,p.x,p.y,g.extent));
   const cls=line.water?"c-water-underground c-underground-line":`${confidenceClass(line.conf)} c-underground-line${line.dashed?" c-underground-dashed":""}`;
@@ -725,8 +750,7 @@ function drawHypotheses(g){
   // mètres tient dans moins d'une cellule. Les repères documentés suffisent :
   // inventer une empreinte agrandie nuirait à la lecture et au coût du rendu.
   if(depth===0||state.zoomIndex<=1||!state.layerHypothesis||!state.cavities.length)return;
-  const searchExtent=expandExtentBox(g.extent,1.7);
-  for(const poi of queryNormalizedPois(searchExtent,"cavity")){
+  for(const poi of visibleHypothesisPois(g.extent)){
     const c=poi.raw;
     if(c.local&&!state.layerObservations)continue;
     const marker=cavityMarker(c),info=poiFeatureInfo(poi,cavityInfo(c,marker));
@@ -739,22 +763,18 @@ function drawHypotheses(g){
   if(state.scenario==="extensive")drawPossibleConnections(g);
 }
 function drawPossibleConnections(g){
-  const depth=currentDepth(),searchExtent=expandExtentBox(g.extent,2.1);
+  const depth=currentDepth(),searchExtent=expandExtentMeters(g.extent,760);
   const candidates=queryNormalizedPois(searchExtent,"cavity").map(p=>p.raw).filter(c=>{
     if(!cavityType(c).includes("carri"))return false;
     if(!depthStrength(c,depth))return false;
     return true;
-  });
+  }).sort((a,b)=>String(a.id||cavityName(a)).localeCompare(String(b.id||cavityName(b))));
   for(let i=0;i<candidates.length;i++)for(let j=i+1;j<candidates.length;j++){
     const a=candidates[i],b=candidates[j];
     const distance=distanceMeters(a,b);
     if(distance<140||distance>720)continue;
+    if(!segmentIntersectsExtent(a,b,g.extent))continue;
     const pa=coordToGrid(a.lat,a.lon,g.extent),pb=coordToGrid(b.lat,b.lon,g.extent);
-    const bothOutside=(
-      (pa.x<0||pa.y<0||pa.x>=CONFIG.gridW||pa.y>=CONFIG.gridH)&&
-      (pb.x<0||pb.y<0||pb.x>=CONFIG.gridW||pb.y>=CONFIG.gridH)
-    );
-    if(bothOutside)continue;
     const confidence=distance<300?"med":"low";
     const info={kind:"connexion possible entre exploitations",name:`${cavityName(a)} ↔ ${cavityName(b)}`,source:`connexion interprétative dans la coupe ${depthSliceLabel(depth)} · aucune continuité attestée`,confidenceLabel:confidence==="med"?"moyenne":"faible"};
     let n=0;bresenham(pa.x,pa.y,pb.x,pb.y,(x,y)=>{if(n++%3===0)put(g,x,y,"·",`${confidence==="med"?"c-hyp-med":"c-hyp-low"} c-underground-line c-underground-dashed`,9,info,confidence)});

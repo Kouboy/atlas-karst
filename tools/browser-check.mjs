@@ -125,19 +125,40 @@ try {
       const nearClasses=state.lastGrid.grid.flat().map(cell=>String(cell.cls||""));
       const phases={...debugState.lastRenderPhases};
       const shallow=undergroundVisualContract(-3),deep=undergroundVisualContract(-35);
+      state.scenario="extensive";
+      const edgeCavity={id:"test-edge-quarry",name:"Carrière hors champ",type:"carrière souterraine",depth:14,lat:center.lat,lon:center.lon};
+      state.cavities=[edgeCavity];hypothesisModelCache.clear();markSpatialIndexesDirty();
+      const edgeModel=getHypothesisModel(edgeCavity,-14);
+      const edgePoints=[...edgeModel.polygons.flatMap(item=>item.points),...edgeModel.lines.flatMap(item=>item.points),...edgeModel.points]
+        .sort((a,b)=>Math.hypot(b.x,b.y)-Math.hypot(a.x,a.y));
+      state.zoomIndex=5;
+      const edgeTarget=edgePoints.find(point=>{
+        const target=offsetToCoord(edgeCavity,point.x,point.y),extent=extentFor(target,currentZoom());
+        return !inExtent(edgeCavity.lat,edgeCavity.lon,expandExtentBox(extent,1.7));
+      });
+      if(!edgeTarget)throw new Error("modèle étalon trop court pour le test hors champ");
+      state.center=offsetToCoord(edgeCavity,edgeTarget.x,edgeTarget.y);render("test-underground-origin-outside");
+      const originOutside=!inExtent(edgeCavity.lat,edgeCavity.lon,state.lastGrid.extent);
+      const edgeVisibleBefore=state.lastGrid.grid.flat().filter(cell=>cell.feature?.hypothesisModel===edgeModel.key).length;
+      state.center=offsetToCoord(state.center,12,8);render("test-underground-after-pan");
+      const edgeVisibleAfter=state.lastGrid.grid.flat().filter(cell=>cell.feature?.hypothesisModel===edgeModel.key).length;
       setRenderMode("ascii");const asciiBand=document.body.dataset.depthBand;
       setRenderMode("symbolic");
       return {
         farGeometry:farClasses.filter(cls=>/c-underground-(?:volume|line|edge|locator)/.test(cls)).length,
         nearLines:nearClasses.filter(cls=>cls.includes("c-underground-line")).length,
         nearVolumes:nearClasses.filter(cls=>cls.includes("c-underground-volume")).length,
-        phases,asciiBand,mode:document.body.dataset.effectiveRender,paletteChanges:shallow.ground!==deep.ground
+        phases,asciiBand,mode:document.body.dataset.effectiveRender,paletteChanges:shallow.ground!==deep.ground,
+        originOutside,edgeVisibleBefore,edgeVisibleAfter
       };
     });
     assert.equal(comparison.farGeometry,0,"une géométrie artificielle subsiste au zoom territoire");
     assert.ok(comparison.nearLines>0,"les conduits souterrains ne sont pas tracés au zoom proche");
     assert.ok(comparison.nearVolumes>0,"les volumes souterrains ne sont pas tracés au zoom proche");
     assert.ok(comparison.paletteChanges,"la profondeur ne modifie pas le contrat chromatique");
+    assert.ok(comparison.originOutside,"l’origine étalon devrait être hors champ");
+    assert.ok(comparison.edgeVisibleBefore>0,"la galerie disparaît lorsque son origine sort du champ");
+    assert.ok(comparison.edgeVisibleAfter>0,"la galerie disparaît après un déplacement qui conserve son emprise visible");
     assert.ok(comparison.phases.layers<40,`projection souterraine trop coûteuse : ${comparison.phases.layers.toFixed(1)} ms`);
     assert.equal(comparison.asciiBand,"middle");
     assert.equal(comparison.mode,"symbolic");

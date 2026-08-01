@@ -11,6 +11,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - Projection fantôme dédiée : elle ne reconstruit plus toute la carte de surface à chaque coupe.
 - Post-traitement souterrain commun aux deux modes, sans halo plein écran ni scanlines spécifiques à l’ASCII.
 - Réduction mesurée de la phase « couches » d’environ 67 ms à 4–8 ms au zoom parcelle sur la vue de contrôle synchronisée.
+- Conservation des galeries et connexions qui traversent l’écran lorsque leur point d’origine est hors champ ; ordre de composition stabilisé pendant les déplacements.
 
 ## 0.17e — Moteur cartographique mesuré
 
