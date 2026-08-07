@@ -96,11 +96,11 @@ const ENCOUNTER_BY_ID=new Map(LOCAL_ENCOUNTERS.map(e=>[e.id,e]));
 const encounterRuntime={screen:"closed",active:null,answerLocked:false,returnScreen:"codex"};
 
 function loadEncounterCollection(){
-  try{const raw=JSON.parse(localStorage.getItem(ENCOUNTER_COLLECTION_KEY)||"{}");state.encounterCollection=raw&&typeof raw==="object"?raw:{}}catch{state.encounterCollection={}}
+  try{const raw=JSON.parse(localStorage.getItem(territoryStorageKey(ENCOUNTER_COLLECTION_KEY))||"{}");state.encounterCollection=raw&&typeof raw==="object"?raw:{}}catch{state.encounterCollection={}}
   try{state.encounterEnabled=localStorage.getItem(ENCOUNTER_PREF_KEY)!=="off"}catch{state.encounterEnabled=true}
 }
 function saveEncounterCollection(){
-  try{localStorage.setItem(ENCOUNTER_COLLECTION_KEY,JSON.stringify(state.encounterCollection||{}));localStorage.setItem(ENCOUNTER_PREF_KEY,state.encounterEnabled?"on":"off")}catch{}
+  try{localStorage.setItem(territoryStorageKey(ENCOUNTER_COLLECTION_KEY),JSON.stringify(state.encounterCollection||{}));localStorage.setItem(ENCOUNTER_PREF_KEY,state.encounterEnabled?"on":"off")}catch{}
 }
 function encounterRecord(id){return state.encounterCollection?.[id]||null}
 function encounterStatusRank(status){return status==="deepened"?3:status==="identified"?2:status==="seen"?1:0}

@@ -18,7 +18,7 @@ function unlockAudioFromGesture(event){
 }
 function handleLifecycleVisibility(){
   lifecycleControllerRuntime.visibilityChanges++;
-  if(document.hidden){accountLifecycleEvent("page masquée");suspendSessionResources("hidden")}
+  if(document.hidden){accountLifecycleEvent("page masquée");if(typeof autosaveActiveTerritory==="function")autosaveActiveTerritory();suspendSessionResources("hidden")}
   else{accountLifecycleEvent("page visible");resumeSessionResources("visible")}
 }
 function handleLifecycleBlur(){lifecycleControllerRuntime.focusChanges++;accountLifecycleEvent("fenêtre inactive");setRenderFxActivity(false,"blur")}
@@ -53,6 +53,7 @@ function bindLifecycleController(){
   document.addEventListener("visibilitychange",handleLifecycleVisibility);
   window.addEventListener("blur",handleLifecycleBlur);
   window.addEventListener("focus",handleLifecycleFocus);
+  window.addEventListener("pagehide",()=>{if(typeof autosaveActiveTerritory==="function")autosaveActiveTerritory()});
   reducedMotionQuery?.addEventListener?.("change",handleMotionPreferenceChange);
   document.addEventListener("toggle",event=>{
     if(event.target instanceof HTMLDetailsElement)playLifecycleAction(event.target.open?"panelOpen":"panelClose","panneau");

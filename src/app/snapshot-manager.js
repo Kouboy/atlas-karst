@@ -3,7 +3,7 @@ const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
 const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const snapshotRuntime={
   ready:true,bound:false,built:0,applied:0,imports:0,exports:0,standaloneExports:0,
-  dbSaves:0,dbLoads:0,dbDeletes:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
+  dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
 };
 
 function recordSnapshotError(error){
@@ -65,37 +65,119 @@ function openSnapshotDb(){
   });
 }
 
-async function saveSnapshotToDb(snapshot){
-  validateAtlasSnapshot(snapshot);
+function territorySnapshotDbKey(id){return `${TERRITORY_SNAPSHOT_PREFIX}${String(id||"").trim()}`}
+function normalizeTerritoryRegistry(value){
+  const raw=value&&typeof value==="object"&&!Array.isArray(value)?value:{};
+  const entries=[],seen=new Set();
+  for(const item of Array.isArray(raw.entries)?raw.entries:[]){
+    const profile=normalizeTerritoryProfile(item?.profile||item,LEGACY_TERRITORY_PROFILE);
+    if(!profile.id||seen.has(profile.id))continue;seen.add(profile.id);
+    entries.push({
+      id:profile.id,label:profile.label,profile:territorySnapshot(profile),
+      createdAt:String(item.createdAt||item.updatedAt||new Date().toISOString()),
+      updatedAt:String(item.updatedAt||item.createdAt||new Date().toISOString()),
+      lastOpenedAt:String(item.lastOpenedAt||item.updatedAt||item.createdAt||new Date().toISOString())
+    });
+  }
+  return {schema:1,activeId:seen.has(raw.activeId)?raw.activeId:(entries[0]?.id||""),entries};
+}
+function territoryRecordFromSnapshot(snapshot,previous=null,{opened=false}={}){
+  const now=new Date().toISOString(),profile=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE);
+  return {
+    id:profile.id,label:profile.label,profile:territorySnapshot(profile),
+    createdAt:String(previous?.createdAt||snapshot.createdAt||now),updatedAt:now,
+    lastOpenedAt:opened?now:String(previous?.lastOpenedAt||previous?.updatedAt||now)
+  };
+}
+async function readSnapshotDbValue(key){
   const db=await openSnapshotDb();
   return new Promise((resolve,reject)=>{
-    const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite");
-    tx.objectStore(SNAPSHOT_DB_STORE).put(snapshot,SNAPSHOT_DB_KEY);
-    tx.oncomplete=()=>{db.close();snapshotRuntime.dbSaves++;resolve()};
-    tx.onerror=()=>{const error=tx.error||new Error("Sauvegarde IndexedDB impossible");db.close();recordSnapshotError(error);reject(error)};
+    const tx=db.transaction(SNAPSHOT_DB_STORE,"readonly"),req=tx.objectStore(SNAPSHOT_DB_STORE).get(key);
+    req.onsuccess=()=>resolve(req.result??null);req.onerror=()=>reject(req.error);
+    tx.oncomplete=()=>db.close();tx.onabort=()=>db.close();
   });
 }
-
-async function loadSnapshotFromDb(){
+async function writeSnapshotDbValues(values,deletes=[]){
+  const db=await openSnapshotDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite"),store=tx.objectStore(SNAPSHOT_DB_STORE);
+    for(const [key,value] of values)store.put(value,key);
+    for(const key of deletes)store.delete(key);
+    tx.oncomplete=()=>{db.close();resolve()};
+    tx.onerror=()=>{const error=tx.error||new Error("Écriture IndexedDB impossible");db.close();reject(error)};
+    tx.onabort=()=>{const error=tx.error||new Error("Transaction IndexedDB interrompue");db.close();reject(error)};
+  });
+}
+async function loadTerritoryRegistryFromDb(){
+  try{return normalizeTerritoryRegistry(await readSnapshotDbValue(TERRITORY_REGISTRY_KEY))}
+  catch(error){recordSnapshotError(error);return normalizeTerritoryRegistry(null)}
+}
+async function saveTerritoryRegistryToDb(registry){
+  const normalized=normalizeTerritoryRegistry(registry);
+  await writeSnapshotDbValues([[TERRITORY_REGISTRY_KEY,normalized]]);return normalized;
+}
+async function listTerritoriesFromDb(){
+  const registry=await loadTerritoryRegistryFromDb();snapshotRuntime.dbLists++;
+  return registry.entries.slice().sort((a,b)=>String(b.lastOpenedAt).localeCompare(String(a.lastOpenedAt)));
+}
+async function saveSnapshotToDb(snapshot,{setActive=true}={}){
+  validateAtlasSnapshot(snapshot);
   try{
-    const db=await openSnapshotDb();
-    const snapshot=await new Promise((resolve,reject)=>{
-      const tx=db.transaction(SNAPSHOT_DB_STORE,"readonly"),req=tx.objectStore(SNAPSHOT_DB_STORE).get(SNAPSHOT_DB_KEY);
-      req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
-      tx.oncomplete=()=>db.close();tx.onabort=()=>db.close();
-    });
+    const registry=await loadTerritoryRegistryFromDb(),id=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE).id;
+    const previous=registry.entries.find(entry=>entry.id===id)||null,record=territoryRecordFromSnapshot(snapshot,previous,{opened:setActive});
+    registry.entries=registry.entries.filter(entry=>entry.id!==id);registry.entries.push(record);
+    if(setActive||!registry.activeId)registry.activeId=id;
+    await writeSnapshotDbValues([
+      [territorySnapshotDbKey(id),{...snapshot,savedAt:record.updatedAt}],
+      [TERRITORY_REGISTRY_KEY,normalizeTerritoryRegistry(registry)]
+    ],[SNAPSHOT_DB_KEY]);
+    snapshotRuntime.dbSaves++;snapshotRuntime.lastError="";return record;
+  }catch(error){recordSnapshotError(error);throw error}
+}
+async function loadTerritorySnapshotFromDb(id){
+  try{
+    const snapshot=await readSnapshotDbValue(territorySnapshotDbKey(id));
     if(snapshot){validateAtlasSnapshot(snapshot);snapshotRuntime.dbLoads++}
-    return snapshot;
+    return snapshot||null;
   }catch(error){recordSnapshotError(error);return null}
 }
-
-async function deleteSnapshotFromDb(){
+async function setActiveTerritoryInDb(id){
+  const registry=await loadTerritoryRegistryFromDb(),entry=registry.entries.find(item=>item.id===id);
+  if(!entry)return false;
+  entry.lastOpenedAt=new Date().toISOString();registry.activeId=id;
+  await saveTerritoryRegistryToDb(registry);return true;
+}
+async function loadSnapshotFromDb(){
+  try{
+    const registry=await loadTerritoryRegistryFromDb();
+    const candidates=[registry.activeId,...registry.entries.map(entry=>entry.id)].filter((id,index,list)=>id&&list.indexOf(id)===index);
+    for(const id of candidates){
+      const snapshot=await loadTerritorySnapshotFromDb(id);
+      if(snapshot){if(registry.activeId!==id)await setActiveTerritoryInDb(id);return snapshot}
+    }
+    const legacy=await readSnapshotDbValue(SNAPSHOT_DB_KEY);
+    if(legacy){
+      validateAtlasSnapshot(legacy);await saveSnapshotToDb(legacy,{setActive:true});snapshotRuntime.migrations++;snapshotRuntime.lastSource="migration de l’instantané actif";return legacy;
+    }
+    return null;
+  }catch(error){recordSnapshotError(error);return null}
+}
+async function deleteSnapshotFromDb(id=""){
+  try{
+    const registry=await loadTerritoryRegistryFromDb(),target=String(id||registry.activeId||CONFIG.territory?.id||"");
+    registry.entries=registry.entries.filter(entry=>entry.id!==target);
+    if(registry.activeId===target)registry.activeId=registry.entries.slice().sort((a,b)=>String(b.lastOpenedAt).localeCompare(String(a.lastOpenedAt)))[0]?.id||"";
+    await writeSnapshotDbValues([[TERRITORY_REGISTRY_KEY,normalizeTerritoryRegistry(registry)]],[territorySnapshotDbKey(target),SNAPSHOT_DB_KEY]);
+    snapshotRuntime.dbDeletes++;snapshotRuntime.lastError="";return {deletedId:target,activeId:registry.activeId,entries:registry.entries};
+  }catch(error){recordSnapshotError(error);return {deletedId:"",activeId:"",entries:[]}}
+}
+async function clearTerritoryLibraryFromDb(){
   try{
     const db=await openSnapshotDb();
     await new Promise((resolve,reject)=>{
-      const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite");
-      tx.objectStore(SNAPSHOT_DB_STORE).delete(SNAPSHOT_DB_KEY);
-      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+      const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite"),store=tx.objectStore(SNAPSHOT_DB_STORE),req=store.getAllKeys();
+      req.onsuccess=()=>{for(const key of req.result||[])if(key===SNAPSHOT_DB_KEY||key===TERRITORY_REGISTRY_KEY||String(key).startsWith(TERRITORY_SNAPSHOT_PREFIX))store.delete(key)};
+      req.onerror=()=>reject(req.error);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||new Error("Nettoyage IndexedDB interrompu"));
     });
     db.close();snapshotRuntime.dbDeletes++;snapshotRuntime.lastError="";
   }catch(error){recordSnapshotError(error)}
@@ -152,8 +234,12 @@ async function importSnapshotFile(file){
   try{
     if(Number(file.size)>SNAPSHOT_IMPORT_LIMIT_BYTES)throw new Error("Ce fichier dépasse la limite de 64 Mo prévue pour un instantané local.");
     const snapshot=validateAtlasSnapshot(JSON.parse(await file.text()));
+    if(typeof persistActiveTerritory==="function"&&territoryControllerRuntime?.managerReady&&!territorySessionDetached){
+      const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’import");
+    }
     applyAtlasSnapshot(snapshot,{source:`sauvegarde importée · ${file.name}`});
     await saveSnapshotToDb(snapshot);
+    if(typeof refreshTerritoryLibraryUI==="function")await refreshTerritoryLibraryUI(snapshot.territory?.id);
     snapshotRuntime.imports++;snapshotRuntime.lastSource=file.name;
     els.snapshotHelp.textContent="Sauvegarde chargée et mémorisée dans ce navigateur pour le prochain démarrage.";
   }catch(error){
@@ -200,8 +286,11 @@ function bindSnapshotManager(){
   els.snapshotFile.addEventListener("change",event=>importSnapshotFile(event.target.files?.[0]));
   els.exportStandaloneHtml.addEventListener("click",exportStandaloneHtml);
   els.clearSavedSnapshot.addEventListener("click",async()=>{
-    await deleteSnapshotFromDb();
-    els.snapshotHelp.textContent="La sauvegarde locale a été oubliée. Les données restent visibles jusqu’à la fermeture de cette session.";
-    state.snapshotSource="session courante";updateSnapshotUI();
+    if(typeof deleteStoredTerritory==="function"){
+      const deleted=await deleteStoredTerritory(CONFIG.territory?.id);
+      if(deleted)els.snapshotHelp.textContent="Le territoire actif a été supprimé de la bibliothèque locale.";
+      return;
+    }
+    await deleteSnapshotFromDb();state.snapshotSource="session courante";updateSnapshotUI();
   });
 }

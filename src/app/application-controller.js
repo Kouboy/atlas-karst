@@ -124,7 +124,9 @@ async function bootAtlas(){
 }
 function startAtlasApplication(){
   bindApplicationController();
-  if(!atlasBootPromise)atlasBootPromise=bootAtlas();
+  if(!atlasBootPromise)atlasBootPromise=bootAtlas().then(async()=>{
+    if(typeof initializeTerritoryManager==="function")await initializeTerritoryManager();
+  });
   return atlasBootPromise;
 }
 

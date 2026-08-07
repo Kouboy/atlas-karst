@@ -2,6 +2,13 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18c — Gestionnaire de territoires
+
+- Bibliothèque locale multi-territoires avec sauvegarde IndexedDB indépendante, ouverture hors ligne et mémorisation du territoire actif.
+- Sauvegarde automatique avant chaque bascule, renommage, duplication et suppression protégée du dernier territoire.
+- Migration transparente de l’ancien instantané unique vers le registre territorial.
+- L’ouverture d’un territoire restaure sa vue et ses données sans déclencher de synchronisation réseau automatique.
+
 ## 0.18b — Création de territoire
 
 - La synchronisation Cartofriches suit le schéma courant de la ressource (`geompoint`) et filtre les fiches départementales dans l’emprise locale, sans dépendre des anciennes colonnes `lat` / `long`.

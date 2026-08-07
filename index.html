@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18b · création de territoire</title>
+<title>Atlas Karst ASCII v0.18c · gestionnaire de territoires</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1320,7 +1320,25 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
   </section>
 
   <section class="card" data-panel-kind="navigation">
-    <h2>Nouveau territoire</h2>
+    <h2>Territoires</h2>
+    <label class="field-label">Territoires enregistrés
+      <select id="territoryLibrarySelect"><option value="">Préparation de la bibliothèque…</option></select>
+    </label>
+    <div class="grid2" style="margin-top:7px">
+      <button id="territoryLoad" type="button">▶ ouvrir</button>
+      <button id="territorySave" type="button">▣ sauvegarder l’actif</button>
+    </div>
+    <label class="field-label" style="margin-top:7px">Nom dans la bibliothèque
+      <input id="territoryRenameName" type="text" maxlength="80" autocomplete="off">
+    </label>
+    <div class="grid2" style="margin-top:7px">
+      <button id="territoryRename" type="button">✎ renommer</button>
+      <button id="territoryDuplicate" type="button">⧉ dupliquer</button>
+    </div>
+    <button id="territoryDelete" type="button" style="width:100%;margin-top:7px">✕ supprimer de la bibliothèque</button>
+    <div class="small" id="territoryLibraryStatus" style="margin-top:8px">Chaque territoire conserve son propre état. L’ouverture utilise la sauvegarde locale sans lancer le réseau.</div>
+    <hr style="margin:12px 0 9px;border:0;border-top:1px solid var(--line)">
+    <h3 style="margin:0 0 7px">Créer un territoire</h3>
     <label class="field-label">Nom
       <input id="territoryName" type="text" maxlength="80" autocomplete="off" value="Mon territoire">
     </label>
@@ -1494,7 +1512,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     </div>
     <input id="snapshotFile" class="file-input-hidden" type="file" accept=".json,.atlas.json,application/json">
     <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
-    <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">↶ oublier la sauvegarde locale au prochain démarrage</button>
+    <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">✕ supprimer le territoire actif de la bibliothèque</button>
     <div class="snapshot-note" id="snapshotHelp">Le JSON reste réimportable dans les versions futures. L’HTML autonome contient l’état courant et démarre sans requête réseau, sauf si tu demandes explicitement une actualisation.</div>
   </section>
 
@@ -1853,7 +1871,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18b";
+const APP_VERSION = "0.18c";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2067,7 +2085,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Centre géographique valide",Number.isFinite(state.center?.lat)&&Number.isFinite(state.center?.lon),`${state.center?.lat} / ${state.center?.lon}`));
   const territory=CONFIG.territory;
   checks.push(debugCheckResult("Profil territorial",territory?.schema===TERRITORY_PROFILE_SCHEMA&&CONFIG.dataWidthKm===territory?.sizeKm?.width&&CONFIG.dataHeightKm===territory?.sizeKm?.height,`${territory?.label||"absent"} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km`));
-  checks.push(debugCheckResult("Créateur de territoire",territoryControllerRuntime.ready&&territoryControllerRuntime.bound&&!territoryControllerRuntime.lastError,`${territoryControllerRuntime.created} créations · ${territoryControllerRuntime.syncs} synchronisations · dernière : ${territoryControllerRuntime.lastAction}`));
+  checks.push(debugCheckResult("Gestionnaire de territoires",territoryControllerRuntime.ready&&territoryControllerRuntime.bound&&territoryControllerRuntime.managerReady&&!territoryControllerRuntime.lastError,`${territoryControllerRuntime.librarySize} enregistrés · ${territoryControllerRuntime.saves}/${territoryControllerRuntime.loads} sauvegardes/ouvertures · dernière : ${territoryControllerRuntime.lastAction}`));
   checks.push(debugCheckResult("Grille en mémoire",!!state.lastGrid&&state.lastGrid.grid?.length===CONFIG.gridH,state.lastGrid?`${state.lastGrid.grid.length} lignes`:"absente"));
   const expectedCorners=[[0,0],[CONFIG.gridW-1,0],[0,CONFIG.gridH-1],[CONFIG.gridW-1,CONFIG.gridH-1]];
   let targetOk=true,targetDetails=[];
@@ -2083,7 +2101,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Contrôleur de navigation",inputRuntime.bound,`${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · dernier : ${inputRuntime.lastGesture}`));
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
-  checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures`));
+  checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
@@ -2120,7 +2138,7 @@ function createDebugReport(){
     `Contexte sécurisé : ${window.isSecureContext} · protocole ${location.protocol}`,
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · coupe ${depthSliceLabel()}`,
     `Territoire : ${CONFIG.territory.label} [${CONFIG.territory.id}] · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km · profil ${CONFIG.territory.schema}/${TERRITORY_PROFILE_SCHEMA}`,
-    `Créateur de territoire : ${territoryControllerRuntime.bound?"lié":"absent"} · ${territoryControllerRuntime.created} créations · ${territoryControllerRuntime.locationCopies} positions · ${territoryControllerRuntime.syncs} synchronisations · erreur ${territoryControllerRuntime.lastError||"aucune"}`,
+    `Gestionnaire de territoires : ${territoryControllerRuntime.managerReady?"prêt":"incomplet"} · ${territoryControllerRuntime.librarySize} enregistrés · ${territoryControllerRuntime.created} créations · ${territoryControllerRuntime.saves}/${territoryControllerRuntime.loads} sauvegardes/ouvertures · ${territoryControllerRuntime.renames}/${territoryControllerRuntime.duplicates}/${territoryControllerRuntime.deletes} renommages/duplications/suppressions · ${territoryControllerRuntime.autosaves} sauvegardes automatiques · erreur ${territoryControllerRuntime.lastError||"aucune"}`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
     `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,
@@ -2135,7 +2153,7 @@ function createDebugReport(){
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
-    `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.exports} JSON · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}`,
+    `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.exports} JSON · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
     `Phases CPU : ${debugRenderPhasesText()}`,
     `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
     `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
@@ -2297,6 +2315,8 @@ function territoryRequestIsCurrent(stamp){return !!stamp&&stamp.revision===terri
 const SNAPSHOT_DB_NAME = "atlas-karst-memory";
 const SNAPSHOT_DB_STORE = "snapshots";
 const SNAPSHOT_DB_KEY = "active";
+const TERRITORY_REGISTRY_KEY = "territory-registry-v1";
+const TERRITORY_SNAPSHOT_PREFIX = "territory:";
 function parseEmbeddedSnapshot(){
   try{
     const raw=document.getElementById("atlas-snapshot")?.textContent?.trim();
@@ -2474,7 +2494,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "appVersionLabel","territorySummary","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "appVersionLabel","territorySummary","territoryLibrarySelect","territoryLoad","territorySave","territoryRenameName","territoryRename","territoryDuplicate","territoryDelete","territoryLibraryStatus","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
@@ -4462,11 +4482,11 @@ const ENCOUNTER_BY_ID=new Map(LOCAL_ENCOUNTERS.map(e=>[e.id,e]));
 const encounterRuntime={screen:"closed",active:null,answerLocked:false,returnScreen:"codex"};
 
 function loadEncounterCollection(){
-  try{const raw=JSON.parse(localStorage.getItem(ENCOUNTER_COLLECTION_KEY)||"{}");state.encounterCollection=raw&&typeof raw==="object"?raw:{}}catch{state.encounterCollection={}}
+  try{const raw=JSON.parse(localStorage.getItem(territoryStorageKey(ENCOUNTER_COLLECTION_KEY))||"{}");state.encounterCollection=raw&&typeof raw==="object"?raw:{}}catch{state.encounterCollection={}}
   try{state.encounterEnabled=localStorage.getItem(ENCOUNTER_PREF_KEY)!=="off"}catch{state.encounterEnabled=true}
 }
 function saveEncounterCollection(){
-  try{localStorage.setItem(ENCOUNTER_COLLECTION_KEY,JSON.stringify(state.encounterCollection||{}));localStorage.setItem(ENCOUNTER_PREF_KEY,state.encounterEnabled?"on":"off")}catch{}
+  try{localStorage.setItem(territoryStorageKey(ENCOUNTER_COLLECTION_KEY),JSON.stringify(state.encounterCollection||{}));localStorage.setItem(ENCOUNTER_PREF_KEY,state.encounterEnabled?"on":"off")}catch{}
 }
 function encounterRecord(id){return state.encounterCollection?.[id]||null}
 function encounterStatusRank(status){return status==="deepened"?3:status==="identified"?2:status==="seen"?1:0}
@@ -7219,17 +7239,65 @@ function bindSourceController(){
   els.retryData.addEventListener("click",retryAllDataSources);
 }
 
-const territoryControllerRuntime={ready:true,bound:false,created:0,locationCopies:0,resets:0,syncs:0,lastAction:"initialisation",lastError:""};
+const territoryControllerRuntime={
+  ready:true,bound:false,managerReady:false,created:0,locationCopies:0,resets:0,syncs:0,
+  saves:0,loads:0,renames:0,duplicates:0,deletes:0,autosaves:0,librarySize:0,
+  lastAction:"initialisation",lastError:""
+};
+const TERRITORY_LOCAL_STORAGE_BASES=[
+  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,
+  ENCOUNTER_COLLECTION_KEY,"atlas-karst-cavities-v06","atlas-karst-elevation-v09d","atlas-karst-cadastre-v06","atlas-karst-address-v06"
+];
+let territoryAutosavePromise=null;
+let territorySessionDetached=false;
 
 function setTerritorySetupStatus(message,bad=false){
   if(!els?.territorySetupStatus)return;
   if(bad)els.territorySetupStatus.innerHTML=`<span class="location-warning">${esc(message)}</span>`;
   else els.territorySetupStatus.textContent=String(message);
 }
+function setTerritoryLibraryStatus(message,bad=false){
+  if(!els?.territoryLibraryStatus)return;
+  if(bad)els.territoryLibraryStatus.innerHTML=`<span class="location-warning">${esc(message)}</span>`;
+  else els.territoryLibraryStatus.textContent=String(message);
+}
 function populateTerritoryControls(profile=CONFIG.territory){
   if(els?.territoryName)els.territoryName.value=profile.label||"Mon territoire";
   if(els?.territoryLat)els.territoryLat.value=Number(profile.center.lat).toFixed(7);
   if(els?.territoryLon)els.territoryLon.value=Number(profile.center.lon).toFixed(7);
+}
+function selectedTerritoryId(){return String(els?.territoryLibrarySelect?.value||"")}
+function territoryLibraryDate(value){
+  const date=new Date(value);return Number.isNaN(date.getTime())?"date inconnue":date.toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
+}
+function setTerritoryLibraryControlsDisabled(disabled){
+  for(const control of [els?.territoryLoad,els?.territoryRename,els?.territoryDuplicate,els?.territoryDelete,els?.territoryRenameName])if(control)control.disabled=disabled;
+}
+async function refreshTerritoryLibraryUI(preferredId=""){
+  if(!els?.territoryLibrarySelect)return [];
+  const entries=await listTerritoriesFromDb(),selected=preferredId||selectedTerritoryId()||CONFIG.territory?.id;
+  territoryControllerRuntime.librarySize=entries.length;
+  els.territoryLibrarySelect.replaceChildren();
+  if(!entries.length){
+    const option=document.createElement("option");option.value="";option.textContent="Aucun territoire enregistré";els.territoryLibrarySelect.append(option);
+    setTerritoryLibraryControlsDisabled(true);if(els.territorySave)els.territorySave.disabled=false;
+    setTerritoryLibraryStatus("La bibliothèque locale est vide. Sauvegarde le territoire actif ou crée-en un nouveau.");return entries;
+  }
+  for(const entry of entries){
+    const option=document.createElement("option");option.value=entry.id;option.textContent=`${entry.label}${entry.id===CONFIG.territory?.id?" · actif":""}`;els.territoryLibrarySelect.append(option);
+  }
+  const target=entries.some(entry=>entry.id===selected)?selected:(entries.find(entry=>entry.id===CONFIG.territory?.id)?.id||entries[0].id);
+  els.territoryLibrarySelect.value=target;setTerritoryLibraryControlsDisabled(false);if(els.territorySave)els.territorySave.disabled=false;
+  updateTerritoryLibrarySelection(entries);return entries;
+}
+function updateTerritoryLibrarySelection(entries=null){
+  const id=selectedTerritoryId(),entry=(entries||[]).find(item=>item.id===id);
+  if(entry){
+    if(els?.territoryRenameName)els.territoryRenameName.value=entry.label;
+    setTerritoryLibraryStatus(`${entry.id===CONFIG.territory?.id?"Territoire actif":"Territoire enregistré"} · dernière sauvegarde ${territoryLibraryDate(entry.updatedAt)}. L’ouverture reste hors ligne.`);
+  }else if(id){
+    listTerritoriesFromDb().then(items=>updateTerritoryLibrarySelection(items));
+  }
 }
 function resetTerritoryRuntimeData(){
   if(state.osmLoading)cancelOsmSync();
@@ -7237,7 +7305,7 @@ function resetTerritoryRuntimeData(){
   state.officialCavities=[];state.cartofriches=[];state.heritageItems=[];state.cadastreBuildings=[];state.cadastreParcels=[];
   state.address=null;state.bss=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
-  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();
+  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
   setStatus("cartofriches",state.cartofriches.length?"ok":"pending",state.cartofriches.length?`${state.cartofriches.length} sites locaux`:"à charger");
@@ -7254,8 +7322,23 @@ function applyRuntimeTerritoryProfile(profile){
   if(els?.houseHelp)els.houseHelp.innerHTML=`Repère de départ : <strong>${CONFIG.house.lat.toFixed(6)}, ${CONFIG.house.lon.toFixed(6)}</strong> · centre du territoire actif.`;
   return normalized;
 }
-async function persistActiveTerritory(){
-  try{await saveSnapshotToDb(buildAtlasSnapshot());updateSnapshotUI(state.snapshotSource)}catch(error){console.warn("Sauvegarde du territoire indisponible",error)}
+async function persistActiveTerritory({automatic=false,refresh=true}={}){
+  try{
+    const record=await saveSnapshotToDb(buildAtlasSnapshot(),{setActive:true});
+    territorySessionDetached=false;
+    territoryControllerRuntime.saves++;if(automatic)territoryControllerRuntime.autosaves++;
+    territoryControllerRuntime.lastAction=automatic?"sauvegarde automatique":"sauvegarde du territoire";
+    updateSnapshotUI(state.snapshotSource);if(refresh)await refreshTerritoryLibraryUI(record.id);
+    return record;
+  }catch(error){
+    territoryControllerRuntime.lastError=String(error?.message||error);console.warn("Sauvegarde du territoire indisponible",error);
+    setTerritoryLibraryStatus(`Sauvegarde impossible : ${territoryControllerRuntime.lastError}`,true);return null;
+  }
+}
+function autosaveActiveTerritory(){
+  if(!territoryControllerRuntime.managerReady||territorySessionDetached||EMBEDDED_SNAPSHOT)return Promise.resolve(null);
+  if(!territoryAutosavePromise)territoryAutosavePromise=persistActiveTerritory({automatic:true,refresh:false}).finally(()=>{territoryAutosavePromise=null});
+  return territoryAutosavePromise;
 }
 async function waitForTerritoryOsmIdle(){
   for(let attempt=0;state.osmLoading&&attempt<50;attempt++)await new Promise(resolve=>setTimeout(resolve,40));
@@ -7276,12 +7359,15 @@ async function syncCoreTerritorySources({persist=true}={}){
   if(persist)await persistActiveTerritory();
   setTerritorySetupStatus(`${CONFIG.territory.label} est actif sur 16 × 16 km${address?.city?` · ${address.city}`:""}. ${failures?`${failures} source${failures>1?"s":""} reste${failures>1?"nt":""} indisponible${failures>1?"s":""}.`:"Les sources principales ont répondu."}`);
 }
-async function activateTerritory(profile,{sync=true,persist=true}={}){
+async function activateTerritory(profile,{sync=true,persist=true,saveCurrent=true}={}){
   territoryControllerRuntime.lastError="";territoryControllerRuntime.lastAction="création du territoire";
   try{
-    beginTerritoryDataRevision();
-    if(state.osmLoading)cancelOsmSync();
-    const normalized=applyRuntimeTerritoryProfile(normalizeTerritoryProfile(profile,profile));
+    const incoming=normalizeTerritoryProfile(profile,profile);
+    if(saveCurrent&&territoryControllerRuntime.managerReady&&!territorySessionDetached&&CONFIG.territory?.id!==incoming.id){
+      const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant la création");
+    }
+    beginTerritoryDataRevision();if(state.osmLoading)cancelOsmSync();await waitForTerritoryOsmIdle();
+    const normalized=applyRuntimeTerritoryProfile(incoming);
     territoryControllerRuntime.created++;territoryControllerRuntime.resets++;
     resetTerritoryRuntimeData();state.allowNetwork=!!sync;
     updateLocationUI();updateSnapshotUI(state.snapshotSource);render("territory-change");scheduleFrameFit();
@@ -7292,6 +7378,59 @@ async function activateTerritory(profile,{sync=true,persist=true}={}){
   }catch(error){
     territoryControllerRuntime.lastError=String(error?.message||error);setTerritorySetupStatus(`Création impossible : ${territoryControllerRuntime.lastError}`,true);throw error;
   }
+}
+async function openStoredTerritory(id,{saveCurrent=true}={}){
+  const target=String(id||"");if(!target)return null;
+  if(target===CONFIG.territory?.id){setTerritoryLibraryStatus(`${CONFIG.territory.label} est déjà actif.`);return CONFIG.territory}
+  territoryControllerRuntime.lastError="";territoryControllerRuntime.lastAction="ouverture d’un territoire";
+  try{
+    if(saveCurrent&&territoryControllerRuntime.managerReady&&!territorySessionDetached){
+      const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’ouverture");
+    }
+    beginTerritoryDataRevision();if(state.osmLoading)cancelOsmSync();await waitForTerritoryOsmIdle();
+    const snapshot=await loadTerritorySnapshotFromDb(target);if(!snapshot)throw new Error("Sauvegarde introuvable");
+    applyAtlasSnapshot(snapshot,{source:`territoire enregistré · ${snapshot.territory?.label||target}`,renderNow:true});
+    await setActiveTerritoryInDb(target);territorySessionDetached=false;state.allowNetwork=false;territoryControllerRuntime.loads++;
+    territoryControllerRuntime.lastAction="territoire ouvert hors ligne";scheduleFrameFit();await refreshTerritoryLibraryUI(target);updateDebugPanel(true);
+    setTerritoryLibraryStatus(`${CONFIG.territory.label} est ouvert depuis sa sauvegarde locale. Aucune source réseau n’a été sollicitée.`);
+    return CONFIG.territory;
+  }catch(error){
+    territoryControllerRuntime.lastError=String(error?.message||error);setTerritoryLibraryStatus(`Ouverture impossible : ${territoryControllerRuntime.lastError}`,true);throw error;
+  }
+}
+async function renameStoredTerritory(id,label){
+  const target=String(id||""),newLabel=String(label||"").trim();if(!target||!newLabel)throw new Error("Le nom du territoire ne peut pas être vide");
+  let snapshot;
+  if(target===CONFIG.territory?.id){snapshot=buildAtlasSnapshot();snapshot.territory=territorySnapshot({...CONFIG.territory,label:newLabel});applyTerritoryProfileToConfig(CONFIG,snapshot.territory);ACTIVE_TERRITORY=CONFIG.territory;updateTerritoryIdentityUI();populateTerritoryControls()}
+  else snapshot=await loadTerritorySnapshotFromDb(target);
+  if(!snapshot)throw new Error("Sauvegarde introuvable");
+  snapshot={...snapshot,territory:territorySnapshot({...snapshot.territory,label:newLabel})};
+  await saveSnapshotToDb(snapshot,{setActive:target===CONFIG.territory?.id});territoryControllerRuntime.renames++;territoryControllerRuntime.lastAction="territoire renommé";
+  await refreshTerritoryLibraryUI(target);return snapshot.territory;
+}
+async function duplicateStoredTerritory(id,label=""){
+  const target=String(id||""),snapshot=await loadTerritorySnapshotFromDb(target);if(!snapshot)throw new Error("Sauvegarde introuvable");
+  const entries=await listTerritoriesFromDb(),ids=new Set(entries.map(entry=>entry.id));
+  let copyId=`${territorySafeId(snapshot.territory.id)}-copie-${Date.now().toString(36)}`,suffix=1;
+  while(ids.has(copyId))copyId=`${territorySafeId(snapshot.territory.id)}-copie-${Date.now().toString(36)}-${suffix++}`;
+  const copyLabel=String(label||"").trim()||`${snapshot.territory.label} — copie`,copy=JSON.parse(JSON.stringify(snapshot));
+  copy.createdAt=new Date().toISOString();copy.territory=territorySnapshot({...snapshot.territory,id:copyId,label:copyLabel,provenance:`copie de ${snapshot.territory.label}`});
+  await saveSnapshotToDb(copy,{setActive:false});territoryControllerRuntime.duplicates++;territoryControllerRuntime.lastAction="territoire dupliqué";
+  await refreshTerritoryLibraryUI(copyId);setTerritoryLibraryStatus(`${copyLabel} a été dupliqué. La copie n’est pas ouverte.`);return copy.territory;
+}
+function removeTerritoryScopedLocalData(profile){
+  for(const base of TERRITORY_LOCAL_STORAGE_BASES){try{localStorage.removeItem(territoryStorageKey(base,profile))}catch{}}
+}
+async function deleteStoredTerritory(id,{confirmUser=true}={}){
+  const target=String(id||""),entries=await listTerritoriesFromDb(),entry=entries.find(item=>item.id===target);if(!entry)return false;
+  if(confirmUser&&!confirm(`Supprimer « ${entry.label} » de la bibliothèque locale ? Cette action efface sa sauvegarde et ses notes locales sur cet appareil.`))return false;
+  const wasActive=target===CONFIG.territory?.id,result=await deleteSnapshotFromDb(target);removeTerritoryScopedLocalData(entry.profile);
+  territoryControllerRuntime.deletes++;territoryControllerRuntime.lastAction="territoire supprimé";
+  if(wasActive&&!result.activeId)territorySessionDetached=true;
+  if(wasActive&&result.activeId)await openStoredTerritory(result.activeId,{saveCurrent:false});
+  else await refreshTerritoryLibraryUI(result.activeId||"");
+  setTerritoryLibraryStatus(wasActive&&!result.activeId?"Le dernier territoire a été retiré de la bibliothèque. La session courante reste visible mais n’est plus sauvegardée.":`${entry.label} a été supprimé de cet appareil.`);
+  return true;
 }
 async function useLocationForTerritory(){
   if(!state.userLocation)await locateUser();
@@ -7304,14 +7443,46 @@ async function createTerritoryFromControls(){
   const lat=Number(els.territoryLat.value),lon=Number(els.territoryLon.value),label=els.territoryName.value.trim()||"Mon territoire";
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -85||lat > 85||lon < -180||lon > 180){setTerritorySetupStatus("Coordonnées invalides : latitude entre −85 et 85, longitude entre −180 et 180.",true);return}
   els.territoryCreate.disabled=true;els.territoryUseLocation.disabled=true;
-  try{await activateTerritory(createUserTerritoryProfile({label,center:{lat,lon}}),{sync:true,persist:true})}
-  finally{els.territoryCreate.disabled=false;els.territoryUseLocation.disabled=false}
+  try{
+    let profile=createUserTerritoryProfile({label,center:{lat,lon}});const ids=new Set((await listTerritoriesFromDb()).map(entry=>entry.id));
+    if(ids.has(profile.id))profile=normalizeTerritoryProfile({...profile,id:`${profile.id}-${Date.now().toString(36)}`},profile);
+    await activateTerritory(profile,{sync:true,persist:true,saveCurrent:true});
+  }finally{els.territoryCreate.disabled=false;els.territoryUseLocation.disabled=false}
+}
+async function saveCurrentTerritoryFromControl(){
+  if(els?.territorySave)els.territorySave.disabled=true;
+  const record=await persistActiveTerritory();if(record)setTerritoryLibraryStatus(`${record.label} a été sauvegardé sur cet appareil.`);
+  if(els?.territorySave)els.territorySave.disabled=false;
+}
+async function loadTerritoryFromControl(){try{await openStoredTerritory(selectedTerritoryId())}catch{}}
+async function renameTerritoryFromControl(){
+  try{const profile=await renameStoredTerritory(selectedTerritoryId(),els.territoryRenameName.value);setTerritoryLibraryStatus(`${profile.label} a été renommé.`)}
+  catch(error){territoryControllerRuntime.lastError=String(error?.message||error);setTerritoryLibraryStatus(`Renommage impossible : ${territoryControllerRuntime.lastError}`,true)}
+}
+async function duplicateTerritoryFromControl(){
+  try{await duplicateStoredTerritory(selectedTerritoryId())}
+  catch(error){territoryControllerRuntime.lastError=String(error?.message||error);setTerritoryLibraryStatus(`Duplication impossible : ${territoryControllerRuntime.lastError}`,true)}
+}
+async function deleteTerritoryFromControl(){try{await deleteStoredTerritory(selectedTerritoryId())}catch(error){territoryControllerRuntime.lastError=String(error?.message||error);setTerritoryLibraryStatus(`Suppression impossible : ${territoryControllerRuntime.lastError}`,true)}}
+async function initializeTerritoryManager(){
+  try{
+    let entries=await listTerritoriesFromDb();
+    if(!entries.length&&!EMBEDDED_SNAPSHOT){await persistActiveTerritory({automatic:true,refresh:false});entries=await listTerritoriesFromDb()}
+    territoryControllerRuntime.managerReady=true;territoryControllerRuntime.librarySize=entries.length;
+    await refreshTerritoryLibraryUI(CONFIG.territory?.id);territoryControllerRuntime.lastAction="gestionnaire prêt";
+  }catch(error){territoryControllerRuntime.lastError=String(error?.message||error);setTerritoryLibraryStatus(`Bibliothèque indisponible : ${territoryControllerRuntime.lastError}`,true)}
 }
 function bindTerritoryController(){
   if(territoryControllerRuntime.bound)return;
   territoryControllerRuntime.bound=true;populateTerritoryControls();
   els.territoryUseLocation?.addEventListener("click",useLocationForTerritory);
   els.territoryCreate?.addEventListener("click",createTerritoryFromControls);
+  els.territoryLibrarySelect?.addEventListener("change",()=>listTerritoriesFromDb().then(updateTerritoryLibrarySelection));
+  els.territoryLoad?.addEventListener("click",loadTerritoryFromControl);
+  els.territorySave?.addEventListener("click",saveCurrentTerritoryFromControl);
+  els.territoryRename?.addEventListener("click",renameTerritoryFromControl);
+  els.territoryDuplicate?.addEventListener("click",duplicateTerritoryFromControl);
+  els.territoryDelete?.addEventListener("click",deleteTerritoryFromControl);
   territoryControllerRuntime.lastAction="contrôleur lié";
 }
 
@@ -7582,7 +7753,7 @@ function unlockAudioFromGesture(event){
 }
 function handleLifecycleVisibility(){
   lifecycleControllerRuntime.visibilityChanges++;
-  if(document.hidden){accountLifecycleEvent("page masquée");suspendSessionResources("hidden")}
+  if(document.hidden){accountLifecycleEvent("page masquée");if(typeof autosaveActiveTerritory==="function")autosaveActiveTerritory();suspendSessionResources("hidden")}
   else{accountLifecycleEvent("page visible");resumeSessionResources("visible")}
 }
 function handleLifecycleBlur(){lifecycleControllerRuntime.focusChanges++;accountLifecycleEvent("fenêtre inactive");setRenderFxActivity(false,"blur")}
@@ -7617,6 +7788,7 @@ function bindLifecycleController(){
   document.addEventListener("visibilitychange",handleLifecycleVisibility);
   window.addEventListener("blur",handleLifecycleBlur);
   window.addEventListener("focus",handleLifecycleFocus);
+  window.addEventListener("pagehide",()=>{if(typeof autosaveActiveTerritory==="function")autosaveActiveTerritory()});
   reducedMotionQuery?.addEventListener?.("change",handleMotionPreferenceChange);
   document.addEventListener("toggle",event=>{
     if(event.target instanceof HTMLDetailsElement)playLifecycleAction(event.target.open?"panelOpen":"panelClose","panneau");
@@ -9253,7 +9425,7 @@ function buildSidebarClusters(){
   const cards=[...els.sidebar.querySelectorAll(":scope > .card")];
   const byTitle=new Map(cards.map(card=>[(card.querySelector(":scope > h2")?.textContent||"").trim(),card]));
   const groups=[
-    {code:"01",title:"Exploration",meta:"se déplacer · se situer · enquêter",open:true,cards:["Ma position","Nouveau territoire","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Navigation géographique","Aller à une cavité"]},
+    {code:"01",title:"Exploration",meta:"se déplacer · se situer · enquêter",open:true,cards:["Ma position","Territoires","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Navigation géographique","Aller à une cavité"]},
     {code:"02",title:"Calques & lecture",meta:"composer la carte · lire ses signes",open:true,cards:["Couches","Légende lisible"]},
     {code:"03",title:"Carnet local",meta:"mémoriser · observer · annoter",open:false,cards:["Mémoire de l’Atlas","Observations de terrain","Repères patrimoine & mystère"]},
     {code:"04",title:"Sources & synchronisation",meta:"charger · vérifier · archiver",open:false,cards:["Données","Patrimoine & curiosités synchronisés","Cartofriches · Cerema","Forages BSS & piézomètres","Diagnostic"]}
@@ -9278,11 +9450,11 @@ function buildSidebarClusters(){
 
 function prepareSidebarCards(){
   const panelMeta={
-    "Mode d’utilisation":["navigation","◈"],"Nouveau territoire":["navigation","⊕"],"Autour de moi":["navigation","⌖"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
+    "Mode d’utilisation":["navigation","◈"],"Territoires":["navigation","⊕"],"Autour de moi":["navigation","⌖"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
     "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
     "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
   };
-  const openByDefault=new Set(["Ma position","Nouveau territoire","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Couches","Données"]);
+  const openByDefault=new Set(["Ma position","Territoires","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Couches","Données"]);
   for(const card of els.sidebar.querySelectorAll(":scope > .card")){
     if(card.classList.contains("warning")||card.id==="offlineNotice"||card.classList.contains("collapsible"))continue;
     const heading=card.querySelector(":scope > h2");if(!heading)continue;
@@ -9750,7 +9922,7 @@ const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
 const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const snapshotRuntime={
   ready:true,bound:false,built:0,applied:0,imports:0,exports:0,standaloneExports:0,
-  dbSaves:0,dbLoads:0,dbDeletes:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
+  dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
 };
 
 function recordSnapshotError(error){
@@ -9812,37 +9984,119 @@ function openSnapshotDb(){
   });
 }
 
-async function saveSnapshotToDb(snapshot){
-  validateAtlasSnapshot(snapshot);
+function territorySnapshotDbKey(id){return `${TERRITORY_SNAPSHOT_PREFIX}${String(id||"").trim()}`}
+function normalizeTerritoryRegistry(value){
+  const raw=value&&typeof value==="object"&&!Array.isArray(value)?value:{};
+  const entries=[],seen=new Set();
+  for(const item of Array.isArray(raw.entries)?raw.entries:[]){
+    const profile=normalizeTerritoryProfile(item?.profile||item,LEGACY_TERRITORY_PROFILE);
+    if(!profile.id||seen.has(profile.id))continue;seen.add(profile.id);
+    entries.push({
+      id:profile.id,label:profile.label,profile:territorySnapshot(profile),
+      createdAt:String(item.createdAt||item.updatedAt||new Date().toISOString()),
+      updatedAt:String(item.updatedAt||item.createdAt||new Date().toISOString()),
+      lastOpenedAt:String(item.lastOpenedAt||item.updatedAt||item.createdAt||new Date().toISOString())
+    });
+  }
+  return {schema:1,activeId:seen.has(raw.activeId)?raw.activeId:(entries[0]?.id||""),entries};
+}
+function territoryRecordFromSnapshot(snapshot,previous=null,{opened=false}={}){
+  const now=new Date().toISOString(),profile=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE);
+  return {
+    id:profile.id,label:profile.label,profile:territorySnapshot(profile),
+    createdAt:String(previous?.createdAt||snapshot.createdAt||now),updatedAt:now,
+    lastOpenedAt:opened?now:String(previous?.lastOpenedAt||previous?.updatedAt||now)
+  };
+}
+async function readSnapshotDbValue(key){
   const db=await openSnapshotDb();
   return new Promise((resolve,reject)=>{
-    const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite");
-    tx.objectStore(SNAPSHOT_DB_STORE).put(snapshot,SNAPSHOT_DB_KEY);
-    tx.oncomplete=()=>{db.close();snapshotRuntime.dbSaves++;resolve()};
-    tx.onerror=()=>{const error=tx.error||new Error("Sauvegarde IndexedDB impossible");db.close();recordSnapshotError(error);reject(error)};
+    const tx=db.transaction(SNAPSHOT_DB_STORE,"readonly"),req=tx.objectStore(SNAPSHOT_DB_STORE).get(key);
+    req.onsuccess=()=>resolve(req.result??null);req.onerror=()=>reject(req.error);
+    tx.oncomplete=()=>db.close();tx.onabort=()=>db.close();
   });
 }
-
-async function loadSnapshotFromDb(){
+async function writeSnapshotDbValues(values,deletes=[]){
+  const db=await openSnapshotDb();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite"),store=tx.objectStore(SNAPSHOT_DB_STORE);
+    for(const [key,value] of values)store.put(value,key);
+    for(const key of deletes)store.delete(key);
+    tx.oncomplete=()=>{db.close();resolve()};
+    tx.onerror=()=>{const error=tx.error||new Error("Écriture IndexedDB impossible");db.close();reject(error)};
+    tx.onabort=()=>{const error=tx.error||new Error("Transaction IndexedDB interrompue");db.close();reject(error)};
+  });
+}
+async function loadTerritoryRegistryFromDb(){
+  try{return normalizeTerritoryRegistry(await readSnapshotDbValue(TERRITORY_REGISTRY_KEY))}
+  catch(error){recordSnapshotError(error);return normalizeTerritoryRegistry(null)}
+}
+async function saveTerritoryRegistryToDb(registry){
+  const normalized=normalizeTerritoryRegistry(registry);
+  await writeSnapshotDbValues([[TERRITORY_REGISTRY_KEY,normalized]]);return normalized;
+}
+async function listTerritoriesFromDb(){
+  const registry=await loadTerritoryRegistryFromDb();snapshotRuntime.dbLists++;
+  return registry.entries.slice().sort((a,b)=>String(b.lastOpenedAt).localeCompare(String(a.lastOpenedAt)));
+}
+async function saveSnapshotToDb(snapshot,{setActive=true}={}){
+  validateAtlasSnapshot(snapshot);
   try{
-    const db=await openSnapshotDb();
-    const snapshot=await new Promise((resolve,reject)=>{
-      const tx=db.transaction(SNAPSHOT_DB_STORE,"readonly"),req=tx.objectStore(SNAPSHOT_DB_STORE).get(SNAPSHOT_DB_KEY);
-      req.onsuccess=()=>resolve(req.result||null);req.onerror=()=>reject(req.error);
-      tx.oncomplete=()=>db.close();tx.onabort=()=>db.close();
-    });
+    const registry=await loadTerritoryRegistryFromDb(),id=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE).id;
+    const previous=registry.entries.find(entry=>entry.id===id)||null,record=territoryRecordFromSnapshot(snapshot,previous,{opened:setActive});
+    registry.entries=registry.entries.filter(entry=>entry.id!==id);registry.entries.push(record);
+    if(setActive||!registry.activeId)registry.activeId=id;
+    await writeSnapshotDbValues([
+      [territorySnapshotDbKey(id),{...snapshot,savedAt:record.updatedAt}],
+      [TERRITORY_REGISTRY_KEY,normalizeTerritoryRegistry(registry)]
+    ],[SNAPSHOT_DB_KEY]);
+    snapshotRuntime.dbSaves++;snapshotRuntime.lastError="";return record;
+  }catch(error){recordSnapshotError(error);throw error}
+}
+async function loadTerritorySnapshotFromDb(id){
+  try{
+    const snapshot=await readSnapshotDbValue(territorySnapshotDbKey(id));
     if(snapshot){validateAtlasSnapshot(snapshot);snapshotRuntime.dbLoads++}
-    return snapshot;
+    return snapshot||null;
   }catch(error){recordSnapshotError(error);return null}
 }
-
-async function deleteSnapshotFromDb(){
+async function setActiveTerritoryInDb(id){
+  const registry=await loadTerritoryRegistryFromDb(),entry=registry.entries.find(item=>item.id===id);
+  if(!entry)return false;
+  entry.lastOpenedAt=new Date().toISOString();registry.activeId=id;
+  await saveTerritoryRegistryToDb(registry);return true;
+}
+async function loadSnapshotFromDb(){
+  try{
+    const registry=await loadTerritoryRegistryFromDb();
+    const candidates=[registry.activeId,...registry.entries.map(entry=>entry.id)].filter((id,index,list)=>id&&list.indexOf(id)===index);
+    for(const id of candidates){
+      const snapshot=await loadTerritorySnapshotFromDb(id);
+      if(snapshot){if(registry.activeId!==id)await setActiveTerritoryInDb(id);return snapshot}
+    }
+    const legacy=await readSnapshotDbValue(SNAPSHOT_DB_KEY);
+    if(legacy){
+      validateAtlasSnapshot(legacy);await saveSnapshotToDb(legacy,{setActive:true});snapshotRuntime.migrations++;snapshotRuntime.lastSource="migration de l’instantané actif";return legacy;
+    }
+    return null;
+  }catch(error){recordSnapshotError(error);return null}
+}
+async function deleteSnapshotFromDb(id=""){
+  try{
+    const registry=await loadTerritoryRegistryFromDb(),target=String(id||registry.activeId||CONFIG.territory?.id||"");
+    registry.entries=registry.entries.filter(entry=>entry.id!==target);
+    if(registry.activeId===target)registry.activeId=registry.entries.slice().sort((a,b)=>String(b.lastOpenedAt).localeCompare(String(a.lastOpenedAt)))[0]?.id||"";
+    await writeSnapshotDbValues([[TERRITORY_REGISTRY_KEY,normalizeTerritoryRegistry(registry)]],[territorySnapshotDbKey(target),SNAPSHOT_DB_KEY]);
+    snapshotRuntime.dbDeletes++;snapshotRuntime.lastError="";return {deletedId:target,activeId:registry.activeId,entries:registry.entries};
+  }catch(error){recordSnapshotError(error);return {deletedId:"",activeId:"",entries:[]}}
+}
+async function clearTerritoryLibraryFromDb(){
   try{
     const db=await openSnapshotDb();
     await new Promise((resolve,reject)=>{
-      const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite");
-      tx.objectStore(SNAPSHOT_DB_STORE).delete(SNAPSHOT_DB_KEY);
-      tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);
+      const tx=db.transaction(SNAPSHOT_DB_STORE,"readwrite"),store=tx.objectStore(SNAPSHOT_DB_STORE),req=store.getAllKeys();
+      req.onsuccess=()=>{for(const key of req.result||[])if(key===SNAPSHOT_DB_KEY||key===TERRITORY_REGISTRY_KEY||String(key).startsWith(TERRITORY_SNAPSHOT_PREFIX))store.delete(key)};
+      req.onerror=()=>reject(req.error);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||new Error("Nettoyage IndexedDB interrompu"));
     });
     db.close();snapshotRuntime.dbDeletes++;snapshotRuntime.lastError="";
   }catch(error){recordSnapshotError(error)}
@@ -9899,8 +10153,12 @@ async function importSnapshotFile(file){
   try{
     if(Number(file.size)>SNAPSHOT_IMPORT_LIMIT_BYTES)throw new Error("Ce fichier dépasse la limite de 64 Mo prévue pour un instantané local.");
     const snapshot=validateAtlasSnapshot(JSON.parse(await file.text()));
+    if(typeof persistActiveTerritory==="function"&&territoryControllerRuntime?.managerReady&&!territorySessionDetached){
+      const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’import");
+    }
     applyAtlasSnapshot(snapshot,{source:`sauvegarde importée · ${file.name}`});
     await saveSnapshotToDb(snapshot);
+    if(typeof refreshTerritoryLibraryUI==="function")await refreshTerritoryLibraryUI(snapshot.territory?.id);
     snapshotRuntime.imports++;snapshotRuntime.lastSource=file.name;
     els.snapshotHelp.textContent="Sauvegarde chargée et mémorisée dans ce navigateur pour le prochain démarrage.";
   }catch(error){
@@ -9947,9 +10205,12 @@ function bindSnapshotManager(){
   els.snapshotFile.addEventListener("change",event=>importSnapshotFile(event.target.files?.[0]));
   els.exportStandaloneHtml.addEventListener("click",exportStandaloneHtml);
   els.clearSavedSnapshot.addEventListener("click",async()=>{
-    await deleteSnapshotFromDb();
-    els.snapshotHelp.textContent="La sauvegarde locale a été oubliée. Les données restent visibles jusqu’à la fermeture de cette session.";
-    state.snapshotSource="session courante";updateSnapshotUI();
+    if(typeof deleteStoredTerritory==="function"){
+      const deleted=await deleteStoredTerritory(CONFIG.territory?.id);
+      if(deleted)els.snapshotHelp.textContent="Le territoire actif a été supprimé de la bibliothèque locale.";
+      return;
+    }
+    await deleteSnapshotFromDb();state.snapshotSource="session courante";updateSnapshotUI();
   });
 }
 
@@ -10228,7 +10489,9 @@ async function bootAtlas(){
 }
 function startAtlasApplication(){
   bindApplicationController();
-  if(!atlasBootPromise)atlasBootPromise=bootAtlas();
+  if(!atlasBootPromise)atlasBootPromise=bootAtlas().then(async()=>{
+    if(typeof initializeTerritoryManager==="function")await initializeTerritoryManager();
+  });
   return atlasBootPromise;
 }
 

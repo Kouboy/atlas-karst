@@ -38,6 +38,7 @@ async function openOfflineAtlas(page, query = "?offline&debug") {
   assert.match(await page.title(), titleVersionPattern);
   await page.locator("#viewport").waitFor({ state: "visible" });
   await page.waitForFunction(() => /^(symbolic|ascii)$/.test(document.body.dataset.effectiveRender || ""));
+  await page.waitForFunction(() => territoryControllerRuntime.managerReady === true);
   if (query.includes("debug")) {
     await page.waitForFunction(() => document.getElementById("debugRenderTime")?.textContent !== "—");
   }
@@ -83,6 +84,7 @@ try {
     assert.match(checks, /Pipeline Canvas final/);
     assert.match(checks, /FX synchronisés avec OSM/);
     assert.match(checks, /Coque responsive/);
+    assert.match(checks, /Gestionnaire de territoires/);
     assert.match(checks, /Gestionnaire d’instantanés/);
     assert.match(checks, /Rendu stabilisé sous 80 ms/);
     assert.equal(await page.locator(".debug-check.bad").count(), 0);
@@ -522,6 +524,56 @@ try {
     assert.match(result.identity,/Territoire parisien · 16 × 16 km/);assert.equal(result.controls.name,"Territoire parisien");assert.equal(result.controls.lat,48.85837);assert.equal(result.controls.lon,2.294481);
     assert.notEqual(result.legacyObservationKey,result.customObservationKey);assert.deepEqual(result.restoredLegacy,["OBS-LEGACY"]);assert.deepEqual(result.customStored,["OBS-CUSTOM"]);
     assert.equal(result.runtime.bound,true);assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.created>=1);
+  });
+
+  await withPage("bibliothèque multi-territoires étanche", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      await clearTerritoryLibraryFromDb();
+      const legacySnapshot=buildAtlasSnapshot();
+      await writeSnapshotDbValues([[SNAPSHOT_DB_KEY,legacySnapshot]]);
+      const migrated=await loadSnapshotFromDb(),afterMigration=await listTerritoriesFromDb();
+      const migration={id:migrated?.territory?.id,entries:afterMigration.length,count:snapshotRuntime.migrations,oldKey:await readSnapshotDbValue(SNAPSHOT_DB_KEY)};
+      await clearTerritoryLibraryFromDb();
+
+      const paris=createUserTerritoryProfile({label:"Carnet Paris",center:{lat:48.8566,lon:2.3522}});
+      await activateTerritory(paris,{sync:false,persist:true,saveCurrent:false});
+      state.observations=[{id:"OBS-PARIS",mode:"point",glyph:"◎",name:"Trace parisienne",lat:48.8566,lon:2.3522,confidence:"high"}];
+      state.encounterCollection={paris:{status:"catalogued"}};
+      await persistActiveTerritory();
+
+      const lyon=createUserTerritoryProfile({label:"Carnet Lyon",center:{lat:45.764,lon:4.8357}});
+      await activateTerritory(lyon,{sync:false,persist:true,saveCurrent:true});
+      state.observations=[{id:"OBS-LYON",mode:"point",glyph:"◎",name:"Trace lyonnaise",lat:45.764,lon:4.8357,confidence:"medium"}];
+      state.encounterCollection={lyon:{status:"seen"}};
+      await persistActiveTerritory();
+
+      await openStoredTerritory(paris.id);
+      const parisState={id:CONFIG.territory.id,observations:state.observations.map(item=>item.id),encounters:Object.keys(state.encounterCollection),network:state.allowNetwork};
+      await renameStoredTerritory(paris.id,"Carnet Paris renommé");
+      const copy=await duplicateStoredTerritory(paris.id);
+      const beforeDelete=await listTerritoriesFromDb();
+      await deleteStoredTerritory(copy.id,{confirmUser:false});
+      const afterDelete=await listTerritoriesFromDb();
+
+      await openStoredTerritory(lyon.id);
+      const lyonState={id:CONFIG.territory.id,observations:state.observations.map(item=>item.id),encounters:Object.keys(state.encounterCollection),network:state.allowNetwork};
+      const finalEntries=await listTerritoriesFromDb();
+      return {
+        migration,parisState,lyonState,copy,
+        beforeDelete:beforeDelete.map(item=>({id:item.id,label:item.label})),afterDelete:afterDelete.map(item=>({id:item.id,label:item.label})),
+        finalEntries:finalEntries.map(item=>({id:item.id,label:item.label})),selectOptions:[...els.territoryLibrarySelect.options].map(option=>option.value),
+        runtime:{...territoryControllerRuntime},snapshotRuntime:{migrations:snapshotRuntime.migrations,lastError:snapshotRuntime.lastError}
+      };
+    });
+    assert.equal(result.migration.id,"angouleme-karst");assert.equal(result.migration.entries,1);assert.ok(result.migration.count>=1);assert.equal(result.migration.oldKey,null);
+    assert.match(result.parisState.id,/^carnet-paris-/);assert.deepEqual(result.parisState.observations,["OBS-PARIS"]);assert.deepEqual(result.parisState.encounters,["paris"]);assert.equal(result.parisState.network,false);
+    assert.match(result.lyonState.id,/^carnet-lyon-/);assert.deepEqual(result.lyonState.observations,["OBS-LYON"]);assert.deepEqual(result.lyonState.encounters,["lyon"]);assert.equal(result.lyonState.network,false);
+    assert.equal(result.beforeDelete.length,3);assert.equal(result.afterDelete.length,2);assert.ok(result.beforeDelete.some(item=>item.id===result.copy.id));assert.ok(!result.afterDelete.some(item=>item.id===result.copy.id));
+    assert.deepEqual(new Set(result.finalEntries.map(item=>item.label)),new Set(["Carnet Paris renommé","Carnet Lyon"]));
+    assert.deepEqual(new Set(result.selectOptions),new Set(result.finalEntries.map(item=>item.id)));
+    assert.equal(result.runtime.managerReady,true);assert.ok(result.runtime.saves>=4);assert.ok(result.runtime.loads>=2);assert.ok(result.runtime.renames>=1);assert.ok(result.runtime.duplicates>=1);assert.ok(result.runtime.deletes>=1);
+    assert.equal(result.runtime.lastError,"");assert.equal(result.snapshotRuntime.lastError,"");
   });
 
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {

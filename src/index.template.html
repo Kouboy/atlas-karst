@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18b · création de territoire</title>
+<title>Atlas Karst ASCII v0.18c · gestionnaire de territoires</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -48,7 +48,25 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
   </section>
 
   <section class="card" data-panel-kind="navigation">
-    <h2>Nouveau territoire</h2>
+    <h2>Territoires</h2>
+    <label class="field-label">Territoires enregistrés
+      <select id="territoryLibrarySelect"><option value="">Préparation de la bibliothèque…</option></select>
+    </label>
+    <div class="grid2" style="margin-top:7px">
+      <button id="territoryLoad" type="button">▶ ouvrir</button>
+      <button id="territorySave" type="button">▣ sauvegarder l’actif</button>
+    </div>
+    <label class="field-label" style="margin-top:7px">Nom dans la bibliothèque
+      <input id="territoryRenameName" type="text" maxlength="80" autocomplete="off">
+    </label>
+    <div class="grid2" style="margin-top:7px">
+      <button id="territoryRename" type="button">✎ renommer</button>
+      <button id="territoryDuplicate" type="button">⧉ dupliquer</button>
+    </div>
+    <button id="territoryDelete" type="button" style="width:100%;margin-top:7px">✕ supprimer de la bibliothèque</button>
+    <div class="small" id="territoryLibraryStatus" style="margin-top:8px">Chaque territoire conserve son propre état. L’ouverture utilise la sauvegarde locale sans lancer le réseau.</div>
+    <hr style="margin:12px 0 9px;border:0;border-top:1px solid var(--line)">
+    <h3 style="margin:0 0 7px">Créer un territoire</h3>
     <label class="field-label">Nom
       <input id="territoryName" type="text" maxlength="80" autocomplete="off" value="Mon territoire">
     </label>
@@ -222,7 +240,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
     <input id="snapshotFile" class="file-input-hidden" type="file" accept=".json,.atlas.json,application/json">
     <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
-    <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">↶ oublier la sauvegarde locale au prochain démarrage</button>
+    <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">✕ supprimer le territoire actif de la bibliothèque</button>
     <div class="snapshot-note" id="snapshotHelp">Le JSON reste réimportable dans les versions futures. L’HTML autonome contient l’état courant et démarre sans requête réseau, sauf si tu demandes explicitement une actualisation.</div>
   </section>
 

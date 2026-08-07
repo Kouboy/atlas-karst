@@ -123,8 +123,12 @@ check("contrôleur des sources isolé", () =>
   !sourceByName["main.js"].includes("els.syncCartofriches.addEventListener") &&
   !sourceByName["main.js"].includes("els.retryData.addEventListener")
 );
-check("créateur de territoire isolé", () =>
+check("gestionnaire de territoires isolé", () =>
   sourceByName["territory-controller.js"].includes("async function activateTerritory") &&
+  sourceByName["territory-controller.js"].includes("async function openStoredTerritory") &&
+  sourceByName["territory-controller.js"].includes("async function renameStoredTerritory") &&
+  sourceByName["territory-controller.js"].includes("async function duplicateStoredTerritory") &&
+  sourceByName["territory-controller.js"].includes("async function deleteStoredTerritory") &&
   sourceByName["territory-controller.js"].includes("function resetTerritoryRuntimeData") &&
   sourceByName["territory-controller.js"].includes("async function syncCoreTerritorySources") &&
   sourceByName["application-controller.js"].includes("bindTerritoryController()") &&
@@ -236,6 +240,10 @@ check("gestionnaire d’instantanés isolé", () =>
   sourceByName["snapshot-manager.js"].includes("function validateAtlasSnapshot") &&
   sourceByName["snapshot-manager.js"].includes("function buildAtlasSnapshot") &&
   sourceByName["snapshot-manager.js"].includes("async function saveSnapshotToDb") &&
+  sourceByName["snapshot-manager.js"].includes("async function listTerritoriesFromDb") &&
+  sourceByName["snapshot-manager.js"].includes("async function loadTerritorySnapshotFromDb") &&
+  sourceByName["snapshot-manager.js"].includes("const TERRITORY_SNAPSHOT_PREFIX") === false &&
+  sourceByName["bootstrap.js"].includes("const TERRITORY_SNAPSHOT_PREFIX") &&
   sourceByName["snapshot-manager.js"].includes("function exportStandaloneHtml") &&
   sourceByName["application-controller.js"].includes("bindSnapshotManager()") &&
   !sourceByName["main.js"].includes("function applyAtlasSnapshot") &&

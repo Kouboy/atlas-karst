@@ -8,7 +8,7 @@
 - `app/performance.js` borne la résolution du Canvas, met les effets animés au repos et regroupe les rafales de données.
 - `app/debug.js` porte le diagnostic et l’auto-vérification.
 - `app/territory-model.js` définit le contrat géographique sérialisable d’un Atlas : identité, centre, emprise, rattachement administratif et données patrimoniales embarquées.
-- `app/territory-controller.js` crée un territoire en session, cloisonne ses données et orchestre sa synchronisation initiale.
+- `app/territory-controller.js` gère la bibliothèque locale de territoires : création, sauvegarde, ouverture hors ligne, renommage, duplication, suppression et cloisonnement des données.
 - `app/bootstrap.js` charge les données embarquées, la configuration et l’état partagé.
 - `app/canvas-renderer.js` contient le pipeline de rendu ASCII et symbolique, jusqu’aux effets finaux du bitmap.
 - `app/audio.js` porte les retours sonores et leur cycle de vie.
@@ -27,7 +27,7 @@
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
-- `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, IndexedDB, texte et HTML autonome.
+- `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, texte et HTML autonome ; IndexedDB conserve un instantané indépendant par territoire et migre l’ancienne sauvegarde unique.
 - `app/main.js` orchestre les fonctions applicatives qui restent à extraire progressivement.
 
 Le générateur concatène les sources JavaScript dans cet ordre et les embarque avec les styles dans un unique fichier HTML classique. Ce choix conserve pour l’instant la portée globale et l’ordre d’initialisation de l’application, tout en permettant de réduire le monolithe sans migration brutale.

@@ -1,6 +1,8 @@
 const SNAPSHOT_DB_NAME = "atlas-karst-memory";
 const SNAPSHOT_DB_STORE = "snapshots";
 const SNAPSHOT_DB_KEY = "active";
+const TERRITORY_REGISTRY_KEY = "territory-registry-v1";
+const TERRITORY_SNAPSHOT_PREFIX = "territory:";
 function parseEmbeddedSnapshot(){
   try{
     const raw=document.getElementById("atlas-snapshot")?.textContent?.trim();
@@ -178,7 +180,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "appVersionLabel","territorySummary","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "appVersionLabel","territorySummary","territoryLibrarySelect","territoryLoad","territorySave","territoryRenameName","territoryRename","territoryDuplicate","territoryDelete","territoryLibraryStatus","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
