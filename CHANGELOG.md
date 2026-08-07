@@ -9,6 +9,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - Suppression des replis « Charente » codés en dur dans Cartofriches, le patrimoine culturel et Hub’Eau au profit du profil actif.
 - Ajout du territoire au schéma 3 des sauvegardes, avec compatibilité conservée pour les schémas 1 et 2.
 - Séparation explicite entre données synchronisables partout et inventaires historiques locaux, afin qu’un futur territoire ne réutilise pas silencieusement les 736 points BSS charentais.
+- Version du HUD reliée à la version d’exécution, territoire actif identifié dans l’en-tête et commande de diagnostic rendue directement accessible.
 
 ## 0.17u — Santé des sessions longues
 

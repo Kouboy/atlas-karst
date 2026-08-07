@@ -33,6 +33,7 @@ const missingRegisteredIds = registeredIds.filter((id) => !ids.includes(id));
 const classicScripts = [...html.matchAll(/<script(?![^>]*type="application\/json")[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
 
 check("version visible cohérente", () => Boolean(atlasVersion) && html.includes(`v${atlasVersion}`) && html.includes(`const APP_VERSION = "${atlasVersion}"`));
+check("version du HUD liée au runtime", () => html.includes('id="appVersionLabel"') && html.includes('els.appVersionLabel.textContent=`V${APP_VERSION}`'));
 check("livrable autonome généré", () => html.includes("Fichier généré par npm run build") && !html.includes("@atlas-inline:"));
 check("identifiants HTML uniques", () => duplicateIds.length === 0);
 check("fonctions nommées uniques", () => duplicateFunctions.length === 0);

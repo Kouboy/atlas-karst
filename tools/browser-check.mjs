@@ -69,6 +69,10 @@ try {
   await withPage("diagnostic et pipeline Canvas", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForFunction(() => document.getElementById("debugChecks")?.textContent?.includes("Pipeline Canvas final"));
+    const identity=await page.evaluate(()=>({version:document.getElementById("appVersionLabel")?.textContent,territory:document.getElementById("territorySummary")?.textContent,debugVisible:getComputedStyle(document.getElementById("debugToggle")).display!=="none"}));
+    assert.equal(identity.version,`V${packageMetadata.atlasVersion}`);
+    assert.match(identity.territory,/Atlas historique d.Angoulême · 16 × 16 km/);
+    assert.equal(identity.debugVisible,true,"le bouton diagnostic doit rester accessible");
     const coldMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
     assert.ok(coldMs <= 140, `premier rendu trop lent : ${coldMs} ms`);
     await page.evaluate(() => {

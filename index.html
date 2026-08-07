@@ -1297,9 +1297,10 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17u</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · <span id="appVersionLabel">V—</span></div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
+      <div class="small" id="territorySummary">Territoire actif en cours d’initialisation…</div>
       <div class="sidebar-tools">
         <button id="collapseCards" type="button">− replier</button>
         <button id="expandCards" type="button">＋ déployer</button>
@@ -1650,7 +1651,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 
   <section class="card debug-only" id="debugPanel">
     <h2>Diagnostic</h2>
-    <div class="small">Activé par <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span>. Les mesures restent locales.</div>
+    <div class="small">Ouvert avec le bouton <strong>⚙ diagnostic</strong>, <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span> lorsque le navigateur laisse passer ce raccourci. Les mesures restent locales.</div>
     <div class="debug-kpis">
       <div class="debug-kpi"><span>Dernier rendu</span><strong id="debugRenderTime">—</strong></div>
       <div class="debug-kpi"><span>Moyenne</span><strong id="debugRenderAverage">—</strong></div>
@@ -1736,7 +1737,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     <button id="sidebarToggle" class="toolbar-button sidebar-toggle" type="button" title="Afficher ou masquer le panneau">☰ panneau</button>
     <button id="infoToggle" class="toolbar-button info-toggle" type="button" title="Afficher ou masquer les informations">ⓘ infos</button>
     <button id="audioToggle" class="toolbar-button audio-toggle" type="button" aria-pressed="true" title="Activer ou couper les petits effets sonores">♪ sons</button>
-    <button id="debugToggle" class="toolbar-button debug-only" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
+    <button id="debugToggle" class="toolbar-button" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
     <div class="badge">position <strong id="locationBadge">non localisée</strong></div>
     <div class="badge">échelle <strong id="zoomLabel">commune</strong></div>
     <div class="badge">niveau <strong id="depthLabel">surface</strong></div>
@@ -2386,7 +2387,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "appVersionLabel","territorySummary","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
@@ -9900,6 +9901,8 @@ async function bootAtlas(){
   applicationControllerRuntime.bootStarts++;
   try{
     retroAudio.init();
+    if(els.appVersionLabel)els.appVersionLabel.textContent=`V${APP_VERSION}`;
+    if(els.territorySummary)els.territorySummary.textContent=`Territoire actif · ${ACTIVE_TERRITORY.label} · ${ACTIVE_TERRITORY.sizeKm.width} × ${ACTIVE_TERRITORY.sizeKm.height} km`;
     setDebugEnabled(DEBUG_REQUESTED);
     if(!CANVAS_RENDERER){
       applicationControllerRuntime.bootMode="canvas-indisponible";
