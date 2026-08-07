@@ -115,7 +115,7 @@ function buildSidebarClusters(){
   const cards=[...els.sidebar.querySelectorAll(":scope > .card")];
   const byTitle=new Map(cards.map(card=>[(card.querySelector(":scope > h2")?.textContent||"").trim(),card]));
   const groups=[
-    {code:"01",title:"Exploration",meta:"se déplacer · se situer · enquêter",open:true,cards:["Ma position","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Navigation géographique","Aller à une cavité"]},
+    {code:"01",title:"Exploration",meta:"se déplacer · se situer · enquêter",open:true,cards:["Ma position","Nouveau territoire","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Navigation géographique","Aller à une cavité"]},
     {code:"02",title:"Calques & lecture",meta:"composer la carte · lire ses signes",open:true,cards:["Couches","Légende lisible"]},
     {code:"03",title:"Carnet local",meta:"mémoriser · observer · annoter",open:false,cards:["Mémoire de l’Atlas","Observations de terrain","Repères patrimoine & mystère"]},
     {code:"04",title:"Sources & synchronisation",meta:"charger · vérifier · archiver",open:false,cards:["Données","Patrimoine & curiosités synchronisés","Cartofriches · Cerema","Forages BSS & piézomètres","Diagnostic"]}
@@ -140,11 +140,11 @@ function buildSidebarClusters(){
 
 function prepareSidebarCards(){
   const panelMeta={
-    "Mode d’utilisation":["navigation","◈"],"Autour de moi":["navigation","⌖"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
+    "Mode d’utilisation":["navigation","◈"],"Nouveau territoire":["navigation","⊕"],"Autour de moi":["navigation","⌖"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
     "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
     "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
   };
-  const openByDefault=new Set(["Ma position","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Couches","Données"]);
+  const openByDefault=new Set(["Ma position","Nouveau territoire","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Couches","Données"]);
   for(const card of els.sidebar.querySelectorAll(":scope > .card")){
     if(card.classList.contains("warning")||card.id==="offlineNotice"||card.classList.contains("collapsible"))continue;
     const heading=card.querySelector(":scope > h2");if(!heading)continue;

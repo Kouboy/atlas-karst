@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18b — Création de territoire
+
+- Ajout d’un panneau permettant de nommer un territoire de 16 × 16 km et de définir son centre par coordonnées ou depuis la géolocalisation ponctuelle.
+- Changement de territoire possible sans recharger la page, avec recentrage, remise à zéro des couches territoriales et relance explicite des sources principales.
+- Géocodage inverse du centre via la Géoplateforme afin de déterminer automatiquement commune et département avant le chargement cadastral.
+- Suppression de l’adresse et de la commune charentaises encore codées en dur dans l’adresse officielle et le cadastre.
+- Cloisonnement par territoire des observations, mémoires, repères de départ, Cartofriches, patrimoine, BSS et caches de données.
+- Sauvegarde automatique du territoire actif dans l’instantané local et restauration de son identité dans l’interface.
+
 ## 0.18a — Modèle de territoire
 
 - Introduction d’un profil territorial sérialisable qui regroupe identité, centre, emprise, rattachement administratif et disponibilité des données patrimoniales embarquées.

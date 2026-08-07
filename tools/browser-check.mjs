@@ -487,6 +487,38 @@ try {
     assert.equal(result.snapshotTerritory.id,"territoire-test-paris");
   });
 
+  await withPage("création et cloisonnement d’un territoire", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      state.observations=[{id:"OBS-LEGACY",mode:"point",glyph:"◎",name:"Trace historique",lat:CONFIG.house.lat,lon:CONFIG.house.lon,confidence:"high"}];
+      saveLocalCavities();
+      const legacyObservationKey=territoryStorageKey(OBSERVATION_KEY,CONFIG.territory);
+      const profile=enrichTerritoryAdministration(createUserTerritoryProfile({label:"Territoire parisien",center:{lat:48.85837,lon:2.294481}}),{
+        citycode:"75107",city:"Paris",postcode:"75007",context:"75, Paris, Île-de-France"
+      });
+      await activateTerritory(profile,{sync:false,persist:false});
+      const customObservationKey=territoryStorageKey(OBSERVATION_KEY,CONFIG.territory);
+      const customState={
+        id:CONFIG.territory.id,label:CONFIG.territory.label,center:{...state.center},house:{...CONFIG.house},size:{width:CONFIG.dataWidthKm,height:CONFIG.dataHeightKm},
+        administration:{...CONFIG.territory.administration},embedded:{...CONFIG.territory.embeddedData},observations:state.observations.length,bss:state.bss.length,
+        identity:document.getElementById("territorySummary").textContent,controls:{name:els.territoryName.value,lat:Number(els.territoryLat.value),lon:Number(els.territoryLon.value)},
+        runtime:{...territoryControllerRuntime},legacyObservationKey,customObservationKey
+      };
+      state.observations=[{id:"OBS-CUSTOM",mode:"point",glyph:"◎",name:"Trace parisienne",lat:CONFIG.house.lat,lon:CONFIG.house.lon,confidence:"high"}];
+      saveLocalCavities();
+      await activateTerritory(LEGACY_TERRITORY_PROFILE,{sync:false,persist:false});
+      return {...customState,restoredLegacy:state.observations.map(item=>item.id),customStored:JSON.parse(localStorage.getItem(customObservationKey)||"[]").map(item=>item.id)};
+    });
+    assert.equal(result.label,"Territoire parisien");
+    assert.deepEqual(result.center,{lat:48.85837,lon:2.294481});assert.deepEqual(result.house,result.center);
+    assert.deepEqual(result.size,{width:16,height:16});assert.equal(result.administration.departmentCode,"75");assert.equal(result.administration.communeInsee,"75107");
+    assert.deepEqual(result.embedded,{bss:false,cavityInventory:false,fallbackSurface:false,offlineDemo:false});
+    assert.equal(result.observations,0,"les observations historiques ont fui dans le nouveau territoire");assert.equal(result.bss,0,"les BSS historiques ont fui dans le nouveau territoire");
+    assert.match(result.identity,/Territoire parisien · 16 × 16 km/);assert.equal(result.controls.name,"Territoire parisien");assert.equal(result.controls.lat,48.85837);assert.equal(result.controls.lon,2.294481);
+    assert.notEqual(result.legacyObservationKey,result.customObservationKey);assert.deepEqual(result.restoredLegacy,["OBS-LEGACY"]);assert.deepEqual(result.customStored,["OBS-CUSTOM"]);
+    assert.equal(result.runtime.bound,true);assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.created>=1);
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {

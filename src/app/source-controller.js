@@ -16,16 +16,17 @@ async function importSourceFile(file,source,importer){
 }
 function resetBssSource(){
   accountSourceAction("réinitialisation BSS");sourceControllerRuntime.clears++;
-  try{localStorage.removeItem(BSS_LOCAL_KEY);localStorage.removeItem("atlas-karst-bss-v09b")}catch{}
-  state.bss=mergeBssItems(BSS_EMBEDDED_LOCAL);
-  updateBssUI("Couche réinitialisée sur les 736 ouvrages BRGM embarqués.");
+  try{localStorage.removeItem(territoryStorageKey(BSS_LOCAL_KEY));if(CONFIG.territory.id===LEGACY_TERRITORY_PROFILE.id)localStorage.removeItem("atlas-karst-bss-v09b")}catch{}
+  const embedded=territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[];
+  state.bss=mergeBssItems(embedded);
+  updateBssUI(embedded.length?"Couche réinitialisée sur les ouvrages BRGM embarqués.":"Couche locale vidée pour ce territoire.");
   els.layerBss.checked=true;state.layerBss=true;
   render("bss-reset");
 }
 function clearCartofrichesSource(){
   accountSourceAction("effacement Cartofriches");sourceControllerRuntime.clears++;
   state.cartofriches=[];
-  try{localStorage.removeItem(CARTOFRICHES_KEY)}catch{}
+  try{localStorage.removeItem(territoryStorageKey(CARTOFRICHES_KEY))}catch{}
   updateCartofrichesUI("Couche locale vidée.");
   render("cartofriches-clear");
 }
@@ -36,7 +37,7 @@ async function retryAllDataSources(){
   els.retryData.textContent="↻ recharger toutes les données";
   try{
     ["atlas-karst-address-v06","atlas-karst-cadastre-v06","atlas-karst-cavities-v06","atlas-karst-elevation-v06","atlas-karst-elevation-v09d"]
-      .forEach(key=>localStorage.removeItem(key));
+      .forEach(key=>localStorage.removeItem(territoryStorageKey(key)));
   }catch{}
   await syncOsmNow();
   Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation()]);

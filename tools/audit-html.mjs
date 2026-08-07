@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "territory-model.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "territory-model.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "territory-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -119,6 +119,16 @@ check("contrôleur des sources isolé", () =>
   !sourceByName["main.js"].includes("els.syncOsm.addEventListener") &&
   !sourceByName["main.js"].includes("els.syncCartofriches.addEventListener") &&
   !sourceByName["main.js"].includes("els.retryData.addEventListener")
+);
+check("créateur de territoire isolé", () =>
+  sourceByName["territory-controller.js"].includes("async function activateTerritory") &&
+  sourceByName["territory-controller.js"].includes("function resetTerritoryRuntimeData") &&
+  sourceByName["territory-controller.js"].includes("async function syncCoreTerritorySources") &&
+  sourceByName["application-controller.js"].includes("bindTerritoryController()") &&
+  sourceByName["territory-model.js"].includes("function territoryStorageKey") &&
+  sourceByName["data-services.js"].includes("geocodage/reverse") &&
+  !sourceByName["data-services.js"].includes("communes/16/16418") &&
+  !sourceByName["data-services.js"].includes("42 rue de la Falaise")
 );
 check("contrôleur des expériences isolé", () =>
   sourceByName["experience-controller.js"].includes("function bindExperienceController") &&

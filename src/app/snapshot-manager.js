@@ -104,9 +104,11 @@ async function deleteSnapshotFromDb(){
 function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   validateAtlasSnapshot(snapshot);
   const d=snapshot.data,v=snapshot.view||{};
-  applyTerritoryProfileToConfig(CONFIG,normalizeTerritoryProfile(snapshot.territory,CONFIG.territory));
+  ACTIVE_TERRITORY=applyTerritoryProfileToConfig(CONFIG,normalizeTerritoryProfile(snapshot.territory,CONFIG.territory));
+  HOUSE_ESTIMATE={...ACTIVE_TERRITORY.center};updateTerritoryIdentityUI();
+  if(typeof populateTerritoryControls==="function")populateTerritoryControls(ACTIVE_TERRITORY);
   if(snapshot.house&&Number.isFinite(+snapshot.house.lat)&&Number.isFinite(+snapshot.house.lon)){
-    CONFIG.house={lat:+snapshot.house.lat,lon:+snapshot.house.lon};markSpatialIndexesDirty();
+    CONFIG.house={lat:+snapshot.house.lat,lon:+snapshot.house.lon};HOUSE_WAS_SAVED=true;markSpatialIndexesDirty();
     els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7);
   }
   state.osm=Array.isArray(d.osm)?d.osm:[];markMapDataRevision("osm");state.osmMeta=d.osmMeta||null;

@@ -11,8 +11,8 @@ function parseEmbeddedSnapshot(){
 }
 const EMBEDDED_SNAPSHOT = parseEmbeddedSnapshot();
 
-const ACTIVE_TERRITORY = normalizeTerritoryProfile(EMBEDDED_SNAPSHOT?.territory,LEGACY_TERRITORY_PROFILE);
-const HOUSE_ESTIMATE = {...ACTIVE_TERRITORY.center};
+let ACTIVE_TERRITORY = normalizeTerritoryProfile(EMBEDDED_SNAPSHOT?.territory,LEGACY_TERRITORY_PROFILE);
+let HOUSE_ESTIMATE = {...ACTIVE_TERRITORY.center};
 const LORE_KEY = "atlas-karst-lore-v07";
 const CARTOFRICHES_KEY = "atlas-karst-cartofriches-v09h";
 const HERITAGE_KEY = "atlas-karst-heritage-v010b";
@@ -83,11 +83,13 @@ const CONFIG = {
 };
 let HOUSE_WAS_SAVED=false;
 try{
-  const savedHouse=JSON.parse(localStorage.getItem("atlas-karst-house-v06")||localStorage.getItem("atlas-karst-house-v05")||"null");
+  const houseKey=territoryStorageKey("atlas-karst-house-v06",ACTIVE_TERRITORY);
+  const legacyHouse=ACTIVE_TERRITORY.id===LEGACY_TERRITORY_PROFILE.id?localStorage.getItem("atlas-karst-house-v05"):null;
+  const savedHouse=JSON.parse(localStorage.getItem(houseKey)||legacyHouse||"null");
   if(savedHouse&&Number.isFinite(savedHouse.lat)&&Number.isFinite(savedHouse.lon)){
     CONFIG.house={lat:savedHouse.lat,lon:savedHouse.lon};HOUSE_WAS_SAVED=true;
-    localStorage.setItem("atlas-karst-house-v06",JSON.stringify(CONFIG.house));
-    localStorage.removeItem("atlas-karst-house-v05");
+    localStorage.setItem(houseKey,JSON.stringify(CONFIG.house));
+    if(ACTIVE_TERRITORY.id===LEGACY_TERRITORY_PROFILE.id)localStorage.removeItem("atlas-karst-house-v05");
   }
 }catch{}
 
@@ -176,7 +178,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "appVersionLabel","territorySummary","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "appVersionLabel","territorySummary","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",

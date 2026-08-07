@@ -463,9 +463,9 @@ function parseOsm(json){
 const OBSERVATION_KEY="atlas-karst-observations-v06";
 function loadLocalCavities(){
   try{
-    let v=JSON.parse(localStorage.getItem(OBSERVATION_KEY)||"null");
+    let v=JSON.parse(localStorage.getItem(territoryStorageKey(OBSERVATION_KEY))||"null");
     if(!Array.isArray(v)){
-      const legacy=JSON.parse(localStorage.getItem("atlas-karst-local-cavities-v05")||"[]");
+      const legacy=CONFIG.territory.id===LEGACY_TERRITORY_PROFILE.id?JSON.parse(localStorage.getItem("atlas-karst-local-cavities-v05")||"[]"):[];
       v=Array.isArray(legacy)?legacy.map(c=>({id:c.id||`OBS-${Date.now()}-${Math.random()}`,mode:"point",glyph:c.markerOverride||"?o",name:c.name||"Observation importée",lat:+c.lat,lon:+c.lon,confidence:"med",season:"",source:"Observation locale importée de la V0.5"})):[];
     }
     state.observations=v.filter(o=>Number.isFinite(+o.lat)&&Number.isFinite(+o.lon)).map(o=>({...o,lat:+o.lat,lon:+o.lon,local:true}));
@@ -479,17 +479,17 @@ function refreshLocalCavitiesFromObservations(){
   });
 }
 function saveLocalCavities(){
-  try{localStorage.setItem(OBSERVATION_KEY,JSON.stringify(state.observations))}catch{}
+  try{localStorage.setItem(territoryStorageKey(OBSERVATION_KEY),JSON.stringify(state.observations))}catch{}
   refreshLocalCavitiesFromObservations();
 }
 function loadLoreItems(){
   try{
-    const v=JSON.parse(localStorage.getItem(LORE_KEY)||"[]");
+    const v=JSON.parse(localStorage.getItem(territoryStorageKey(LORE_KEY))||"[]");
     state.loreItems=Array.isArray(v)?v.filter(o=>Number.isFinite(+o.lat)&&Number.isFinite(+o.lon)).map(o=>({...o,lat:+o.lat,lon:+o.lon,category:o.category||"anecdote"})):[];
   }catch{state.loreItems=[]}
 }
 function saveLoreItems(){
-  try{localStorage.setItem(LORE_KEY,JSON.stringify(state.loreItems))}catch{}
+  try{localStorage.setItem(territoryStorageKey(LORE_KEY),JSON.stringify(state.loreItems))}catch{}
 }
 
 function normalizeLooseText(v){
@@ -522,7 +522,7 @@ function cartofrichesCoordinateCandidates(a,b,origin="coordonnées"){
 function chooseCartofrichesCoordinate(candidates,insee=""){
   if(!candidates.length)return null;
   const departmentCode=CONFIG.territory.administration.departmentCode;
-  const isCurrentDepartment=String(insee||"").padStart(5,"0").startsWith(departmentCode);
+  const isCurrentDepartment=!!departmentCode&&String(insee||"").padStart(5,"0").startsWith(departmentCode);
   return candidates.slice().sort((a,b)=>{
     // Une coordonnée située en France métropolitaine est infiniment plus plausible
     // pour les codes INSEE métropolitains qu'un point valide mathématiquement,
@@ -636,7 +636,7 @@ function cartofrichesMarker(f){
 }
 function saveCartofriches(){
   try{
-    localStorage.setItem(CARTOFRICHES_KEY,JSON.stringify({
+    localStorage.setItem(territoryStorageKey(CARTOFRICHES_KEY),JSON.stringify({
       savedAt:Date.now(),
       items:state.cartofriches,
       includeReconverted:state.cartofrichesIncludeReconverted
@@ -645,7 +645,7 @@ function saveCartofriches(){
 }
 function loadCartofriches(){
   try{
-    const v=JSON.parse(localStorage.getItem(CARTOFRICHES_KEY)||"null");
+    const v=JSON.parse(localStorage.getItem(territoryStorageKey(CARTOFRICHES_KEY))||"null");
     if(v&&Array.isArray(v.items)){
       state.cartofriches=v.items.map(normalizeCartofrichesRow).filter(Boolean);
       state.cartofrichesIncludeReconverted=!!v.includeReconverted;
@@ -672,6 +672,7 @@ function cartofrichesQueryExtent(){
   return {west:e.west,east:e.east,south:e.south,north:e.north};
 }
 async function syncCartofriches(){
+  const requestStamp=territoryRequestStamp();
   const e=cartofrichesQueryExtent();
   els.cartofrichesHelp.textContent="Connexion à l’API tabulaire officielle…";
   els.syncCartofriches.disabled=true;
@@ -689,17 +690,20 @@ async function syncCartofriches(){
       clearTimeout(timer);
       if(!r.ok)throw new Error(`HTTP ${r.status}`);
       const j=await r.json();
+      if(!territoryRequestIsCurrent(requestStamp))return null;
       const rows=Array.isArray(j.data)?j.data:[];
       all.push(...rows);
       total=Number(j.meta?.total??all.length);
       if(!rows.length)break;
       page++;
     }
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     state.cartofriches=all.map(normalizeCartofrichesRow).filter(Boolean);
     saveCartofriches();updateCartofrichesUI(`Synchronisé depuis data.gouv.fr · ${state.cartofriches.length} lignes locales`);
     els.cartofrichesHelp.innerHTML=`Synchronisation terminée. Les données sont désormais conservées localement et la carte reste utilisable hors ligne.`;
     render();
   }catch(err){
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     console.warn("Cartofriches API indisponible",err);
     els.cartofrichesHelp.innerHTML=`L’API n’a pas répondu (${esc(err?.message||"erreur réseau")}). Utilise <strong>télécharger le CSV</strong>, puis <strong>importer le CSV</strong> : cette voie ne dépend pas de CORS.`;
     updateCartofrichesUI();
@@ -896,11 +900,11 @@ function mergeHeritageItems(items){
   saveHeritage();updateHeritageUI();render();
 }
 function saveHeritage(){
-  try{localStorage.setItem(HERITAGE_KEY,JSON.stringify({items:state.heritageItems,enabled:state.heritageEnabled,updatedAt:new Date().toISOString()}))}catch{}
+  try{localStorage.setItem(territoryStorageKey(HERITAGE_KEY),JSON.stringify({items:state.heritageItems,enabled:state.heritageEnabled,updatedAt:new Date().toISOString()}))}catch{}
 }
 function loadHeritage(){
   try{
-    const saved=JSON.parse(localStorage.getItem(HERITAGE_KEY)||"null");
+    const saved=JSON.parse(localStorage.getItem(territoryStorageKey(HERITAGE_KEY))||"null");
     if(saved&&Array.isArray(saved.items))state.heritageItems=saved.items.map(normalizeHeritageItem).filter(Boolean);
     if(saved?.enabled)state.heritageEnabled={...state.heritageEnabled,...saved.enabled};
   }catch{state.heritageItems=[]}
@@ -1054,11 +1058,11 @@ async function fetchCultureFromDatasetJsonp(dataset,category,ds){
   const radius=heritageQueryRadius();
   const departmentName=CONFIG.territory.administration.departmentName;
   const attempts=[
-    {label:"proximité JSONP",params:{"geofilter.distance":`${CONFIG.dataCenter.lat},${CONFIG.dataCenter.lon},${radius}`},cap:1000},
-    // Le filtre plein texte sert de repli aux catalogues dont le champ spatial
-    // n’est pas déclaré comme géographique par le portail.
-    {label:`${departmentName} JSONP`,params:{q:departmentName},cap:Math.min(ds.fullScanCap||1800,3000)}
+    {label:"proximité JSONP",params:{"geofilter.distance":`${CONFIG.dataCenter.lat},${CONFIG.dataCenter.lon},${radius}`},cap:1000}
   ];
+  // Le filtre plein texte sert de repli aux catalogues dont le champ spatial
+  // n’est pas déclaré comme géographique par le portail.
+  if(departmentName)attempts.push({label:`${departmentName} JSONP`,params:{q:departmentName},cap:Math.min(ds.fullScanCap||1800,3000)});
   if(ds.allowFullScan)attempts.push({label:"catalogue JSONP complet",params:{},cap:ds.fullScanCap||1800});
   const errors=[];
   for(const attempt of attempts){
@@ -1247,20 +1251,24 @@ async function fetchCultureDataset(category){
   throw new Error(`${ds.label} · ${errors.join(" · ")}`);
 }
 async function syncCultureHeritage(){
+  const requestStamp=territoryRequestStamp();
   const selected=["monument","garden","house","museum"].filter(k=>state.heritageEnabled[k]!==false);
   if(!selected.length){els.heritageHelp.textContent="Coche au moins une base du ministère de la Culture.";return}
   els.syncCultureHeritage.disabled=true;
   const items=[],reports=[],errors=[];
   try{
     for(let i=0;i<selected.length;i++){
+      if(!territoryRequestIsCurrent(requestStamp))return null;
       const category=selected[i],label=CULTURE_DATASETS[category].label;
       els.heritageHelp.textContent=`Ministère de la Culture · ${i+1}/${selected.length} · ${label}…`;
       try{
         const result=await fetchCultureDataset(category);
+        if(!territoryRequestIsCurrent(requestStamp))return null;
         items.push(...result.items);
         reports.push(`${label} ${result.items.length} · ${result.strategy}`);
       }catch(err){errors.push(err?.message||String(err))}
     }
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     if(items.length)mergeHeritageItems(items);else updateHeritageUI();
     const reportText=reports.length?` Sources reçues : ${reports.join(" ; ")}.`:"";
     const conciseErrors=errors.map(value=>String(value).length>900?`${String(value).slice(0,900)}…`:String(value));
@@ -1278,19 +1286,21 @@ async function wikipediaDetails(pageIds){
   return out;
 }
 async function syncWikipediaHeritage(){
+  const requestStamp=territoryRequestStamp();
   if(state.heritageEnabled.wikipedia===false){els.heritageHelp.textContent="La source Wikipédia est décochée.";return}
   els.syncWikipediaHeritage.disabled=true;els.heritageHelp.textContent="Recherche des pages géolocalisées autour de l’Atlas…";
   try{
     const q=new URLSearchParams({action:"query",format:"json",origin:"*",list:"geosearch",gscoord:`${CONFIG.dataCenter.lat}|${CONFIG.dataCenter.lon}`,gsradius:String(heritageQueryRadius()),gslimit:"100",gsnamespace:"0"});
     const r=await fetchWithTimeout(`${WIKIPEDIA_API}?${q}`,{},25000);if(!r.ok)throw new Error(`Wikipédia géolocalisation · HTTP ${r.status}`);
     const j=await r.json(),geo=j.query?.geosearch||[],details=await wikipediaDetails(geo.map(v=>v.pageid));
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     const byId=new Map(details.map(v=>[Number(v.pageid),v]));
     const items=geo.map(g=>{
       const d=byId.get(Number(g.pageid))||{},extract=String(d.extract||"").replace(/\s+/g," ").trim();
       return normalizeHeritageItem({id:`WIKI-${g.pageid}`,category:"wikipedia",name:g.title,lat:+g.lat,lon:+g.lon,description:extract.slice(0,900),url:d.fullurl||`https://fr.wikipedia.org/?curid=${g.pageid}`,wikidata:d.pageprops?.wikibase_item||"",source:"Wikipédia francophone · page géolocalisée",license:"CC BY-SA",heritage:true});
     }).filter(Boolean).filter(v=>inExtent(v.lat,v.lon,largestExtent()));
     mergeHeritageItems(items);els.heritageHelp.innerHTML=`<strong>${items.length}</strong> pages géolocalisées trouvées. Les doublons proches d’une notice officielle ont été fusionnés pour enrichir son récit sans ajouter un second symbole.`;
-  }catch(err){els.heritageHelp.textContent=`Wikipédia n’a pas répondu : ${err?.message||err}`}
+  }catch(err){if(!territoryRequestIsCurrent(requestStamp))return null;els.heritageHelp.textContent=`Wikipédia n’a pas répondu : ${err?.message||err}`}
   finally{els.syncWikipediaHeritage.disabled=false}
 }
 function clearHeritage(){state.heritageItems=[];saveHeritage();updateHeritageUI();render();els.heritageHelp.textContent="Couche synchronisée vidée. Les repères saisis manuellement restent intacts."}
@@ -1350,7 +1360,8 @@ function localMarkerDefinition(glyph){
 }
 
 async function fetchCavities(){
-  const cached=cacheGet("atlas-karst-cavities-v06");
+  const requestStamp=territoryRequestStamp();
+  const cached=cacheGet(territoryStorageKey("atlas-karst-cavities-v06"));
   if(cached){
     state.officialCavities=Array.isArray(cached)?cached.map(normalizeCavityRecord).filter(Boolean):[];
     state.cavityInventoryOnly=false;
@@ -1376,14 +1387,16 @@ async function fetchCavities(){
     const r=await fetch(`${base}?${params.toString()}`);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const geo=await r.json();
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     if(!Array.isArray(geo.features))throw new Error("GeoJSON cavités incomplet");
     const cavs=geo.features.map(normalizeCavity).filter(Boolean);
     if(!cavs.length)throw new Error("Aucune cavité géolocalisée dans l’emprise");
     state.officialCavities=cavs;
     state.cavityInventoryOnly=false;
-    cacheSet("atlas-karst-cavities-v06",cavs);
+    cacheSet(territoryStorageKey("atlas-karst-cavities-v06"),cavs);
     state.load.cavities="ok";
   }catch(err){
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     const inventory=territoryUsesEmbeddedData("cavityInventory",CONFIG.territory)?CAVITY_INVENTORY:[];
     state.officialCavities=inventory.map(c=>normalizeCavityRecord({...c,lat:null,lon:null,source:"inventaire local sans coordonnées"}));
     state.cavityInventoryOnly=true;
@@ -1481,7 +1494,8 @@ async function fetchElevationOpenMeteo(points){
   return values;
 }
 async function fetchElevation(){
-  const cached=cacheGet("atlas-karst-elevation-v09d");
+  const requestStamp=territoryRequestStamp();
+  const cached=cacheGet(territoryStorageKey("atlas-karst-elevation-v09d"));
   if(cached){
     state.elevation=cached;
     setStatus("elevation","ok",`cache ${cached.source||"local"}`);
@@ -1511,10 +1525,12 @@ async function fetchElevation(){
     }
   }
   if(values&&values.length===points.length){
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     state.elevation={extent:e,cols,rows,values,source};
-    cacheSet("atlas-karst-elevation-v09d",state.elevation);
+    cacheSet(territoryStorageKey("atlas-karst-elevation-v09d"),state.elevation);
     setStatus("elevation","ok",`${values.length} points · ${source}`);
   }else{
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     state.elevation=null;
     setStatus("elevation","bad","2 sources indisponibles");
     console.warn("Relief indisponible",{
@@ -1568,20 +1584,26 @@ function normalizeCadastre(fc,kind){
   return out;
 }
 async function fetchCadastre(){
-  const cached=cacheGet("atlas-karst-cadastre-v06");
+  const requestStamp=territoryRequestStamp();
+  const cacheKey=territoryStorageKey("atlas-karst-cadastre-v06");
+  const commune=CONFIG.territory.administration.communeInsee||CONFIG.communeInsee;
+  const department=CONFIG.territory.administration.departmentCode;
+  if(!commune||!department){state.cadastreBuildings=[];state.cadastreParcels=[];setStatus("cadastre","bad","commune non déterminée");return null}
+  const cached=cacheGet(cacheKey);
   if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();scheduleDataRender("cadastre-cache");return}
-  const root="https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/16/16418";
+  const root=`https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/${encodeURIComponent(department)}/${encodeURIComponent(commune)}`;
   try{
     const [buildingsFc,parcelsFc]=await Promise.all([
-      fetchJsonMaybeGzip(`${root}/cadastre-16418-batiments.json.gz`),
-      fetchJsonMaybeGzip(`${root}/cadastre-16418-parcelles.json.gz`)
+      fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-batiments.json.gz`),
+      fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-parcelles.json.gz`)
     ]);
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     state.cadastreBuildings=normalizeCadastre(buildingsFc,"building");
     state.cadastreParcels=normalizeCadastre(parcelsFc,"parcel");
-    cacheSet("atlas-karst-cadastre-v06",{buildings:state.cadastreBuildings,parcels:state.cadastreParcels});
+    cacheSet(cacheKey,{buildings:state.cadastreBuildings,parcels:state.cadastreParcels});
     setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${state.cadastreParcels.length} parc.`);
     autoSnapHouse();
-  }catch(err){setStatus("cadastre","bad","indisponible");console.warn("Cadastre indisponible",err)}
+  }catch(err){if(!territoryRequestIsCurrent(requestStamp))return null;setStatus("cadastre","bad","indisponible");console.warn("Cadastre indisponible",err)}
   scheduleDataRender("cadastre-sync");
 }
 function polygonCentroid(coords){
@@ -1620,19 +1642,23 @@ function snapHouseToBuilding(persist=true){
 function autoSnapHouse(){
   if(!HOUSE_WAS_SAVED&&state.address&&state.cadastreBuildings.length)snapHouseToBuilding(false);
 }
-async function fetchAddress(force=false){
-  const cached=!force&&cacheGet("atlas-karst-address-v06");
-  if(cached){state.address=cached;setStatus("address","ok",`cache · score ${Math.round((cached.score||0)*100)} %`);if(!HOUSE_WAS_SAVED){CONFIG.house={lat:cached.lat,lon:cached.lon};autoSnapHouse();scheduleDataRender("address-cache")}return cached}
-  const q=encodeURIComponent("42 rue de la Falaise 16400 Vœuil-et-Giget");
-  const url=`https://data.geopf.fr/geocodage/search?q=${q}&index=address&limit=5`;
+async function fetchAddress(force=false,{moveHouse=force||!HOUSE_WAS_SAVED}={}){
+  const requestStamp=territoryRequestStamp();
+  const cacheKey=territoryStorageKey("atlas-karst-address-v06");
+  const cached=!force&&cacheGet(cacheKey);
+  if(cached){state.address=cached;setStatus("address","ok",`cache · score ${Math.round((cached.score||0)*100)} %`);if(moveHouse){CONFIG.house={lat:cached.lat,lon:cached.lon};autoSnapHouse();scheduleDataRender("address-cache")}return cached}
+  const target=CONFIG.house||CONFIG.dataCenter;
+  const query=new URLSearchParams({lon:Number(target.lon).toFixed(7),lat:Number(target.lat).toFixed(7),index:"address",limit:"1"});
+  const url=`https://data.geopf.fr/geocodage/reverse?${query}`;
   try{
     const r=await fetch(url);if(!r.ok)throw new Error(`HTTP ${r.status}`);const j=await r.json();
-    const f=j.features?.[0];const c=f?.geometry?.coordinates;if(!Array.isArray(c)||!Number.isFinite(+c[0])||!Number.isFinite(+c[1]))throw new Error("Adresse non trouvée");
-    state.address={lon:+c[0],lat:+c[1],label:f.properties?.label||"42 rue de la Falaise",score:+f.properties?.score||0,id:f.properties?.id||"",source:"Géoplateforme / Base Adresse Nationale"};
-    cacheSet("atlas-karst-address-v06",state.address);setStatus("address","ok",`score ${Math.round(state.address.score*100)} %`);
-    if(force||!HOUSE_WAS_SAVED){CONFIG.house={lat:state.address.lat,lon:state.address.lon};if(force)HOUSE_WAS_SAVED=false;autoSnapHouse();scheduleDataRender("address-sync")}
+    if(!territoryRequestIsCurrent(requestStamp))return null;
+    const f=j.features?.[0],properties=f?.properties||{},c=f?.geometry?.coordinates;if(!Array.isArray(c)||!Number.isFinite(+c[0])||!Number.isFinite(+c[1]))throw new Error("Adresse non trouvée");
+    state.address={lon:+c[0],lat:+c[1],label:properties.label||properties.name||"Adresse la plus proche",score:+properties.score||0,id:properties.id||"",citycode:properties.citycode||"",city:properties.city||"",postcode:properties.postcode||"",context:properties.context||"",district:properties.district||"",source:"Géoplateforme / Base Adresse Nationale"};
+    cacheSet(cacheKey,state.address);setStatus("address","ok",`score ${Math.round(state.address.score*100)} %`);
+    if(moveHouse){CONFIG.house={lat:state.address.lat,lon:state.address.lon};if(force)HOUSE_WAS_SAVED=false;autoSnapHouse();scheduleDataRender("address-sync")}
     return state.address;
-  }catch(err){setStatus("address","bad","non trouvée");console.warn("Adresse officielle indisponible",err);return null}
+  }catch(err){if(!territoryRequestIsCurrent(requestStamp))return null;setStatus("address","bad","non trouvée");console.warn("Adresse officielle indisponible",err);return null}
 }
 
 function normalizeHeaderName(s){
@@ -1935,13 +1961,13 @@ function saveBssLocal(){
     // Embedded BRGM rows are already in the HTML. Only save additions or richer
     // Hub'Eau/imported records to avoid duplicating 736 rows in localStorage.
     const additions=state.bss.filter(p=>!p.embedded||p.piezo);
-    localStorage.setItem(BSS_LOCAL_KEY,JSON.stringify({savedAt:Date.now(),items:additions}));
+    localStorage.setItem(territoryStorageKey(BSS_LOCAL_KEY),JSON.stringify({savedAt:Date.now(),items:additions}));
   }catch{}
 }
 function loadBssLocal(){
   let additions=[];
   try{
-    const v=JSON.parse(localStorage.getItem(BSS_LOCAL_KEY)||"null");
+    const v=JSON.parse(localStorage.getItem(territoryStorageKey(BSS_LOCAL_KEY))||"null");
     if(v&&Array.isArray(v.items))additions=v.items;
   }catch{}
   const embedded=territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[];
@@ -2050,7 +2076,9 @@ async function importBssFile(file){
 }
 
 async function syncHubeauPiezo(){
+  const requestStamp=territoryRequestStamp();
   const department=CONFIG.territory.administration;
+  if(!department.departmentCode){els.bssHelp.textContent="Le département n’a pas pu être déterminé pour ce territoire ; Hub’Eau reste disponible après identification de la commune.";return}
   els.syncPiezo.disabled=true;els.bssHelp.textContent=`Recherche des stations piézométriques Hub’Eau en ${department.departmentName}…`;
   try{
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
@@ -2059,6 +2087,7 @@ async function syncHubeauPiezo(){
     clearTimeout(timer);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const j=await r.json(),e=largestExtent(),points=[];
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     for(const s of j.data||[]){
       const lon=Number(s.x??s.geometry?.coordinates?.[0]),lat=Number(s.y??s.geometry?.coordinates?.[1]);
       if(!Number.isFinite(lat)||!Number.isFinite(lon)||!inExtent(lat,lon,e))continue;
@@ -2081,6 +2110,7 @@ async function syncHubeauPiezo(){
       : `Hub’Eau a répondu, mais aucune station piézométrique suivie ne se trouve dans l’emprise actuelle.`;
     render();
   }catch(err){
+    if(!territoryRequestIsCurrent(requestStamp))return null;
     els.bssHelp.innerHTML=`Hub’Eau n’a pas répondu (${esc(err?.message||"erreur réseau")}). La carte reste utilisable ; l’import CSV BSS demeure disponible.`;
     updateBssUI();
   }finally{els.syncPiezo.disabled=false}
