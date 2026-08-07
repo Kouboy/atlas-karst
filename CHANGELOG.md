@@ -10,6 +10,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - L’ouverture d’un territoire restaure sa vue et ses données sans déclencher de synchronisation réseau automatique.
 - Culture reconnaît les coordonnées WGS84 actuelles des catalogues ministériels, indépendamment de la casse et du séparateur décimal.
 - Le cadastre conserve la couche bâtiments si le serveur refuse ponctuellement les parcelles, et Cartofriches affiche sa progression départementale.
+- Les prototypes « Rencontres locales » et « Parcours guidés » quittent l’interface active : leur moteur est conservé en réserve pour une réinterprétation après stabilisation du nouveau modèle territorial.
 
 ## 0.18b — Création de territoire
 

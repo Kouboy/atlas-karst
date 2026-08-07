@@ -1378,7 +1378,8 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
   </section>
 
-  <section class="card" data-panel-kind="navigation">
+  <!-- Prototype conservé hors de l’interface active jusqu’à la stabilisation du nouveau modèle territorial. -->
+  <section class="card" data-panel-kind="navigation" data-prototype-reserve="rencontres-locales" hidden aria-hidden="true">
     <h2>Rencontres locales</h2>
     <label class="switch"><input id="encounterEnabled" type="checkbox" checked> Mode rencontre activé</label>
     <div class="encounter-controls">
@@ -1391,7 +1392,8 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     <div class="small" style="margin-top:7px">Les rencontres sont ludiques : elles signalent une espèce ou une curiosité compatible avec le milieu, jamais une observation réelle à cet endroit.</div>
   </section>
 
-  <section class="card guided-tour-card" data-panel-kind="navigation">
+  <!-- Prototype conservé hors de l’interface active jusqu’à la stabilisation du nouveau modèle territorial. -->
+  <section class="card guided-tour-card" data-panel-kind="navigation" data-prototype-reserve="parcours-guides" hidden aria-hidden="true">
     <h2>Parcours guidés</h2>
     <div class="guided-tour-controls">
       <label class="field-label">Parcours
@@ -9490,7 +9492,7 @@ function prepareSidebarCards(){
     "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
     "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
   };
-  const openByDefault=new Set(["Ma position","Territoires","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Couches","Données"]);
+  const openByDefault=new Set(["Ma position","Territoires","Autour de moi","Échelle géographique","Profondeur","Couches","Données"]);
   for(const card of els.sidebar.querySelectorAll(":scope > .card")){
     if(card.classList.contains("warning")||card.id==="offlineNotice"||card.classList.contains("collapsible"))continue;
     const heading=card.querySelector(":scope > h2");if(!heading)continue;

@@ -106,7 +106,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
   </section>
 
-  <section class="card" data-panel-kind="navigation">
+  <!-- Prototype conservé hors de l’interface active jusqu’à la stabilisation du nouveau modèle territorial. -->
+  <section class="card" data-panel-kind="navigation" data-prototype-reserve="rencontres-locales" hidden aria-hidden="true">
     <h2>Rencontres locales</h2>
     <label class="switch"><input id="encounterEnabled" type="checkbox" checked> Mode rencontre activé</label>
     <div class="encounter-controls">
@@ -119,7 +120,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" style="margin-top:7px">Les rencontres sont ludiques : elles signalent une espèce ou une curiosité compatible avec le milieu, jamais une observation réelle à cet endroit.</div>
   </section>
 
-  <section class="card guided-tour-card" data-panel-kind="navigation">
+  <!-- Prototype conservé hors de l’interface active jusqu’à la stabilisation du nouveau modèle territorial. -->
+  <section class="card guided-tour-card" data-panel-kind="navigation" data-prototype-reserve="parcours-guides" hidden aria-hidden="true">
     <h2>Parcours guidés</h2>
     <div class="guided-tour-controls">
       <label class="field-label">Parcours

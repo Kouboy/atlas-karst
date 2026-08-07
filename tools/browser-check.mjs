@@ -304,6 +304,8 @@ try {
   await withPage("contrôleur des expériences", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForFunction(()=>experienceControllerRuntime.bound&&guidedTourRuntime.tours.length>0);
+    assert.equal(await page.locator('[data-prototype-reserve="rencontres-locales"]').isHidden(),true,"le prototype Rencontres locales ne doit plus apparaître dans l’interface active");
+    assert.equal(await page.locator('[data-prototype-reserve="parcours-guides"]').isHidden(),true,"le prototype Parcours guidés ne doit plus apparaître dans l’interface active");
     await page.evaluate(()=>document.getElementById("testEncounter").click());
     await page.waitForFunction(()=>encounterRuntime.screen==="encounter"&&state.encounterSession?.testMode===true);
     await page.locator('[data-encounter-action="begin"]').click();
