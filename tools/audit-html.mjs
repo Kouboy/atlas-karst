@@ -85,6 +85,9 @@ check("services de données isolés", () =>
   sourceByName["data-services.js"].includes("async function overpassRequest") &&
   sourceByName["data-services.js"].includes("async function fetchCadastre") &&
   sourceByName["data-services.js"].includes("async function syncCultureHeritage") &&
+  sourceByName["data-services.js"].includes("function cartofrichesDepartmentFilter") &&
+  sourceByName["data-services.js"].includes("comm_insee__greater") &&
+  !sourceByName["data-services.js"].includes("long__greater") &&
   sourceByName["data-services.js"].includes("async function fetchElevation") &&
   sourceByName["data-services.js"].includes("async function fetchBss") &&
   !sourceByName["main.js"].includes("async function overpassRequest") &&

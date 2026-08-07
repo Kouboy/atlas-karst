@@ -465,12 +465,15 @@ try {
       const width=distanceMeters({lat:custom.center.lat,lon:extent.west},{lat:custom.center.lat,lon:extent.east});
       const height=distanceMeters({lat:extent.south,lon:custom.center.lon},{lat:extent.north,lon:custom.center.lon});
       const rebuilt=buildAtlasSnapshot();
+      const cartofrichesFilter=cartofrichesDepartmentFilter(custom);
+      const cartofrichesPoint=normalizeCartofrichesRow({site_id:"CF-TEST",site_nom:"Friche test",comm_insee:"75056",geompoint:"POINT (2.3522 48.8566)"});
       return {
         id:CONFIG.territory.id,label:CONFIG.territory.label,center:{...CONFIG.dataCenter},
         size:{width:CONFIG.dataWidthKm,height:CONFIG.dataHeightKm},width,height,
         departmentValues:territoryDepartmentValues(CONFIG.territory,true),communeInsee:CONFIG.communeInsee,
         embedded:{...CONFIG.territory.embeddedData},bss:state.bss.length,cavityInventory:state.cavities.length,
-        snapshotTerritory:rebuilt.territory
+        snapshotTerritory:rebuilt.territory,cartofrichesFilter,
+        cartofrichesPoint:cartofrichesPoint?{id:cartofrichesPoint.id,lat:cartofrichesPoint.lat,lon:cartofrichesPoint.lon,source:cartofrichesPoint.coordinateSource}:null
       };
     });
     assert.equal(result.id,"territoire-test-paris");
@@ -485,6 +488,8 @@ try {
     assert.equal(result.bss,0,"les BSS historiques ont fui dans le territoire synthétique");
     assert.equal(result.cavityInventory,0,"l’inventaire historique a fui dans le territoire synthétique");
     assert.equal(result.snapshotTerritory.id,"territoire-test-paris");
+    assert.deepEqual(result.cartofrichesFilter,{comm_insee__greater:"75000",comm_insee__less:"76000"});
+    assert.deepEqual(result.cartofrichesPoint,{id:"CF-TEST",lat:48.8566,lon:2.3522,source:"geompoint WKT · longitude/latitude corrigé"});
   });
 
   await withPage("création et cloisonnement d’un territoire", { width: 1280, height: 720 }, async (page) => {

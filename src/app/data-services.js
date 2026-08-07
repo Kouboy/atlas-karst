@@ -671,18 +671,35 @@ function cartofrichesQueryExtent(){
   const e=largestExtent();
   return {west:e.west,east:e.east,south:e.south,north:e.north};
 }
+function cartofrichesDepartmentFilter(profile=CONFIG.territory){
+  const administration=profile?.administration||{};
+  const department=String(administration.departmentCode||"").trim().toUpperCase();
+  const commune=String(administration.communeInsee||CONFIG.communeInsee||"").trim().toUpperCase();
+  if(/^\d{2,3}$/.test(department)){
+    const next=String(Number(department)+1).padStart(department.length,"0");
+    const suffix="0".repeat(Math.max(0,5-department.length));
+    return {comm_insee__greater:`${department}${suffix}`,comm_insee__less:`${next}${suffix}`};
+  }
+  if(department==="2A")return {comm_insee__greater:"2A000",comm_insee__less:"2B000"};
+  if(department==="2B")return {comm_insee__greater:"2B000",comm_insee__less:"2C000"};
+  if(commune)return {comm_insee__exact:commune};
+  return null;
+}
 async function syncCartofriches(){
   const requestStamp=territoryRequestStamp();
   const e=cartofrichesQueryExtent();
+  const departmentFilter=cartofrichesDepartmentFilter();
+  if(!departmentFilter){
+    els.cartofrichesHelp.textContent="La commune ou le département de ce territoire n’est pas encore identifié. Relance la création du territoire, puis réessaie.";
+    updateCartofrichesUI();return null;
+  }
   els.cartofrichesHelp.textContent="Connexion à l’API tabulaire officielle…";
   els.syncCartofriches.disabled=true;
   try{
     let page=1,all=[],total=Infinity;
-    while(all.length<total&&page<=20){
+    while(all.length<total&&page<=50){
       const q=new URLSearchParams({
-        page:String(page),page_size:"50",
-        long__greater:String(e.west),long__less:String(e.east),
-        lat__greater:String(e.south),lat__less:String(e.north)
+        page:String(page),page_size:"100",...departmentFilter
       });
       const controller=new AbortController();
       const timer=setTimeout(()=>controller.abort(),20000);
@@ -698,9 +715,10 @@ async function syncCartofriches(){
       page++;
     }
     if(!territoryRequestIsCurrent(requestStamp))return null;
-    state.cartofriches=all.map(normalizeCartofrichesRow).filter(Boolean);
-    saveCartofriches();updateCartofrichesUI(`Synchronisé depuis data.gouv.fr · ${state.cartofriches.length} lignes locales`);
-    els.cartofrichesHelp.innerHTML=`Synchronisation terminée. Les données sont désormais conservées localement et la carte reste utilisable hors ligne.`;
+    const geolocated=all.map(normalizeCartofrichesRow).filter(Boolean);
+    state.cartofriches=geolocated.filter(item=>inExtent(item.lat,item.lon,e));
+    saveCartofriches();updateCartofrichesUI(`Synchronisé depuis data.gouv.fr · ${state.cartofriches.length} sites dans l’emprise`);
+    els.cartofrichesHelp.textContent=`Synchronisation terminée : ${all.length} fiches départementales examinées, ${state.cartofriches.length} dans les 16 × 16 km de l’Atlas. Les données locales restent disponibles hors ligne.`;
     render();
   }catch(err){
     if(!territoryRequestIsCurrent(requestStamp))return null;

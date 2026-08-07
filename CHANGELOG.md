@@ -4,6 +4,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 
 ## 0.18b — Création de territoire
 
+- La synchronisation Cartofriches suit le schéma courant de la ressource (`geompoint`) et filtre les fiches départementales dans l’emprise locale, sans dépendre des anciennes colonnes `lat` / `long`.
 - Ajout d’un panneau permettant de nommer un territoire de 16 × 16 km et de définir son centre par coordonnées ou depuis la géolocalisation ponctuelle.
 - Changement de territoire possible sans recharger la page, avec recentrage, remise à zéro des couches territoriales et relance explicite des sources principales.
 - Géocodage inverse du centre via la Géoplateforme afin de déterminer automatiquement commune et département avant le chargement cadastral.
