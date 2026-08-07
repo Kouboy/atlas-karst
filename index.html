@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18c · gestionnaire de territoires</title>
+<title>Atlas Karst ASCII v0.18d · carnet portable</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1509,13 +1509,13 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
       <span>Préparation de l’inventaire embarqué…</span>
     </div>
     <div class="grid2" style="margin-top:7px">
-      <button id="exportSnapshotJson" type="button">⇩ sauvegarde .atlas.json</button>
-      <button id="importSnapshotJson" type="button">＋ charger une sauvegarde</button>
+      <button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button>
+      <button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button>
     </div>
-    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".json,.atlas.json,application/json">
+    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
     <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
     <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">✕ supprimer le territoire actif de la bibliothèque</button>
-    <div class="snapshot-note" id="snapshotHelp">Le JSON reste réimportable dans les versions futures. L’HTML autonome contient l’état courant et démarre sans requête réseau, sauf si tu demandes explicitement une actualisation.</div>
+    <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
   </section>
 
   <section class="card">
@@ -1873,7 +1873,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18c";
+const APP_VERSION = "0.18d";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2104,6 +2104,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
+  checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
@@ -2155,7 +2156,8 @@ function createDebugReport(){
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
-    `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.exports} JSON · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
+    `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
+    `Carnets : schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.exports}/${carnetRuntime.imports} exports/imports · ${debugFormatBytes(carnetRuntime.lastBytes)} · intégrité ${carnetRuntime.lastAlgorithm} · ${carnetRuntime.migrations} anciennes sauvegardes reconnues`,
     `Phases CPU : ${debugRenderPhasesText()}`,
     `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
     `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
@@ -9988,6 +9990,135 @@ function bindInputController(){
   window.addEventListener("keydown",handleNavigationKeydown);
 }
 
+const ATLAS_CARNET_FORMAT="atlas-carnet";
+const ATLAS_CARNET_SCHEMA_VERSION=1;
+const ATLAS_CARNET_IMPORT_LIMIT_BYTES=16*1024*1024;
+const ATLAS_CARNET_RECOMMENDED_BYTES=4*1024*1024;
+const carnetRuntime={
+  ready:true,built:0,validated:0,migrations:0,imports:0,exports:0,lastBytes:0,lastAlgorithm:"—",lastError:""
+};
+
+function carnetRecordError(error){
+  carnetRuntime.lastError=String(error?.message||error||"Erreur de carnet");
+  return error;
+}
+function carnetJsonClone(value){
+  return JSON.parse(JSON.stringify(value??null));
+}
+function carnetStableJson(value){
+  if(value===null||typeof value!=="object")return JSON.stringify(value);
+  if(Array.isArray(value))return `[${value.map(carnetStableJson).join(",")}]`;
+  return `{${Object.keys(value).sort().filter(key=>value[key]!==undefined).map(key=>`${JSON.stringify(key)}:${carnetStableJson(value[key])}`).join(",")}}`;
+}
+function carnetUtf8Bytes(text){return new TextEncoder().encode(text)}
+function carnetHex(buffer){return [...new Uint8Array(buffer)].map(byte=>byte.toString(16).padStart(2,"0")).join("")}
+function carnetFnv1a(bytes){
+  let hash=2166136261;
+  for(const byte of bytes){hash^=byte;hash=Math.imul(hash,16777619)}
+  return (hash>>>0).toString(16).padStart(8,"0");
+}
+async function carnetDigest(text,algorithm=""){
+  const bytes=carnetUtf8Bytes(text),requested=String(algorithm||"").toUpperCase();
+  if(requested==="FNV-1A-32")return {algorithm:"FNV-1A-32",digest:carnetFnv1a(bytes),bytes:bytes.byteLength};
+  if(globalThis.crypto?.subtle){
+    const digest=await globalThis.crypto.subtle.digest("SHA-256",bytes);
+    return {algorithm:"SHA-256",digest:carnetHex(digest),bytes:bytes.byteLength};
+  }
+  if(requested&&requested!=="FNV-1A-32")throw new Error(`Algorithme d’intégrité non disponible : ${algorithm}`);
+  return {algorithm:"FNV-1A-32",digest:carnetFnv1a(bytes),bytes:bytes.byteLength};
+}
+function carnetUnsigned(document){
+  const unsigned=carnetJsonClone(document);delete unsigned.integrity;return unsigned;
+}
+async function sealAtlasCarnet(document){
+  const unsigned=carnetUnsigned(document),result=await carnetDigest(carnetStableJson(unsigned));
+  return {...unsigned,integrity:{algorithm:result.algorithm,digest:result.digest,bytes:result.bytes}};
+}
+function carnetArray(value){return Array.isArray(value)?carnetJsonClone(value):[]}
+function carnetSourceReference({id,label,provider,license="",url="",count=0,embedded=false,consulted=false,retrievedAt=""}){
+  return {id,label,provider,license,url,count:Math.max(0,Number(count)||0),disposition:embedded?"embedded":consulted?"consulted":"referenced",retrievedAt:String(retrievedAt||"")};
+}
+function carnetSourceRegistry(snapshot){
+  const d=snapshot.data||{},references=[];
+  const add=entry=>{if(entry.count||entry.consulted||entry.embedded)references.push(carnetSourceReference(entry))};
+  add({id:"openstreetmap",label:"Fond cartographique",provider:"OpenStreetMap",license:"ODbL",url:"https://www.openstreetmap.org/copyright",count:d.osm?.length,consulted:!!d.osm?.length,retrievedAt:d.osmMeta?.loadedAt});
+  add({id:"cadastre",label:"Parcelles et bâtiments",provider:"DGFiP / Etalab / IGN",license:"Licence Ouverte 2.0",url:"https://cadastre.data.gouv.fr/",count:(d.cadastreBuildings?.length||0)+(d.cadastreParcels?.length||0),consulted:!!(d.cadastreBuildings?.length||d.cadastreParcels?.length)});
+  add({id:"adresse",label:"Adresse de référence",provider:"Base Adresse Nationale",license:"Licence Ouverte 2.0",url:"https://adresse.data.gouv.fr/",count:d.address?1:0,embedded:!!d.address});
+  add({id:"cavites",label:"Cavités",provider:"Géorisques / BRGM",license:"Licence Ouverte 2.0",url:"https://www.georisques.gouv.fr/",count:d.officialCavities?.length,embedded:!!d.officialCavities?.length});
+  add({id:"cartofriches",label:"Friches",provider:"Cartofriches / Cerema",license:"Licence Ouverte 2.0",url:"https://cartofriches.cerema.fr/",count:d.cartofriches?.length,embedded:!!d.cartofriches?.length});
+  add({id:"culture",label:"Patrimoine et curiosités",provider:"Ministère de la Culture / Wikipédia",license:"Licences propres aux notices",url:"https://www.pop.culture.gouv.fr/",count:d.heritageItems?.length,embedded:!!d.heritageItems?.length});
+  add({id:"bss",label:"Forages et piézomètres",provider:"BRGM / Hub’Eau",license:"Licence Ouverte 2.0",url:"https://infoterre.brgm.fr/",count:d.bss?.length,embedded:!!d.bss?.length});
+  add({id:"relief",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",license:"Selon le fournisseur",count:d.elevation?1:0,consulted:!!d.elevation});
+  return references;
+}
+function carnetSummary(document){
+  const content=document.content||{},extracts=document.sources?.extracts||{};
+  return {
+    observations:content.observations?.length||0,
+    notes:content.notes?.length||0,
+    embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.address?1:0),
+    sourceReferences:document.sources?.references?.length||0
+  };
+}
+async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
+  validateAtlasSnapshot(snapshot);
+  const d=snapshot.data||{},v=snapshot.view||{},now=new Date().toISOString(),territory=territorySnapshot(normalizeTerritoryProfile(snapshot.territory,CONFIG.territory));
+  const document={
+    format:ATLAS_CARNET_FORMAT,schema:ATLAS_CARNET_SCHEMA_VERSION,
+    metadata:{id:territory.id,title:territory.label,language:"fr",createdAt:String(snapshot.createdAt||now),updatedAt:now,generator:{name:"Atlas Karst",version:APP_VERSION}},
+    territory,
+    content:{
+      startPoint:carnetJsonClone(snapshot.house||territory.center),
+      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),
+      experiences:{collection:carnetJsonClone(d.encounterCollection||{}),enabled:!!d.encounterEnabled}
+    },
+    presentation:{
+      renderMode:v.renderMode==="ascii"?"ascii":"symbolic",zoomIndex:Number(v.zoomIndex)||0,depthIndex:Number(v.depthIndex)||0,
+      center:carnetJsonClone(v.center||territory.center),scenario:String(v.scenario||"default"),layers:carnetJsonClone(v.layers||{}),
+      filters:{heritage:carnetJsonClone(d.heritageEnabled||{})}
+    },
+    sources:{
+      references:carnetSourceRegistry(snapshot),
+      extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss)}
+    },
+    cachePolicy:{embedded:false,excluded:["osm","cadastreBuildings","cadastreParcels","elevation","coverage"],refresh:"manual"}
+  };
+  document.summary=carnetSummary(document);
+  const sealed=await sealAtlasCarnet(document);carnetRuntime.built++;carnetRuntime.lastBytes=sealed.integrity.bytes;carnetRuntime.lastAlgorithm=sealed.integrity.algorithm;carnetRuntime.lastError="";return sealed;
+}
+async function validateAtlasCarnet(document,{verifyIntegrity=true}={}){
+  try{
+    if(!document||typeof document!=="object"||Array.isArray(document)||document.format!==ATLAS_CARNET_FORMAT)throw new Error("Format de carnet non reconnu");
+    const schema=Number(document.schema);
+    if(!Number.isInteger(schema)||schema<1)throw new Error("Version de carnet invalide");
+    if(schema>ATLAS_CARNET_SCHEMA_VERSION)throw new Error(`Ce carnet utilise le schéma ${schema}, plus récent que le schéma ${ATLAS_CARNET_SCHEMA_VERSION} pris en charge.`);
+    if(!document.metadata||typeof document.metadata!=="object"||!document.territory||typeof document.territory!=="object")throw new Error("Métadonnées ou territoire absents du carnet");
+    if(!document.content||typeof document.content!=="object"||!document.sources||typeof document.sources!=="object")throw new Error("Contenu ou registre des sources absent du carnet");
+    if(!Array.isArray(document.content.observations)||!Array.isArray(document.content.notes)||!Array.isArray(document.sources.references))throw new Error("Collections du carnet invalides");
+    normalizeTerritoryProfile(document.territory,LEGACY_TERRITORY_PROFILE);
+    if(verifyIntegrity){
+      const expected=document.integrity;
+      if(!expected?.algorithm||!expected?.digest)throw new Error("Contrôle d’intégrité absent");
+      const actual=await carnetDigest(carnetStableJson(carnetUnsigned(document)),expected.algorithm);
+      if(actual.digest!==expected.digest||actual.bytes!==Number(expected.bytes))throw new Error("Le carnet a été modifié ou endommagé : contrôle d’intégrité incorrect");
+    }
+    carnetRuntime.validated++;carnetRuntime.lastAlgorithm=document.integrity?.algorithm||"non vérifié";carnetRuntime.lastError="";return document;
+  }catch(error){throw carnetRecordError(error)}
+}
+async function atlasCarnetToSnapshot(document){
+  const carnet=await validateAtlasCarnet(document),content=carnet.content||{},presentation=carnet.presentation||{},extracts=carnet.sources?.extracts||{},experiences=content.experiences||{};
+  return {
+    format:"atlas-karst-snapshot",schema:SNAPSHOT_SCHEMA_VERSION,appVersion:APP_VERSION,createdAt:String(carnet.metadata?.createdAt||new Date().toISOString()),
+    territory:territorySnapshot(normalizeTerritoryProfile(carnet.territory,LEGACY_TERRITORY_PROFILE)),house:carnetJsonClone(content.startPoint||carnet.territory.center),
+    view:{mode:"classic",renderMode:presentation.renderMode==="ascii"?"ascii":"symbolic",zoomIndex:Number(presentation.zoomIndex)||0,depthIndex:Number(presentation.depthIndex)||0,center:carnetJsonClone(presentation.center||carnet.territory.center),scenario:String(presentation.scenario||"default"),layers:carnetJsonClone(presentation.layers||{})},
+    data:{
+      osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
+      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),
+      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
+    }
+  };
+}
+
 const SNAPSHOT_SCHEMA_VERSION=3;
 const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
 const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
@@ -10213,28 +10344,51 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   if(renderNow)render("snapshot-apply");
 }
 
-function exportSnapshotJson(){
-  const snapshot=buildAtlasSnapshot();
-  downloadBlob(JSON.stringify(snapshot,null,2),"application/json;charset=utf-8",`atlas-karst-${new Date().toISOString().slice(0,10)}.atlas.json`);
-  snapshotRuntime.exports++;snapshotRuntime.lastSource="export JSON";
-  els.snapshotHelp.textContent="Sauvegarde JSON exportée. Elle peut être chargée dans cette version ou une version ultérieure compatible.";
+function carnetFilename(){
+  const slug=territorySafeId(CONFIG.territory?.label||CONFIG.territory?.id||"carnet");
+  return `${slug}-${new Date().toISOString().slice(0,10)}.atlas`;
+}
+async function exportSnapshotJson(){
+  try{
+    const carnet=await buildAtlasCarnet(),json=JSON.stringify(carnet,null,2),bytes=new Blob([json]).size;
+    if(bytes>ATLAS_CARNET_IMPORT_LIMIT_BYTES)throw new Error("Ce carnet dépasse 16 Mo. Retire des extraits documentaires avant de l’exporter.");
+    downloadBlob(json,"application/vnd.atlas+carnet+json;charset=utf-8",carnetFilename());
+    snapshotRuntime.exports++;carnetRuntime.exports++;carnetRuntime.lastBytes=bytes;snapshotRuntime.lastSource="export .atlas";
+    els.snapshotHelp.textContent=bytes>ATLAS_CARNET_RECOMMENDED_BYTES
+      ? `Carnet exporté (${debugFormatBytes(bytes)}). Il dépasse le budget conseillé de 4 Mo, mais reste valide.`
+      : `Carnet portable exporté (${debugFormatBytes(bytes)}). Les caches cartographiques lourds ont été laissés de côté.`;
+  }catch(error){recordSnapshotError(error);carnetRecordError(error);els.snapshotHelp.textContent=`Export impossible : ${error?.message||"erreur inconnue"}`}
+}
+function importedTerritoryCopy(snapshot,entries,fileName){
+  const profile=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE);
+  if(!entries.some(entry=>entry.id===profile.id))return {snapshot,copied:false};
+  const ids=new Set(entries.map(entry=>entry.id)),base=`${territorySafeId(profile.id)}-import`,stamp=Date.now().toString(36);let id=`${base}-${stamp}`,suffix=1;
+  while(ids.has(id))id=`${base}-${stamp}-${suffix++}`;
+  const copy=carnetJsonClone(snapshot);copy.createdAt=new Date().toISOString();copy.territory=territorySnapshot({...profile,id,label:`${profile.label} — import`,provenance:`import de ${fileName||profile.label}`});
+  return {snapshot:copy,copied:true};
 }
 
 async function importSnapshotFile(file){
   if(!file)return;
   try{
     if(Number(file.size)>SNAPSHOT_IMPORT_LIMIT_BYTES)throw new Error("Ce fichier dépasse la limite de 64 Mo prévue pour un instantané local.");
-    const snapshot=validateAtlasSnapshot(JSON.parse(await file.text()));
+    const document=JSON.parse(await file.text()),isCarnet=document?.format===ATLAS_CARNET_FORMAT;
+    if(isCarnet&&Number(file.size)>ATLAS_CARNET_IMPORT_LIMIT_BYTES)throw new Error("Ce carnet dépasse la limite portable de 16 Mo.");
+    let snapshot=isCarnet?await atlasCarnetToSnapshot(document):validateAtlasSnapshot(document);
+    if(!isCarnet)carnetRuntime.migrations++;
     if(typeof persistActiveTerritory==="function"&&territoryControllerRuntime?.managerReady&&!territorySessionDetached){
       const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’import");
     }
-    applyAtlasSnapshot(snapshot,{source:`sauvegarde importée · ${file.name}`});
+    const collision=importedTerritoryCopy(snapshot,await listTerritoriesFromDb(),file.name);snapshot=collision.snapshot;
+    applyAtlasSnapshot(snapshot,{source:`${isCarnet?"carnet":"sauvegarde historique"} importé · ${file.name}`});
     await saveSnapshotToDb(snapshot);
     if(typeof refreshTerritoryLibraryUI==="function")await refreshTerritoryLibraryUI(snapshot.territory?.id);
-    snapshotRuntime.imports++;snapshotRuntime.lastSource=file.name;
-    els.snapshotHelp.textContent="Sauvegarde chargée et mémorisée dans ce navigateur pour le prochain démarrage.";
+    snapshotRuntime.imports++;if(isCarnet)carnetRuntime.imports++;snapshotRuntime.lastSource=file.name;
+    els.snapshotHelp.textContent=collision.copied
+      ? "Carnet chargé comme une nouvelle copie afin de ne pas remplacer l’original déjà présent."
+      : `${isCarnet?"Carnet":"Ancienne sauvegarde"} chargé et ajouté à la bibliothèque locale.`;
   }catch(error){
-    recordSnapshotError(error);
+    recordSnapshotError(error);if(error?.message?.includes("carnet")||error?.message?.includes("intégrité"))carnetRecordError(error);
     els.snapshotHelp.textContent=`Import impossible : ${error?.message||"fichier invalide"}`;
   }
   els.snapshotFile.value="";

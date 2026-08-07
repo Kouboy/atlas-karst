@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18d — Format canonique du carnet
+
+- Nouveau fichier portable `.atlas`, JSON UTF-8 versionné et documenté, distinct des instantanés techniques internes.
+- Séparation explicite entre contenu durable, présentation, références de sources, extraits documentaires et caches cartographiques jetables.
+- Empreinte d’intégrité SHA-256, avec repli local déterministe si l’API cryptographique du navigateur est absente.
+- Import compatible avec les anciennes sauvegardes `.atlas.json` et refus des schémas futurs ou des carnets altérés.
+- Un carnet portant l’identifiant d’un territoire déjà présent est importé comme copie, sans remplacer l’original.
+- Budget conseillé de 4 Mo et plafond d’import de 16 Mo pour préserver un format léger ; l’HTML autonome conserve l’instantané complet.
+
 ## 0.18c — Gestionnaire de territoires
 
 - Bibliothèque locale multi-territoires avec sauvegarde IndexedDB indépendante, ouverture hors ligne et mémorisation du territoire actif.

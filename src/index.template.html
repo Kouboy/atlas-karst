@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18c · gestionnaire de territoires</title>
+<title>Atlas Karst ASCII v0.18d · carnet portable</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -237,13 +237,13 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <span>Préparation de l’inventaire embarqué…</span>
     </div>
     <div class="grid2" style="margin-top:7px">
-      <button id="exportSnapshotJson" type="button">⇩ sauvegarde .atlas.json</button>
-      <button id="importSnapshotJson" type="button">＋ charger une sauvegarde</button>
+      <button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button>
+      <button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button>
     </div>
-    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".json,.atlas.json,application/json">
+    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
     <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
     <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">✕ supprimer le territoire actif de la bibliothèque</button>
-    <div class="snapshot-note" id="snapshotHelp">Le JSON reste réimportable dans les versions futures. L’HTML autonome contient l’état courant et démarre sans requête réseau, sauf si tu demandes explicitement une actualisation.</div>
+    <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
   </section>
 
   <section class="card">

@@ -223,28 +223,51 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   if(renderNow)render("snapshot-apply");
 }
 
-function exportSnapshotJson(){
-  const snapshot=buildAtlasSnapshot();
-  downloadBlob(JSON.stringify(snapshot,null,2),"application/json;charset=utf-8",`atlas-karst-${new Date().toISOString().slice(0,10)}.atlas.json`);
-  snapshotRuntime.exports++;snapshotRuntime.lastSource="export JSON";
-  els.snapshotHelp.textContent="Sauvegarde JSON exportée. Elle peut être chargée dans cette version ou une version ultérieure compatible.";
+function carnetFilename(){
+  const slug=territorySafeId(CONFIG.territory?.label||CONFIG.territory?.id||"carnet");
+  return `${slug}-${new Date().toISOString().slice(0,10)}.atlas`;
+}
+async function exportSnapshotJson(){
+  try{
+    const carnet=await buildAtlasCarnet(),json=JSON.stringify(carnet,null,2),bytes=new Blob([json]).size;
+    if(bytes>ATLAS_CARNET_IMPORT_LIMIT_BYTES)throw new Error("Ce carnet dépasse 16 Mo. Retire des extraits documentaires avant de l’exporter.");
+    downloadBlob(json,"application/vnd.atlas+carnet+json;charset=utf-8",carnetFilename());
+    snapshotRuntime.exports++;carnetRuntime.exports++;carnetRuntime.lastBytes=bytes;snapshotRuntime.lastSource="export .atlas";
+    els.snapshotHelp.textContent=bytes>ATLAS_CARNET_RECOMMENDED_BYTES
+      ? `Carnet exporté (${debugFormatBytes(bytes)}). Il dépasse le budget conseillé de 4 Mo, mais reste valide.`
+      : `Carnet portable exporté (${debugFormatBytes(bytes)}). Les caches cartographiques lourds ont été laissés de côté.`;
+  }catch(error){recordSnapshotError(error);carnetRecordError(error);els.snapshotHelp.textContent=`Export impossible : ${error?.message||"erreur inconnue"}`}
+}
+function importedTerritoryCopy(snapshot,entries,fileName){
+  const profile=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE);
+  if(!entries.some(entry=>entry.id===profile.id))return {snapshot,copied:false};
+  const ids=new Set(entries.map(entry=>entry.id)),base=`${territorySafeId(profile.id)}-import`,stamp=Date.now().toString(36);let id=`${base}-${stamp}`,suffix=1;
+  while(ids.has(id))id=`${base}-${stamp}-${suffix++}`;
+  const copy=carnetJsonClone(snapshot);copy.createdAt=new Date().toISOString();copy.territory=territorySnapshot({...profile,id,label:`${profile.label} — import`,provenance:`import de ${fileName||profile.label}`});
+  return {snapshot:copy,copied:true};
 }
 
 async function importSnapshotFile(file){
   if(!file)return;
   try{
     if(Number(file.size)>SNAPSHOT_IMPORT_LIMIT_BYTES)throw new Error("Ce fichier dépasse la limite de 64 Mo prévue pour un instantané local.");
-    const snapshot=validateAtlasSnapshot(JSON.parse(await file.text()));
+    const document=JSON.parse(await file.text()),isCarnet=document?.format===ATLAS_CARNET_FORMAT;
+    if(isCarnet&&Number(file.size)>ATLAS_CARNET_IMPORT_LIMIT_BYTES)throw new Error("Ce carnet dépasse la limite portable de 16 Mo.");
+    let snapshot=isCarnet?await atlasCarnetToSnapshot(document):validateAtlasSnapshot(document);
+    if(!isCarnet)carnetRuntime.migrations++;
     if(typeof persistActiveTerritory==="function"&&territoryControllerRuntime?.managerReady&&!territorySessionDetached){
       const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’import");
     }
-    applyAtlasSnapshot(snapshot,{source:`sauvegarde importée · ${file.name}`});
+    const collision=importedTerritoryCopy(snapshot,await listTerritoriesFromDb(),file.name);snapshot=collision.snapshot;
+    applyAtlasSnapshot(snapshot,{source:`${isCarnet?"carnet":"sauvegarde historique"} importé · ${file.name}`});
     await saveSnapshotToDb(snapshot);
     if(typeof refreshTerritoryLibraryUI==="function")await refreshTerritoryLibraryUI(snapshot.territory?.id);
-    snapshotRuntime.imports++;snapshotRuntime.lastSource=file.name;
-    els.snapshotHelp.textContent="Sauvegarde chargée et mémorisée dans ce navigateur pour le prochain démarrage.";
+    snapshotRuntime.imports++;if(isCarnet)carnetRuntime.imports++;snapshotRuntime.lastSource=file.name;
+    els.snapshotHelp.textContent=collision.copied
+      ? "Carnet chargé comme une nouvelle copie afin de ne pas remplacer l’original déjà présent."
+      : `${isCarnet?"Carnet":"Ancienne sauvegarde"} chargé et ajouté à la bibliothèque locale.`;
   }catch(error){
-    recordSnapshotError(error);
+    recordSnapshotError(error);if(error?.message?.includes("carnet")||error?.message?.includes("intégrité"))carnetRecordError(error);
     els.snapshotHelp.textContent=`Import impossible : ${error?.message||"fichier invalide"}`;
   }
   els.snapshotFile.value="";

@@ -27,6 +27,7 @@
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` porte les panneaux, les accordéons, le dimensionnement responsive et l’alignement de la carte.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
+- `app/carnet-format.js` définit le format portable `.atlas`, son registre de sources, son empreinte d’intégrité et la conversion avec les instantanés internes.
 - `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, texte et HTML autonome ; IndexedDB conserve un instantané indépendant par territoire et migre l’ancienne sauvegarde unique.
 - `app/main.js` orchestre les fonctions applicatives qui restent à extraire progressivement.
 

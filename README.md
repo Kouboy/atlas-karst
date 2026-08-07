@@ -2,7 +2,7 @@
 
 Atlas Karst ASCII est un atlas cartographique expérimental, autonome et local, consacré à l’exploration d’un territoire karstique. Il combine des données ouvertes, des observations enregistrées dans le navigateur et des coupes souterraines explicitement présentées comme interprétatives.
 
-L’application propose deux rendus Canvas : une carte symbolique d’arpenteur et une surface ASCII. Elle fonctionne sur ordinateur et mobile, avec déplacement, zoom, sélection, géolocalisation ponctuelle, import/export et mode hors ligne.
+L’application propose deux rendus Canvas : une carte symbolique d’arpenteur et une surface ASCII. Elle fonctionne sur ordinateur et mobile, avec déplacement, zoom, sélection, géolocalisation ponctuelle, import/export et mode hors ligne. Un territoire peut être exporté comme carnet portable `.atlas` ; le format est décrit dans [`ATLAS_FORMAT.md`](ATLAS_FORMAT.md).
 
 ## Utilisation
 

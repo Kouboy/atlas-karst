@@ -619,6 +619,11 @@ try {
       const schema2={...snapshot,schema:2};delete schema2.territory;
       const schema2Accepted=validateAtlasSnapshot(schema2)===schema2&&snapshotRuntime.lastSchema===2;
       validateAtlasSnapshot(loaded);
+      const carnet=await buildAtlasCarnet(loaded),portableSnapshot=await atlasCarnetToSnapshot(carnet),tampered=JSON.parse(JSON.stringify(carnet));
+      tampered.content.observations.push({id:"ALTERATION",name:"Ne doit pas passer"});
+      let integrityError="";try{await validateAtlasCarnet(tampered)}catch(error){integrityError=String(error.message||error)}
+      carnetRuntime.lastError="";snapshotRuntime.lastError="";
+      const importedCopy=importedTerritoryCopy(portableSnapshot,[{id:portableSnapshot.territory.id}],"controle.atlas");
       const checks=runAtlasSelfCheck();
       const functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       await deleteSnapshotFromDb();
@@ -626,6 +631,7 @@ try {
         expected,
         restored:{zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length,territory:territorySnapshot(CONFIG.territory)},
         loadedSchema:loaded.schema,futureError,legacyAccepted,schema2Accepted,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name),
+        carnet:{format:carnet.format,schema:carnet.schema,algorithm:carnet.integrity.algorithm,bytes:carnet.integrity.bytes,cachePolicy:carnet.cachePolicy,observations:carnet.content.observations.length,portableObservations:portableSnapshot.data.observations.length,portableOsm:portableSnapshot.data.osm.length,portableCadastre:portableSnapshot.data.cadastreBuildings.length+portableSnapshot.data.cadastreParcels.length,portableElevation:portableSnapshot.data.elevation,integrityError,copyId:importedCopy.snapshot.territory.id,originalId:portableSnapshot.territory.id,copied:importedCopy.copied},
         runtime:{bound:snapshotRuntime.bound,applied:snapshotRuntime.applied,dbSaves:snapshotRuntime.dbSaves,dbLoads:snapshotRuntime.dbLoads,dbDeletes:snapshotRuntime.dbDeletes,lastError:snapshotRuntime.lastError}
       };
     });
@@ -634,22 +640,27 @@ try {
     assert.match(result.futureError,/plus récent/);
     assert.equal(result.legacyAccepted,true,"un instantané historique sans schéma n’est plus accepté");
     assert.equal(result.schema2Accepted,true,"un instantané du schéma 2 n’est plus accepté");
+    assert.equal(result.carnet.format,"atlas-carnet");assert.equal(result.carnet.schema,1);assert.match(result.carnet.algorithm,/^(SHA-256|FNV-1A-32)$/);assert.ok(result.carnet.bytes>0);
+    assert.equal(result.carnet.cachePolicy.embedded,false);assert.deepEqual(result.carnet.cachePolicy.excluded,["osm","cadastreBuildings","cadastreParcels","elevation","coverage"]);
+    assert.equal(result.carnet.portableObservations,result.carnet.observations);assert.equal(result.carnet.portableOsm,0);assert.equal(result.carnet.portableCadastre,0);assert.equal(result.carnet.portableElevation,null);
+    assert.match(result.carnet.integrityError,/modifié ou endommagé/);assert.equal(result.carnet.copied,true);assert.notEqual(result.carnet.copyId,result.carnet.originalId);
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après restauration : ${result.badChecks.join(", ")}`);
     assert.equal(result.runtime.bound,true);
     assert.ok(result.runtime.applied>=1&&result.runtime.dbSaves>=1&&result.runtime.dbLoads>=1&&result.runtime.dbDeletes>=2);
     assert.equal(result.runtime.lastError,"");
     await page.evaluate(()=>document.getElementById("exportSnapshotJson").click());
-    await page.waitForFunction(()=>snapshotRuntime.exports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".atlas.json")));
+    await page.waitForFunction(()=>snapshotRuntime.exports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".atlas")));
     const exportedJson=await page.evaluate(async()=>{
-      const link=[...document.querySelectorAll("a[download]")].find(item=>item.download.endsWith(".atlas.json"));
+      const link=[...document.querySelectorAll("a[download]")].find(item=>item.download.endsWith(".atlas"));
       const parsed=JSON.parse(await (await fetch(link.href)).text());
-      return {filename:link.download,format:parsed.format,schema:parsed.schema,territory:parsed.territory};
+      return {filename:link.download,format:parsed.format,schema:parsed.schema,territory:parsed.territory,integrity:parsed.integrity,cachePolicy:parsed.cachePolicy};
     });
-    assert.match(exportedJson.filename,/\.atlas\.json$/);
-    assert.equal(exportedJson.format,"atlas-karst-snapshot");
-    assert.equal(exportedJson.schema,3);
+    assert.match(exportedJson.filename,/\.atlas$/);
+    assert.equal(exportedJson.format,"atlas-carnet");
+    assert.equal(exportedJson.schema,1);
     assert.equal(exportedJson.territory.id,"angouleme-karst");
     assert.deepEqual(exportedJson.territory.sizeKm,{width:16,height:16});
+    assert.match(exportedJson.integrity.digest,/^[a-f0-9]{8,64}$/);assert.equal(exportedJson.cachePolicy.embedded,false);
     await page.evaluate(()=>document.getElementById("exportStandaloneHtml").click());
     await page.waitForFunction(()=>snapshotRuntime.standaloneExports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".html")));
     const exportedHtml=await page.evaluate(async()=>{
@@ -660,6 +671,28 @@ try {
     assert.match(exportedHtml.filename,/\.html$/);
     assert.equal(exportedHtml.hasSnapshot,true,"l’export HTML ne contient pas l’instantané");
     assert.equal(exportedHtml.hasTitle,true,"l’export HTML n’est pas identifié comme instantané autonome");
+  });
+
+  await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      await clearTerritoryLibraryFromDb();
+      state.observations=[{id:"OBS-CARNET",mode:"point",glyph:"◎",name:"Observation portable",lat:CONFIG.house.lat,lon:CONFIG.house.lon,confidence:"high",source:"test"}];
+      state.loreItems=[{id:"NOTE-CARNET",name:"Note portable",lat:CONFIG.house.lat,lon:CONFIG.house.lon,note:"Texte conservé"}];
+      const sourceSnapshot=buildAtlasSnapshot(),sourceId=sourceSnapshot.territory.id,carnet=await buildAtlasCarnet(sourceSnapshot);
+      await saveSnapshotToDb(sourceSnapshot);
+      const file=new File([JSON.stringify(carnet)],"controle.atlas",{type:"application/vnd.atlas+carnet+json"});
+      await importSnapshotFile(file);
+      const imported={id:CONFIG.territory.id,label:CONFIG.territory.label,observations:state.observations.map(item=>item.id),notes:state.loreItems.map(item=>item.id),osm:state.osm.length,cadastre:state.cadastreBuildings.length+state.cadastreParcels.length,elevation:state.elevation,entries:(await listTerritoriesFromDb()).map(item=>item.id),help:els.snapshotHelp.textContent};
+      const tampered=JSON.parse(JSON.stringify(carnet));tampered.content.notes[0].note="altération";
+      await importSnapshotFile(new File([JSON.stringify(tampered)],"controle-altere.atlas",{type:"application/vnd.atlas+carnet+json"}));
+      const afterTamper={id:CONFIG.territory.id,entries:(await listTerritoriesFromDb()).map(item=>item.id),help:els.snapshotHelp.textContent};
+      await clearTerritoryLibraryFromDb();carnetRuntime.lastError="";snapshotRuntime.lastError="";
+      return {sourceId,imported,afterTamper,runtime:{imports:carnetRuntime.imports,validated:carnetRuntime.validated}};
+    });
+    assert.notEqual(result.imported.id,result.sourceId);assert.match(result.imported.label,/— import$/);assert.deepEqual(result.imported.observations,["OBS-CARNET"]);assert.deepEqual(result.imported.notes,["NOTE-CARNET"]);
+    assert.equal(result.imported.osm,0);assert.equal(result.imported.cadastre,0);assert.equal(result.imported.elevation,null);assert.equal(result.imported.entries.length,2);assert.match(result.imported.help,/nouvelle copie/);
+    assert.equal(result.afterTamper.id,result.imported.id);assert.deepEqual(result.afterTamper.entries,result.imported.entries);assert.match(result.afterTamper.help,/intégrité incorrect/);assert.equal(result.runtime.imports,1);assert.ok(result.runtime.validated>=1);
   });
 
   await withPage("coque responsive regroupée", { width: 1280, height: 720 }, async (page) => {
