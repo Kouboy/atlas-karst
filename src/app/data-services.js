@@ -521,13 +521,14 @@ function cartofrichesCoordinateCandidates(a,b,origin="coordonnées"){
 }
 function chooseCartofrichesCoordinate(candidates,insee=""){
   if(!candidates.length)return null;
-  const isCharente=String(insee||"").padStart(5,"0").startsWith("16");
+  const departmentCode=CONFIG.territory.administration.departmentCode;
+  const isCurrentDepartment=String(insee||"").padStart(5,"0").startsWith(departmentCode);
   return candidates.slice().sort((a,b)=>{
     // Une coordonnée située en France métropolitaine est infiniment plus plausible
     // pour les codes INSEE métropolitains qu'un point valide mathématiquement,
     // mais posé à 5 000 km.
-    const penaltyA=(a.inFrance?0:10_000_000)+(isCharente&&a.distance>250_000?5_000_000:0);
-    const penaltyB=(b.inFrance?0:10_000_000)+(isCharente&&b.distance>250_000?5_000_000:0);
+    const penaltyA=(a.inFrance?0:10_000_000)+(isCurrentDepartment&&a.distance>250_000?5_000_000:0);
+    const penaltyB=(b.inFrance?0:10_000_000)+(isCurrentDepartment&&b.distance>250_000?5_000_000:0);
     return (penaltyA+a.distance)-(penaltyB+b.distance);
   })[0];
 }
@@ -725,7 +726,7 @@ function parseCartofrichesCsv(textData){
     rows:0,
     geolocated:0,
     inside:0,
-    charente:0,
+    department:0,
     commune:0,
     nearest:null,
     swapped:0,
@@ -745,8 +746,8 @@ function parseCartofrichesCsv(textData){
         stats.geolocated++;
         if(normalized.coordinateSwapped)stats.swapped++;
         stats.coordinateSources[normalized.coordinateSource]=(stats.coordinateSources[normalized.coordinateSource]||0)+1;
-        if(normalized.insee==="16418")stats.commune++;
-        if(String(normalized.insee).startsWith("16"))stats.charente++;
+        if(normalized.insee===String(CONFIG.communeInsee))stats.commune++;
+        if(String(normalized.insee).startsWith(CONFIG.territory.administration.departmentCode))stats.department++;
         const d=distanceMeters(CONFIG.dataCenter,normalized);
         if(!stats.nearest||d<stats.nearest.distance)stats.nearest={distance:d,item:normalized};
         if(inExtent(normalized.lat,normalized.lon,e)){
@@ -803,7 +804,7 @@ async function importCartofrichesFile(file){
       els.cartofrichesHelp.innerHTML=
         `Le fichier est bien compris : <strong>${stats.rows.toLocaleString("fr-FR")}</strong> lignes lues, `+
         `<strong>${stats.geolocated.toLocaleString("fr-FR")}</strong> géolocalisées, `+
-        `<strong>${stats.charente}</strong> en Charente, <strong>${stats.swapped.toLocaleString("fr-FR")}</strong> orientations corrigées, mais aucune dans l’emprise actuelle de ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km.`+
+        `<strong>${stats.department}</strong> dans le département ${esc(CONFIG.territory.administration.departmentName)}, <strong>${stats.swapped.toLocaleString("fr-FR")}</strong> orientations corrigées, mais aucune dans l’emprise actuelle de ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km.`+
         nearestText;
     }
     render();
@@ -1051,11 +1052,12 @@ async function cultureFetchV1JsonpPages(dataset,params,maxRecords=1000){
 
 async function fetchCultureFromDatasetJsonp(dataset,category,ds){
   const radius=heritageQueryRadius();
+  const departmentName=CONFIG.territory.administration.departmentName;
   const attempts=[
     {label:"proximité JSONP",params:{"geofilter.distance":`${CONFIG.dataCenter.lat},${CONFIG.dataCenter.lon},${radius}`},cap:1000},
     // Le filtre plein texte sert de repli aux catalogues dont le champ spatial
     // n’est pas déclaré comme géographique par le portail.
-    {label:"Charente JSONP",params:{q:"Charente"},cap:Math.min(ds.fullScanCap||1800,3000)}
+    {label:`${departmentName} JSONP`,params:{q:departmentName},cap:Math.min(ds.fullScanCap||1800,3000)}
   ];
   if(ds.allowFullScan)attempts.push({label:"catalogue JSONP complet",params:{},cap:ds.fullScanCap||1800});
   const errors=[];
@@ -1138,7 +1140,7 @@ async function fetchCultureFromDataGouv(category){
   const errors=[];let rows=[];let strategy="";
 
   if(department){
-    const values=/code|numerique|^dpt$/.test(department.key)?["16","016","Charente"]:["Charente","16","016"];
+    const values=territoryDepartmentValues(CONFIG.territory,/code|numerique|^dpt$/.test(department.key));
     for(const value of values){
       try{
         rows=await cultureTabularPages(source.rid,{[`${department.name}__exact`]:value},Math.min(ds.fullScanCap||2200,3500));
@@ -1192,7 +1194,7 @@ function cultureSpatialParams(geoField){
 function cultureDepartmentParams(fieldInfo){
   if(!fieldInfo)return [];
   const token=cultureFieldToken(fieldInfo.field.name),numeric=/code|num|^dpt$|^dep$/.test(fieldInfo.hay);
-  const values=numeric?["16","016"]:["Charente","16"];
+  const values=territoryDepartmentValues(CONFIG.territory,numeric);
   return values.map(value=>({where:`${token} = "${value}"`}));
 }
 async function fetchCultureFromDataset(dataset,category,ds){
@@ -1382,7 +1384,8 @@ async function fetchCavities(){
     cacheSet("atlas-karst-cavities-v06",cavs);
     state.load.cavities="ok";
   }catch(err){
-    state.officialCavities=CAVITY_INVENTORY.map(c=>normalizeCavityRecord({...c,lat:null,lon:null,source:"inventaire communal sans coordonnées"}));
+    const inventory=territoryUsesEmbeddedData("cavityInventory",CONFIG.territory)?CAVITY_INVENTORY:[];
+    state.officialCavities=inventory.map(c=>normalizeCavityRecord({...c,lat:null,lon:null,source:"inventaire local sans coordonnées"}));
     state.cavityInventoryOnly=true;
     state.load.cavities="bad";
     console.warn("Cavités géolocalisées indisponibles",err);
@@ -1941,7 +1944,8 @@ function loadBssLocal(){
     const v=JSON.parse(localStorage.getItem(BSS_LOCAL_KEY)||"null");
     if(v&&Array.isArray(v.items))additions=v.items;
   }catch{}
-  state.bss=mergeBssItems(BSS_EMBEDDED_LOCAL,additions);
+  const embedded=territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[];
+  state.bss=mergeBssItems(embedded,additions);
   updateBssUI();
 }
 function updateBssUI(message=""){
@@ -2046,10 +2050,11 @@ async function importBssFile(file){
 }
 
 async function syncHubeauPiezo(){
-  els.syncPiezo.disabled=true;els.bssHelp.textContent="Recherche des stations piézométriques Hub’Eau en Charente…";
+  const department=CONFIG.territory.administration;
+  els.syncPiezo.disabled=true;els.bssHelp.textContent=`Recherche des stations piézométriques Hub’Eau en ${department.departmentName}…`;
   try{
     const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),20000);
-    const q=new URLSearchParams({code_departement:"16",format:"json",size:"200"});
+    const q=new URLSearchParams({code_departement:department.departmentCode,format:"json",size:"200"});
     const r=await fetch(`${HUBEAU_PIEZO_URL}?${q}`,{signal:controller.signal});
     clearTimeout(timer);
     if(!r.ok)throw new Error(`HTTP ${r.status}`);

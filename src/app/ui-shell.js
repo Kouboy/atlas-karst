@@ -285,7 +285,8 @@ function populateControls(){
 }
 
 function populateCavitySelect(){
-  const list=state.cavities.length?state.cavities:CAVITY_INVENTORY;
+  const fallback=territoryUsesEmbeddedData("cavityInventory",CONFIG.territory)?CAVITY_INVENTORY:[];
+  const list=state.cavities.length?state.cavities:fallback;
   els.cavitySelect.innerHTML='<option value="">Choisir une cavité…</option>';
   list.slice().sort((a,b)=>cavityName(a).localeCompare(cavityName(b),"fr")).forEach(cavity=>{
     const option=document.createElement("option");option.value=cavity.id;option.textContent=`${cavityMarker(cavity).glyph} ${cavityName(cavity)}${cavity.commune?` · ${cavity.commune}`:""}${Number.isFinite(cavity.lat)?"":" · coordonnées indisponibles"}`;

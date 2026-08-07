@@ -201,7 +201,7 @@ function drawBss(g){
       const info={
         kind:count>1?`groupe de ${count} ouvrages BSS`:piezo?"station piézométrique":"forage ou ouvrage BSS",
         name:count>1?`${count} ouvrages dans cette zone`:bucket.items[0].name,
-        source:"BRGM · BSS Charente, regroupement visuel à cette échelle",
+        source:`BRGM · BSS ${CONFIG.territory.administration.departmentName}, regroupement visuel à cette échelle`,
         bss:true,piezo,records:bucket.items,normalizedPois:bucket.pois,
         poi:true,poiCategory:"bss",poiSourceType:"bss",poiId:`bss-cluster:${x}:${y}`
       };
@@ -424,7 +424,7 @@ function renderSurface(g){
         );
       }
     }
-  }else if(state.zoomIndex===3 && (OFFLINE_TEST || (Math.abs(state.center.lat-CONFIG.house.lat)<.002 && Math.abs(state.center.lon-CONFIG.house.lon)<.003))){
+  }else if(territoryUsesEmbeddedData("fallbackSurface",CONFIG.territory)&&state.zoomIndex===3 && (OFFLINE_TEST || (Math.abs(state.center.lat-CONFIG.house.lat)<.002 && Math.abs(state.center.lon-CONFIG.house.lon)<.003))){
     const sourceH=FALLBACK_SURFACE.length,sourceW=Math.max(...FALLBACK_SURFACE.map(row=>row.length));
     for(let y=0;y<CONFIG.gridH;y++){
       const sy=clamp(Math.round((y/Math.max(1,CONFIG.gridH-1))*(sourceH-1)),0,sourceH-1);
@@ -446,7 +446,7 @@ function renderSurface(g){
     const source=state.houseBuilding?"centre d’un bâtiment du Cadastre Etalab, rapproché du point BAN":state.address?"Géoplateforme / Base Adresse Nationale":"repère de secours ou réglage manuel";
     ensureSpatialIndexes();
     const housePoi=spatialRuntime.normalizedPois.find(v=>v.sourceType==="house");
-    put(g,p.x,p.y,"@","c-house",24,housePoi?poiFeatureInfo(housePoi,{kind:"maison",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""}):{kind:"maison",name:"42 rue de la Falaise",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""});
+    put(g,p.x,p.y,"@","c-house",24,housePoi?poiFeatureInfo(housePoi,{kind:"repère de départ",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""}):{kind:"repère de départ",name:state.address?.label||"Repère de départ",source,address:state.address?.label||"",cadastreBuilding:state.houseBuilding?.id||""});
   }
 }
 
