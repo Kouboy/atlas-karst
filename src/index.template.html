@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18a · modèle de territoire</title>
+<title>Atlas Karst ASCII v0.18b · création de territoire</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -45,6 +45,26 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
     <label class="switch"><input id="centerOnLocation" type="checkbox" checked> Recentrer la carte sur ma position</label>
     <div class="small" id="locationHelp">La position n’est demandée qu’au clic et n’est pas suivie en continu. Sur mobile, un fichier ouvert en <code>file://</code> peut être bloqué sans même afficher de demande ; une copie servie en HTTPS est alors nécessaire.</div>
+  </section>
+
+  <section class="card" data-panel-kind="navigation">
+    <h2>Nouveau territoire</h2>
+    <label class="field-label">Nom
+      <input id="territoryName" type="text" maxlength="80" autocomplete="off" value="Mon territoire">
+    </label>
+    <div class="grid2" style="margin-top:7px">
+      <label class="field-label">Latitude
+        <input id="territoryLat" type="number" min="-85" max="85" step="any" inputmode="decimal">
+      </label>
+      <label class="field-label">Longitude
+        <input id="territoryLon" type="number" min="-180" max="180" step="any" inputmode="decimal">
+      </label>
+    </div>
+    <div class="grid2" style="margin-top:8px">
+      <button id="territoryUseLocation" type="button">⌖ ma position</button>
+      <button id="territoryCreate" type="button">＋ créer 16 × 16 km</button>
+    </div>
+    <div class="small" id="territorySetupStatus" style="margin-top:8px">Les données locales sont séparées par territoire. La création interroge les services cartographiques autour du point choisi ; certaines sources restent limitées à la France.</div>
   </section>
 
   <section class="card" data-panel-kind="navigation">

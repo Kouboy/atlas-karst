@@ -54,26 +54,26 @@ async function locateUser(){
     retroAudio.play("error");render();return;
   }
   updateLocationUI(permissionState==="prompt"?"Le navigateur devrait maintenant afficher sa demande d’autorisation…":"Recherche ponctuelle de la position…");
-  navigator.geolocation.getCurrentPosition(pos=>{
-    state.locationLoading=false;fieldworkRuntime.locationSuccesses++;
-    const c=pos.coords;
-    state.userLocation={lat:Number(c.latitude),lon:Number(c.longitude),accuracy:Number(c.accuracy)||0,altitude:Number.isFinite(c.altitude)?c.altitude:null,heading:Number.isFinite(c.heading)?c.heading:null,speed:Number.isFinite(c.speed)?c.speed:null,timestamp:pos.timestamp||Date.now()};
-    const inside=inExtent(state.userLocation.lat,state.userLocation.lon,largestExtent());
-    if(inside&&state.centerOnLocation)state.center=clampCenter({lat:state.userLocation.lat,lon:state.userLocation.lon},currentZoom());
-    updateLocationUI(inside?"":'<span class="location-warning">Position obtenue, mais elle se trouve hors de l’emprise actuelle de l’Atlas.</span>');
-    retroAudio.play("success");render();
-  },err=>{
-    state.locationLoading=false;fieldworkRuntime.locationErrors++;
-    updateLocationUI(`<span class="location-warning">${esc(geolocationErrorLabel(err,{permissionState}))}</span>${geolocationContextHint()}`);
-    retroAudio.play("error");render();
-  },{enableHighAccuracy:true,timeout:20000,maximumAge:30000});
+  return new Promise(resolve=>navigator.geolocation.getCurrentPosition(pos=>{
+      state.locationLoading=false;fieldworkRuntime.locationSuccesses++;
+      const c=pos.coords;
+      state.userLocation={lat:Number(c.latitude),lon:Number(c.longitude),accuracy:Number(c.accuracy)||0,altitude:Number.isFinite(c.altitude)?c.altitude:null,heading:Number.isFinite(c.heading)?c.heading:null,speed:Number.isFinite(c.speed)?c.speed:null,timestamp:pos.timestamp||Date.now()};
+      const inside=inExtent(state.userLocation.lat,state.userLocation.lon,largestExtent());
+      if(inside&&state.centerOnLocation)state.center=clampCenter({lat:state.userLocation.lat,lon:state.userLocation.lon},currentZoom());
+      updateLocationUI(inside?"":'<span class="location-warning">Position obtenue, mais elle se trouve hors de l’emprise actuelle de l’Atlas.</span>');
+      retroAudio.play("success");render();resolve(state.userLocation);
+    },err=>{
+      state.locationLoading=false;fieldworkRuntime.locationErrors++;
+      updateLocationUI(`<span class="location-warning">${esc(geolocationErrorLabel(err,{permissionState}))}</span>${geolocationContextHint()}`);
+      retroAudio.play("error");render();resolve(null);
+    },{enableHighAccuracy:true,timeout:20000,maximumAge:30000}));
 }
 function clearUserLocation(){state.userLocation=null;updateLocationUI("Position masquée. Elle n’était pas enregistrée dans l’Atlas.");render()}
 
 function saveHousePosition(coord,sourceLabel="placement manuel",persist=true){
   CONFIG.house={lat:+coord.lat,lon:+coord.lon};markSpatialIndexesDirty();fieldworkRuntime.houseChanges++;
   if(els.houseLat){els.houseLat.value=CONFIG.house.lat.toFixed(7);els.houseLon.value=CONFIG.house.lon.toFixed(7)}
-  if(persist){HOUSE_WAS_SAVED=true;try{localStorage.setItem("atlas-karst-house-v06",JSON.stringify(CONFIG.house));localStorage.removeItem("atlas-karst-house-v05")}catch{}}
+  if(persist){HOUSE_WAS_SAVED=true;try{localStorage.setItem(territoryStorageKey("atlas-karst-house-v06"),JSON.stringify(CONFIG.house));if(CONFIG.territory.id===LEGACY_TERRITORY_PROFILE.id)localStorage.removeItem("atlas-karst-house-v05")}catch{}}
   state.placingHouse=false;activeMapSurface()?.classList.remove("placing-house");
   els.placeHouse.classList.remove("active");
   els.houseHelp.innerHTML=`Repère enregistré : <strong>${CONFIG.house.lat.toFixed(6)}, ${CONFIG.house.lon.toFixed(6)}</strong> · ${sourceLabel}.`;
@@ -96,7 +96,7 @@ function bindFieldworkController(){
     if(!state.selectedCell){els.houseHelp.innerHTML='<span class="house-placement-note">Clique d’abord une case : elle sera entourée en jaune.</span>';return}
     saveHousePosition(state.selectedCell.coord,"case sélectionnée");state.center=clampCenter({...CONFIG.house},currentZoom());render();
   });
-  els.resetHouse.addEventListener("click",()=>{saveHousePosition({...HOUSE_ESTIMATE},"coordonnées précises fournies par l’utilisateur");recenterOnHouse("reset-home")});
+  els.resetHouse.addEventListener("click",()=>{saveHousePosition({...HOUSE_ESTIMATE},"centre du territoire actif");recenterOnHouse("reset-home")});
   els.geocodeHouse.addEventListener("click",async()=>{
     const a=await fetchAddress(true);if(!a)return;
     if(state.cadastreBuildings.length){CONFIG.house={lat:a.lat,lon:a.lon};markSpatialIndexesDirty();state.address=a;snapHouseToBuilding(true)}

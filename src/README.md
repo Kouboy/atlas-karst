@@ -8,6 +8,7 @@
 - `app/performance.js` borne la résolution du Canvas, met les effets animés au repos et regroupe les rafales de données.
 - `app/debug.js` porte le diagnostic et l’auto-vérification.
 - `app/territory-model.js` définit le contrat géographique sérialisable d’un Atlas : identité, centre, emprise, rattachement administratif et données patrimoniales embarquées.
+- `app/territory-controller.js` crée un territoire en session, cloisonne ses données et orchestre sa synchronisation initiale.
 - `app/bootstrap.js` charge les données embarquées, la configuration et l’état partagé.
 - `app/canvas-renderer.js` contient le pipeline de rendu ASCII et symbolique, jusqu’aux effets finaux du bitmap.
 - `app/audio.js` porte les retours sonores et leur cycle de vie.

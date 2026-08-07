@@ -1,4 +1,5 @@
 const TERRITORY_PROFILE_SCHEMA=1;
+let territoryDataRevision=0;
 const LEGACY_TERRITORY_PROFILE=Object.freeze({
   schema:TERRITORY_PROFILE_SCHEMA,
   id:"angouleme-karst",
@@ -71,7 +72,7 @@ function territoryDepartmentValues(profile,numeric=false){
   const code=normalized.administration.departmentCode;
   const name=normalized.administration.departmentName;
   const padded=/^\d+$/.test(code)?code.padStart(3,"0"):code;
-  return [...new Set(numeric?[code,padded,name]:[name,code,padded].filter(Boolean))];
+  return [...new Set((numeric?[code,padded,name]:[name,code,padded]).filter(Boolean))];
 }
 function territoryUsesEmbeddedData(kind,profile){
   const normalized=normalizeTerritoryProfile(profile||LEGACY_TERRITORY_PROFILE);
@@ -80,3 +81,53 @@ function territoryUsesEmbeddedData(kind,profile){
 function territorySnapshot(profile){
   return normalizeTerritoryProfile(profile||LEGACY_TERRITORY_PROFILE);
 }
+function territorySafeId(value){
+  return territoryText(value,"territoire").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,54)||"territoire";
+}
+function createUserTerritoryProfile({label="Mon territoire",center}={}){
+  const lat=territoryFiniteNumber(center?.lat,LEGACY_TERRITORY_PROFILE.center.lat);
+  const lon=territoryFiniteNumber(center?.lon,LEGACY_TERRITORY_PROFILE.center.lon);
+  const safeLabel=territoryText(label,"Mon territoire");
+  return normalizeTerritoryProfile({
+    schema:TERRITORY_PROFILE_SCHEMA,
+    id:`${territorySafeId(safeLabel)}-${lat.toFixed(4)}-${lon.toFixed(4)}`,
+    label:safeLabel,
+    center:{lat,lon},
+    sizeKm:{width:16,height:16},
+    administration:{countryCode:"",departmentCode:"",departmentName:"",communeInsee:""},
+    embeddedData:{bss:false,cavityInventory:false,fallbackSurface:false,offlineDemo:false},
+    provenance:"territoire défini par l’utilisateur"
+  },{
+    ...LEGACY_TERRITORY_PROFILE,
+    administration:{countryCode:"",departmentCode:"",departmentName:"",communeInsee:""},
+    embeddedData:{bss:false,cavityInventory:false,fallbackSurface:false,offlineDemo:false}
+  });
+}
+function territoryAdministrationFromAddress(address){
+  const citycode=territoryText(address?.citycode);
+  const context=territoryText(address?.context).split(",").map(value=>value.trim()).filter(Boolean);
+  const inferredCode=context[0]||(/^97\d|^98\d/.test(citycode)?citycode.slice(0,3):citycode.slice(0,2));
+  return {
+    countryCode:citycode?"FR":"",
+    departmentCode:inferredCode,
+    departmentName:context[1]||"",
+    communeInsee:citycode
+  };
+}
+function enrichTerritoryAdministration(profile,address){
+  return normalizeTerritoryProfile({...profile,administration:territoryAdministrationFromAddress(address)},profile);
+}
+function territoryStorageKey(base,profile){
+  const active=profile||(typeof CONFIG!=="undefined"?CONFIG.territory:null)||LEGACY_TERRITORY_PROFILE;
+  const normalized=normalizeTerritoryProfile(active);
+  if(normalized.id===LEGACY_TERRITORY_PROFILE.id)return base;
+  return `${base}--${territorySafeId(normalized.id)}`;
+}
+function updateTerritoryIdentityUI(){
+  if(typeof CONFIG==="undefined")return;
+  const territory=CONFIG.territory;if(!territory)return;
+  if(typeof els!=="undefined"&&els?.territorySummary)els.territorySummary.textContent=`Territoire actif · ${territory.label} · ${territory.sizeKm.width} × ${territory.sizeKm.height} km`;
+}
+function beginTerritoryDataRevision(){territoryDataRevision++;return territoryDataRevision}
+function territoryRequestStamp(){return {revision:territoryDataRevision,id:CONFIG.territory.id}}
+function territoryRequestIsCurrent(stamp){return !!stamp&&stamp.revision===territoryDataRevision&&stamp.id===CONFIG.territory.id}
