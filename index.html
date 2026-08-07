@@ -5635,6 +5635,7 @@ async function syncCartofriches(){
       const rows=Array.isArray(j.data)?j.data:[];
       all.push(...rows);
       total=Number(j.meta?.total??all.length);
+      els.cartofrichesHelp.textContent=`Cartofriches · ${Math.min(all.length,total).toLocaleString("fr-FR")} / ${total.toLocaleString("fr-FR")} fiches départementales reçues…`;
       if(!rows.length)break;
       page++;
     }
@@ -5768,6 +5769,22 @@ function heritageField(fields,patterns,fallback=""){
   }
   return fallback;
 }
+function heritageCoordinatePairFromText(value){
+  const textValue=normalizeLooseText(value).trim();if(!textValue)return null;
+  const wkt=parseWktPoint(textValue);if(wkt)return [wkt.lat,wkt.lon];
+  const patterns=[
+    /^\s*(-?\d+,\d+)\s*,\s*(-?\d+,\d+)\s*$/,
+    /^\s*(-?\d+(?:[.,]\d+)?)\s*[;|/]\s*(-?\d+(?:[.,]\d+)?)\s*$/,
+    /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/,
+    /^\s*(-?\d+(?:[.,]\d+)?)\s+(-?\d+(?:[.,]\d+)?)\s*$/
+  ];
+  for(const pattern of patterns){
+    const match=textValue.match(pattern);if(!match)continue;
+    const a=Number(match[1].replace(",",".")),b=Number(match[2].replace(",","."));
+    if(Number.isFinite(a)&&Number.isFinite(b))return [a,b];
+  }
+  return null;
+}
 function heritageCoordinates(record){
   const geometry=record?.geometry;
   if(geometry?.type==="Point"&&Array.isArray(geometry.coordinates)){
@@ -5784,7 +5801,7 @@ function heritageCoordinates(record){
     if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180)return {lat,lon};
   }
   const named=[f.coordonnees_au_format_wgs84,f.coordonnees_finales,f.coordonnees_geographiques,f.coordonnees,f.geolocalisation,f.geo_point_2d,f.localisation,f.location,record?._atlasGeo];
-  const candidates=[...named,...entries.map(([,v])=>v).filter(v=>v&&typeof v==="object")];
+  const candidates=[...named,...entries.map(([,v])=>v).filter(v=>v!=null&&v!=="")];
   for(const raw of candidates){
     if(raw&&typeof raw==="object"){
       if(raw.type==="Point"&&Array.isArray(raw.coordinates)){
@@ -5794,9 +5811,8 @@ function heritageCoordinates(record){
       const lat=Number(raw.lat??raw.latitude??raw[1]),lon=Number(raw.lon??raw.lng??raw.longitude??raw[0]);
       if(Number.isFinite(lat)&&Number.isFinite(lon))return {lat,lon};
     }
-    const textValue=normalizeLooseText(raw);
-    const nums=(textValue.match(/-?\d+(?:[.,]\d+)?/g)||[]).slice(0,2).map(v=>Number(v.replace(",",".")));
-    if(nums.length===2){
+    const nums=heritageCoordinatePairFromText(raw);
+    if(nums){
       const chosen=chooseCartofrichesCoordinate(cartofrichesCoordinateCandidates(nums[0],nums[1],"coordonnées patrimoniales"),"");
       if(chosen)return {lat:chosen.lat,lon:chosen.lon};
     }
@@ -5811,7 +5827,7 @@ function normalizeCultureRecord(record,category){
   const coord=heritageCoordinates(record);if(!coord)return null;
   const f=record.fields||record;
   const ref=heritageField(f,[/^reference$/i,/^ref$/i,/identifiant.*origine/i,/identifiant/i],record.recordid||"");
-  const name=heritageField(f,[/titre.*courant/i,/denomination.*edifice/i,/nom.*officiel/i,/^nomoff$/i,/^nom$/i,/appellation/i,/intitule/i],CULTURE_DATASETS[category]?.label||"Lieu patrimonial");
+  const name=heritageField(f,[/titre.*courant/i,/titre.*editorial/i,/denomination.*edifice/i,/nom.*officiel/i,/^nomoff$/i,/^nom$/i,/appellation/i,/intitule/i],CULTURE_DATASETS[category]?.label||"Lieu patrimonial");
   const commune=heritageField(f,[/commune.*editoriale/i,/commune.*index/i,/^commune$/i,/^com$/i,/^ville/i]);
   const address=heritageField(f,[/adresse.*editoriale/i,/adresse.*index/i,/^adresse$/i,/^adrs/i]);
   const period=heritageField(f,[/siecle.*principal/i,/format.*siecle/i,/^scle/i,/datation/i,/annee.*creation/i]);
@@ -6495,8 +6511,16 @@ function elevationAt(lat,lon){
 }
 
 
-async function fetchJsonMaybeGzip(url){
-  const r=await fetch(url);if(!r.ok)throw new Error(`HTTP ${r.status}`);
+async function fetchJsonMaybeGzip(url,attempts=2){
+  let r=null,lastError=null;
+  for(let attempt=0;attempt<attempts;attempt++){
+    try{
+      r=await fetch(url,{mode:"cors",credentials:"omit",cache:attempt?"reload":"default"});
+      if(!r.ok)throw new Error(`HTTP ${r.status}`);
+      break;
+    }catch(error){lastError=error;if(attempt+1<attempts)await new Promise(resolve=>setTimeout(resolve,160))}
+  }
+  if(!r?.ok)throw lastError||new Error("Téléchargement impossible");
   const buf=await r.arrayBuffer();
   const bytes=new Uint8Array(buf);
   let textData="";
@@ -6534,18 +6558,30 @@ async function fetchCadastre(){
   const cached=cacheGet(cacheKey);
   if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();scheduleDataRender("cadastre-cache");return}
   const root=`https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/${encodeURIComponent(department)}/${encodeURIComponent(commune)}`;
-  try{
-    const [buildingsFc,parcelsFc]=await Promise.all([
+  const [buildingsResult,parcelsResult]=await Promise.allSettled([
       fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-batiments.json.gz`),
       fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-parcelles.json.gz`)
-    ]);
-    if(!territoryRequestIsCurrent(requestStamp))return null;
-    state.cadastreBuildings=normalizeCadastre(buildingsFc,"building");
-    state.cadastreParcels=normalizeCadastre(parcelsFc,"parcel");
+  ]);
+  if(!territoryRequestIsCurrent(requestStamp))return null;
+  state.cadastreBuildings=buildingsResult.status==="fulfilled"?normalizeCadastre(buildingsResult.value,"building"):[];
+  state.cadastreParcels=parcelsResult.status==="fulfilled"?normalizeCadastre(parcelsResult.value,"parcel"):[];
+  const failures=[buildingsResult,parcelsResult].filter(result=>result.status==="rejected");
+  if(failures.length<2){
+    if(!failures.length){
     cacheSet(cacheKey,{buildings:state.cadastreBuildings,parcels:state.cadastreParcels});
     setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${state.cadastreParcels.length} parc.`);
+    }else{
+      const missing=buildingsResult.status==="rejected"?"bât. indisponibles":"parc. indisponibles";
+      setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${missing}`);
+      console.warn("Cadastre partiellement disponible",failures[0].reason);
+    }
+    if(els.cadastreStatus)els.cadastreStatus.title=failures.length?"Une des deux couches cadastrales a été refusée par le serveur ; la couche disponible reste utilisée.":"";
     autoSnapHouse();
-  }catch(err){if(!territoryRequestIsCurrent(requestStamp))return null;setStatus("cadastre","bad","indisponible");console.warn("Cadastre indisponible",err)}
+  }else{
+    setStatus("cadastre","bad","indisponible");
+    if(els.cadastreStatus)els.cadastreStatus.title=failures.map(result=>result.reason?.message||String(result.reason)).join(" · ");
+    console.warn("Cadastre indisponible",...failures.map(result=>result.reason));
+  }
   scheduleDataRender("cadastre-sync");
 }
 function polygonCentroid(coords){

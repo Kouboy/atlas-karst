@@ -253,6 +253,25 @@ try {
       savedCartofriches:JSON.parse(localStorage.getItem(CARTOFRICHES_KEY)||"{}").items?.some(item=>item.id==="TEST-CF")||false
     }));
     assert.deepEqual(imported,{osm:true,bss:true,cartofriches:true,savedBss:true,savedCartofriches:true});
+    const cultureCoordinates=await page.evaluate(()=>([
+      heritageCoordinates({coordonnees_au_format_WGS84:"45.5981,0.1472"}),
+      heritageCoordinates({coordonnees_au_format_WGS84:"45,5981 ; 0,1472"}),
+      normalizeCultureRecord({Reference:"PA-TEST",Titre_editorial_de_la_notice:"Monument test",coordonnees_au_format_WGS84:"45.5981,0.1472"},"monument")
+    ]));
+    assert.deepEqual(cultureCoordinates.map(value=>value&&{lat:value.lat,lon:value.lon}),[{lat:45.5981,lon:.1472},{lat:45.5981,lon:.1472},{lat:45.5981,lon:.1472}]);
+    assert.equal(cultureCoordinates[2].name,"Monument test");
+    const partialCadastre=await page.evaluate(async()=>{
+      localStorage.removeItem(territoryStorageKey("atlas-karst-cadastre-v06"));
+      const originalFetch=fetchJsonMaybeGzip;
+      fetchJsonMaybeGzip=async url=>{
+        if(url.includes("-batiments.json.gz"))return {type:"FeatureCollection",features:[{id:"BAT-TEST",type:"Feature",properties:{},geometry:{type:"Polygon",coordinates:[[[.1471,45.5980],[.1473,45.5980],[.1473,45.5982],[.1471,45.5982],[.1471,45.5980]]]}}]};
+        throw new TypeError("refus CORS simulé pour les parcelles");
+      };
+      try{await fetchCadastre()}finally{fetchJsonMaybeGzip=originalFetch}
+      return {buildings:state.cadastreBuildings.length,parcels:state.cadastreParcels.length,status:els.cadastreStatus.textContent,className:els.cadastreStatus.className,title:els.cadastreStatus.title};
+    });
+    assert.deepEqual({buildings:partialCadastre.buildings,parcels:partialCadastre.parcels,status:partialCadastre.status,className:partialCadastre.className},{buildings:1,parcels:0,status:"1 bât. · parc. indisponibles",className:"ok"});
+    assert.match(partialCadastre.title,/couche disponible/);
     const result=await page.evaluate(async()=>{
       document.getElementById("clearBss").click();
       document.getElementById("clearCartofriches").click();

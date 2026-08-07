@@ -5,9 +5,11 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 ## 0.18c — Gestionnaire de territoires
 
 - Bibliothèque locale multi-territoires avec sauvegarde IndexedDB indépendante, ouverture hors ligne et mémorisation du territoire actif.
-- Sauvegarde automatique avant chaque bascule, renommage, duplication et suppression protégée du dernier territoire.
+- Sauvegarde automatique avant chaque bascule, renommage, duplication et suppression confirmée des territoires.
 - Migration transparente de l’ancien instantané unique vers le registre territorial.
 - L’ouverture d’un territoire restaure sa vue et ses données sans déclencher de synchronisation réseau automatique.
+- Culture reconnaît les coordonnées WGS84 actuelles des catalogues ministériels, indépendamment de la casse et du séparateur décimal.
+- Le cadastre conserve la couche bâtiments si le serveur refuse ponctuellement les parcelles, et Cartofriches affiche sa progression départementale.
 
 ## 0.18b — Création de territoire
 
