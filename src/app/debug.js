@@ -20,10 +20,22 @@ function debugRecordError(kind,error){
   debugState.errors.unshift({at:new Date().toLocaleTimeString("fr-FR"),kind,message});
   debugState.errors=debugState.errors.slice(0,12);updateDebugPanel();
 }
-function setDebugEnabled(enabled){
+function revealDebugPanel(){
+  if(!els?.debugPanel)return;
+  if(typeof setSidebarOpen==="function")setSidebarOpen(true);
+  const cluster=els.debugPanel.closest(".sidebar-cluster");
+  if(cluster&&typeof setCollapsibleState==="function")setCollapsibleState(cluster,false,".sidebar-cluster-head");
+  if(typeof setCollapsibleState==="function")setCollapsibleState(els.debugPanel,false,"h2");
+  requestAnimationFrame(()=>{
+    els.debugPanel.scrollIntoView({block:"start",behavior:"auto"});
+    els.debugPanel.querySelector(":scope > h2")?.focus({preventScroll:true});
+    updateDebugPanel(true);runAtlasSelfCheck();
+  });
+}
+function setDebugEnabled(enabled,{reveal=true}={}){
   debugState.enabled=!!enabled;document.body.classList.toggle("debug-mode",debugState.enabled);
   if(els?.debugToggle){els.debugToggle.setAttribute("aria-pressed",String(debugState.enabled));els.debugToggle.textContent=debugState.enabled?"⚙ masquer":"⚙ diagnostic"}
-  if(debugState.enabled){updateDebugPanel(true);scheduleFrameFit()}
+  if(debugState.enabled){updateDebugPanel(true);scheduleFrameFit();if(reveal)revealDebugPanel()}
 }
 function debugStatusText(id){
   const el=els?.[id];return el?`${el.textContent.trim()} [${el.className||"sans classe"}]`:"absent";
@@ -69,6 +81,8 @@ function runAtlasSelfCheck(){
   const cellCount=CONFIG.gridW*CONFIG.gridH;
   checks.push(debugCheckResult("Cellules virtuelles Canvas",cellCount===CONFIG.gridW*CONFIG.gridH,`${cellCount} / ${CONFIG.gridW*CONFIG.gridH}`));
   checks.push(debugCheckResult("Centre géographique valide",Number.isFinite(state.center?.lat)&&Number.isFinite(state.center?.lon),`${state.center?.lat} / ${state.center?.lon}`));
+  const territory=CONFIG.territory;
+  checks.push(debugCheckResult("Profil territorial",territory?.schema===TERRITORY_PROFILE_SCHEMA&&CONFIG.dataWidthKm===territory?.sizeKm?.width&&CONFIG.dataHeightKm===territory?.sizeKm?.height,`${territory?.label||"absent"} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km`));
   checks.push(debugCheckResult("Grille en mémoire",!!state.lastGrid&&state.lastGrid.grid?.length===CONFIG.gridH,state.lastGrid?`${state.lastGrid.grid.length} lignes`:"absente"));
   const expectedCorners=[[0,0],[CONFIG.gridW-1,0],[0,CONFIG.gridH-1],[CONFIG.gridW-1,CONFIG.gridH-1]];
   let targetOk=true,targetDetails=[];
@@ -120,6 +134,7 @@ function createDebugReport(){
     `Écran : ${screen.width} × ${screen.height} · viewport ${innerWidth} × ${innerHeight} · DPR ${devicePixelRatio}`,
     `Contexte sécurisé : ${window.isSecureContext} · protocole ${location.protocol}`,
     `Grille : ${CONFIG.gridW} × ${CONFIG.gridH} · zoom ${state.zoomIndex} · coupe ${depthSliceLabel()}`,
+    `Territoire : ${CONFIG.territory.label} [${CONFIG.territory.id}] · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km · profil ${CONFIG.territory.schema}/${TERRITORY_PROFILE_SCHEMA}`,
     `Centre : ${state.center.lat.toFixed(7)}, ${state.center.lon.toFixed(7)}`,
     `Rendus : ${debugState.renderCount} · dernier ${debugState.lastRenderMs.toFixed(2)} ms · moyenne ${average.toFixed(2)} ms · max ${debugState.maxRenderMs.toFixed(2)} ms`,
     `Rafales de données : ${debugDataRendersText()} · ${dataRenderRuntime.covered} couvertes par une interaction`,

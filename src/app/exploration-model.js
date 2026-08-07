@@ -318,10 +318,10 @@ function ensureSpatialIndexes(){
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
   for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});
   for(const f of state.cartofriches||[])addPoi("cartofriches",f,{kind:f.type||"site Cartofriches",title:f.name||"Site recensé",priority:22});
-  if(OFFLINE_TEST&&!state.cartofriches?.length&&!state.loreItems?.length&&!state.localCavities?.length){
+  if(OFFLINE_TEST&&territoryUsesEmbeddedData("offlineDemo",CONFIG.territory)&&!state.cartofriches?.length&&!state.loreItems?.length&&!state.localCavities?.length){
     for(const d of OFFLINE_DEMO_POINTS)addPoi("demo",d,{kind:d.kind,title:d.name,priority:21});
   }
-  addPoi("house",CONFIG.house,{id:"house",title:"42 rue de la Falaise",kind:"maison",source:"Repère privé de l’Atlas",priority:24});
+  addPoi("house",CONFIG.house,{id:"house",title:state.address?.label||"Repère de départ",kind:"repère de départ",source:"Repère privé de l’Atlas",priority:24});
   if(state.userLocation)addPoi("location",state.userLocation,{id:"user-location",title:"Ma position",kind:"position actuelle",source:"Géolocalisation ponctuelle du navigateur",priority:50});
   for(const f of state.osm||[]){
     const bounds=featureBounds(f);if(bounds)spatialRuntime.osmIndex.insert(f,bounds);

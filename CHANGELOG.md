@@ -2,6 +2,15 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18a — Modèle de territoire
+
+- Introduction d’un profil territorial sérialisable qui regroupe identité, centre, emprise, rattachement administratif et disponibilité des données patrimoniales embarquées.
+- Passage de l’emprise navigable historique à 16 × 16 km autour de son centre, première fondation de l’Atlas généralisable.
+- Suppression des replis « Charente » codés en dur dans Cartofriches, le patrimoine culturel et Hub’Eau au profit du profil actif.
+- Ajout du territoire au schéma 3 des sauvegardes, avec compatibilité conservée pour les schémas 1 et 2.
+- Séparation explicite entre données synchronisables partout et inventaires historiques locaux, afin qu’un futur territoire ne réutilise pas silencieusement les 736 points BSS charentais.
+- Version du HUD reliée à la version d’exécution, territoire actif identifié dans l’en-tête et commande de diagnostic rendue directement accessible ; son activation ouvre désormais la colonne, déplie la section et l’amène au premier plan.
+
 ## 0.17u — Santé des sessions longues
 
 - Plafonds explicites pour les caches de styles Canvas, d’hypothèses souterraines et de relations documentaires.

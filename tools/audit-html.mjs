@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "territory-model.js", "bootstrap.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "startup-loader.js", "source-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -33,6 +33,7 @@ const missingRegisteredIds = registeredIds.filter((id) => !ids.includes(id));
 const classicScripts = [...html.matchAll(/<script(?![^>]*type="application\/json")[^>]*>([\s\S]*?)<\/script>/gi)].map((match) => match[1]);
 
 check("version visible cohérente", () => Boolean(atlasVersion) && html.includes(`v${atlasVersion}`) && html.includes(`const APP_VERSION = "${atlasVersion}"`));
+check("version du HUD liée au runtime", () => html.includes('id="appVersionLabel"') && html.includes('els.appVersionLabel.textContent=`V${APP_VERSION}`'));
 check("livrable autonome généré", () => html.includes("Fichier généré par npm run build") && !html.includes("@atlas-inline:"));
 check("identifiants HTML uniques", () => duplicateIds.length === 0);
 check("fonctions nommées uniques", () => duplicateFunctions.length === 0);
@@ -207,6 +208,16 @@ check("inspecteur de cellule isolé", () =>
   !sourceByName["main.js"].includes("function selectGridCell") &&
   !sourceByName["main.js"].includes("function hoverDescription") &&
   !sourceByName["canvas-renderer.js"].includes("function selectSymbolicPoi")
+);
+check("modèle de territoire central", () =>
+  sourceByName["territory-model.js"].includes("const LEGACY_TERRITORY_PROFILE=") &&
+  sourceByName["territory-model.js"].includes("function normalizeTerritoryProfile") &&
+  sourceByName["territory-model.js"].includes("function applyTerritoryProfileToConfig") &&
+  sourceByName["territory-model.js"].includes("function territoryDepartmentValues") &&
+  sourceByName["bootstrap.js"].includes("territory:ACTIVE_TERRITORY") &&
+  sourceByName["snapshot-manager.js"].includes("territory:territorySnapshot(CONFIG.territory)") &&
+  !sourceByName["data-services.js"].includes('code_departement:"16"') &&
+  !sourceByName["data-services.js"].includes('params:{q:"Charente"}')
 );
 check("gestionnaire d’instantanés isolé", () =>
   sourceByName["snapshot-manager.js"].includes("function validateAtlasSnapshot") &&

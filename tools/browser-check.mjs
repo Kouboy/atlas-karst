@@ -69,6 +69,10 @@ try {
   await withPage("diagnostic et pipeline Canvas", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForFunction(() => document.getElementById("debugChecks")?.textContent?.includes("Pipeline Canvas final"));
+    const identity=await page.evaluate(()=>({version:document.getElementById("appVersionLabel")?.textContent,territory:document.getElementById("territorySummary")?.textContent,debugVisible:getComputedStyle(document.getElementById("debugToggle")).display!=="none"}));
+    assert.equal(identity.version,`V${packageMetadata.atlasVersion}`);
+    assert.match(identity.territory,/Atlas historique d.Angoulême · 16 × 16 km/);
+    assert.equal(identity.debugVisible,true,"le bouton diagnostic doit rester accessible");
     const coldMs = Number.parseFloat(await page.locator("#debugRenderTime").innerText());
     assert.ok(coldMs <= 140, `premier rendu trop lent : ${coldMs} ms`);
     await page.evaluate(() => {
@@ -337,14 +341,19 @@ try {
     });
     await page.keyboard.press("Control+Shift+D");
     await page.waitForFunction(()=>debugState.enabled===true);
+    await page.waitForFunction(()=>{
+      const panel=document.getElementById("debugPanel"),cluster=panel?.closest(".sidebar-cluster");
+      return panel&&!panel.classList.contains("collapsed")&&cluster&&!cluster.classList.contains("collapsed")&&getComputedStyle(panel).display!=="none";
+    });
     await page.evaluate(()=>document.getElementById("runSelfCheck").click());
     const diagnostic=await page.evaluate(()=>{
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
-      return {runtime:{...viewControllerRuntime},debug:debugState.enabled,motionDisabled:document.body.classList.contains("motion-disabled"),badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+      const panel=document.getElementById("debugPanel"),cluster=panel.closest(".sidebar-cluster");
+      return {runtime:{...viewControllerRuntime},debug:debugState.enabled,revealed:!panel.classList.contains("collapsed")&&!cluster.classList.contains("collapsed")&&document.activeElement===panel.querySelector(":scope > h2"),motionDisabled:document.body.classList.contains("motion-disabled"),badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
     assert.equal(result.afterControls.mode,"ascii");assert.equal(result.afterControls.hydrology,false);assert.equal(result.afterControls.ambient,false);assert.equal(result.afterControls.scenario,"extensive");
     assert.equal(result.afterControls.selectedCavity,"TEST-VIEW-CAVITY");assert.deepEqual(result.afterControls.center,result.selectedCoord);assert.equal(result.afterControls.debug,false);assert.equal(result.storedMotion,"off");
-    assert.equal(diagnostic.debug,true);assert.equal(diagnostic.motionDisabled,true);assert.match(result.cavityReadout,/Cavité de contrôle/);
+    assert.equal(diagnostic.debug,true);assert.equal(diagnostic.revealed,true);assert.equal(diagnostic.motionDisabled,true);assert.match(result.cavityReadout,/Cavité de contrôle/);
     assert.equal(diagnostic.runtime.ready,true);assert.equal(diagnostic.runtime.bound,true);
     assert.equal(diagnostic.runtime.modeChanges,1);assert.equal(diagnostic.runtime.scenarioChanges,1);assert.equal(diagnostic.runtime.layerChanges,2);assert.equal(diagnostic.runtime.cavitySelections,1);assert.equal(diagnostic.runtime.recenters,1);assert.equal(diagnostic.runtime.debugActions,3);
     assert.deepEqual(diagnostic.badChecks,[],`diagnostic en échec après les réglages de vue : ${diagnostic.badChecks.join(", ")}`);
@@ -438,6 +447,46 @@ try {
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après entretien prolongé : ${result.badChecks.join(", ")}`);
   });
 
+  await withPage("profil territorial généralisable", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(()=>{
+      const custom=normalizeTerritoryProfile({
+        id:"territoire-test-paris",label:"Territoire de test",
+        center:{lat:48.8566,lon:2.3522},sizeKm:{width:16,height:16},
+        administration:{countryCode:"FR",departmentCode:"75",departmentName:"Paris",communeInsee:"75056"},
+        embeddedData:{bss:false,cavityInventory:false,fallbackSurface:false,offlineDemo:false},
+        provenance:"test navigateur"
+      });
+      const snapshot=buildAtlasSnapshot();
+      snapshot.territory=custom;snapshot.house={...custom.center};snapshot.view.center={...custom.center};
+      snapshot.data={...snapshot.data,bss:[],officialCavities:[],observations:[],loreItems:[]};
+      applyAtlasSnapshot(snapshot,{source:"territoire synthétique",renderNow:true});
+      const extent=largestExtent();
+      const width=distanceMeters({lat:custom.center.lat,lon:extent.west},{lat:custom.center.lat,lon:extent.east});
+      const height=distanceMeters({lat:extent.south,lon:custom.center.lon},{lat:extent.north,lon:custom.center.lon});
+      const rebuilt=buildAtlasSnapshot();
+      return {
+        id:CONFIG.territory.id,label:CONFIG.territory.label,center:{...CONFIG.dataCenter},
+        size:{width:CONFIG.dataWidthKm,height:CONFIG.dataHeightKm},width,height,
+        departmentValues:territoryDepartmentValues(CONFIG.territory,true),communeInsee:CONFIG.communeInsee,
+        embedded:{...CONFIG.territory.embeddedData},bss:state.bss.length,cavityInventory:state.cavities.length,
+        snapshotTerritory:rebuilt.territory
+      };
+    });
+    assert.equal(result.id,"territoire-test-paris");
+    assert.equal(result.label,"Territoire de test");
+    assert.deepEqual(result.center,{lat:48.8566,lon:2.3522});
+    assert.deepEqual(result.size,{width:16,height:16});
+    assert.ok(Math.abs(result.width-16000)<40,`largeur territoriale inattendue : ${result.width} m`);
+    assert.ok(Math.abs(result.height-16000)<40,`hauteur territoriale inattendue : ${result.height} m`);
+    assert.deepEqual(result.departmentValues,["75","075","Paris"]);
+    assert.equal(result.communeInsee,"75056");
+    assert.deepEqual(result.embedded,{bss:false,cavityInventory:false,fallbackSurface:false,offlineDemo:false});
+    assert.equal(result.bss,0,"les BSS historiques ont fui dans le territoire synthétique");
+    assert.equal(result.cavityInventory,0,"l’inventaire historique a fui dans le territoire synthétique");
+    assert.equal(result.snapshotTerritory.id,"territoire-test-paris");
+  });
+
   await withPage("instantané local restauré", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result = await page.evaluate(async () => {
@@ -445,7 +494,7 @@ try {
       state.zoomIndex=4;state.depthIndex=2;state.renderMode="ascii";state.layerHydrology=false;
       state.center=clampCenter({lat:CONFIG.house.lat+.00021,lon:CONFIG.house.lon-.00017},CONFIG.zooms[state.zoomIndex]);
       state.observations=[...state.observations,{id:"OBS-ROUNDTRIP",mode:"point",glyph:"◎",name:"Test round-trip",lat:state.center.lat,lon:state.center.lon,confidence:"high",source:"test"}];
-      const expected={zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length};
+      const expected={zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length,territory:territorySnapshot(CONFIG.territory)};
       const snapshot=buildAtlasSnapshot();
       await saveSnapshotToDb(snapshot);
       state.zoomIndex=0;state.depthIndex=0;state.renderMode="symbolic";state.layerHydrology=true;state.center={...CONFIG.house};state.observations=[];
@@ -456,21 +505,24 @@ try {
       try{validateAtlasSnapshot({...snapshot,schema:SNAPSHOT_SCHEMA_VERSION+1})}catch(error){futureError=String(error.message||error)}
       const legacy={...snapshot};delete legacy.schema;
       const legacyAccepted=validateAtlasSnapshot(legacy)===legacy&&snapshotRuntime.lastSchema===1;
+      const schema2={...snapshot,schema:2};delete schema2.territory;
+      const schema2Accepted=validateAtlasSnapshot(schema2)===schema2&&snapshotRuntime.lastSchema===2;
       validateAtlasSnapshot(loaded);
       const checks=runAtlasSelfCheck();
       const functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       await deleteSnapshotFromDb();
       return {
         expected,
-        restored:{zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length},
-        loadedSchema:loaded.schema,futureError,legacyAccepted,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name),
+        restored:{zoomIndex:state.zoomIndex,depthIndex:state.depthIndex,renderMode:state.renderMode,layerHydrology:state.layerHydrology,center:{...state.center},observations:state.observations.length,territory:territorySnapshot(CONFIG.territory)},
+        loadedSchema:loaded.schema,futureError,legacyAccepted,schema2Accepted,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name),
         runtime:{bound:snapshotRuntime.bound,applied:snapshotRuntime.applied,dbSaves:snapshotRuntime.dbSaves,dbLoads:snapshotRuntime.dbLoads,dbDeletes:snapshotRuntime.dbDeletes,lastError:snapshotRuntime.lastError}
       };
     });
     assert.deepEqual(result.restored,result.expected,"l’état restauré diffère de l’instantané enregistré");
-    assert.equal(result.loadedSchema,2);
+    assert.equal(result.loadedSchema,3);
     assert.match(result.futureError,/plus récent/);
     assert.equal(result.legacyAccepted,true,"un instantané historique sans schéma n’est plus accepté");
+    assert.equal(result.schema2Accepted,true,"un instantané du schéma 2 n’est plus accepté");
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après restauration : ${result.badChecks.join(", ")}`);
     assert.equal(result.runtime.bound,true);
     assert.ok(result.runtime.applied>=1&&result.runtime.dbSaves>=1&&result.runtime.dbLoads>=1&&result.runtime.dbDeletes>=2);
@@ -480,11 +532,13 @@ try {
     const exportedJson=await page.evaluate(async()=>{
       const link=[...document.querySelectorAll("a[download]")].find(item=>item.download.endsWith(".atlas.json"));
       const parsed=JSON.parse(await (await fetch(link.href)).text());
-      return {filename:link.download,format:parsed.format,schema:parsed.schema};
+      return {filename:link.download,format:parsed.format,schema:parsed.schema,territory:parsed.territory};
     });
     assert.match(exportedJson.filename,/\.atlas\.json$/);
     assert.equal(exportedJson.format,"atlas-karst-snapshot");
-    assert.equal(exportedJson.schema,2);
+    assert.equal(exportedJson.schema,3);
+    assert.equal(exportedJson.territory.id,"angouleme-karst");
+    assert.deepEqual(exportedJson.territory.sizeKm,{width:16,height:16});
     await page.evaluate(()=>document.getElementById("exportStandaloneHtml").click());
     await page.waitForFunction(()=>snapshotRuntime.standaloneExports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".html")));
     const exportedHtml=await page.evaluate(async()=>{

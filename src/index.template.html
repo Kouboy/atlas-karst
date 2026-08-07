@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.17u · santé des sessions longues</title>
+<title>Atlas Karst ASCII v0.18a · modèle de territoire</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -25,9 +25,10 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · V0.17u</div>
+      <div class="eyebrow">INSTRUMENT LOCAL · <span id="appVersionLabel">V—</span></div>
       <h1>ATLAS KARST ASCII</h1>
       <div class="sub">Exploration · archive · interprétation · savoir local</div>
+      <div class="small" id="territorySummary">Territoire actif en cours d’initialisation…</div>
       <div class="sidebar-tools">
         <button id="collapseCards" type="button">− replier</button>
         <button id="expandCards" type="button">＋ déployer</button>
@@ -337,7 +338,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
     <div class="grid2" style="margin-top:9px">
       <button id="syncPiezo">≈ charger Hub’Eau</button>
-      <button id="openBssDownload">⇩ CSV BSS Charente</button>
+      <button id="openBssDownload">⇩ CSV BSS départemental</button>
     </div>
     <div class="grid2" style="margin-top:7px">
       <button id="importBss">＋ importer le CSV</button>
@@ -345,7 +346,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
     <input class="file-input-hidden" id="bssFile" type="file" accept=".csv,text/csv">
     <div class="small" id="bssHelp" style="margin-top:8px">
-      736 ouvrages issus du CSV BSS Charente sont déjà embarqués. Hub’Eau peut enrichir certains points avec leur statut piézométrique ; l’import CSV reste disponible pour une future mise à jour.
+      Le profil historique embarque 736 ouvrages issus du CSV BSS de la Charente. Hub’Eau peut enrichir certains points avec leur statut piézométrique ; l’import CSV reste disponible pour une future mise à jour.
     </div>
   </section>
 
@@ -378,7 +379,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
 
   <section class="card debug-only" id="debugPanel">
     <h2>Diagnostic</h2>
-    <div class="small">Activé par <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span>. Les mesures restent locales.</div>
+    <div class="small">Ouvert avec le bouton <strong>⚙ diagnostic</strong>, <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span> lorsque le navigateur laisse passer ce raccourci. Les mesures restent locales.</div>
     <div class="debug-kpis">
       <div class="debug-kpi"><span>Dernier rendu</span><strong id="debugRenderTime">—</strong></div>
       <div class="debug-kpi"><span>Moyenne</span><strong id="debugRenderAverage">—</strong></div>
@@ -464,7 +465,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <button id="sidebarToggle" class="toolbar-button sidebar-toggle" type="button" title="Afficher ou masquer le panneau">☰ panneau</button>
     <button id="infoToggle" class="toolbar-button info-toggle" type="button" title="Afficher ou masquer les informations">ⓘ infos</button>
     <button id="audioToggle" class="toolbar-button audio-toggle" type="button" aria-pressed="true" title="Activer ou couper les petits effets sonores">♪ sons</button>
-    <button id="debugToggle" class="toolbar-button debug-only" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
+    <button id="debugToggle" class="toolbar-button" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
     <div class="badge">position <strong id="locationBadge">non localisée</strong></div>
     <div class="badge">échelle <strong id="zoomLabel">commune</strong></div>
     <div class="badge">niveau <strong id="depthLabel">surface</strong></div>
