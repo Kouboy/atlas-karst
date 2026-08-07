@@ -20,10 +20,22 @@ function debugRecordError(kind,error){
   debugState.errors.unshift({at:new Date().toLocaleTimeString("fr-FR"),kind,message});
   debugState.errors=debugState.errors.slice(0,12);updateDebugPanel();
 }
-function setDebugEnabled(enabled){
+function revealDebugPanel(){
+  if(!els?.debugPanel)return;
+  if(typeof setSidebarOpen==="function")setSidebarOpen(true);
+  const cluster=els.debugPanel.closest(".sidebar-cluster");
+  if(cluster&&typeof setCollapsibleState==="function")setCollapsibleState(cluster,false,".sidebar-cluster-head");
+  if(typeof setCollapsibleState==="function")setCollapsibleState(els.debugPanel,false,"h2");
+  requestAnimationFrame(()=>{
+    els.debugPanel.scrollIntoView({block:"start",behavior:"auto"});
+    els.debugPanel.querySelector(":scope > h2")?.focus({preventScroll:true});
+    updateDebugPanel(true);runAtlasSelfCheck();
+  });
+}
+function setDebugEnabled(enabled,{reveal=true}={}){
   debugState.enabled=!!enabled;document.body.classList.toggle("debug-mode",debugState.enabled);
   if(els?.debugToggle){els.debugToggle.setAttribute("aria-pressed",String(debugState.enabled));els.debugToggle.textContent=debugState.enabled?"⚙ masquer":"⚙ diagnostic"}
-  if(debugState.enabled){updateDebugPanel(true);scheduleFrameFit()}
+  if(debugState.enabled){updateDebugPanel(true);scheduleFrameFit();if(reveal)revealDebugPanel()}
 }
 function debugStatusText(id){
   const el=els?.[id];return el?`${el.textContent.trim()} [${el.className||"sans classe"}]`:"absent";

@@ -341,14 +341,19 @@ try {
     });
     await page.keyboard.press("Control+Shift+D");
     await page.waitForFunction(()=>debugState.enabled===true);
+    await page.waitForFunction(()=>{
+      const panel=document.getElementById("debugPanel"),cluster=panel?.closest(".sidebar-cluster");
+      return panel&&!panel.classList.contains("collapsed")&&cluster&&!cluster.classList.contains("collapsed")&&getComputedStyle(panel).display!=="none";
+    });
     await page.evaluate(()=>document.getElementById("runSelfCheck").click());
     const diagnostic=await page.evaluate(()=>{
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
-      return {runtime:{...viewControllerRuntime},debug:debugState.enabled,motionDisabled:document.body.classList.contains("motion-disabled"),badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+      const panel=document.getElementById("debugPanel"),cluster=panel.closest(".sidebar-cluster");
+      return {runtime:{...viewControllerRuntime},debug:debugState.enabled,revealed:!panel.classList.contains("collapsed")&&!cluster.classList.contains("collapsed")&&document.activeElement===panel.querySelector(":scope > h2"),motionDisabled:document.body.classList.contains("motion-disabled"),badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
     assert.equal(result.afterControls.mode,"ascii");assert.equal(result.afterControls.hydrology,false);assert.equal(result.afterControls.ambient,false);assert.equal(result.afterControls.scenario,"extensive");
     assert.equal(result.afterControls.selectedCavity,"TEST-VIEW-CAVITY");assert.deepEqual(result.afterControls.center,result.selectedCoord);assert.equal(result.afterControls.debug,false);assert.equal(result.storedMotion,"off");
-    assert.equal(diagnostic.debug,true);assert.equal(diagnostic.motionDisabled,true);assert.match(result.cavityReadout,/Cavité de contrôle/);
+    assert.equal(diagnostic.debug,true);assert.equal(diagnostic.revealed,true);assert.equal(diagnostic.motionDisabled,true);assert.match(result.cavityReadout,/Cavité de contrôle/);
     assert.equal(diagnostic.runtime.ready,true);assert.equal(diagnostic.runtime.bound,true);
     assert.equal(diagnostic.runtime.modeChanges,1);assert.equal(diagnostic.runtime.scenarioChanges,1);assert.equal(diagnostic.runtime.layerChanges,2);assert.equal(diagnostic.runtime.cavitySelections,1);assert.equal(diagnostic.runtime.recenters,1);assert.equal(diagnostic.runtime.debugActions,3);
     assert.deepEqual(diagnostic.badChecks,[],`diagnostic en échec après les réglages de vue : ${diagnostic.badChecks.join(", ")}`);

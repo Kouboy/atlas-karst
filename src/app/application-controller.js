@@ -33,7 +33,7 @@ async function bootAtlas(){
     retroAudio.init();
     if(els.appVersionLabel)els.appVersionLabel.textContent=`V${APP_VERSION}`;
     if(els.territorySummary)els.territorySummary.textContent=`Territoire actif · ${ACTIVE_TERRITORY.label} · ${ACTIVE_TERRITORY.sizeKm.width} × ${ACTIVE_TERRITORY.sizeKm.height} km`;
-    setDebugEnabled(DEBUG_REQUESTED);
+    setDebugEnabled(DEBUG_REQUESTED,{reveal:false});
     if(!CANVAS_RENDERER){
       applicationControllerRuntime.bootMode="canvas-indisponible";
       if(els.canvasUnsupported)els.canvasUnsupported.hidden=false;
