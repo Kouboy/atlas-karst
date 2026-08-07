@@ -1625,33 +1625,66 @@ function normalizeCadastre(fc,kind){
   }
   return out;
 }
+function cadastreExtentGeometry(extent=largestExtent()){
+  return {type:"Polygon",coordinates:[[[extent.west,extent.south],[extent.east,extent.south],[extent.east,extent.north],[extent.west,extent.north],[extent.west,extent.south]]]};
+}
+async function fetchApiCartoCadastreParcels(extent=largestExtent(),maxFeatures=4000){
+  const endpoint="https://apicarto.ign.fr/api/cadastre/parcelle",features=[];
+  const pageSize=1000;let start=0,truncated=false;
+  while(features.length<maxFeatures){
+    const query=new URLSearchParams({geom:JSON.stringify(cadastreExtentGeometry(extent)),_limit:String(Math.min(pageSize,maxFeatures-features.length)),_start:String(start),source_ign:"PCI"});
+    const response=await fetchWithTimeout(`${endpoint}?${query}`,{mode:"cors",credentials:"omit",cache:"no-store",headers:{Accept:"application/json"}},32000);
+    if(!response.ok)throw new Error(`API Carto · HTTP ${response.status}`);
+    const json=await response.json(),rows=Array.isArray(json?.features)?json.features:[];
+    features.push(...rows);start+=rows.length;
+    if(rows.length<Number(query.get("_limit")))break;
+    if(features.length>=maxFeatures){truncated=true;break}
+  }
+  return {type:"FeatureCollection",features,truncated,source:"API Carto IGN · Parcellaire Express PCI"};
+}
 async function fetchCadastre(){
   const requestStamp=territoryRequestStamp();
-  const cacheKey=territoryStorageKey("atlas-karst-cadastre-v06");
+  const cacheKey=territoryStorageKey("atlas-karst-cadastre-v07");
   const commune=CONFIG.territory.administration.communeInsee||CONFIG.communeInsee;
   const department=CONFIG.territory.administration.departmentCode;
-  if(!commune||!department){state.cadastreBuildings=[];state.cadastreParcels=[];setStatus("cadastre","bad","commune non déterminée");return null}
+  const country=String(CONFIG.territory.administration.countryCode||"").toUpperCase();
+  if(country&&country!=="FR"){state.cadastreBuildings=[];state.cadastreParcels=[];setStatus("cadastre","bad","hors couverture française");if(els.cadastreStatus)els.cadastreStatus.title="Le cadastre utilisé par l’Atlas couvre la France.";return null}
   const cached=cacheGet(cacheKey);
-  if(cached){state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât.`);autoSnapHouse();scheduleDataRender("cadastre-cache");return}
-  const root=`https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/${encodeURIComponent(department)}/${encodeURIComponent(commune)}`;
-  const [buildingsResult,parcelsResult]=await Promise.allSettled([
-      fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-batiments.json.gz`),
-      fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-parcelles.json.gz`)
+  if(cached){
+    state.cadastreBuildings=cached.buildings||[];state.cadastreParcels=cached.parcels||[];
+    setStatus("cadastre","ok",`cache · ${state.cadastreBuildings.length} bât. · ${cached.parcelsTruncated?"≥ ":""}${state.cadastreParcels.length} parc.`);
+    if(els.cadastreStatus)els.cadastreStatus.title=cached.parcelSource||"";autoSnapHouse();scheduleDataRender("cadastre-cache");return;
+  }
+  const root=commune&&department?`https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/${encodeURIComponent(department)}/${encodeURIComponent(commune)}`:"";
+  const unavailable=label=>Promise.reject(new Error(label));
+  let [buildingsResult,parcelsResult]=await Promise.allSettled([
+      root?fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-batiments.json.gz`):unavailable("bâtiments · commune non déterminée"),
+      root?fetchJsonMaybeGzip(`${root}/cadastre-${encodeURIComponent(commune)}-parcelles.json.gz`):unavailable("parcelles · commune non déterminée")
   ]);
   if(!territoryRequestIsCurrent(requestStamp))return null;
+  let parcelSource="Etalab Cadastre",parcelsTruncated=false;
+  if(parcelsResult.status==="rejected"){
+    try{
+      const fallback=await fetchApiCartoCadastreParcels();
+      if(!territoryRequestIsCurrent(requestStamp))return null;
+      parcelsResult={status:"fulfilled",value:fallback};parcelSource=fallback.source;parcelsTruncated=!!fallback.truncated;
+    }catch(error){parcelsResult={status:"rejected",reason:error}}
+  }
   state.cadastreBuildings=buildingsResult.status==="fulfilled"?normalizeCadastre(buildingsResult.value,"building"):[];
   state.cadastreParcels=parcelsResult.status==="fulfilled"?normalizeCadastre(parcelsResult.value,"parcel"):[];
   const failures=[buildingsResult,parcelsResult].filter(result=>result.status==="rejected");
   if(failures.length<2){
     if(!failures.length){
-    cacheSet(cacheKey,{buildings:state.cadastreBuildings,parcels:state.cadastreParcels});
-    setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${state.cadastreParcels.length} parc.`);
+      cacheSet(cacheKey,{buildings:state.cadastreBuildings,parcels:state.cadastreParcels,parcelSource,parcelsTruncated});
+      setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${parcelsTruncated?"≥ ":""}${state.cadastreParcels.length} parc.${parcelSource.includes("API Carto")?" · API Carto":""}`);
     }else{
-      const missing=buildingsResult.status==="rejected"?"bât. indisponibles":"parc. indisponibles";
-      setStatus("cadastre","ok",`${state.cadastreBuildings.length} bât. · ${missing}`);
+      const label=buildingsResult.status==="rejected"
+        ? `bât. indisponibles · ${parcelsTruncated?"≥ ":""}${state.cadastreParcels.length} parc. · API Carto`
+        : `${state.cadastreBuildings.length} bât. · parc. indisponibles`;
+      setStatus("cadastre","ok",label);
       console.warn("Cadastre partiellement disponible",failures[0].reason);
     }
-    if(els.cadastreStatus)els.cadastreStatus.title=failures.length?"Une des deux couches cadastrales a été refusée par le serveur ; la couche disponible reste utilisée.":"";
+    if(els.cadastreStatus)els.cadastreStatus.title=failures.length?`Couverture partielle : ${failures[0].reason?.message||failures[0].reason}. La couche disponible reste utilisée.`:`Parcelles : ${parcelSource}${parcelsTruncated?` · résultat limité aux ${state.cadastreParcels.length} premières entités de l’emprise`:""}.`;
     autoSnapHouse();
   }else{
     setStatus("cadastre","bad","indisponible");

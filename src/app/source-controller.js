@@ -36,7 +36,7 @@ async function retryAllDataSources(){
   if(els.offlineNotice)els.offlineNotice.style.display="none";
   els.retryData.textContent="↻ recharger toutes les données";
   try{
-    ["atlas-karst-address-v06","atlas-karst-cadastre-v06","atlas-karst-cavities-v06","atlas-karst-elevation-v06","atlas-karst-elevation-v09d"]
+    ["atlas-karst-address-v06","atlas-karst-cadastre-v06","atlas-karst-cadastre-v07","atlas-karst-cavities-v06","atlas-karst-elevation-v06","atlas-karst-elevation-v09d"]
       .forEach(key=>localStorage.removeItem(territoryStorageKey(key)));
   }catch{}
   await syncOsmNow();

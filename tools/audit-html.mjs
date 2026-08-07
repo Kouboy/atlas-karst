@@ -123,6 +123,12 @@ check("contrôleur des sources isolé", () =>
   !sourceByName["main.js"].includes("els.syncCartofriches.addEventListener") &&
   !sourceByName["main.js"].includes("els.retryData.addEventListener")
 );
+check("repli cadastral par emprise", () =>
+  sourceByName["data-services.js"].includes("function cadastreExtentGeometry") &&
+  sourceByName["data-services.js"].includes("async function fetchApiCartoCadastreParcels") &&
+  sourceByName["data-services.js"].includes("https://apicarto.ign.fr/api/cadastre/parcelle") &&
+  sourceByName["snapshot-manager.js"].includes("state.cadastreBuildings.length||state.cadastreParcels.length")
+);
 check("gestionnaire de territoires isolé", () =>
   sourceByName["territory-controller.js"].includes("async function activateTerritory") &&
   sourceByName["territory-controller.js"].includes("async function openStoredTerritory") &&

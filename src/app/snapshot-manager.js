@@ -210,7 +210,8 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   refreshCavities();updateBssUI();updateCartofrichesUI();updateHeritageUI();populateCavitySelect();
   setStatus("osm","ok",state.osm.length?`${state.osm.length} objets · instantané`:"instantané sans OSM");
   setStatus("address",state.address?"ok":"bad",state.address?"instantané":"non embarqué");
-  setStatus("cadastre",state.cadastreBuildings.length?"ok":"bad",state.cadastreBuildings.length?`${state.cadastreBuildings.length} bât. · instantané`:"non embarqué");
+  const cadastreEmbedded=state.cadastreBuildings.length||state.cadastreParcels.length;
+  setStatus("cadastre",cadastreEmbedded?"ok":"bad",cadastreEmbedded?`${state.cadastreBuildings.length} bât. · ${state.cadastreParcels.length} parc. · instantané`:"absent de cette sauvegarde");
   setStatus("cavities",state.officialCavities.length?"ok":"bad",state.officialCavities.length?`${state.officialCavities.length} · instantané`:"repères locaux seulement");
   setStatus("heritage",state.heritageItems.length?"ok":"pending",state.heritageItems.length?`${state.heritageItems.length} · instantané`:"non embarqué");
   setStatus("elevation",state.elevation?"ok":"bad",state.elevation?"instantané":"non embarqué");

@@ -261,17 +261,18 @@ try {
     assert.deepEqual(cultureCoordinates.map(value=>value&&{lat:value.lat,lon:value.lon}),[{lat:45.5981,lon:.1472},{lat:45.5981,lon:.1472},{lat:45.5981,lon:.1472}]);
     assert.equal(cultureCoordinates[2].name,"Monument test");
     const partialCadastre=await page.evaluate(async()=>{
-      localStorage.removeItem(territoryStorageKey("atlas-karst-cadastre-v06"));
-      const originalFetch=fetchJsonMaybeGzip;
+      localStorage.removeItem(territoryStorageKey("atlas-karst-cadastre-v06"));localStorage.removeItem(territoryStorageKey("atlas-karst-cadastre-v07"));
+      const originalFetch=fetchJsonMaybeGzip,originalFallback=fetchApiCartoCadastreParcels;
       fetchJsonMaybeGzip=async url=>{
         if(url.includes("-batiments.json.gz"))return {type:"FeatureCollection",features:[{id:"BAT-TEST",type:"Feature",properties:{},geometry:{type:"Polygon",coordinates:[[[.1471,45.5980],[.1473,45.5980],[.1473,45.5982],[.1471,45.5982],[.1471,45.5980]]]}}]};
         throw new TypeError("refus CORS simulé pour les parcelles");
       };
-      try{await fetchCadastre()}finally{fetchJsonMaybeGzip=originalFetch}
+      fetchApiCartoCadastreParcels=async()=>({type:"FeatureCollection",source:"API Carto IGN · Parcellaire Express PCI",features:[{id:"PAR-TEST",type:"Feature",properties:{},geometry:{type:"Polygon",coordinates:[[[.1470,45.5979],[.1474,45.5979],[.1474,45.5983],[.1470,45.5983],[.1470,45.5979]]]}}]});
+      try{await fetchCadastre()}finally{fetchJsonMaybeGzip=originalFetch;fetchApiCartoCadastreParcels=originalFallback}
       return {buildings:state.cadastreBuildings.length,parcels:state.cadastreParcels.length,status:els.cadastreStatus.textContent,className:els.cadastreStatus.className,title:els.cadastreStatus.title};
     });
-    assert.deepEqual({buildings:partialCadastre.buildings,parcels:partialCadastre.parcels,status:partialCadastre.status,className:partialCadastre.className},{buildings:1,parcels:0,status:"1 bât. · parc. indisponibles",className:"ok"});
-    assert.match(partialCadastre.title,/couche disponible/);
+    assert.deepEqual({buildings:partialCadastre.buildings,parcels:partialCadastre.parcels,status:partialCadastre.status,className:partialCadastre.className},{buildings:1,parcels:1,status:"1 bât. · 1 parc. · API Carto",className:"ok"});
+    assert.match(partialCadastre.title,/API Carto IGN/);
     const result=await page.evaluate(async()=>{
       document.getElementById("clearBss").click();
       document.getElementById("clearCartofriches").click();

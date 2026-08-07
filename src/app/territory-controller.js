@@ -5,7 +5,7 @@ const territoryControllerRuntime={
 };
 const TERRITORY_LOCAL_STORAGE_BASES=[
   "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,
-  ENCOUNTER_COLLECTION_KEY,"atlas-karst-cavities-v06","atlas-karst-elevation-v09d","atlas-karst-cadastre-v06","atlas-karst-address-v06"
+  ENCOUNTER_COLLECTION_KEY,"atlas-karst-cavities-v06","atlas-karst-elevation-v09d","atlas-karst-cadastre-v06","atlas-karst-cadastre-v07","atlas-karst-address-v06"
 ];
 let territoryAutosavePromise=null;
 let territorySessionDetached=false;
