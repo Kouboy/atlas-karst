@@ -2,6 +2,16 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18e — Architecture de l’interface
+
+- Navigation ramenée à quatre espaces exclusifs : Carnets, Explorer, Noter et Sources.
+- Fusion des panneaux Territoires/Mémoire, Position/Proximité/Cavités et Observations/Repères locaux.
+- Suppression du premier niveau des commandes d’échelle, profondeur et déplacement déjà présentes sur la carte.
+- Une seule suppression de carnet et une seule actualisation globale restent visibles ; imports, tests de serveurs et effacements de sources passent dans les options techniques.
+- Accès directs Carnets, Affichage et Noter depuis la carte, avec la fiche documentaire séparée du menu.
+- Coque « carnet de terrain » sans arrondis, dégradés, ombres, halos ni animations décoratives ; hiérarchie portée par les caractères, l’espace et les traits.
+- Moteur cartographique, données et contrôleurs inchangés pendant cette passe d’architecture.
+
 ## 0.18d — Format canonique du carnet
 
 - Nouveau fichier portable `.atlas`, JSON UTF-8 versionné et documenté, distinct des instantanés techniques internes.

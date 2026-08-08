@@ -1281,3 +1281,103 @@ body.motion-disabled .dq-vignette::before,
 body.motion-disabled .dq-dialogue::after{animation:none!important}
 .canvas-compatibility{margin:12px;padding:14px;border:1px solid var(--danger);border-radius:10px;background:#211012;color:#ffe3e4;line-height:1.55}
 .canvas-compatibility strong{display:block;margin-bottom:4px;color:#ffb3b7}
+
+/* v0.18e — carnet de terrain plat. La carte conserve son langage propre ;
+   toute la coque utilise uniquement la typographie, l'espace et les traits. */
+body[data-ui-version="field-notebook"]{
+  --ui-paper:#ebe9e0;--ui-paper-2:#dfddd4;--ui-ink:#1a1d19;--ui-muted:#5e625c;
+  --ui-line:#85887f;--ui-accent:#235b45;--ui-danger:#8a2f2f
+}
+body[data-ui-version="field-notebook"] aside{
+  --text:var(--ui-ink);--muted:var(--ui-muted);--accent:var(--ui-accent);--line:var(--ui-line);
+  padding:12px;background:var(--ui-paper);color:var(--ui-ink);border-right:1px solid var(--ui-ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif
+}
+body[data-ui-version="field-notebook"] .sidebar-head{padding:0 0 12px;border-bottom:2px solid var(--ui-ink)}
+body[data-ui-version="field-notebook"] .sidebar-title-copy{min-width:0}
+body[data-ui-version="field-notebook"] .eyebrow{color:var(--ui-muted);font-size:9px;font-weight:700;letter-spacing:.13em}
+body[data-ui-version="field-notebook"] h1{margin:4px 0 3px;font-size:22px;letter-spacing:-.035em}
+body[data-ui-version="field-notebook"] .sub{max-width:290px;color:var(--ui-muted);font-size:11px;line-height:1.4}
+body[data-ui-version="field-notebook"] #territorySummary{margin-top:8px;color:var(--ui-ink);font-weight:650}
+body[data-ui-version="field-notebook"] .sidebar-section-tabs{
+  position:sticky;top:-12px;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  margin:0 -12px;padding:0 12px;background:var(--ui-paper);border-bottom:1px solid var(--ui-ink)
+}
+body[data-ui-version="field-notebook"] .sidebar-section-tab{
+  min-width:0;padding:10px 3px 8px;border:0;border-bottom:3px solid transparent;background:transparent;
+  color:var(--ui-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.035em
+}
+body[data-ui-version="field-notebook"] .sidebar-section-tab[aria-selected="true"]{border-bottom-color:var(--ui-ink);color:var(--ui-ink)}
+body[data-ui-version="field-notebook"] .sidebar-cluster{margin:0;padding:0;background:transparent;border:0}
+body[data-ui-version="field-notebook"] .sidebar-cluster-head{padding:14px 0 7px;border-bottom:1px solid var(--ui-line);background:transparent}
+body[data-ui-version="field-notebook"] .sidebar-cluster-head h2{margin:0;color:var(--ui-ink);font-size:16px;font-weight:700;letter-spacing:-.02em}
+body[data-ui-version="field-notebook"] .cluster-meta{margin-top:2px;color:var(--ui-muted);font-size:10px}
+body[data-ui-version="field-notebook"] .cluster-status{float:right;color:var(--ui-muted);font-size:9px;font-weight:500}
+body[data-ui-version="field-notebook"] .cluster-status.is-live{color:var(--ui-accent)}
+body[data-ui-version="field-notebook"] .sidebar-cluster-body{display:grid;gap:0}
+body[data-ui-version="field-notebook"] aside .card{
+  margin:0;padding:0;border:0;border-bottom:1px solid var(--ui-line);background:transparent;color:var(--ui-ink)
+}
+body[data-ui-version="field-notebook"] aside .card>h2{
+  margin:0;padding:11px 19px 10px 0;color:var(--ui-ink);font-size:12px;font-weight:720;letter-spacing:0
+}
+body[data-ui-version="field-notebook"] aside .card>h2::after{right:1px;color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] aside .card>.card-body{padding:0 0 13px}
+body[data-ui-version="field-notebook"] aside .card.collapsed>.card-body{display:none}
+body[data-ui-version="field-notebook"] aside button,
+body[data-ui-version="field-notebook"] aside select,
+body[data-ui-version="field-notebook"] aside input[type="text"],
+body[data-ui-version="field-notebook"] aside input[type="number"]{
+  min-height:34px;padding:7px 8px;border:1px solid var(--ui-line);background:transparent;color:var(--ui-ink)
+}
+body[data-ui-version="field-notebook"] aside button:hover,
+body[data-ui-version="field-notebook"] aside button:focus-visible,
+body[data-ui-version="field-notebook"] aside select:focus-visible,
+body[data-ui-version="field-notebook"] aside input:focus-visible{border-color:var(--ui-ink);outline:1px solid var(--ui-ink);outline-offset:1px}
+body[data-ui-version="field-notebook"] aside button.active{background:var(--ui-ink);border-color:var(--ui-ink);color:var(--ui-paper)}
+body[data-ui-version="field-notebook"] aside .action-danger{color:var(--ui-danger);border-color:#a37979}
+body[data-ui-version="field-notebook"] aside .small,
+body[data-ui-version="field-notebook"] aside .field-label,
+body[data-ui-version="field-notebook"] aside .source-note,
+body[data-ui-version="field-notebook"] aside .snapshot-note{color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] aside .snapshot-summary,
+body[data-ui-version="field-notebook"] aside .technical-details,
+body[data-ui-version="field-notebook"] aside .interface-subsection{border:1px solid var(--ui-line);background:transparent}
+body[data-ui-version="field-notebook"] aside .interface-subsection{margin-top:9px}
+body[data-ui-version="field-notebook"] aside .interface-subsection>summary,
+body[data-ui-version="field-notebook"] aside .technical-details>summary{padding:8px;color:var(--ui-ink);font-size:11px;font-weight:700;cursor:pointer}
+body[data-ui-version="field-notebook"] aside .interface-subsection-body,
+body[data-ui-version="field-notebook"] aside .technical-details>div{padding:0 8px 9px;color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] aside .warning{margin-top:12px;padding:9px;border:1px solid var(--ui-line);background:transparent;color:#5e4d25}
+body[data-ui-version="field-notebook"] aside .progress{background:var(--ui-paper-2);border:1px solid var(--ui-line)}
+body[data-ui-version="field-notebook"] aside .progress>span{background:var(--ui-accent)}
+
+body[data-ui-version="field-notebook"] .statusbar{gap:0;border:1px solid #6d716b;background:#e4e2d9;color:#1a1d19;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body[data-ui-version="field-notebook"] .statusbar>*{margin:0;border:0;border-right:1px solid #9b9d96;background:transparent;color:#1a1d19}
+body[data-ui-version="field-notebook"] .statusbar>*:last-child{border-right:0}
+body[data-ui-version="field-notebook"] .statusbar .toolbar-button{padding:7px 9px;font-weight:650}
+body[data-ui-version="field-notebook"] .statusbar .badge{padding:7px 9px}
+body[data-ui-version="field-notebook"] .statusbar .badge.secondary{display:none}
+body[data-ui-version="field-notebook"] .statusbar strong{color:#235b45}
+body[data-ui-version="field-notebook"] .terminal-wrap{border:1px solid #4d554f;background:var(--map-core)}
+body[data-ui-version="field-notebook"] .map-actions button{border:1px solid #667168!important;background:#0b1510!important;color:#e6e7df!important}
+body[data-ui-version="field-notebook"] #readout,
+body[data-ui-version="field-notebook"] .hover-tip,
+body[data-ui-version="field-notebook"] .selection-assist{border:1px solid #606861;background:#0b1510}
+
+body[data-ui-version="field-notebook"] aside *,
+body[data-ui-version="field-notebook"] .statusbar *,
+body[data-ui-version="field-notebook"] #readout *,
+body[data-ui-version="field-notebook"] .hover-tip *,
+body[data-ui-version="field-notebook"] .selection-assist *,
+body[data-ui-version="field-notebook"] .map-actions button{
+  border-radius:0!important;box-shadow:none!important;text-shadow:none!important;filter:none!important;
+  background-image:none!important;transition:none!important;animation:none!important;backdrop-filter:none!important
+}
+body[data-ui-version="field-notebook"] .card.card-awake{box-shadow:none!important}
+body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:none!important;filter:none!important}
+@media(max-width:520px){
+  body[data-ui-version="field-notebook"] .statusbar .badge{display:none}
+  body[data-ui-version="field-notebook"] .statusbar .toolbar-button{flex:1 1 auto;padding-inline:5px;font-size:9px}
+  body[data-ui-version="field-notebook"] .sidebar-section-tab{font-size:9px;letter-spacing:0}
+}

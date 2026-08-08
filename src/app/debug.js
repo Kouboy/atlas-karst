@@ -23,6 +23,7 @@ function debugRecordError(kind,error){
 function revealDebugPanel(){
   if(!els?.debugPanel)return;
   if(typeof setSidebarOpen==="function")setSidebarOpen(true);
+  if(typeof activateSidebarSection==="function")activateSidebarSection("sources");
   const cluster=els.debugPanel.closest(".sidebar-cluster");
   if(cluster&&typeof setCollapsibleState==="function")setCollapsibleState(cluster,false,".sidebar-cluster-head");
   if(typeof setCollapsibleState==="function")setCollapsibleState(els.debugPanel,false,"h2");
@@ -99,6 +100,8 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Contrôleur de navigation",inputRuntime.bound,`${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · dernier : ${inputRuntime.lastGesture}`));
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
+  const sidebarSections=[...document.querySelectorAll(".sidebar-section-tab")],visibleSidebarSections=[...document.querySelectorAll("#sidebar > .sidebar-cluster")].filter(section=>!section.hidden);
+  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.mergedCards>=3,`${sidebarSections.length} sections · ${uiShellRuntime.mergedCards} regroupements · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
@@ -152,6 +155,7 @@ function createDebugReport(){
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
+    `Architecture du carnet : section ${uiShellRuntime.activeSection} · ${uiShellRuntime.sectionSwitches} changements · ${uiShellRuntime.mergedCards} regroupements`,
     `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
     `Carnets : schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.exports}/${carnetRuntime.imports} exports/imports · ${debugFormatBytes(carnetRuntime.lastBytes)} · intégrité ${carnetRuntime.lastAlgorithm} · ${carnetRuntime.migrations} anciennes sauvegardes reconnues`,
     `Phases CPU : ${debugRenderPhasesText()}`,

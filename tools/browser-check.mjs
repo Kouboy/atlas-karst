@@ -722,6 +722,40 @@ try {
     await page.waitForFunction(()=>!document.body.classList.contains("info-collapsed"));
   });
 
+  await withPage("architecture carnet minimaliste", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page,"?offline");
+    const initial=await page.evaluate(()=>{
+      const styleOf=selector=>{const style=getComputedStyle(document.querySelector(selector));return {radius:style.borderRadius,shadow:style.boxShadow,image:style.backgroundImage,animation:style.animationName}};
+      return {
+        tabs:[...document.querySelectorAll(".sidebar-section-tab")].map(tab=>({label:tab.textContent.trim(),selected:tab.getAttribute("aria-selected")})),
+        active:document.getElementById("sidebar").dataset.activeSection,
+        visible:[...document.querySelectorAll("#sidebar > .sidebar-cluster")].filter(cluster=>!cluster.hidden).map(cluster=>cluster.dataset.section),
+        merged:uiShellRuntime.mergedCards,
+        retired:[...document.querySelectorAll("[data-interface-retired]")].every(element=>element.hidden),
+        clearDuplicateHidden:document.getElementById("clearSavedSnapshot")?.hidden,
+        selectionOptions:document.querySelector('[data-interface-advanced="selection-export"]')?.tagName,
+        technicalDetails:document.querySelectorAll("details.technical-details").length,
+        audioLocation:document.getElementById("audioToggle")?.closest('[data-section="sources"]')?.dataset.section,
+        debugLocation:document.getElementById("debugToggle")?.closest('[data-section="sources"]')?.dataset.section,
+        orphanCards:[...document.querySelectorAll("#sidebar > .card")].filter(card=>!card.hidden&&card.id!=="offlineNotice").map(card=>card.querySelector(":scope > h2")?.textContent.trim()),
+        tabLinks:[...document.querySelectorAll(".sidebar-section-tab")].every(tab=>document.getElementById(tab.getAttribute("aria-controls"))?.getAttribute("aria-labelledby")===tab.id),
+        shellStyle:styleOf("#sidebar"),cardStyle:styleOf(".sidebar-cluster .card"),buttonStyle:styleOf(".sidebar-section-tab")
+      };
+    });
+    assert.deepEqual(initial.tabs.map(tab=>tab.label),["Carnets","Explorer","Noter","Sources"]);
+    assert.equal(initial.active,"explorer");assert.deepEqual(initial.visible,["explorer"]);assert.equal(initial.tabs[1].selected,"true");
+    assert.ok(initial.merged>=3);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
+    assert.equal(initial.audioLocation,"sources");assert.equal(initial.debugLocation,"sources");assert.deepEqual(initial.orphanCards,[]);assert.equal(initial.tabLinks,true);
+    for(const style of [initial.shellStyle,initial.cardStyle,initial.buttonStyle]){assert.equal(style.radius,"0px");assert.equal(style.shadow,"none");assert.equal(style.image,"none");assert.equal(style.animation,"none")}
+    await page.locator("#mapCarnets").click();await page.waitForFunction(()=>document.getElementById("sidebar").dataset.activeSection==="carnets");
+    await page.locator("#mapDisplay").click();await page.waitForFunction(()=>document.getElementById("sidebar").dataset.activeSection==="explorer");
+    assert.equal(await page.locator('.card:has(> h2:text-is("Affichage"))').evaluate(card=>card.classList.contains("collapsed")),false);
+    await page.locator("#mapNotes").click();await page.waitForFunction(()=>document.getElementById("sidebar").dataset.activeSection==="noter");
+    await page.getByRole("tab",{name:"Noter",exact:true}).press("ArrowRight");
+    await page.waitForFunction(()=>document.getElementById("sidebar").dataset.activeSection==="sources");
+    assert.equal(await page.evaluate(()=>document.activeElement?.textContent.trim()),"Sources");
+  });
+
   await withPage("rendus symbolique et ASCII", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     assert.equal(await page.locator("body").getAttribute("data-effective-render"), "symbolic");

@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18d · carnet portable</title>
+<title>Atlas Karst ASCII v0.18e · architecture de l’interface</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1289,19 +1289,119 @@ body.motion-disabled .dq-vignette::before,
 body.motion-disabled .dq-dialogue::after{animation:none!important}
 .canvas-compatibility{margin:12px;padding:14px;border:1px solid var(--danger);border-radius:10px;background:#211012;color:#ffe3e4;line-height:1.55}
 .canvas-compatibility strong{display:block;margin-bottom:4px;color:#ffb3b7}
+
+/* v0.18e — carnet de terrain plat. La carte conserve son langage propre ;
+   toute la coque utilise uniquement la typographie, l'espace et les traits. */
+body[data-ui-version="field-notebook"]{
+  --ui-paper:#ebe9e0;--ui-paper-2:#dfddd4;--ui-ink:#1a1d19;--ui-muted:#5e625c;
+  --ui-line:#85887f;--ui-accent:#235b45;--ui-danger:#8a2f2f
+}
+body[data-ui-version="field-notebook"] aside{
+  --text:var(--ui-ink);--muted:var(--ui-muted);--accent:var(--ui-accent);--line:var(--ui-line);
+  padding:12px;background:var(--ui-paper);color:var(--ui-ink);border-right:1px solid var(--ui-ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif
+}
+body[data-ui-version="field-notebook"] .sidebar-head{padding:0 0 12px;border-bottom:2px solid var(--ui-ink)}
+body[data-ui-version="field-notebook"] .sidebar-title-copy{min-width:0}
+body[data-ui-version="field-notebook"] .eyebrow{color:var(--ui-muted);font-size:9px;font-weight:700;letter-spacing:.13em}
+body[data-ui-version="field-notebook"] h1{margin:4px 0 3px;font-size:22px;letter-spacing:-.035em}
+body[data-ui-version="field-notebook"] .sub{max-width:290px;color:var(--ui-muted);font-size:11px;line-height:1.4}
+body[data-ui-version="field-notebook"] #territorySummary{margin-top:8px;color:var(--ui-ink);font-weight:650}
+body[data-ui-version="field-notebook"] .sidebar-section-tabs{
+  position:sticky;top:-12px;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  margin:0 -12px;padding:0 12px;background:var(--ui-paper);border-bottom:1px solid var(--ui-ink)
+}
+body[data-ui-version="field-notebook"] .sidebar-section-tab{
+  min-width:0;padding:10px 3px 8px;border:0;border-bottom:3px solid transparent;background:transparent;
+  color:var(--ui-muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.035em
+}
+body[data-ui-version="field-notebook"] .sidebar-section-tab[aria-selected="true"]{border-bottom-color:var(--ui-ink);color:var(--ui-ink)}
+body[data-ui-version="field-notebook"] .sidebar-cluster{margin:0;padding:0;background:transparent;border:0}
+body[data-ui-version="field-notebook"] .sidebar-cluster-head{padding:14px 0 7px;border-bottom:1px solid var(--ui-line);background:transparent}
+body[data-ui-version="field-notebook"] .sidebar-cluster-head h2{margin:0;color:var(--ui-ink);font-size:16px;font-weight:700;letter-spacing:-.02em}
+body[data-ui-version="field-notebook"] .cluster-meta{margin-top:2px;color:var(--ui-muted);font-size:10px}
+body[data-ui-version="field-notebook"] .cluster-status{float:right;color:var(--ui-muted);font-size:9px;font-weight:500}
+body[data-ui-version="field-notebook"] .cluster-status.is-live{color:var(--ui-accent)}
+body[data-ui-version="field-notebook"] .sidebar-cluster-body{display:grid;gap:0}
+body[data-ui-version="field-notebook"] aside .card{
+  margin:0;padding:0;border:0;border-bottom:1px solid var(--ui-line);background:transparent;color:var(--ui-ink)
+}
+body[data-ui-version="field-notebook"] aside .card>h2{
+  margin:0;padding:11px 19px 10px 0;color:var(--ui-ink);font-size:12px;font-weight:720;letter-spacing:0
+}
+body[data-ui-version="field-notebook"] aside .card>h2::after{right:1px;color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] aside .card>.card-body{padding:0 0 13px}
+body[data-ui-version="field-notebook"] aside .card.collapsed>.card-body{display:none}
+body[data-ui-version="field-notebook"] aside button,
+body[data-ui-version="field-notebook"] aside select,
+body[data-ui-version="field-notebook"] aside input[type="text"],
+body[data-ui-version="field-notebook"] aside input[type="number"]{
+  min-height:34px;padding:7px 8px;border:1px solid var(--ui-line);background:transparent;color:var(--ui-ink)
+}
+body[data-ui-version="field-notebook"] aside button:hover,
+body[data-ui-version="field-notebook"] aside button:focus-visible,
+body[data-ui-version="field-notebook"] aside select:focus-visible,
+body[data-ui-version="field-notebook"] aside input:focus-visible{border-color:var(--ui-ink);outline:1px solid var(--ui-ink);outline-offset:1px}
+body[data-ui-version="field-notebook"] aside button.active{background:var(--ui-ink);border-color:var(--ui-ink);color:var(--ui-paper)}
+body[data-ui-version="field-notebook"] aside .action-danger{color:var(--ui-danger);border-color:#a37979}
+body[data-ui-version="field-notebook"] aside .small,
+body[data-ui-version="field-notebook"] aside .field-label,
+body[data-ui-version="field-notebook"] aside .source-note,
+body[data-ui-version="field-notebook"] aside .snapshot-note{color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] aside .snapshot-summary,
+body[data-ui-version="field-notebook"] aside .technical-details,
+body[data-ui-version="field-notebook"] aside .interface-subsection{border:1px solid var(--ui-line);background:transparent}
+body[data-ui-version="field-notebook"] aside .interface-subsection{margin-top:9px}
+body[data-ui-version="field-notebook"] aside .interface-subsection>summary,
+body[data-ui-version="field-notebook"] aside .technical-details>summary{padding:8px;color:var(--ui-ink);font-size:11px;font-weight:700;cursor:pointer}
+body[data-ui-version="field-notebook"] aside .interface-subsection-body,
+body[data-ui-version="field-notebook"] aside .technical-details>div{padding:0 8px 9px;color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] aside .warning{margin-top:12px;padding:9px;border:1px solid var(--ui-line);background:transparent;color:#5e4d25}
+body[data-ui-version="field-notebook"] aside .progress{background:var(--ui-paper-2);border:1px solid var(--ui-line)}
+body[data-ui-version="field-notebook"] aside .progress>span{background:var(--ui-accent)}
+
+body[data-ui-version="field-notebook"] .statusbar{gap:0;border:1px solid #6d716b;background:#e4e2d9;color:#1a1d19;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body[data-ui-version="field-notebook"] .statusbar>*{margin:0;border:0;border-right:1px solid #9b9d96;background:transparent;color:#1a1d19}
+body[data-ui-version="field-notebook"] .statusbar>*:last-child{border-right:0}
+body[data-ui-version="field-notebook"] .statusbar .toolbar-button{padding:7px 9px;font-weight:650}
+body[data-ui-version="field-notebook"] .statusbar .badge{padding:7px 9px}
+body[data-ui-version="field-notebook"] .statusbar .badge.secondary{display:none}
+body[data-ui-version="field-notebook"] .statusbar strong{color:#235b45}
+body[data-ui-version="field-notebook"] .terminal-wrap{border:1px solid #4d554f;background:var(--map-core)}
+body[data-ui-version="field-notebook"] .map-actions button{border:1px solid #667168!important;background:#0b1510!important;color:#e6e7df!important}
+body[data-ui-version="field-notebook"] #readout,
+body[data-ui-version="field-notebook"] .hover-tip,
+body[data-ui-version="field-notebook"] .selection-assist{border:1px solid #606861;background:#0b1510}
+
+body[data-ui-version="field-notebook"] aside *,
+body[data-ui-version="field-notebook"] .statusbar *,
+body[data-ui-version="field-notebook"] #readout *,
+body[data-ui-version="field-notebook"] .hover-tip *,
+body[data-ui-version="field-notebook"] .selection-assist *,
+body[data-ui-version="field-notebook"] .map-actions button{
+  border-radius:0!important;box-shadow:none!important;text-shadow:none!important;filter:none!important;
+  background-image:none!important;transition:none!important;animation:none!important;backdrop-filter:none!important
+}
+body[data-ui-version="field-notebook"] .card.card-awake{box-shadow:none!important}
+body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:none!important;filter:none!important}
+@media(max-width:520px){
+  body[data-ui-version="field-notebook"] .statusbar .badge{display:none}
+  body[data-ui-version="field-notebook"] .statusbar .toolbar-button{flex:1 1 auto;padding-inline:5px;font-size:9px}
+  body[data-ui-version="field-notebook"] .sidebar-section-tab{font-size:9px;letter-spacing:0}
+}
 </style>
 </head>
-<body data-depth-band="surface">
+<body data-depth-band="surface" data-ui-version="field-notebook">
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <div class="app">
 <aside id="sidebar">
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
-      <div class="eyebrow">INSTRUMENT LOCAL · <span id="appVersionLabel">V—</span></div>
-      <h1>ATLAS KARST ASCII</h1>
-      <div class="sub">Exploration · archive · interprétation · savoir local</div>
+      <div class="eyebrow">CARNET TERRITORIAL · <span id="appVersionLabel">V—</span></div>
+      <h1>ATLAS KARST</h1>
+      <div class="sub">Explorer un petit morceau de monde et consigner ce qui affleure.</div>
       <div class="small" id="territorySummary">Territoire actif en cours d’initialisation…</div>
-      <div class="sidebar-tools">
+      <div class="sidebar-tools" hidden aria-hidden="true">
         <button id="collapseCards" type="button">− replier</button>
         <button id="expandCards" type="button">＋ déployer</button>
       </div>
@@ -1421,7 +1521,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     La surface locale est immédiatement disponible au zoom Site. Quelques balises orange purement synthétiques servent à tester l’avatar et le brouillard de connaissance. Elles ne décrivent aucun lieu réel. Les forages BSS ne sont pas requis pour cette démonstration.
   </section>
 
-  <section class="card">
+  <section class="card" data-interface-retired="map-scale-duplicate" hidden aria-hidden="true">
     <h2>Échelle géographique</h2>
     <div class="grid4" id="zoomButtons"></div>
     <div class="grid2" style="margin-top:7px">
@@ -1431,7 +1531,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     <div class="small" id="zoomHelp" style="margin-top:8px"></div>
   </section>
 
-  <section class="card">
+  <section class="card" data-interface-retired="map-depth-duplicate" hidden aria-hidden="true">
     <h2>Profondeur</h2>
     <div class="grid2" id="depthButtons"></div>
     <div class="grid2" style="margin-top:7px">
@@ -1476,15 +1576,18 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 
   <section class="card">
     <h2>Navigation géographique</h2>
-    <div class="pan-grid" aria-label="Déplacer la carte">
+    <div class="pan-grid" aria-label="Déplacer la carte" data-interface-retired="map-pan-duplicate" hidden>
       <span></span><button type="button" data-pan-x="0" data-pan-y="1" title="Déplacer vers le nord">↑ N</button><span></span>
       <button type="button" data-pan-x="-1" data-pan-y="0" title="Déplacer vers l’ouest">← O</button><button type="button" class="pan-home" id="homeBtn" title="Revenir à la maison">⌂</button><button type="button" data-pan-x="1" data-pan-y="0" title="Déplacer vers l’est">E →</button>
       <span></span><button type="button" data-pan-x="0" data-pan-y="-1" title="Déplacer vers le sud">↓ S</button><span></span>
     </div>
-    <div class="grid2">
-      <button id="recenterSelected">◎ centrer la case</button>
-      <button id="exportBtn">⇩ exporter .txt</button>
-    </div>
+    <details class="technical-details" data-interface-advanced="selection-export">
+      <summary>Options de la sélection</summary>
+      <div class="grid2">
+        <button id="recenterSelected">◎ centrer la case</button>
+        <button id="exportBtn">⇩ exporter .txt</button>
+      </div>
+    </details>
     <div class="grid2" style="margin-top:7px">
       <button id="placeHouse">⌖ maison sur la sélection</button>
       <button id="resetHouse">↶ coordonnées connues</button>
@@ -1514,7 +1617,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
     </div>
     <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
     <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
-    <button id="clearSavedSnapshot" type="button" style="width:100%;margin-top:7px">✕ supprimer le territoire actif de la bibliothèque</button>
+    <button id="clearSavedSnapshot" type="button" hidden aria-hidden="true">✕ supprimer le territoire actif de la bibliothèque</button>
     <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
   </section>
 
@@ -1572,16 +1675,13 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
       </div>
       <div class="small" id="cartofrichesSummary">Aucune donnée locale chargée.</div>
     </div>
-    <div class="grid2" style="margin-top:9px">
-      <button id="syncCartofriches">↻ synchroniser l’API</button>
-      <button id="downloadCartofriches">⇩ télécharger le CSV</button>
-    </div>
-    <div class="grid2" style="margin-top:7px">
-      <button id="importCartofriches">＋ importer le CSV</button>
-      <button id="clearCartofriches">✕ vider la couche</button>
-    </div>
+    <button id="syncCartofriches" style="width:100%;margin-top:9px">Actualiser Cartofriches</button>
     <input class="file-input-hidden" id="cartofrichesFile" type="file" accept=".csv,text/csv">
     <label class="switch"><input id="cartofrichesReconverted" type="checkbox"> Inclure aussi les sites déjà reconvertis</label>
+    <details class="technical-details"><summary>Options techniques</summary><div>
+      <div class="grid2"><button id="downloadCartofriches">Télécharger le CSV</button><button id="importCartofriches">Importer un CSV</button></div>
+      <button id="clearCartofriches" style="width:100%;margin-top:7px">Vider cette source</button>
+    </div></details>
     <div class="small" id="cartofrichesHelp" style="margin-top:8px">
       Le fichier de juin 2026 contient des coordonnées dont l’ordre peut différer selon le champ. L’importeur teste désormais les deux orientations, privilégie une position cohérente avec la France et le code INSEE, puis signale chaque inversion corrigée.
     </div>
@@ -1607,7 +1707,7 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
       <button id="syncCultureHeritage">↻ ministère de la Culture</button>
       <button id="syncWikipediaHeritage">↻ curiosités Wikipédia</button>
     </div>
-    <button id="clearHeritage" style="width:100%;margin-top:7px">✕ vider la couche synchronisée</button>
+    <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div><button id="clearHeritage" style="width:100%">Vider cette source</button></div></details>
     <div class="small" id="heritageHelp" style="margin-top:8px">
       Les sources officielles apportent les protections et labels culturels. Chaque catalogue du ministère utilise désormais son propre adaptateur API v2.1 ; Wikipédia complète avec des lieux possédant une page géolocalisée et fournit souvent un court récit. Les résultats sont mémorisés localement et intégrés aux exports autonomes.
     </div>
@@ -1648,15 +1748,12 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
       </div>
       <div class="small" id="bssSummary">Couche facultative, actuellement vide.</div>
     </div>
-    <div class="grid2" style="margin-top:9px">
-      <button id="syncPiezo">≈ charger Hub’Eau</button>
-      <button id="openBssDownload">⇩ CSV BSS départemental</button>
-    </div>
-    <div class="grid2" style="margin-top:7px">
-      <button id="importBss">＋ importer le CSV</button>
-      <button id="clearBss">✕ vider la couche</button>
-    </div>
+    <button id="syncPiezo" style="width:100%;margin-top:9px">Actualiser Hub’Eau</button>
     <input class="file-input-hidden" id="bssFile" type="file" accept=".csv,text/csv">
+    <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div>
+      <div class="grid2"><button id="openBssDownload">CSV départemental</button><button id="importBss">Importer un CSV</button></div>
+      <button id="clearBss" style="width:100%;margin-top:7px">Vider cette source</button>
+    </div></details>
     <div class="small" id="bssHelp" style="margin-top:8px">
       Le profil historique embarque 736 ouvrages issus du CSV BSS de la Charente. Hub’Eau peut enrichir certains points avec leur statut piézométrique ; l’import CSV reste disponible pour une future mise à jour.
     </div>
@@ -1675,17 +1772,13 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>
-    <div class="grid2" style="margin-top:8px">
-      <button id="syncOsm" type="button">↻ synchroniser OSM</button>
-      <button id="testOsm" type="button">⌁ tester les serveurs</button>
-    </div>
-    <div class="grid2" style="margin-top:7px">
-      <button id="openOsmQuery" type="button">↗ requête Overpass</button>
-      <button id="importOsmJson" type="button">＋ importer JSON OSM</button>
-    </div>
     <input class="file-input-hidden" id="osmFile" type="file" accept=".json,application/json">
     <div class="small" id="osmHelp" style="margin-top:8px">OSM est chargé par petites fenêtres autour de la vue. Pendant l’attente, un chrono et l’étape active sont affichés ; le même bouton permet d’annuler sans perdre les données déjà reçues.</div>
-    <button id="retryData" style="width:100%;margin-top:8px">↻ recharger toutes les données</button>
+    <button id="retryData" style="width:100%;margin-top:8px">Actualiser le territoire</button>
+    <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div>
+      <div class="grid2"><button id="syncOsm" type="button">Synchroniser OSM</button><button id="testOsm" type="button">Tester les serveurs</button></div>
+      <div class="grid2" style="margin-top:7px"><button id="openOsmQuery" type="button">Ouvrir Overpass</button><button id="importOsmJson" type="button">Importer JSON OSM</button></div>
+    </div></details>
     <div class="source-note" id="sourceNote" style="margin-top:8px">Les services en ligne sont facultatifs. Une copie ouverte en HTTPS peut synchroniser directement les sources ; une page locale <code>file://</code> peut être limitée par les politiques CORS de certains serveurs.</div>
   </section>
 
@@ -1774,11 +1867,14 @@ body.motion-disabled .dq-dialogue::after{animation:none!important}
 
 <main>
   <div class="statusbar map-bound">
-    <button id="sidebarToggle" class="toolbar-button sidebar-toggle" type="button" title="Afficher ou masquer le panneau">☰ panneau</button>
-    <button id="infoToggle" class="toolbar-button info-toggle" type="button" title="Afficher ou masquer les informations">ⓘ infos</button>
+    <button id="sidebarToggle" class="toolbar-button sidebar-toggle" type="button" title="Afficher ou masquer le panneau">Menu</button>
+    <button id="mapCarnets" class="toolbar-button" type="button">Carnets</button>
+    <button id="mapDisplay" class="toolbar-button" type="button">Affichage</button>
+    <button id="mapNotes" class="toolbar-button" type="button">Noter</button>
+    <button id="infoToggle" class="toolbar-button info-toggle" type="button" title="Afficher ou masquer la fiche">Fiche</button>
     <button id="audioToggle" class="toolbar-button audio-toggle" type="button" aria-pressed="true" title="Activer ou couper les petits effets sonores">♪ sons</button>
     <button id="debugToggle" class="toolbar-button" type="button" aria-pressed="false" title="Afficher ou masquer le diagnostic">⚙ diagnostic</button>
-    <div class="badge">position <strong id="locationBadge">non localisée</strong></div>
+    <div class="badge secondary">position <strong id="locationBadge">non localisée</strong></div>
     <div class="badge">échelle <strong id="zoomLabel">commune</strong></div>
     <div class="badge">niveau <strong id="depthLabel">surface</strong></div>
     <div class="badge secondary">cellule <strong id="cellSizeLabel">≈ 50 m</strong></div>
@@ -1873,7 +1969,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18d";
+const APP_VERSION = "0.18e";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2027,6 +2123,7 @@ function debugRecordError(kind,error){
 function revealDebugPanel(){
   if(!els?.debugPanel)return;
   if(typeof setSidebarOpen==="function")setSidebarOpen(true);
+  if(typeof activateSidebarSection==="function")activateSidebarSection("sources");
   const cluster=els.debugPanel.closest(".sidebar-cluster");
   if(cluster&&typeof setCollapsibleState==="function")setCollapsibleState(cluster,false,".sidebar-cluster-head");
   if(typeof setCollapsibleState==="function")setCollapsibleState(els.debugPanel,false,"h2");
@@ -2103,6 +2200,8 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Contrôleur de navigation",inputRuntime.bound,`${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · dernier : ${inputRuntime.lastGesture}`));
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
+  const sidebarSections=[...document.querySelectorAll(".sidebar-section-tab")],visibleSidebarSections=[...document.querySelectorAll("#sidebar > .sidebar-cluster")].filter(section=>!section.hidden);
+  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.mergedCards>=3,`${sidebarSections.length} sections · ${uiShellRuntime.mergedCards} regroupements · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
@@ -2156,6 +2255,7 @@ function createDebugReport(){
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
+    `Architecture du carnet : section ${uiShellRuntime.activeSection} · ${uiShellRuntime.sectionSwitches} changements · ${uiShellRuntime.mergedCards} regroupements`,
     `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
     `Carnets : schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.exports}/${carnetRuntime.imports} exports/imports · ${debugFormatBytes(carnetRuntime.lastBytes)} · intégrité ${carnetRuntime.lastAlgorithm} · ${carnetRuntime.migrations} anciennes sauvegardes reconnues`,
     `Phases CPU : ${debugRenderPhasesText()}`,
@@ -2498,7 +2598,7 @@ const state = {
 };
 
 els = Object.fromEntries([
-  "appVersionLabel","territorySummary","territoryLibrarySelect","territoryLoad","territorySave","territoryRenameName","territoryRename","territoryDuplicate","territoryDelete","territoryLibraryStatus","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
+  "appVersionLabel","territorySummary","territoryLibrarySelect","territoryLoad","territorySave","territoryRenameName","territoryRename","territoryDuplicate","territoryDelete","territoryLibraryStatus","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","mapCarnets","mapDisplay","mapNotes","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
@@ -9381,7 +9481,7 @@ function scheduleHover(target,ev){
   hoverDwellTimer=setTimeout(revealHoverCandidate,HOVER_DWELL_MS);
 }
 
-const uiShellRuntime={ready:true,bound:false,fitRequests:0,fitRuns:0,fitCoalesced:0,gridChanges:0,sidebarChanges:0,infoChanges:0,lastGridProfile:"—"};
+const uiShellRuntime={ready:true,bound:false,fitRequests:0,fitRuns:0,fitCoalesced:0,gridChanges:0,sidebarChanges:0,infoChanges:0,sectionSwitches:0,mergedCards:0,activeSection:"explorer",lastGridProfile:"—"};
 let uiShellMain=null,uiShellResizeObserver=null,frameFitTimer=0,frameFitRaf=0,depthTransitionTimer=0;
 
 function playDepthTransition(direction){
@@ -9493,31 +9593,80 @@ function documentarySignalHtml(cell){
   return `<div class="documentary-signal" style="--signal-color:${signal.color}"><span>assise documentaire</span><span class="documentary-signal-track" aria-label="${signal.level} niveaux sur 5">${bars}</span><strong>${esc(signal.label)}</strong></div>`;
 }
 
+function preparedSidebarCard(title){
+  return [...els.sidebar.querySelectorAll(":scope > .card")].find(card=>(card.querySelector(":scope > h2")?.textContent||"").trim()===title)||null;
+}
+function renamePreparedSidebarCard(from,to){
+  const card=preparedSidebarCard(from),heading=card?.querySelector(":scope > h2");if(heading)heading.textContent=to;return card;
+}
+function mergePreparedSidebarCards(primaryTitle,secondaryItems,newTitle){
+  const primary=preparedSidebarCard(primaryTitle),body=primary?.querySelector(":scope > .card-body");if(!primary||!body)return null;
+  const heading=primary.querySelector(":scope > h2");if(heading)heading.textContent=newTitle;
+  for(const item of secondaryItems){
+    const secondary=preparedSidebarCard(item.title),secondaryBody=secondary?.querySelector(":scope > .card-body");if(!secondary||!secondaryBody)continue;
+    const details=document.createElement("details");details.className="interface-subsection";details.open=!!item.open;
+    const summary=document.createElement("summary");summary.textContent=item.label;details.appendChild(summary);
+    const content=document.createElement("div");content.className="interface-subsection-body";
+    while(secondaryBody.firstChild)content.appendChild(secondaryBody.firstChild);
+    details.appendChild(content);body.appendChild(details);secondary.remove();uiShellRuntime.mergedCards=(uiShellRuntime.mergedCards||0)+1;
+  }
+  return primary;
+}
+function sidebarSectionStorageKey(){return "atlas-karst-ui-section-v1"}
+function activateSidebarSection(section,{focus=false}={}){
+  if(!els.sidebar?.dataset.clustered)return false;
+  const target=String(section||"explorer"),clusters=[...els.sidebar.querySelectorAll(":scope > .sidebar-cluster")],buttons=[...els.sidebar.querySelectorAll(".sidebar-section-tab")];
+  if(!clusters.some(cluster=>cluster.dataset.section===target))return false;
+  for(const cluster of clusters)cluster.hidden=cluster.dataset.section!==target;
+  for(const button of buttons){const selected=button.dataset.sectionTarget===target;button.setAttribute("aria-selected",String(selected));button.tabIndex=selected?0:-1;if(selected&&focus)button.focus()}
+  els.sidebar.dataset.activeSection=target;uiShellRuntime.activeSection=target;uiShellRuntime.sectionSwitches=(uiShellRuntime.sectionSwitches||0)+1;
+  try{localStorage.setItem(sidebarSectionStorageKey(),target)}catch{}
+  scheduleFrameFit();return true;
+}
+function openSidebarPanel(section,title=""){
+  setSidebarOpen(true);activateSidebarSection(section);
+  const cluster=els.sidebar.querySelector(`.sidebar-cluster[data-section="${section}"]`),card=[...cluster?.querySelectorAll(".card")||[]].find(item=>(item.querySelector(":scope > h2")?.textContent||"").trim()===title);
+  if(card){setCollapsibleState(card,false,"h2");requestAnimationFrame(()=>card.scrollIntoView({block:"start",behavior:"auto"}))}
+}
+
 function buildSidebarClusters(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
+  mergePreparedSidebarCards("Territoires",[{title:"Mémoire de l’Atlas",label:"Importer et exporter",open:false}],"Carnets");
+  mergePreparedSidebarCards("Ma position",[{title:"Autour de moi",label:"À proximité",open:true},{title:"Aller à une cavité",label:"Rechercher une cavité",open:false}],"Se situer");
+  mergePreparedSidebarCards("Observations de terrain",[{title:"Repères patrimoine & mystère",label:"Repères, récits et mémoire locale",open:false}],"Notes de terrain");
+  renamePreparedSidebarCard("Couches","Affichage");renamePreparedSidebarCard("Navigation géographique","Point de départ");renamePreparedSidebarCard("Données","État des sources");renamePreparedSidebarCard("Légende lisible","Légende");
   const cards=[...els.sidebar.querySelectorAll(":scope > .card")];
   const byTitle=new Map(cards.map(card=>[(card.querySelector(":scope > h2")?.textContent||"").trim(),card]));
   const groups=[
-    {code:"01",title:"Exploration",meta:"se déplacer · se situer · enquêter",open:true,cards:["Ma position","Territoires","Autour de moi","Rencontres locales","Parcours guidés","Échelle géographique","Profondeur","Navigation géographique","Aller à une cavité"]},
-    {code:"02",title:"Calques & lecture",meta:"composer la carte · lire ses signes",open:true,cards:["Couches","Légende lisible"]},
-    {code:"03",title:"Carnet local",meta:"mémoriser · observer · annoter",open:false,cards:["Mémoire de l’Atlas","Observations de terrain","Repères patrimoine & mystère"]},
-    {code:"04",title:"Sources & synchronisation",meta:"charger · vérifier · archiver",open:false,cards:["Données","Patrimoine & curiosités synchronisés","Cartofriches · Cerema","Forages BSS & piézomètres","Diagnostic"]}
+    {code:"01",section:"carnets",title:"Carnets",meta:"ouvrir · créer · partager",cards:["Carnets"]},
+    {code:"02",section:"explorer",title:"Explorer",meta:"se situer · lire · cadrer",cards:["Se situer","Affichage","Point de départ","Légende"]},
+    {code:"03",section:"noter",title:"Noter",meta:"observer · décrire · mémoriser",cards:["Notes de terrain"]},
+    {code:"04",section:"sources",title:"Sources",meta:"actualiser · vérifier · attribuer",cards:["État des sources","Patrimoine & curiosités synchronisés","Cartofriches · Cerema","Forages BSS & piézomètres","Diagnostic"]}
   ];
+  const navigation=document.createElement("nav");navigation.className="sidebar-section-tabs";navigation.setAttribute("role","tablist");navigation.setAttribute("aria-label","Sections du carnet");
   const fragment=document.createDocumentFragment();
   for(const group of groups){
+    const tab=document.createElement("button");tab.type="button";tab.id=`sidebar-tab-${group.section}`;tab.className="sidebar-section-tab";tab.dataset.sectionTarget=group.section;tab.setAttribute("role","tab");tab.setAttribute("aria-controls",`sidebar-section-${group.section}`);tab.textContent=group.title;
+    tab.addEventListener("click",()=>activateSidebarSection(group.section));
+    tab.addEventListener("keydown",event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const tabs=[...navigation.querySelectorAll("button")],index=tabs.indexOf(tab),next=event.key==="Home"?0:event.key==="End"?tabs.length-1:(index+(event.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;activateSidebarSection(tabs[next].dataset.sectionTarget,{focus:true})});
+    navigation.appendChild(tab);
     const cluster=document.createElement("section");
-    cluster.className=`sidebar-cluster collapsible${group.open?"":" collapsed"}`;cluster.dataset.group=group.title.toLowerCase();
-    cluster.innerHTML=`<div class="sidebar-cluster-head" role="button" tabindex="0" aria-expanded="${group.open?"true":"false"}"><div style="min-width:0;flex:1"><h2><span class="cluster-code">[${group.code}]</span>${group.title}<span class="cluster-status" data-cluster-status="${group.code}">veille</span></h2><div class="cluster-meta">${group.meta}</div></div></div><div class="sidebar-cluster-body"></div>`;
+    cluster.id=`sidebar-section-${group.section}`;cluster.className="sidebar-cluster";cluster.dataset.group=group.title.toLowerCase();cluster.dataset.section=group.section;cluster.setAttribute("role","tabpanel");cluster.setAttribute("aria-labelledby",tab.id);
+    cluster.innerHTML=`<div class="sidebar-cluster-head"><h2>${group.title}<span class="cluster-status" data-cluster-status="${group.code}">veille</span></h2><div class="cluster-meta">${group.meta}</div></div><div class="sidebar-cluster-body"></div>`;
     const body=cluster.querySelector(".sidebar-cluster-body");
     for(const title of group.cards){const card=byTitle.get(title);if(card)body.appendChild(card)}
-    const head=cluster.querySelector(".sidebar-cluster-head");
-    const toggle=()=>{const next=!cluster.classList.contains("collapsed");setCollapsibleState(cluster,next,".sidebar-cluster-head");retroAudio.play(next?"panelClose":"panelOpen");scheduleFrameFit()};
-    head.addEventListener("click",toggle);head.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggle()}});
+    if(group.section==="sources"){
+      const utilities=document.createElement("section");utilities.className="card interface-utilities";utilities.innerHTML='<h2>Réglages</h2><div class="card-body"><div class="grid2 interface-utility-actions"></div></div>';
+      const actions=utilities.querySelector(".interface-utility-actions");if(els.audioToggle)actions.appendChild(els.audioToggle);if(els.debugToggle)actions.appendChild(els.debugToggle);body.appendChild(utilities);
+    }
     fragment.appendChild(cluster);
   }
+  els.sidebar.insertBefore(navigation,els.sidebar.querySelector(":scope > .card"));
   const notice=els.sidebar.querySelector("#offlineNotice");if(notice)fragment.appendChild(notice);
-  const warning=els.sidebar.querySelector(".warning");if(warning)fragment.appendChild(warning);
+  const warning=els.sidebar.querySelector(".warning"),sourcesBody=fragment.querySelector('.sidebar-cluster[data-section="sources"] .sidebar-cluster-body');if(warning&&sourcesBody)sourcesBody.appendChild(warning);
   els.sidebar.appendChild(fragment);els.sidebar.dataset.clustered="1";
+  let initial="explorer";try{initial=localStorage.getItem(sidebarSectionStorageKey())||initial}catch{}
+  activateSidebarSection(initial);
   classifyAtlasControls();updateSidebarClusterStatus();
 }
 
@@ -9527,7 +9676,7 @@ function prepareSidebarCards(){
     "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
     "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
   };
-  const openByDefault=new Set(["Ma position","Territoires","Autour de moi","Échelle géographique","Profondeur","Couches","Données"]);
+  const openByDefault=new Set(["Ma position","Territoires","Couches","Données","Observations de terrain"]);
   for(const card of els.sidebar.querySelectorAll(":scope > .card")){
     if(card.classList.contains("warning")||card.id==="offlineNotice"||card.classList.contains("collapsible"))continue;
     const heading=card.querySelector(":scope > h2");if(!heading)continue;
@@ -9648,7 +9797,7 @@ function scheduleFrameFit(){
 
 function setInfoVisible(visible){
   const before=!document.body.classList.contains("info-collapsed");
-  document.body.classList.toggle("info-collapsed",!visible);els.infoToggle.textContent=visible?"ⓘ replier":"ⓘ infos";
+  document.body.classList.toggle("info-collapsed",!visible);els.infoToggle.textContent=visible?"Masquer la fiche":"Fiche";
   if(before!==visible)uiShellRuntime.infoChanges++;
   if(visible&&mobileReadoutMode()&&!els.readout.dataset.sheetState)setReadoutSheetState("peek");
   setTimeout(scheduleFrameFit,30);
@@ -9687,6 +9836,9 @@ function bindUiShell(){
   els.collapseCards.addEventListener("click",()=>setAllSidebarCards(true));
   els.expandCards.addEventListener("click",()=>setAllSidebarCards(false));
   els.infoToggle.addEventListener("click",()=>setInfoVisible(document.body.classList.contains("info-collapsed")));
+  els.mapCarnets?.addEventListener("click",()=>openSidebarPanel("carnets","Carnets"));
+  els.mapDisplay?.addEventListener("click",()=>openSidebarPanel("explorer","Affichage"));
+  els.mapNotes?.addEventListener("click",()=>openSidebarPanel("noter","Notes de terrain"));
   window.addEventListener("resize",()=>{if(!mobileSidebarMode())document.body.classList.remove("sidebar-open");scheduleFrameFit()});
   if(typeof ResizeObserver!=="undefined"&&uiShellMain){uiShellResizeObserver=new ResizeObserver(()=>scheduleFrameFit());uiShellResizeObserver.observe(uiShellMain)}
 }

@@ -274,6 +274,16 @@ check("coque d’interface isolée", () =>
   !sourceByName["main.js"].includes("function fitMapFrame") &&
   !sourceByName["main.js"].includes("function prepareSidebarCards")
 );
+check("architecture carnet minimaliste", () =>
+  html.includes('data-ui-version="field-notebook"') &&
+  sourceByName["ui-shell.js"].includes("function mergePreparedSidebarCards") &&
+  sourceByName["ui-shell.js"].includes("function activateSidebarSection") &&
+  ["carnets","explorer","noter","sources"].every((section)=>sourceByName["ui-shell.js"].includes(`section:"${section}"`)) &&
+  atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-section-tabs') &&
+  atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-cluster') &&
+  html.includes('data-interface-retired="map-scale-duplicate"') &&
+  html.includes('data-interface-retired="map-depth-duplicate"')
+);
 check("contrat souterrain harmonisé", () =>
   sourceByName["map-engine.js"].includes("function undergroundVisualContract") &&
   sourceByName["map-engine.js"].includes("function renderUndergroundSurfaceGhost") &&
