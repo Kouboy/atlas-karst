@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18e · architecture de l’interface</title>
+<title>Atlas Karst ASCII v0.18f · coque native</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -37,18 +37,56 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <button id="sidebarClose" class="sidebar-close" type="button" title="Fermer le panneau">✕</button>
   </div>
 
-  <section class="card" data-panel-kind="navigation">
-    <h2>Ma position</h2>
+  <nav class="sidebar-section-tabs" role="tablist" aria-label="Sections du carnet">
+    <button id="sidebar-tab-carnets" class="sidebar-section-tab" type="button" role="tab" data-section-target="carnets" aria-controls="sidebar-section-carnets" aria-selected="false" tabindex="-1">Carnets</button>
+    <button id="sidebar-tab-explorer" class="sidebar-section-tab" type="button" role="tab" data-section-target="explorer" aria-controls="sidebar-section-explorer" aria-selected="true">Explorer</button>
+    <button id="sidebar-tab-noter" class="sidebar-section-tab" type="button" role="tab" data-section-target="noter" aria-controls="sidebar-section-noter" aria-selected="false" tabindex="-1">Noter</button>
+    <button id="sidebar-tab-sources" class="sidebar-section-tab" type="button" role="tab" data-section-target="sources" aria-controls="sidebar-section-sources" aria-selected="false" tabindex="-1">Sources</button>
+  </nav>
+
+  <section id="sidebar-section-carnets" class="sidebar-cluster" data-section="carnets" role="tabpanel" aria-labelledby="sidebar-tab-carnets" hidden>
+    <div class="sidebar-cluster-head"><h2>Carnets</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+  <section id="sidebar-section-explorer" class="sidebar-cluster" data-section="explorer" role="tabpanel" aria-labelledby="sidebar-tab-explorer">
+    <div class="sidebar-cluster-head"><h2>Explorer</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+  <section id="sidebar-section-noter" class="sidebar-cluster" data-section="noter" role="tabpanel" aria-labelledby="sidebar-tab-noter" hidden>
+    <div class="sidebar-cluster-head"><h2>Noter</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+  <section id="sidebar-section-sources" class="sidebar-cluster" data-section="sources" role="tabpanel" aria-labelledby="sidebar-tab-sources" hidden>
+    <div class="sidebar-cluster-head"><h2>Sources</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+
+  <div id="sidebarCardPool" hidden aria-hidden="true">
+
+  <section class="card" data-panel-kind="navigation" data-ui-card="location">
+    <h2>Se situer</h2>
     <div class="grid2">
       <button id="locateMe" type="button">⌖ me localiser</button>
       <button id="clearLocation" type="button" disabled>× masquer</button>
     </div>
     <label class="switch"><input id="centerOnLocation" type="checkbox" checked> Recentrer la carte sur ma position</label>
     <div class="small" id="locationHelp">La position n’est demandée qu’au clic et n’est pas suivie en continu. Sur mobile, un fichier ouvert en <code>file://</code> peut être bloqué sans même afficher de demande ; une copie servie en HTTPS est alors nécessaire.</div>
+    <details class="interface-subsection" data-ui-subsection="nearby" open><summary>À proximité</summary><div class="interface-subsection-body">
+      <div class="around-controls">
+        <label class="field-label">Rayon
+          <select id="aroundRadius">
+            <option value="100">100 m</option><option value="250">250 m</option><option value="500" selected>500 m</option><option value="1000">1 km</option><option value="2000">2 km</option>
+          </select>
+        </label>
+        <button id="refreshAround" type="button">⌖ actualiser</button>
+      </div>
+      <div class="around-results"><div class="around-summary" id="aroundSummary">Localise-toi pour dresser l’inventaire des lieux proches.</div><div class="around-list" id="aroundList"></div></div>
+      <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
+    </div></details>
+    <details class="interface-subsection" data-ui-subsection="cavity-search"><summary>Rechercher une cavité</summary><div class="interface-subsection-body">
+      <select id="cavitySelect"><option value="">Chargement des coordonnées…</option></select>
+      <div class="small" id="cavityHelp" style="margin-top:7px">La recherche couvre désormais toute l’emprise navigable, y compris les communes voisines. Une position connue ne constitue pas un plan de galeries.</div>
+    </div></details>
   </section>
 
-  <section class="card" data-panel-kind="navigation">
-    <h2>Territoires</h2>
+  <section class="card" data-panel-kind="navigation" data-ui-card="carnets">
+    <h2>Carnets</h2>
     <label class="field-label">Territoires enregistrés
       <select id="territoryLibrarySelect"><option value="">Préparation de la bibliothèque…</option></select>
     </label>
@@ -83,27 +121,14 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <button id="territoryCreate" type="button">＋ créer 16 × 16 km</button>
     </div>
     <div class="small" id="territorySetupStatus" style="margin-top:8px">Les données locales sont séparées par territoire. La création interroge les services cartographiques autour du point choisi ; certaines sources restent limitées à la France.</div>
-  </section>
-
-  <section class="card" data-panel-kind="navigation">
-    <h2>Autour de moi</h2>
-    <div class="around-controls">
-      <label class="field-label">Rayon
-        <select id="aroundRadius">
-          <option value="100">100 m</option>
-          <option value="250">250 m</option>
-          <option value="500" selected>500 m</option>
-          <option value="1000">1 km</option>
-          <option value="2000">2 km</option>
-        </select>
-      </label>
-      <button id="refreshAround" type="button">⌖ actualiser</button>
-    </div>
-    <div class="around-results">
-      <div class="around-summary" id="aroundSummary">Localise-toi pour dresser l’inventaire des lieux proches.</div>
-      <div class="around-list" id="aroundList"></div>
-    </div>
-    <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
+    <details class="interface-subsection" data-ui-subsection="memory"><summary>Importer et exporter</summary><div class="interface-subsection-body">
+      <div class="snapshot-summary" id="snapshotStatus"><span>Préparation de l’inventaire embarqué…</span></div>
+      <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button><button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button></div>
+      <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
+      <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
+      <button id="clearSavedSnapshot" type="button" hidden aria-hidden="true">✕ supprimer le territoire actif de la bibliothèque</button>
+      <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
+    </div></details>
   </section>
 
   <!-- Prototype conservé hors de l’interface active jusqu’à la stabilisation du nouveau modèle territorial. -->
@@ -149,7 +174,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     La surface locale est immédiatement disponible au zoom Site. Quelques balises orange purement synthétiques servent à tester l’avatar et le brouillard de connaissance. Elles ne décrivent aucun lieu réel. Les forages BSS ne sont pas requis pour cette démonstration.
   </section>
 
-  <section class="card" data-interface-retired="map-scale-duplicate" hidden aria-hidden="true">
+  <section class="card" data-ui-card="retired-scale" data-interface-retired="map-scale-duplicate" hidden aria-hidden="true">
     <h2>Échelle géographique</h2>
     <div class="grid4" id="zoomButtons"></div>
     <div class="grid2" style="margin-top:7px">
@@ -159,7 +184,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" id="zoomHelp" style="margin-top:8px"></div>
   </section>
 
-  <section class="card" data-interface-retired="map-depth-duplicate" hidden aria-hidden="true">
+  <section class="card" data-ui-card="retired-depth" data-interface-retired="map-depth-duplicate" hidden aria-hidden="true">
     <h2>Profondeur</h2>
     <div class="grid2" id="depthButtons"></div>
     <div class="grid2" style="margin-top:7px">
@@ -171,8 +196,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
-  <section class="card">
-    <h2>Couches</h2>
+  <section class="card" data-ui-card="display">
+    <h2>Affichage</h2>
     <div class="render-mode-panel" role="group" aria-label="Style de rendu de la carte">
       <button id="renderModeSymbolic" type="button" aria-pressed="true">▰ symbolique</button>
       <button id="renderModeAscii" type="button" aria-pressed="false">⌁ ASCII</button>
@@ -202,8 +227,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </label>
   </section>
 
-  <section class="card">
-    <h2>Navigation géographique</h2>
+  <section class="card" data-ui-card="starting-point">
+    <h2>Point de départ</h2>
     <div class="pan-grid" aria-label="Déplacer la carte" data-interface-retired="map-pan-duplicate" hidden>
       <span></span><button type="button" data-pan-x="0" data-pan-y="1" title="Déplacer vers le nord">↑ N</button><span></span>
       <button type="button" data-pan-x="-1" data-pan-y="0" title="Déplacer vers l’ouest">← O</button><button type="button" class="pan-home" id="homeBtn" title="Revenir à la maison">⌂</button><button type="button" data-pan-x="1" data-pan-y="0" title="Déplacer vers l’est">E →</button>
@@ -234,29 +259,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" style="margin-top:8px"><strong>Navigation :</strong> immobiliser brièvement le pointeur sur un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
   </section>
 
-  <section class="card">
-    <h2>Mémoire de l’Atlas</h2>
-    <div class="snapshot-summary" id="snapshotStatus">
-      <span>Préparation de l’inventaire embarqué…</span>
-    </div>
-    <div class="grid2" style="margin-top:7px">
-      <button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button>
-      <button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button>
-    </div>
-    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
-    <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
-    <button id="clearSavedSnapshot" type="button" hidden aria-hidden="true">✕ supprimer le territoire actif de la bibliothèque</button>
-    <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
-  </section>
-
-  <section class="card">
-    <h2>Aller à une cavité</h2>
-    <select id="cavitySelect"><option value="">Chargement des coordonnées…</option></select>
-    <div class="small" id="cavityHelp" style="margin-top:7px">La recherche couvre désormais toute l’emprise navigable, y compris les communes voisines. Une position connue ne constitue pas un plan de galeries.</div>
-  </section>
-
-  <section class="card">
-    <h2>Observations de terrain</h2>
+  <section class="card" data-ui-card="field-notes">
+    <h2>Notes de terrain</h2>
     <div class="grid2">
       <label class="field-label">Forme
         <select id="observationMode">
@@ -292,9 +296,24 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <button id="removeLocalMarker">✕ supprimer l’observation</button>
     </div>
     <div class="small" id="localHelp" style="margin-top:8px">Sélectionne une case. Une visée dessine une direction depuis la maison ; une zone exprime une localisation imprécise sans inventer un point exact.</div>
+    <details class="interface-subsection" data-ui-subsection="lore"><summary>Repères, récits et mémoire locale</summary><div class="interface-subsection-body">
+      <div class="grid2">
+        <label class="field-label">Catégorie
+          <select id="loreCategory">
+            <option value="historic">HI bâtiment historique / patrimoine</option><option value="ruin">RU maison en ruine / ruines</option><option value="friche">FR friche industrielle / artisanale</option><option value="abandoned">AB urbanisme abandonné / infrastructure oubliée</option><option value="anecdote">AN anecdote locale / récit</option><option value="mystery">MY lieu mystérieux / ambiance étrange</option><option value="view">VP curiosité paysagère / point de vue</option>
+          </select>
+        </label>
+        <label class="field-label">Période / époque<input id="lorePeriod" type="text" placeholder="XIXe s., années 1950…"></label>
+      </div>
+      <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
+      <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
+      <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
+      <div class="grid2" style="margin-top:7px"><button id="addLoreItem">＋ enregistrer le repère</button><button id="removeLoreItem">✕ supprimer le repère</button></div>
+      <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
+    </div></details>
   </section>
 
-  <section class="card">
+  <section class="card" data-ui-card="cartofriches">
     <h2>Cartofriches · Cerema</h2>
     <div class="grid2">
       <div>
@@ -315,7 +334,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" data-ui-card="heritage">
     <h2>Patrimoine &amp; curiosités synchronisés</h2>
     <div class="grid2">
       <div>
@@ -341,33 +360,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
-  <section class="card">
-    <h2>Repères patrimoine &amp; mystère</h2>
-    <div class="grid2">
-      <label class="field-label">Catégorie
-        <select id="loreCategory">
-          <option value="historic">HI bâtiment historique / patrimoine</option>
-          <option value="ruin">RU maison en ruine / ruines</option>
-          <option value="friche">FR friche industrielle / artisanale</option>
-          <option value="abandoned">AB urbanisme abandonné / infrastructure oubliée</option>
-          <option value="anecdote">AN anecdote locale / récit</option>
-          <option value="mystery">MY lieu mystérieux / ambiance étrange</option>
-          <option value="view">VP curiosité paysagère / point de vue</option>
-        </select>
-      </label>
-      <label class="field-label">Période / époque<input id="lorePeriod" type="text" placeholder="XIXe s., années 1950…"></label>
-    </div>
-    <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
-    <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
-    <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
-    <div class="grid2" style="margin-top:7px">
-      <button id="addLoreItem">＋ enregistrer le repère</button>
-      <button id="removeLoreItem">✕ supprimer le repère</button>
-    </div>
-    <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
-  </section>
-
-  <section class="card">
+  <section class="card" data-ui-card="bss">
     <h2>Forages BSS &amp; piézomètres</h2>
     <div class="grid2">
       <div>
@@ -387,8 +380,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
-  <section class="card">
-    <h2>Données</h2>
+  <section class="card" data-ui-card="source-status">
+    <h2>État des sources</h2>
     <div class="data-status">
       <div class="status-line"><span>Surface cartographique</span><strong id="osmStatus" class="pending">chargement</strong></div>
       <div class="status-line"><span>Adresse officielle</span><strong id="addressStatus" class="pending">chargement</strong></div>
@@ -410,7 +403,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="source-note" id="sourceNote" style="margin-top:8px">Les services en ligne sont facultatifs. Une copie ouverte en HTTPS peut synchroniser directement les sources ; une page locale <code>file://</code> peut être limitée par les politiques CORS de certains serveurs.</div>
   </section>
 
-  <section class="card debug-only" id="debugPanel">
+  <section class="card debug-only" id="debugPanel" data-ui-card="diagnostic">
     <h2>Diagnostic</h2>
     <div class="small">Ouvert avec le bouton <strong>⚙ diagnostic</strong>, <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span> lorsque le navigateur laisse passer ce raccourci. Les mesures restent locales.</div>
     <div class="debug-kpis">
@@ -431,8 +424,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div id="debugErrors" class="debug-log" style="display:none"></div>
   </section>
 
-  <section class="card">
-    <h2>Légende lisible</h2>
+  <section class="card" data-ui-card="legend">
+    <h2>Légende</h2>
     <div class="legend-section" style="border-top:0;margin-top:0;padding-top:0">
       <div class="legend-title">Surface</div>
       <div class="legend">
@@ -491,6 +484,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
   </section>
 
   <section class="card warning"><strong>Lecture prudente :</strong> le cadastre améliore le placement du bâti mais ne fournit ni propriétaire ni diagnostic de stabilité. Le relief reste un modèle global densifié, pas encore du LiDAR HD. Les forages BSS sont des points documentaires, pas des preuves de galerie. Les profondeurs souterraines précédées de ≈ sont des tranches de visualisation ; les volumes affichés sont des projections cohérentes entre niveaux, pas des plans levés ni des profondeurs attestées.</section>
+  </div>
 </aside>
 
 <main>

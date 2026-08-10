@@ -46,7 +46,7 @@ async function bootAtlas(){
     if(els.ambientMotion)els.ambientMotion.checked=state.ambientMotion;
     if(els.aroundRadius)els.aroundRadius.value=String(state.aroundRadius);
     prepareSidebarCards();
-    buildSidebarClusters();
+    bindNativeSidebarShell();
     if(mobileSidebarMode()){
       setSidebarOpen(false);
       setInfoVisible(false);

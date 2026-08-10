@@ -45,7 +45,6 @@ function render(reason="direct"){
   els.mapDepthUp.disabled=state.depthIndex===0;els.mapDepthDown.disabled=state.depthIndex===CONFIG.depths.length-1;
   updateSnapshotUI();
   requestAnimationFrame(()=>{alignRenderedCenterToVisibleViewport();syncSelectionDom();updateWorldBoundaryFrame();updateRelationOverlay();updateGuidedTourMarker()});
-  updateSidebarClusterStatus();
   updateAroundMe();
   updateGuidedTourUI();
   scheduleFrameFit();

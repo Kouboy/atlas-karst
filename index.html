@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18e · architecture de l’interface</title>
+<title>Atlas Karst ASCII v0.18f · coque native</title>
 <style>
 :root{
   color-scheme:dark;
@@ -456,15 +456,9 @@ h1{font-size:19px;letter-spacing:.055em;color:#f0f4e8;text-shadow:0 0 10px rgba(
 
 /* Grands tiroirs de la console. */
 .sidebar-cluster{border:1px solid #315141;border-radius:8px;background:#060d09;box-shadow:none}
-.sidebar-cluster::before,.readout::before{
+.readout::before{
   content:"";position:absolute;width:9px;height:9px;border-left:2px solid var(--cluster-accent,var(--accent));border-top:2px solid var(--cluster-accent,var(--accent));pointer-events:none
 }
-.sidebar-cluster{position:relative}
-.sidebar-cluster::before{left:4px;top:4px}
-.sidebar-cluster[data-group="exploration"]{--cluster-accent:#79e2ab}
-.sidebar-cluster[data-group="calques & lecture"]{--cluster-accent:#77a9bc}
-.sidebar-cluster[data-group="carnet local"]{--cluster-accent:#d895b8}
-.sidebar-cluster[data-group="sources & synchronisation"]{--cluster-accent:#e8bd64}
 .sidebar-cluster-head{
   padding:10px 10px 9px 12px;background:
     linear-gradient(90deg,color-mix(in srgb,var(--cluster-accent) 10%,transparent),transparent 72%),
@@ -472,18 +466,6 @@ h1{font-size:19px;letter-spacing:.055em;color:#f0f4e8;text-shadow:0 0 10px rgba(
   border-bottom:1px solid color-mix(in srgb,var(--cluster-accent) 36%,#20362c)
 }
 .sidebar-cluster-head h2{font-size:10px;letter-spacing:.13em;color:#edf4ed}
-.cluster-code{
-  display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:21px;padding:0 5px;
-  border:1px solid color-mix(in srgb,var(--cluster-accent) 72%,#243c31);border-radius:3px;
-  background:#07100c;color:var(--cluster-accent);font-size:9px;letter-spacing:.08em
-}
-.sidebar-cluster-head h2 .cluster-icon{display:none}
-.cluster-status{
-  margin-left:auto;display:inline-flex;align-items:center;min-height:20px;padding:2px 6px;border:1px solid #2b493a;
-  border-radius:999px;background:#07100c;color:#9eb4a7;font-size:8px;letter-spacing:.05em;white-space:nowrap
-}
-.cluster-status.is-live{color:var(--cluster-accent);border-color:color-mix(in srgb,var(--cluster-accent) 48%,#263f34)}
-.sidebar-cluster-head .cluster-meta{margin:4px 0 0 42px;font-size:8px;letter-spacing:.035em;color:#81958a}
 .sidebar-cluster-body{gap:0;padding:4px 9px 8px}
 .sidebar-cluster .card{
   border:0;border-top:1px solid rgba(66,99,82,.34);border-radius:0;background:transparent;box-shadow:none
@@ -562,8 +544,6 @@ label.switch{font-size:11px;color:#c9d8cf}
 
 @media(max-width:940px){
   .readout::after{display:none}
-  .sidebar-cluster-head .cluster-meta{margin-left:42px}
-  .cluster-status{font-size:7px}
 }
 @media(prefers-reduced-motion:reduce){button::after{transition:none}}
 
@@ -583,13 +563,6 @@ label.switch{font-size:11px;color:#c9d8cf}
   border-bottom:1px solid rgba(76,122,97,.45);cursor:pointer;user-select:none
 }
 .sidebar-cluster-head h2{margin:0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#f0f5ee;display:flex;align-items:center;gap:8px}
-.sidebar-cluster-head h2 .cluster-icon{
-  display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;
-  border:1px solid #3b6351;border-radius:999px;background:#0e1b14;color:var(--accent);font-size:12px
-}
-.sidebar-cluster-head .cluster-meta{font-size:10px;color:#8ea79a;letter-spacing:.05em;text-transform:none}
-.sidebar-cluster-head::after{content:"⌄";color:var(--accent);font-size:14px;transition:transform .18s ease}
-.sidebar-cluster.collapsed .sidebar-cluster-head::after{transform:rotate(-90deg)}
 .sidebar-cluster-body{padding:10px;display:grid;gap:10px;max-height:8000px;overflow:hidden;transition:max-height .24s ease,opacity .16s ease,padding .24s ease;opacity:1}
 .sidebar-cluster.collapsed .sidebar-cluster-body{max-height:0;opacity:0;padding-top:0;padding-bottom:0}
 .sidebar-cluster .card{margin:0}
@@ -919,9 +892,6 @@ body.encounter-open{overflow:hidden}
 .sub{font-size:11px;line-height:1.48}
 .sidebar-tools button{font-size:10px}
 .sidebar-cluster-head h2{font-size:11px}
-.cluster-code{font-size:10px}
-.cluster-status{font-size:9px}
-.sidebar-cluster-head .cluster-meta{font-size:9px;line-height:1.4}
 .sidebar-cluster .card.collapsible>h2{font-size:11px}
 .sidebar-cluster .card .small,
 .sidebar-cluster .card .source-note,
@@ -976,7 +946,6 @@ body.encounter-open{overflow:hidden}
 .hover-tip .tip-source::before{content:"SOURCE ";color:#657f71;font-size:8px;letter-spacing:.1em}
 .hover-tip .tip-action{padding:6px 10px;background:#0d1b14;color:var(--tip-accent,var(--accent));font-size:9px;letter-spacing:.09em;text-align:right;text-transform:uppercase}
 @media(max-width:940px){
-  .cluster-status{font-size:8px}
   .hover-tip{font-size:11px}
 }
 
@@ -1323,8 +1292,6 @@ body[data-ui-version="field-notebook"] .sidebar-section-tab[aria-selected="true"
 body[data-ui-version="field-notebook"] .sidebar-cluster{margin:0;padding:0;background:transparent;border:0}
 body[data-ui-version="field-notebook"] .sidebar-cluster-head{padding:16px 0 8px;border-bottom:2px solid var(--ui-line-strong);background:transparent}
 body[data-ui-version="field-notebook"] .sidebar-cluster-head h2{margin:0;color:#eef7f1;font-size:17px;font-weight:900;letter-spacing:-.035em;text-transform:uppercase}
-body[data-ui-version="field-notebook"] .cluster-meta,
-body[data-ui-version="field-notebook"] .cluster-status{display:none}
 body[data-ui-version="field-notebook"] .sidebar-cluster-body{display:grid;gap:0}
 body[data-ui-version="field-notebook"] aside .card{
   margin:0;padding:0;border:0;border-bottom:1px solid var(--ui-line);background:transparent;color:var(--ui-text)
@@ -1415,18 +1382,56 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <button id="sidebarClose" class="sidebar-close" type="button" title="Fermer le panneau">✕</button>
   </div>
 
-  <section class="card" data-panel-kind="navigation">
-    <h2>Ma position</h2>
+  <nav class="sidebar-section-tabs" role="tablist" aria-label="Sections du carnet">
+    <button id="sidebar-tab-carnets" class="sidebar-section-tab" type="button" role="tab" data-section-target="carnets" aria-controls="sidebar-section-carnets" aria-selected="false" tabindex="-1">Carnets</button>
+    <button id="sidebar-tab-explorer" class="sidebar-section-tab" type="button" role="tab" data-section-target="explorer" aria-controls="sidebar-section-explorer" aria-selected="true">Explorer</button>
+    <button id="sidebar-tab-noter" class="sidebar-section-tab" type="button" role="tab" data-section-target="noter" aria-controls="sidebar-section-noter" aria-selected="false" tabindex="-1">Noter</button>
+    <button id="sidebar-tab-sources" class="sidebar-section-tab" type="button" role="tab" data-section-target="sources" aria-controls="sidebar-section-sources" aria-selected="false" tabindex="-1">Sources</button>
+  </nav>
+
+  <section id="sidebar-section-carnets" class="sidebar-cluster" data-section="carnets" role="tabpanel" aria-labelledby="sidebar-tab-carnets" hidden>
+    <div class="sidebar-cluster-head"><h2>Carnets</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+  <section id="sidebar-section-explorer" class="sidebar-cluster" data-section="explorer" role="tabpanel" aria-labelledby="sidebar-tab-explorer">
+    <div class="sidebar-cluster-head"><h2>Explorer</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+  <section id="sidebar-section-noter" class="sidebar-cluster" data-section="noter" role="tabpanel" aria-labelledby="sidebar-tab-noter" hidden>
+    <div class="sidebar-cluster-head"><h2>Noter</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+  <section id="sidebar-section-sources" class="sidebar-cluster" data-section="sources" role="tabpanel" aria-labelledby="sidebar-tab-sources" hidden>
+    <div class="sidebar-cluster-head"><h2>Sources</h2></div><div class="sidebar-cluster-body"></div>
+  </section>
+
+  <div id="sidebarCardPool" hidden aria-hidden="true">
+
+  <section class="card" data-panel-kind="navigation" data-ui-card="location">
+    <h2>Se situer</h2>
     <div class="grid2">
       <button id="locateMe" type="button">⌖ me localiser</button>
       <button id="clearLocation" type="button" disabled>× masquer</button>
     </div>
     <label class="switch"><input id="centerOnLocation" type="checkbox" checked> Recentrer la carte sur ma position</label>
     <div class="small" id="locationHelp">La position n’est demandée qu’au clic et n’est pas suivie en continu. Sur mobile, un fichier ouvert en <code>file://</code> peut être bloqué sans même afficher de demande ; une copie servie en HTTPS est alors nécessaire.</div>
+    <details class="interface-subsection" data-ui-subsection="nearby" open><summary>À proximité</summary><div class="interface-subsection-body">
+      <div class="around-controls">
+        <label class="field-label">Rayon
+          <select id="aroundRadius">
+            <option value="100">100 m</option><option value="250">250 m</option><option value="500" selected>500 m</option><option value="1000">1 km</option><option value="2000">2 km</option>
+          </select>
+        </label>
+        <button id="refreshAround" type="button">⌖ actualiser</button>
+      </div>
+      <div class="around-results"><div class="around-summary" id="aroundSummary">Localise-toi pour dresser l’inventaire des lieux proches.</div><div class="around-list" id="aroundList"></div></div>
+      <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
+    </div></details>
+    <details class="interface-subsection" data-ui-subsection="cavity-search"><summary>Rechercher une cavité</summary><div class="interface-subsection-body">
+      <select id="cavitySelect"><option value="">Chargement des coordonnées…</option></select>
+      <div class="small" id="cavityHelp" style="margin-top:7px">La recherche couvre désormais toute l’emprise navigable, y compris les communes voisines. Une position connue ne constitue pas un plan de galeries.</div>
+    </div></details>
   </section>
 
-  <section class="card" data-panel-kind="navigation">
-    <h2>Territoires</h2>
+  <section class="card" data-panel-kind="navigation" data-ui-card="carnets">
+    <h2>Carnets</h2>
     <label class="field-label">Territoires enregistrés
       <select id="territoryLibrarySelect"><option value="">Préparation de la bibliothèque…</option></select>
     </label>
@@ -1461,27 +1466,14 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <button id="territoryCreate" type="button">＋ créer 16 × 16 km</button>
     </div>
     <div class="small" id="territorySetupStatus" style="margin-top:8px">Les données locales sont séparées par territoire. La création interroge les services cartographiques autour du point choisi ; certaines sources restent limitées à la France.</div>
-  </section>
-
-  <section class="card" data-panel-kind="navigation">
-    <h2>Autour de moi</h2>
-    <div class="around-controls">
-      <label class="field-label">Rayon
-        <select id="aroundRadius">
-          <option value="100">100 m</option>
-          <option value="250">250 m</option>
-          <option value="500" selected>500 m</option>
-          <option value="1000">1 km</option>
-          <option value="2000">2 km</option>
-        </select>
-      </label>
-      <button id="refreshAround" type="button">⌖ actualiser</button>
-    </div>
-    <div class="around-results">
-      <div class="around-summary" id="aroundSummary">Localise-toi pour dresser l’inventaire des lieux proches.</div>
-      <div class="around-list" id="aroundList"></div>
-    </div>
-    <div class="small" style="margin-top:7px">La position reste ponctuelle. Les distances sont calculées localement à partir des repères déjà présents dans l’Atlas.</div>
+    <details class="interface-subsection" data-ui-subsection="memory"><summary>Importer et exporter</summary><div class="interface-subsection-body">
+      <div class="snapshot-summary" id="snapshotStatus"><span>Préparation de l’inventaire embarqué…</span></div>
+      <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button><button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button></div>
+      <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
+      <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
+      <button id="clearSavedSnapshot" type="button" hidden aria-hidden="true">✕ supprimer le territoire actif de la bibliothèque</button>
+      <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
+    </div></details>
   </section>
 
   <!-- Prototype conservé hors de l’interface active jusqu’à la stabilisation du nouveau modèle territorial. -->
@@ -1527,7 +1519,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     La surface locale est immédiatement disponible au zoom Site. Quelques balises orange purement synthétiques servent à tester l’avatar et le brouillard de connaissance. Elles ne décrivent aucun lieu réel. Les forages BSS ne sont pas requis pour cette démonstration.
   </section>
 
-  <section class="card" data-interface-retired="map-scale-duplicate" hidden aria-hidden="true">
+  <section class="card" data-ui-card="retired-scale" data-interface-retired="map-scale-duplicate" hidden aria-hidden="true">
     <h2>Échelle géographique</h2>
     <div class="grid4" id="zoomButtons"></div>
     <div class="grid2" style="margin-top:7px">
@@ -1537,7 +1529,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <div class="small" id="zoomHelp" style="margin-top:8px"></div>
   </section>
 
-  <section class="card" data-interface-retired="map-depth-duplicate" hidden aria-hidden="true">
+  <section class="card" data-ui-card="retired-depth" data-interface-retired="map-depth-duplicate" hidden aria-hidden="true">
     <h2>Profondeur</h2>
     <div class="grid2" id="depthButtons"></div>
     <div class="grid2" style="margin-top:7px">
@@ -1549,8 +1541,8 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     </div>
   </section>
 
-  <section class="card">
-    <h2>Couches</h2>
+  <section class="card" data-ui-card="display">
+    <h2>Affichage</h2>
     <div class="render-mode-panel" role="group" aria-label="Style de rendu de la carte">
       <button id="renderModeSymbolic" type="button" aria-pressed="true">▰ symbolique</button>
       <button id="renderModeAscii" type="button" aria-pressed="false">⌁ ASCII</button>
@@ -1580,8 +1572,8 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     </label>
   </section>
 
-  <section class="card">
-    <h2>Navigation géographique</h2>
+  <section class="card" data-ui-card="starting-point">
+    <h2>Point de départ</h2>
     <div class="pan-grid" aria-label="Déplacer la carte" data-interface-retired="map-pan-duplicate" hidden>
       <span></span><button type="button" data-pan-x="0" data-pan-y="1" title="Déplacer vers le nord">↑ N</button><span></span>
       <button type="button" data-pan-x="-1" data-pan-y="0" title="Déplacer vers l’ouest">← O</button><button type="button" class="pan-home" id="homeBtn" title="Revenir à la maison">⌂</button><button type="button" data-pan-x="1" data-pan-y="0" title="Déplacer vers l’est">E →</button>
@@ -1612,29 +1604,8 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <div class="small" style="margin-top:8px"><strong>Navigation :</strong> immobiliser brièvement le pointeur sur un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
   </section>
 
-  <section class="card">
-    <h2>Mémoire de l’Atlas</h2>
-    <div class="snapshot-summary" id="snapshotStatus">
-      <span>Préparation de l’inventaire embarqué…</span>
-    </div>
-    <div class="grid2" style="margin-top:7px">
-      <button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button>
-      <button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button>
-    </div>
-    <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
-    <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
-    <button id="clearSavedSnapshot" type="button" hidden aria-hidden="true">✕ supprimer le territoire actif de la bibliothèque</button>
-    <div class="snapshot-note" id="snapshotHelp">Le fichier .atlas conserve le territoire, les contributions et les extraits documentaires utiles, sans les caches cartographiques lourds. L’HTML autonome contient l’état d’affichage complet et démarre sans requête réseau.</div>
-  </section>
-
-  <section class="card">
-    <h2>Aller à une cavité</h2>
-    <select id="cavitySelect"><option value="">Chargement des coordonnées…</option></select>
-    <div class="small" id="cavityHelp" style="margin-top:7px">La recherche couvre désormais toute l’emprise navigable, y compris les communes voisines. Une position connue ne constitue pas un plan de galeries.</div>
-  </section>
-
-  <section class="card">
-    <h2>Observations de terrain</h2>
+  <section class="card" data-ui-card="field-notes">
+    <h2>Notes de terrain</h2>
     <div class="grid2">
       <label class="field-label">Forme
         <select id="observationMode">
@@ -1670,9 +1641,24 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <button id="removeLocalMarker">✕ supprimer l’observation</button>
     </div>
     <div class="small" id="localHelp" style="margin-top:8px">Sélectionne une case. Une visée dessine une direction depuis la maison ; une zone exprime une localisation imprécise sans inventer un point exact.</div>
+    <details class="interface-subsection" data-ui-subsection="lore"><summary>Repères, récits et mémoire locale</summary><div class="interface-subsection-body">
+      <div class="grid2">
+        <label class="field-label">Catégorie
+          <select id="loreCategory">
+            <option value="historic">HI bâtiment historique / patrimoine</option><option value="ruin">RU maison en ruine / ruines</option><option value="friche">FR friche industrielle / artisanale</option><option value="abandoned">AB urbanisme abandonné / infrastructure oubliée</option><option value="anecdote">AN anecdote locale / récit</option><option value="mystery">MY lieu mystérieux / ambiance étrange</option><option value="view">VP curiosité paysagère / point de vue</option>
+          </select>
+        </label>
+        <label class="field-label">Période / époque<input id="lorePeriod" type="text" placeholder="XIXe s., années 1950…"></label>
+      </div>
+      <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
+      <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
+      <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
+      <div class="grid2" style="margin-top:7px"><button id="addLoreItem">＋ enregistrer le repère</button><button id="removeLoreItem">✕ supprimer le repère</button></div>
+      <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
+    </div></details>
   </section>
 
-  <section class="card">
+  <section class="card" data-ui-card="cartofriches">
     <h2>Cartofriches · Cerema</h2>
     <div class="grid2">
       <div>
@@ -1693,7 +1679,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" data-ui-card="heritage">
     <h2>Patrimoine &amp; curiosités synchronisés</h2>
     <div class="grid2">
       <div>
@@ -1719,33 +1705,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     </div>
   </section>
 
-  <section class="card">
-    <h2>Repères patrimoine &amp; mystère</h2>
-    <div class="grid2">
-      <label class="field-label">Catégorie
-        <select id="loreCategory">
-          <option value="historic">HI bâtiment historique / patrimoine</option>
-          <option value="ruin">RU maison en ruine / ruines</option>
-          <option value="friche">FR friche industrielle / artisanale</option>
-          <option value="abandoned">AB urbanisme abandonné / infrastructure oubliée</option>
-          <option value="anecdote">AN anecdote locale / récit</option>
-          <option value="mystery">MY lieu mystérieux / ambiance étrange</option>
-          <option value="view">VP curiosité paysagère / point de vue</option>
-        </select>
-      </label>
-      <label class="field-label">Période / époque<input id="lorePeriod" type="text" placeholder="XIXe s., années 1950…"></label>
-    </div>
-    <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
-    <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
-    <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
-    <div class="grid2" style="margin-top:7px">
-      <button id="addLoreItem">＋ enregistrer le repère</button>
-      <button id="removeLoreItem">✕ supprimer le repère</button>
-    </div>
-    <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
-  </section>
-
-  <section class="card">
+  <section class="card" data-ui-card="bss">
     <h2>Forages BSS &amp; piézomètres</h2>
     <div class="grid2">
       <div>
@@ -1765,8 +1725,8 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     </div>
   </section>
 
-  <section class="card">
-    <h2>Données</h2>
+  <section class="card" data-ui-card="source-status">
+    <h2>État des sources</h2>
     <div class="data-status">
       <div class="status-line"><span>Surface cartographique</span><strong id="osmStatus" class="pending">chargement</strong></div>
       <div class="status-line"><span>Adresse officielle</span><strong id="addressStatus" class="pending">chargement</strong></div>
@@ -1788,7 +1748,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <div class="source-note" id="sourceNote" style="margin-top:8px">Les services en ligne sont facultatifs. Une copie ouverte en HTTPS peut synchroniser directement les sources ; une page locale <code>file://</code> peut être limitée par les politiques CORS de certains serveurs.</div>
   </section>
 
-  <section class="card debug-only" id="debugPanel">
+  <section class="card debug-only" id="debugPanel" data-ui-card="diagnostic">
     <h2>Diagnostic</h2>
     <div class="small">Ouvert avec le bouton <strong>⚙ diagnostic</strong>, <code>?debug</code> ou <span class="key">Ctrl</span> + <span class="key">Maj</span> + <span class="key">D</span> lorsque le navigateur laisse passer ce raccourci. Les mesures restent locales.</div>
     <div class="debug-kpis">
@@ -1809,8 +1769,8 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <div id="debugErrors" class="debug-log" style="display:none"></div>
   </section>
 
-  <section class="card">
-    <h2>Légende lisible</h2>
+  <section class="card" data-ui-card="legend">
+    <h2>Légende</h2>
     <div class="legend-section" style="border-top:0;margin-top:0;padding-top:0">
       <div class="legend-title">Surface</div>
       <div class="legend">
@@ -1869,6 +1829,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
   </section>
 
   <section class="card warning"><strong>Lecture prudente :</strong> le cadastre améliore le placement du bâti mais ne fournit ni propriétaire ni diagnostic de stabilité. Le relief reste un modèle global densifié, pas encore du LiDAR HD. Les forages BSS sont des points documentaires, pas des preuves de galerie. Les profondeurs souterraines précédées de ≈ sont des tranches de visualisation ; les volumes affichés sont des projections cohérentes entre niveaux, pas des plans levés ni des profondeurs attestées.</section>
+  </div>
 </aside>
 
 <main>
@@ -1975,7 +1936,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18e";
+const APP_VERSION = "0.18f";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2207,7 +2168,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
   const sidebarSections=[...document.querySelectorAll(".sidebar-section-tab")],visibleSidebarSections=[...document.querySelectorAll("#sidebar > .sidebar-cluster")].filter(section=>!section.hidden);
-  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.mergedCards>=3,`${sidebarSections.length} sections · ${uiShellRuntime.mergedCards} regroupements · section ${uiShellRuntime.activeSection}`));
+  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===4,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
@@ -2261,7 +2222,7 @@ function createDebugReport(){
     `Navigation : ${inputRuntime.bound?"liée":"absente"} · ${inputRuntime.panCount} déplacements · ${inputRuntime.pinchZoomCount} pincements · ${inputRuntime.wheelZoomCount} molettes · dernier ${inputRuntime.lastGesture}`,
     `Inspecteur : ${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · ${cellInspectorRuntime.poiSelections} POI · ${cellInspectorRuntime.plainSelections} terrains · ${cellInspectorRuntime.hoverReveals} survols · cache ${descriptionRuntime.hits}/${descriptionRuntime.misses}`,
     `Coque responsive : ${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · ${uiShellRuntime.gridChanges} changements de grille · ${uiShellRuntime.sidebarChanges} panneaux · ${uiShellRuntime.infoChanges} fiches`,
-    `Architecture du carnet : section ${uiShellRuntime.activeSection} · ${uiShellRuntime.sectionSwitches} changements · ${uiShellRuntime.mergedCards} regroupements`,
+    `Architecture du carnet : section ${uiShellRuntime.activeSection} · ${uiShellRuntime.sectionSwitches} changements · ${uiShellRuntime.nativeSubsections} sous-sections natives`,
     `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
     `Carnets : schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.exports}/${carnetRuntime.imports} exports/imports · ${debugFormatBytes(carnetRuntime.lastBytes)} · intégrité ${carnetRuntime.lastAlgorithm} · ${carnetRuntime.migrations} anciennes sauvegardes reconnues`,
     `Phases CPU : ${debugRenderPhasesText()}`,
@@ -9487,7 +9448,7 @@ function scheduleHover(target,ev){
   hoverDwellTimer=setTimeout(revealHoverCandidate,HOVER_DWELL_MS);
 }
 
-const uiShellRuntime={ready:true,bound:false,fitRequests:0,fitRuns:0,fitCoalesced:0,gridChanges:0,sidebarChanges:0,infoChanges:0,sectionSwitches:0,mergedCards:0,activeSection:"explorer",lastGridProfile:"—"};
+const uiShellRuntime={ready:true,bound:false,fitRequests:0,fitRuns:0,fitCoalesced:0,gridChanges:0,sidebarChanges:0,infoChanges:0,sectionSwitches:0,nativeSubsections:0,activeSection:"explorer",lastGridProfile:"—"};
 let uiShellMain=null,uiShellResizeObserver=null,frameFitTimer=0,frameFitRaf=0,depthTransitionTimer=0;
 
 function playDepthTransition(direction){
@@ -9497,12 +9458,6 @@ function playDepthTransition(direction){
   void els.depthTransition.offsetWidth;
   els.depthTransition.classList.add("active");
   depthTransitionTimer=setTimeout(()=>{els.depthTransition.className="depth-transition"},700);
-}
-
-function pulseCard(card){
-  if(!ambientAllowed()||!card)return;
-  card.classList.remove("card-awake");void card.offsetWidth;card.classList.add("card-awake");
-  setTimeout(()=>card.classList.remove("card-awake"),430);
 }
 
 function poiEffectKind(cell){
@@ -9568,23 +9523,6 @@ function classifyAtlasControls(){
   }
 }
 
-function updateSidebarClusterStatus(){
-  if(!els.sidebar?.dataset.clustered)return;
-  const set=(code,text,live=false)=>{
-    const element=els.sidebar.querySelector(`[data-cluster-status="${code}"]`);if(!element)return;
-    element.textContent=text;element.classList.toggle("is-live",!!live);
-  };
-  const z=CONFIG.zooms?.[state.zoomIndex];
-  set("01",state.userLocation?`GPS ±${Math.round(state.userLocation.accuracy||0)} m`:`${z?.label||"carte"} · surface`,!!state.userLocation);
-  const layerInputs=[...els.sidebar.querySelectorAll("#layerSurface,#layerRelief,#layerCadastreBuildings,#layerParcels,#layerBss,#layerObservations,#layerHeritage,#layerLore,#layerCartofriches,#layerCavities,#layerHypothesis,#layerHydrology,#layerLabels,#layerHouse")];
-  const active=layerInputs.filter(value=>value.checked).length;set("02",`${active}/${layerInputs.length} actifs`,active>0);
-  const codex=typeof encounterCollectionStats==="function"?encounterCollectionStats().identified:0;
-  const notes=(state.observations?.length||0)+(state.loreItems?.length||0);set("03",`${notes} notes · ${codex} fiches`,notes+codex>0);
-  const sourceIds=["osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus"];
-  const statuses=sourceIds.map(id=>els[id]).filter(Boolean),ok=statuses.filter(value=>value.classList.contains("ok")).length;
-  set("04",`${ok}/${statuses.length} prêtes`,ok>0);
-}
-
 function documentarySignalProfile(cell){
   const feature=cell?.feature||{},profile=evidenceProfile(cell);let level=1,label="contexte",color="#77a9bc";
   if(feature.heritage||feature.bss||feature.cavity||feature.cartofriches||feature.source){level=4;label="source documentée";color="#79e2ab"}
@@ -9599,24 +9537,8 @@ function documentarySignalHtml(cell){
   return `<div class="documentary-signal" style="--signal-color:${signal.color}"><span>assise documentaire</span><span class="documentary-signal-track" aria-label="${signal.level} niveaux sur 5">${bars}</span><strong>${esc(signal.label)}</strong></div>`;
 }
 
-function preparedSidebarCard(title){
-  return [...els.sidebar.querySelectorAll(":scope > .card")].find(card=>(card.querySelector(":scope > h2")?.textContent||"").trim()===title)||null;
-}
-function renamePreparedSidebarCard(from,to){
-  const card=preparedSidebarCard(from),heading=card?.querySelector(":scope > h2");if(heading)heading.textContent=to;return card;
-}
-function mergePreparedSidebarCards(primaryTitle,secondaryItems,newTitle){
-  const primary=preparedSidebarCard(primaryTitle),body=primary?.querySelector(":scope > .card-body");if(!primary||!body)return null;
-  const heading=primary.querySelector(":scope > h2");if(heading)heading.textContent=newTitle;
-  for(const item of secondaryItems){
-    const secondary=preparedSidebarCard(item.title),secondaryBody=secondary?.querySelector(":scope > .card-body");if(!secondary||!secondaryBody)continue;
-    const details=document.createElement("details");details.className="interface-subsection";details.open=!!item.open;
-    const summary=document.createElement("summary");summary.textContent=item.label;details.appendChild(summary);
-    const content=document.createElement("div");content.className="interface-subsection-body";
-    while(secondaryBody.firstChild)content.appendChild(secondaryBody.firstChild);
-    details.appendChild(content);body.appendChild(details);secondary.remove();uiShellRuntime.mergedCards=(uiShellRuntime.mergedCards||0)+1;
-  }
-  return primary;
+function sidebarCardByKey(key){
+  return els.sidebar?.querySelector(`[data-ui-card="${key}"]`)||null;
 }
 function sidebarSectionStorageKey(){return "atlas-karst-ui-section-v1"}
 function activateSidebarSection(section,{focus=false}={}){
@@ -9635,55 +9557,41 @@ function openSidebarPanel(section,title=""){
   if(card){setCollapsibleState(card,false,"h2");requestAnimationFrame(()=>card.scrollIntoView({block:"start",behavior:"auto"}))}
 }
 
-function buildSidebarClusters(){
+function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
-  mergePreparedSidebarCards("Territoires",[{title:"Mémoire de l’Atlas",label:"Importer et exporter",open:false}],"Carnets");
-  mergePreparedSidebarCards("Ma position",[{title:"Autour de moi",label:"À proximité",open:true},{title:"Aller à une cavité",label:"Rechercher une cavité",open:false}],"Se situer");
-  mergePreparedSidebarCards("Observations de terrain",[{title:"Repères patrimoine & mystère",label:"Repères, récits et mémoire locale",open:false}],"Notes de terrain");
-  renamePreparedSidebarCard("Couches","Affichage");renamePreparedSidebarCard("Navigation géographique","Point de départ");renamePreparedSidebarCard("Données","État des sources");renamePreparedSidebarCard("Légende lisible","Légende");
-  const cards=[...els.sidebar.querySelectorAll(":scope > .card")];
-  const byTitle=new Map(cards.map(card=>[(card.querySelector(":scope > h2")?.textContent||"").trim(),card]));
-  const groups=[
-    {code:"01",section:"carnets",title:"Carnets",meta:"ouvrir · créer · partager",cards:["Carnets"]},
-    {code:"02",section:"explorer",title:"Explorer",meta:"se situer · lire · cadrer",cards:["Se situer","Affichage","Point de départ","Légende"]},
-    {code:"03",section:"noter",title:"Noter",meta:"observer · décrire · mémoriser",cards:["Notes de terrain"]},
-    {code:"04",section:"sources",title:"Sources",meta:"actualiser · vérifier · attribuer",cards:["État des sources","Patrimoine & curiosités synchronisés","Cartofriches · Cerema","Forages BSS & piézomètres","Diagnostic"]}
-  ];
-  const navigation=document.createElement("nav");navigation.className="sidebar-section-tabs";navigation.setAttribute("role","tablist");navigation.setAttribute("aria-label","Sections du carnet");
-  const fragment=document.createDocumentFragment();
-  for(const group of groups){
-    const tab=document.createElement("button");tab.type="button";tab.id=`sidebar-tab-${group.section}`;tab.className="sidebar-section-tab";tab.dataset.sectionTarget=group.section;tab.setAttribute("role","tab");tab.setAttribute("aria-controls",`sidebar-section-${group.section}`);tab.textContent=group.title;
-    tab.addEventListener("click",()=>activateSidebarSection(group.section));
+  const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
+    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","diagnostic"]
+  };
+  for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
+    const section=tab.dataset.sectionTarget;
+    tab.addEventListener("click",()=>activateSidebarSection(section));
     tab.addEventListener("keydown",event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const tabs=[...navigation.querySelectorAll("button")],index=tabs.indexOf(tab),next=event.key==="Home"?0:event.key==="End"?tabs.length-1:(index+(event.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;activateSidebarSection(tabs[next].dataset.sectionTarget,{focus:true})});
-    navigation.appendChild(tab);
-    const cluster=document.createElement("section");
-    cluster.id=`sidebar-section-${group.section}`;cluster.className="sidebar-cluster";cluster.dataset.group=group.title.toLowerCase();cluster.dataset.section=group.section;cluster.setAttribute("role","tabpanel");cluster.setAttribute("aria-labelledby",tab.id);
-    cluster.innerHTML=`<div class="sidebar-cluster-head"><h2>${group.title}<span class="cluster-status" data-cluster-status="${group.code}">veille</span></h2><div class="cluster-meta">${group.meta}</div></div><div class="sidebar-cluster-body"></div>`;
-    const body=cluster.querySelector(".sidebar-cluster-body");
-    for(const title of group.cards){const card=byTitle.get(title);if(card)body.appendChild(card)}
-    if(group.section==="sources"){
-      const utilities=document.createElement("section");utilities.className="card interface-utilities";utilities.innerHTML='<h2>Réglages</h2><div class="card-body"><div class="grid2 interface-utility-actions"></div></div>';
-      const actions=utilities.querySelector(".interface-utility-actions");if(els.audioToggle)actions.appendChild(els.audioToggle);if(els.debugToggle)actions.appendChild(els.debugToggle);body.appendChild(utilities);
-    }
-    fragment.appendChild(cluster);
   }
-  els.sidebar.insertBefore(navigation,els.sidebar.querySelector(":scope > .card"));
-  const notice=els.sidebar.querySelector("#offlineNotice");if(notice)fragment.appendChild(notice);
-  const warning=els.sidebar.querySelector(".warning"),sourcesBody=fragment.querySelector('.sidebar-cluster[data-section="sources"] .sidebar-cluster-body');if(warning&&sourcesBody)sourcesBody.appendChild(warning);
-  els.sidebar.appendChild(fragment);els.sidebar.dataset.clustered="1";
+  for(const [section,keys] of Object.entries(placements)){
+    const body=els.sidebar.querySelector(`.sidebar-cluster[data-section="${section}"] .sidebar-cluster-body`);
+    for(const key of keys){const card=sidebarCardByKey(key);if(card&&body)body.appendChild(card)}
+  }
+  const sourcesBody=els.sidebar.querySelector('.sidebar-cluster[data-section="sources"] .sidebar-cluster-body');
+  if(sourcesBody){
+    const utilities=document.createElement("section");utilities.className="card interface-utilities";utilities.innerHTML='<h2>Réglages</h2><div class="card-body"><div class="grid2 interface-utility-actions"></div></div>';
+    const actions=utilities.querySelector(".interface-utility-actions");if(els.audioToggle)actions.appendChild(els.audioToggle);if(els.debugToggle)actions.appendChild(els.debugToggle);sourcesBody.appendChild(utilities);
+    const warning=els.sidebar.querySelector(".warning");if(warning)sourcesBody.appendChild(warning);
+  }
+  const notice=els.sidebar.querySelector("#offlineNotice");if(notice)els.sidebar.appendChild(notice);
+  els.sidebar.dataset.clustered="1";uiShellRuntime.nativeSubsections=els.sidebar.querySelectorAll("[data-ui-subsection]").length;
   let initial="explorer";try{initial=localStorage.getItem(sidebarSectionStorageKey())||initial}catch{}
   activateSidebarSection(initial);
-  classifyAtlasControls();updateSidebarClusterStatus();
+  classifyAtlasControls();
 }
 
 function prepareSidebarCards(){
   const panelMeta={
-    "Mode d’utilisation":["navigation","◈"],"Territoires":["navigation","⊕"],"Autour de moi":["navigation","⌖"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
-    "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
-    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
+    "Carnets":["navigation","⊕"],"À proximité":["navigation","⌖"],"Affichage":["layers","▦"],"Point de départ":["navigation","⌖"],
+    "Importer et exporter":["memory","◫"],"Rechercher une cavité":["navigation","⌁"],"Notes de terrain":["field","◎"],"Repères, récits et mémoire locale":["field","◇"],
+    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"État des sources":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende":["layers","?"]
   };
-  const openByDefault=new Set(["Ma position","Territoires","Couches","Données","Observations de terrain"]);
-  for(const card of els.sidebar.querySelectorAll(":scope > .card")){
+  const openByDefault=new Set(["Se situer","Carnets","Affichage","État des sources","Notes de terrain"]);
+  for(const card of els.sidebar.querySelectorAll("#sidebarCardPool > .card:not([data-prototype-reserve]):not([data-interface-retired])")){
     if(card.classList.contains("warning")||card.id==="offlineNotice"||card.classList.contains("collapsible"))continue;
     const heading=card.querySelector(":scope > h2");if(!heading)continue;
     const meta=panelMeta[heading.textContent.trim()]||["navigation","•"];
@@ -9695,7 +9603,7 @@ function prepareSidebarCards(){
     card.classList.toggle("collapsed",collapsed);heading.setAttribute("role","button");heading.setAttribute("tabindex","0");heading.setAttribute("aria-expanded",String(!collapsed));
     const toggle=()=>{
       const next=!card.classList.contains("collapsed");card.classList.toggle("collapsed",next);heading.setAttribute("aria-expanded",String(!next));
-      retroAudio.play(next?"panelClose":"panelOpen");pulseCard(card);scheduleFrameFit();
+      retroAudio.play(next?"panelClose":"panelOpen");scheduleFrameFit();
     };
     heading.addEventListener("click",toggle);heading.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggle()}});
   }
@@ -10645,7 +10553,6 @@ function render(reason="direct"){
   els.mapDepthUp.disabled=state.depthIndex===0;els.mapDepthDown.disabled=state.depthIndex===CONFIG.depths.length-1;
   updateSnapshotUI();
   requestAnimationFrame(()=>{alignRenderedCenterToVisibleViewport();syncSelectionDom();updateWorldBoundaryFrame();updateRelationOverlay();updateGuidedTourMarker()});
-  updateSidebarClusterStatus();
   updateAroundMe();
   updateGuidedTourUI();
   scheduleFrameFit();
@@ -10795,7 +10702,7 @@ async function bootAtlas(){
     if(els.ambientMotion)els.ambientMotion.checked=state.ambientMotion;
     if(els.aroundRadius)els.aroundRadius.value=String(state.aroundRadius);
     prepareSidebarCards();
-    buildSidebarClusters();
+    bindNativeSidebarShell();
     if(mobileSidebarMode()){
       setSidebarOpen(false);
       setInfoVisible(false);

@@ -1,4 +1,4 @@
-const uiShellRuntime={ready:true,bound:false,fitRequests:0,fitRuns:0,fitCoalesced:0,gridChanges:0,sidebarChanges:0,infoChanges:0,sectionSwitches:0,mergedCards:0,activeSection:"explorer",lastGridProfile:"—"};
+const uiShellRuntime={ready:true,bound:false,fitRequests:0,fitRuns:0,fitCoalesced:0,gridChanges:0,sidebarChanges:0,infoChanges:0,sectionSwitches:0,nativeSubsections:0,activeSection:"explorer",lastGridProfile:"—"};
 let uiShellMain=null,uiShellResizeObserver=null,frameFitTimer=0,frameFitRaf=0,depthTransitionTimer=0;
 
 function playDepthTransition(direction){
@@ -8,12 +8,6 @@ function playDepthTransition(direction){
   void els.depthTransition.offsetWidth;
   els.depthTransition.classList.add("active");
   depthTransitionTimer=setTimeout(()=>{els.depthTransition.className="depth-transition"},700);
-}
-
-function pulseCard(card){
-  if(!ambientAllowed()||!card)return;
-  card.classList.remove("card-awake");void card.offsetWidth;card.classList.add("card-awake");
-  setTimeout(()=>card.classList.remove("card-awake"),430);
 }
 
 function poiEffectKind(cell){
@@ -79,23 +73,6 @@ function classifyAtlasControls(){
   }
 }
 
-function updateSidebarClusterStatus(){
-  if(!els.sidebar?.dataset.clustered)return;
-  const set=(code,text,live=false)=>{
-    const element=els.sidebar.querySelector(`[data-cluster-status="${code}"]`);if(!element)return;
-    element.textContent=text;element.classList.toggle("is-live",!!live);
-  };
-  const z=CONFIG.zooms?.[state.zoomIndex];
-  set("01",state.userLocation?`GPS ±${Math.round(state.userLocation.accuracy||0)} m`:`${z?.label||"carte"} · surface`,!!state.userLocation);
-  const layerInputs=[...els.sidebar.querySelectorAll("#layerSurface,#layerRelief,#layerCadastreBuildings,#layerParcels,#layerBss,#layerObservations,#layerHeritage,#layerLore,#layerCartofriches,#layerCavities,#layerHypothesis,#layerHydrology,#layerLabels,#layerHouse")];
-  const active=layerInputs.filter(value=>value.checked).length;set("02",`${active}/${layerInputs.length} actifs`,active>0);
-  const codex=typeof encounterCollectionStats==="function"?encounterCollectionStats().identified:0;
-  const notes=(state.observations?.length||0)+(state.loreItems?.length||0);set("03",`${notes} notes · ${codex} fiches`,notes+codex>0);
-  const sourceIds=["osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus"];
-  const statuses=sourceIds.map(id=>els[id]).filter(Boolean),ok=statuses.filter(value=>value.classList.contains("ok")).length;
-  set("04",`${ok}/${statuses.length} prêtes`,ok>0);
-}
-
 function documentarySignalProfile(cell){
   const feature=cell?.feature||{},profile=evidenceProfile(cell);let level=1,label="contexte",color="#77a9bc";
   if(feature.heritage||feature.bss||feature.cavity||feature.cartofriches||feature.source){level=4;label="source documentée";color="#79e2ab"}
@@ -110,24 +87,8 @@ function documentarySignalHtml(cell){
   return `<div class="documentary-signal" style="--signal-color:${signal.color}"><span>assise documentaire</span><span class="documentary-signal-track" aria-label="${signal.level} niveaux sur 5">${bars}</span><strong>${esc(signal.label)}</strong></div>`;
 }
 
-function preparedSidebarCard(title){
-  return [...els.sidebar.querySelectorAll(":scope > .card")].find(card=>(card.querySelector(":scope > h2")?.textContent||"").trim()===title)||null;
-}
-function renamePreparedSidebarCard(from,to){
-  const card=preparedSidebarCard(from),heading=card?.querySelector(":scope > h2");if(heading)heading.textContent=to;return card;
-}
-function mergePreparedSidebarCards(primaryTitle,secondaryItems,newTitle){
-  const primary=preparedSidebarCard(primaryTitle),body=primary?.querySelector(":scope > .card-body");if(!primary||!body)return null;
-  const heading=primary.querySelector(":scope > h2");if(heading)heading.textContent=newTitle;
-  for(const item of secondaryItems){
-    const secondary=preparedSidebarCard(item.title),secondaryBody=secondary?.querySelector(":scope > .card-body");if(!secondary||!secondaryBody)continue;
-    const details=document.createElement("details");details.className="interface-subsection";details.open=!!item.open;
-    const summary=document.createElement("summary");summary.textContent=item.label;details.appendChild(summary);
-    const content=document.createElement("div");content.className="interface-subsection-body";
-    while(secondaryBody.firstChild)content.appendChild(secondaryBody.firstChild);
-    details.appendChild(content);body.appendChild(details);secondary.remove();uiShellRuntime.mergedCards=(uiShellRuntime.mergedCards||0)+1;
-  }
-  return primary;
+function sidebarCardByKey(key){
+  return els.sidebar?.querySelector(`[data-ui-card="${key}"]`)||null;
 }
 function sidebarSectionStorageKey(){return "atlas-karst-ui-section-v1"}
 function activateSidebarSection(section,{focus=false}={}){
@@ -146,55 +107,41 @@ function openSidebarPanel(section,title=""){
   if(card){setCollapsibleState(card,false,"h2");requestAnimationFrame(()=>card.scrollIntoView({block:"start",behavior:"auto"}))}
 }
 
-function buildSidebarClusters(){
+function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
-  mergePreparedSidebarCards("Territoires",[{title:"Mémoire de l’Atlas",label:"Importer et exporter",open:false}],"Carnets");
-  mergePreparedSidebarCards("Ma position",[{title:"Autour de moi",label:"À proximité",open:true},{title:"Aller à une cavité",label:"Rechercher une cavité",open:false}],"Se situer");
-  mergePreparedSidebarCards("Observations de terrain",[{title:"Repères patrimoine & mystère",label:"Repères, récits et mémoire locale",open:false}],"Notes de terrain");
-  renamePreparedSidebarCard("Couches","Affichage");renamePreparedSidebarCard("Navigation géographique","Point de départ");renamePreparedSidebarCard("Données","État des sources");renamePreparedSidebarCard("Légende lisible","Légende");
-  const cards=[...els.sidebar.querySelectorAll(":scope > .card")];
-  const byTitle=new Map(cards.map(card=>[(card.querySelector(":scope > h2")?.textContent||"").trim(),card]));
-  const groups=[
-    {code:"01",section:"carnets",title:"Carnets",meta:"ouvrir · créer · partager",cards:["Carnets"]},
-    {code:"02",section:"explorer",title:"Explorer",meta:"se situer · lire · cadrer",cards:["Se situer","Affichage","Point de départ","Légende"]},
-    {code:"03",section:"noter",title:"Noter",meta:"observer · décrire · mémoriser",cards:["Notes de terrain"]},
-    {code:"04",section:"sources",title:"Sources",meta:"actualiser · vérifier · attribuer",cards:["État des sources","Patrimoine & curiosités synchronisés","Cartofriches · Cerema","Forages BSS & piézomètres","Diagnostic"]}
-  ];
-  const navigation=document.createElement("nav");navigation.className="sidebar-section-tabs";navigation.setAttribute("role","tablist");navigation.setAttribute("aria-label","Sections du carnet");
-  const fragment=document.createDocumentFragment();
-  for(const group of groups){
-    const tab=document.createElement("button");tab.type="button";tab.id=`sidebar-tab-${group.section}`;tab.className="sidebar-section-tab";tab.dataset.sectionTarget=group.section;tab.setAttribute("role","tab");tab.setAttribute("aria-controls",`sidebar-section-${group.section}`);tab.textContent=group.title;
-    tab.addEventListener("click",()=>activateSidebarSection(group.section));
+  const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
+    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","diagnostic"]
+  };
+  for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
+    const section=tab.dataset.sectionTarget;
+    tab.addEventListener("click",()=>activateSidebarSection(section));
     tab.addEventListener("keydown",event=>{if(!["ArrowLeft","ArrowRight","Home","End"].includes(event.key))return;event.preventDefault();const tabs=[...navigation.querySelectorAll("button")],index=tabs.indexOf(tab),next=event.key==="Home"?0:event.key==="End"?tabs.length-1:(index+(event.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length;activateSidebarSection(tabs[next].dataset.sectionTarget,{focus:true})});
-    navigation.appendChild(tab);
-    const cluster=document.createElement("section");
-    cluster.id=`sidebar-section-${group.section}`;cluster.className="sidebar-cluster";cluster.dataset.group=group.title.toLowerCase();cluster.dataset.section=group.section;cluster.setAttribute("role","tabpanel");cluster.setAttribute("aria-labelledby",tab.id);
-    cluster.innerHTML=`<div class="sidebar-cluster-head"><h2>${group.title}<span class="cluster-status" data-cluster-status="${group.code}">veille</span></h2><div class="cluster-meta">${group.meta}</div></div><div class="sidebar-cluster-body"></div>`;
-    const body=cluster.querySelector(".sidebar-cluster-body");
-    for(const title of group.cards){const card=byTitle.get(title);if(card)body.appendChild(card)}
-    if(group.section==="sources"){
-      const utilities=document.createElement("section");utilities.className="card interface-utilities";utilities.innerHTML='<h2>Réglages</h2><div class="card-body"><div class="grid2 interface-utility-actions"></div></div>';
-      const actions=utilities.querySelector(".interface-utility-actions");if(els.audioToggle)actions.appendChild(els.audioToggle);if(els.debugToggle)actions.appendChild(els.debugToggle);body.appendChild(utilities);
-    }
-    fragment.appendChild(cluster);
   }
-  els.sidebar.insertBefore(navigation,els.sidebar.querySelector(":scope > .card"));
-  const notice=els.sidebar.querySelector("#offlineNotice");if(notice)fragment.appendChild(notice);
-  const warning=els.sidebar.querySelector(".warning"),sourcesBody=fragment.querySelector('.sidebar-cluster[data-section="sources"] .sidebar-cluster-body');if(warning&&sourcesBody)sourcesBody.appendChild(warning);
-  els.sidebar.appendChild(fragment);els.sidebar.dataset.clustered="1";
+  for(const [section,keys] of Object.entries(placements)){
+    const body=els.sidebar.querySelector(`.sidebar-cluster[data-section="${section}"] .sidebar-cluster-body`);
+    for(const key of keys){const card=sidebarCardByKey(key);if(card&&body)body.appendChild(card)}
+  }
+  const sourcesBody=els.sidebar.querySelector('.sidebar-cluster[data-section="sources"] .sidebar-cluster-body');
+  if(sourcesBody){
+    const utilities=document.createElement("section");utilities.className="card interface-utilities";utilities.innerHTML='<h2>Réglages</h2><div class="card-body"><div class="grid2 interface-utility-actions"></div></div>';
+    const actions=utilities.querySelector(".interface-utility-actions");if(els.audioToggle)actions.appendChild(els.audioToggle);if(els.debugToggle)actions.appendChild(els.debugToggle);sourcesBody.appendChild(utilities);
+    const warning=els.sidebar.querySelector(".warning");if(warning)sourcesBody.appendChild(warning);
+  }
+  const notice=els.sidebar.querySelector("#offlineNotice");if(notice)els.sidebar.appendChild(notice);
+  els.sidebar.dataset.clustered="1";uiShellRuntime.nativeSubsections=els.sidebar.querySelectorAll("[data-ui-subsection]").length;
   let initial="explorer";try{initial=localStorage.getItem(sidebarSectionStorageKey())||initial}catch{}
   activateSidebarSection(initial);
-  classifyAtlasControls();updateSidebarClusterStatus();
+  classifyAtlasControls();
 }
 
 function prepareSidebarCards(){
   const panelMeta={
-    "Mode d’utilisation":["navigation","◈"],"Territoires":["navigation","⊕"],"Autour de moi":["navigation","⌖"],"Échelle géographique":["navigation","⌗"],"Profondeur":["navigation","⇅"],"Couches":["layers","▦"],"Navigation géographique":["navigation","⌖"],
-    "Mémoire de l’Atlas":["memory","◫"],"Aller à une cavité":["navigation","⌁"],"Observations de terrain":["field","◎"],"Repères patrimoine & mystère":["field","◇"],
-    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Données":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende lisible":["layers","?"],"Provenance des données":["sources","§"]
+    "Carnets":["navigation","⊕"],"À proximité":["navigation","⌖"],"Affichage":["layers","▦"],"Point de départ":["navigation","⌖"],
+    "Importer et exporter":["memory","◫"],"Rechercher une cavité":["navigation","⌁"],"Notes de terrain":["field","◎"],"Repères, récits et mémoire locale":["field","◇"],
+    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"État des sources":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende":["layers","?"]
   };
-  const openByDefault=new Set(["Ma position","Territoires","Couches","Données","Observations de terrain"]);
-  for(const card of els.sidebar.querySelectorAll(":scope > .card")){
+  const openByDefault=new Set(["Se situer","Carnets","Affichage","État des sources","Notes de terrain"]);
+  for(const card of els.sidebar.querySelectorAll("#sidebarCardPool > .card:not([data-prototype-reserve]):not([data-interface-retired])")){
     if(card.classList.contains("warning")||card.id==="offlineNotice"||card.classList.contains("collapsible"))continue;
     const heading=card.querySelector(":scope > h2");if(!heading)continue;
     const meta=panelMeta[heading.textContent.trim()]||["navigation","•"];
@@ -206,7 +153,7 @@ function prepareSidebarCards(){
     card.classList.toggle("collapsed",collapsed);heading.setAttribute("role","button");heading.setAttribute("tabindex","0");heading.setAttribute("aria-expanded",String(!collapsed));
     const toggle=()=>{
       const next=!card.classList.contains("collapsed");card.classList.toggle("collapsed",next);heading.setAttribute("aria-expanded",String(!next));
-      retroAudio.play(next?"panelClose":"panelOpen");pulseCard(card);scheduleFrameFit();
+      retroAudio.play(next?"panelClose":"panelOpen");scheduleFrameFit();
     };
     heading.addEventListener("click",toggle);heading.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();toggle()}});
   }

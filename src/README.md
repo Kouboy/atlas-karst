@@ -25,7 +25,7 @@
 - `app/session-health.js` borne les caches de longue durée et libère les ressources transitoires lors du gel ou de la restauration de page.
 - `app/main.js` ne contient plus que la boucle de rendu mesurée ; `app/map-engine.js` construit la grille et ses couches de surface ou souterraines selon leur contrat visuel partagé.
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
-- `app/ui-shell.js` porte les quatre sections du carnet, leurs regroupements, les accordéons, le dimensionnement responsive et l’alignement de la carte.
+- `app/ui-shell.js` relie les quatre sections natives du carnet, les accordéons, le dimensionnement responsive et l’alignement de la carte.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
 - `app/carnet-format.js` définit le format portable `.atlas`, son registre de sources, son empreinte d’intégrité et la conversion avec les instantanés internes.
 - `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, texte et HTML autonome ; IndexedDB conserve un instantané indépendant par territoire et migre l’ancienne sauvegarde unique.

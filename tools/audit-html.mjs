@@ -267,7 +267,7 @@ check("format canonique du carnet", () =>
 );
 check("coque d’interface isolée", () =>
   sourceByName["ui-shell.js"].includes("function bindUiShell") &&
-  sourceByName["ui-shell.js"].includes("function buildSidebarClusters") &&
+  sourceByName["ui-shell.js"].includes("function bindNativeSidebarShell") &&
   sourceByName["ui-shell.js"].includes("function responsiveGridProfile") &&
   sourceByName["ui-shell.js"].includes("function scheduleFrameFit") &&
   sourceByName["application-controller.js"].includes("bindUiShell()") &&
@@ -276,15 +276,19 @@ check("coque d’interface isolée", () =>
 );
 check("architecture carnet minimaliste", () =>
   html.includes('data-ui-version="field-notebook"') &&
-  sourceByName["ui-shell.js"].includes("function mergePreparedSidebarCards") &&
   sourceByName["ui-shell.js"].includes("function activateSidebarSection") &&
-  ["carnets","explorer","noter","sources"].every((section)=>sourceByName["ui-shell.js"].includes(`section:"${section}"`)) &&
+  ["carnets","explorer","noter","sources"].every((section)=>html.includes(`id="sidebar-section-${section}"`)&&html.includes(`data-section-target="${section}"`)) &&
+  ["carnets","location","display","starting-point","legend","field-notes","source-status","diagnostic"].every((key)=>html.includes(`data-ui-card="${key}"`)) &&
+  ["nearby","cavity-search","memory","lore"].every((key)=>html.includes(`data-ui-subsection="${key}"`)) &&
+  !sourceByName["ui-shell.js"].includes("function renamePreparedSidebarCard") &&
+  !sourceByName["ui-shell.js"].includes("function mergePreparedSidebarCards") &&
+  !sourceByName["ui-shell.js"].includes('document.createElement("nav")') &&
+  !sourceByName["ui-shell.js"].includes("updateSidebarClusterStatus") &&
   atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-section-tabs') &&
   atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-cluster') &&
   atlasCss.includes("--ui-bg:#07100c") &&
   atlasCss.includes("--ui-text:#dce9e1") &&
   atlasCss.includes("font-family:Arial,Helvetica,sans-serif") &&
-  atlasCss.includes(".cluster-meta,") &&
   !atlasCss.includes("--ui-paper:") &&
   html.includes('data-interface-retired="map-scale-duplicate"') &&
   html.includes('data-interface-retired="map-depth-duplicate"')

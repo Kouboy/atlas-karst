@@ -2,6 +2,14 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18f — Coque native
+
+- Les quatre sections Carnets, Explorer, Noter et Sources sont déclarées directement dans le gabarit HTML avec leurs relations d’accessibilité.
+- Les panneaux utilisent des clés structurelles stables ; leur classement ne dépend plus de leur titre affiché.
+- Proximité, recherche de cavité, import/export et mémoire locale deviennent quatre sous-sections natives, sans fusion dynamique au démarrage.
+- Suppression du constructeur de navigation, des renommages par texte, des indicateurs pseudo-techniques disparus et de leur calcul à chaque rendu.
+- Apparence sombre brutaliste, commandes, données, contrôleurs et comportement desktop/mobile conservés à l’identique.
+
 ## 0.18e — Architecture de l’interface
 
 - Navigation ramenée à quatre espaces exclusifs : Carnets, Explorer, Noter et Sources.

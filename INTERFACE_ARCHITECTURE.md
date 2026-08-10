@@ -40,4 +40,4 @@ La coque suit une règle simple : un élément doit aider à regarder le territo
 - les états utilisent du texte et une structure, jamais la couleur seule ;
 - le même ordre et les mêmes mots sont utilisés sur ordinateur et mobile.
 
-Le moteur Canvas et le langage visuel interne de la carte ne sont pas redessinés dans cette version. Cette séparation permet de valider l’architecture avant la reconstruction complète de la coque prévue en v0.18f.
+Le moteur Canvas et le langage visuel interne de la carte ne sont pas redessinés. Depuis la v0.18f, les quatre sections et leurs sous-sections sont déclarées nativement dans le gabarit ; JavaScript ne fait plus que les relier aux comportements applicatifs.
