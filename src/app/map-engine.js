@@ -235,6 +235,15 @@ function drawHydrometry(g){
     if(state.layerLabels&&state.zoomIndex>=3)tryMapLabel(g,p,h.name||h.river||h.code,"c-label",14,info,"hydrometry",1,false);
   }
 }
+function drawBiodiversity(g){
+  if(!state.layerBiodiversity||currentDepth()!==0||!state.biodiversity.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"biodiversity")){
+    const species=biodiversityVisibleSpecies(poi.raw);if(!species.length)continue;
+    const groups=new Set(species.map(item=>item.group)),glyph=groups.size>1?"Bio":groups.has("animals")?"Fa":groups.has("plants")?"Fl":"Fu",p=coordToGrid(poi.lat,poi.lon,g.extent),info=biodiversityFeatureInfo(poi);
+    putText(g,p.x,p.y,glyph,"c-biodiversity",16,info);
+    if(state.layerLabels&&state.zoomIndex>=4)tryMapLabel(g,p,`${species.length} esp.`,"c-label",13,info,"biodiversity",1,false);
+  }
+}
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
@@ -835,6 +844,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     applyRelief(grid);
     drawBss(grid);
     drawHydrometry(grid);
+    drawBiodiversity(grid);
     drawObservations(grid);
     drawHeritage(grid);
     drawLore(grid);

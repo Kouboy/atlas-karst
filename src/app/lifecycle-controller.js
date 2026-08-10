@@ -5,6 +5,7 @@ const LIFECYCLE_SYNC_SOUND_TARGETS={
   syncCartofriches:()=>[els.cartofrichesStatus],
   syncPiezo:()=>[els.bssStatus],
   syncHydrometry:()=>[els.hydrometryStatus],
+  syncBiodiversity:()=>[els.biodiversityStatus],
   retryData:()=>[els.osmStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus]
 };
 const LIFECYCLE_QUIET_BUTTON_IDS=new Set([
@@ -62,7 +63,7 @@ function bindLifecycleController(){
   document.addEventListener("click",handleGlobalActionSound,true);
   document.addEventListener("change",handleGlobalControlSound);
   els.audioToggle.addEventListener("click",()=>{lifecycleControllerRuntime.audioActions++;accountLifecycleEvent("bascule audio");retroAudio.toggle()});
-  const statuses=[els.osmStatus,els.heritageStatus,els.cartofrichesStatus,els.bssStatus,els.hydrometryStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus].filter(Boolean);
+  const statuses=[els.osmStatus,els.heritageStatus,els.cartofrichesStatus,els.bssStatus,els.hydrometryStatus,els.biodiversityStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus].filter(Boolean);
   statuses.forEach(status=>operationStatusObserver.observe(status,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]}));
   lifecycleControllerRuntime.statusObservers=statuses.length;
   accountLifecycleEvent("contrôleur lié");
