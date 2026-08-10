@@ -10,6 +10,7 @@
 - `app/territory-model.js` définit le contrat géographique sérialisable d’un Atlas : identité, centre, emprise, rattachement administratif et données patrimoniales embarquées.
 - `app/territory-controller.js` gère la bibliothèque locale de territoires : création, sauvegarde, ouverture hors ligne, renommage, duplication, suppression et cloisonnement des données.
 - `app/bootstrap.js` charge les données embarquées, la configuration et l’état partagé.
+- `app/source-registry.js` décrit les fournisseurs, couvertures, licences et politiques de portabilité, puis produit le catalogue, les attributions, les statuts et les références des carnets.
 - `app/canvas-renderer.js` contient le pipeline de rendu ASCII et symbolique, jusqu’aux effets finaux du bitmap.
 - `app/audio.js` porte les retours sonores et leur cycle de vie.
 - `app/exploration-model.js` regroupe la géométrie commune, les index spatiaux et l’inventaire de proximité.
@@ -27,7 +28,7 @@
 - `app/cell-inspector.js` transforme le pointeur en case et porte la sélection, le survol, la fiche documentaire ainsi que son panneau mobile.
 - `app/ui-shell.js` relie les quatre sections natives du carnet, les accordéons, le dimensionnement responsive et l’alignement de la carte.
 - `app/input-controller.js` porte le déplacement, la molette, le pincement, le zoom, la profondeur et les raccourcis cartographiques communs au desktop et au mobile.
-- `app/carnet-format.js` définit le format portable `.atlas`, son registre de sources, son empreinte d’intégrité et la conversion avec les instantanés internes.
+- `app/carnet-format.js` définit le format portable `.atlas`, son empreinte d’intégrité et la conversion avec les instantanés internes en s’appuyant sur le registre central des sources.
 - `app/snapshot-manager.js` valide, restaure et exporte les sauvegardes JSON, texte et HTML autonome ; IndexedDB conserve un instantané indépendant par territoire et migre l’ancienne sauvegarde unique.
 
 Le générateur concatène les sources JavaScript dans cet ordre et les embarque avec les styles dans un unique fichier HTML classique. Ce choix conserve pour l’instant la portée globale et l’ordre d’initialisation de l’application, tout en permettant de réduire le monolithe sans migration brutale.

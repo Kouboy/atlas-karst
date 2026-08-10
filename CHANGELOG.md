@@ -2,6 +2,14 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18g — Registre des sources
+
+- Neuf sources documentaires sont décrites dans un registre central versionné : fournisseur, couverture, rythme de mise à jour, licence et comportement dans un carnet portable.
+- L’état détaillé des sources et leurs attributions sont produits depuis ce registre, sans seconde liste éditée à la main.
+- Les statuts de synchronisation alimentent à la fois le résumé existant, le catalogue détaillé et le diagnostic.
+- Les références incluses dans un carnet `.atlas` sont dérivées du même registre ; Culture et Wikipédia conservent désormais leurs licences et compteurs distincts.
+- Cette fondation prépare l’élargissement raisonné des données locales sans alourdir immédiatement le carnet ni multiplier les définitions divergentes.
+
 ## 0.18f — Coque native
 
 - Les quatre sections Carnets, Explorer, Noter et Sources sont déclarées directement dans le gabarit HTML avec leurs relations d’accessibilité.

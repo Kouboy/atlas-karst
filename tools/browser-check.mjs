@@ -688,6 +688,30 @@ try {
     assert.equal(exportedHtml.hasTitle,true,"l’export HTML n’est pas identifié comme instantané autonome");
   });
 
+  await withPage("registre central des sources", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(()=>{
+      const ids=SOURCE_REGISTRY.map(source=>source.id);
+      const references=sourceReferencesForSnapshot({data:{
+        osm:[{id:1}],osmMeta:{loadedAt:"2026-08-10T10:00:00Z"},address:{label:"test"},
+        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],elevation:{min:1},
+        heritageItems:[{id:"m1",category:"monument",syncedAt:"2026-08-09"},{id:"w1",category:"wikipedia",syncedAt:"2026-08-08"}]
+      }});
+      setSourceStatus("heritage","ok","2 notices");
+      const catalog=[...document.querySelectorAll("#sourceCatalogList .source-catalog-entry")].map(entry=>({id:entry.dataset.sourceId,status:entry.querySelector("[data-source-catalog-status]")?.textContent}));
+      const attribution=document.getElementById("mainAttribution").textContent;
+      const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
+      return {schema:SOURCE_REGISTRY_SCHEMA_VERSION,ids,catalog,references,attribution,runtime:{...sourceRegistryRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
+    });
+    assert.equal(result.schema,1);assert.equal(result.ids.length,9);assert.equal(new Set(result.ids).size,9);assert.equal(result.catalog.length,9);
+    assert.equal(result.catalog.find(source=>source.id==="culture")?.status,"2 notices");assert.equal(result.catalog.find(source=>source.id==="wikipedia")?.status,"2 notices");
+    assert.equal(result.references.find(source=>source.id==="culture")?.count,1);assert.equal(result.references.find(source=>source.id==="wikipedia")?.count,1);
+    assert.equal(result.references.find(source=>source.id==="openstreetmap")?.disposition,"consulted");assert.equal(result.references.find(source=>source.id==="adresse")?.disposition,"embedded");
+    assert.match(result.attribution,/OpenStreetMap \(ODbL\)/);assert.match(result.attribution,/Wikipédia francophone \(CC BY-SA\)/);assert.match(result.attribution,/restent privés/);
+    assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.catalogRenders>=1);assert.ok(result.runtime.attributionRenders>=1);assert.ok(result.runtime.statusUpdates>=1);
+    assert.deepEqual(result.badChecks,[],`diagnostic en échec avec le registre : ${result.badChecks.join(", ")}`);
+  });
+
   await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const result=await page.evaluate(async()=>{

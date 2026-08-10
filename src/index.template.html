@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18f · coque native</title>
+<title>Atlas Karst ASCII v0.18g · registre des sources</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -393,6 +393,10 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>
+    <details class="technical-details source-catalog" style="margin-top:7px">
+      <summary>Catalogue et portabilité</summary>
+      <div id="sourceCatalogList" class="source-catalog-list"></div>
+    </details>
     <input class="file-input-hidden" id="osmFile" type="file" accept=".json,application/json">
     <div class="small" id="osmHelp" style="margin-top:8px">OSM est chargé par petites fenêtres autour de la vue. Pendant l’attente, un chrono et l’étape active sont affichés ; le même bouton permet d’annuler sans perdre les données déjà reçues.</div>
     <button id="retryData" style="width:100%;margin-top:8px">Actualiser le territoire</button>
@@ -574,7 +578,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
-  <div class="source-note map-bound" id="mainAttribution">Attribution : © contributeurs OpenStreetMap ; Cadastre Etalab / DGFiP, avec API Carto IGN / Parcellaire Express PCI en repli ; Géoplateforme / BAN ; BRGM InfoTerre et BSS ; inventaire BDCavités/Géorisques ; Cartofriches / Cerema, Licence Ouverte 2.0 ; Ministère de la Culture / POP et labels nationaux, Licence Ouverte 2.0 (API tabulaire data.gouv.fr prioritaire, portails Culture en repli) ; Wikipédia, CC BY-SA ; relief IGN RGE ALTI, avec Open‑Meteo / Copernicus en solution de repli. Le repère de maison et les observations locales restent privés dans le navigateur tant que le fichier n’est pas publié avec ces informations.</div>
+  <div class="source-note map-bound" id="mainAttribution">Attributions des sources en cours de préparation…</div>
 </main>
 </div>
 

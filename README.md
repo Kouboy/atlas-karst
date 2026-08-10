@@ -30,7 +30,7 @@ Paramètres utiles dans l’URL :
 
 ## Données et prudence d’interprétation
 
-L’Atlas peut consulter notamment OpenStreetMap, le cadastre, des données de relief et plusieurs inventaires publics. Leur disponibilité et leurs politiques d’accès peuvent évoluer.
+L’Atlas peut consulter notamment OpenStreetMap, le cadastre, des données de relief et plusieurs inventaires publics. Leur couverture, licence et comportement dans les carnets portables sont détaillés dans le [`SOURCE_REGISTRY.md`](SOURCE_REGISTRY.md). Leur disponibilité et leurs politiques d’accès peuvent évoluer.
 
 Les profondeurs précédées de `≈`, volumes souterrains, connexions hydrologiques supposées et scénarios ne constituent ni des plans levés, ni des mesures locales, ni un diagnostic de stabilité. Ils doivent rester clairement distingués des observations et sources documentées.
 
