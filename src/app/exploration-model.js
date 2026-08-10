@@ -315,8 +315,8 @@ function ensureSpatialIndexes(){
     if(raw&&typeof raw==="object")spatialRuntime.poiByRaw.set(raw,poi);
   };
   for(const b of state.bss||[])addPoi("bss",b,{kind:b.piezo?"station piézométrique":"forage ou ouvrage BSS",priority:b.piezo?19:17});
-  for(const h of state.hydrometry||[])addPoi("hydrometry",h,{kind:"station hydrométrique",title:h.name||h.river||`Station ${h.code}`,priority:20});
-  for(const b of state.biodiversity||[])addPoi("biodiversity",b,{kind:"maille de biodiversité documentée",title:`${b.speciesCount||b.species?.length||0} espèces publiées`,priority:16});
+  for(const h of state.hydrometry||[])addPoi("hydrometry",h,{kind:"station hydrométrique",title:h.river||h.name||`Station ${h.code}`,priority:20});
+  for(const b of state.biodiversity||[]){const first=b.species?.[0],count=b.speciesCount||b.species?.length||0;addPoi("biodiversity",b,{kind:"maille de biodiversité documentée",title:first?`${first.vernacularName||first.scientificName} · ${count} esp.`:`${count} espèces publiées`,priority:16})}
   for(const c of state.cavities||[])addPoi("cavity",c,{kind:cavityType(c),title:cavityName(c),priority:18});
   for(const o of state.observations||[])addPoi("observation",o,{kind:o.mode==="sight"?"ligne de visée observée":o.mode==="zone"?"zone d’observation approximative":"observation ponctuelle",title:o.name||"Observation locale",priority:19});
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});

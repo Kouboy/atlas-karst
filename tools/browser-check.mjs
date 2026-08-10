@@ -728,11 +728,11 @@ try {
       const items=await syncHydrometry();
       window.fetch=originalFetch;
       ensureSpatialIndexes();
-      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="hydrometry"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet();
-      return {count:items?.length||0,height:items?.[0]?.heightM,flow:items?.[0]?.flowM3s,poiCategory:poi?.category,snapshotCount:snapshot.data.hydrometry?.length||0,carnetCount:carnet.sources.extracts.hydrometry?.length||0,status:document.getElementById("hydrometryStatus").textContent,requests:{...hydrometryRuntime}};
+      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="hydrometry"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(),primary=primaryDocumentarySection(symbolicPoiFeatureInfo(poi));
+      return {count:items?.length||0,height:items?.[0]?.heightM,flow:items?.[0]?.flowM3s,poiCategory:poi?.category,snapshotCount:snapshot.data.hydrometry?.length||0,carnetCount:carnet.sources.extracts.hydrometry?.length||0,primary,status:document.getElementById("hydrometryStatus").textContent,requests:{...hydrometryRuntime}};
     });
     assert.equal(result.count,1);assert.equal(result.height,.634);assert.equal(result.flow,3.38);assert.equal(result.poiCategory,"hydrology");
-    assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.match(result.status,/1 stations/);assert.ok(result.requests.stationRequests>=1);assert.ok(result.requests.observationRequests>=1);
+    assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.match(result.primary,/La rivière témoin/);assert.match(result.primary,/0\.634 m/);assert.match(result.primary,/3\.380 m³\/s/);assert.match(result.status,/1 stations/);assert.ok(result.requests.stationRequests>=1);assert.ok(result.requests.observationRequests>=1);
   });
 
   await withPage("biodiversité agrégée sans coordonnées brutes", { width: 1280, height: 720 }, async (page) => {
@@ -746,10 +746,10 @@ try {
       state.allowNetwork=true;const cells=await syncBiodiversity();window.fetch=originalFetch;ensureSpatialIndexes();
       const serialized=JSON.stringify(cells),poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="biodiversity"),feature=symbolicPoiFeatureInfo(poi),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(),composition=composeMapGrid(largestExtent(),0),ascii=composition.grid.grid.flat().some(cell=>String(cell.cls||"").includes("c-biodiversity")),symbolic=symbolicVisiblePois(composition.grid).some(item=>item.sourceType==="biodiversity");
       state.biodiversityEnabled.fungi=false;const filtered=biodiversityVisibleSpecies(cells[0]).length;state.biodiversityEnabled.fungi=true;
-      return {cells:cells.length,species:biodiversityUniqueSpecies(cells),rawFields:serialized.includes("decimalLatitude")||serialized.includes("decimalLongitude"),rawCoordinate:serialized.includes(String(rawLat))||serialized.includes(String(rawLon)),precision:Math.min(...feature.species.map(item=>item.uncertaintyM)),featureCount:feature.speciesCount,filtered,snapshotCount:snapshot.data.biodiversity.length,carnetCount:carnet.sources.extracts.biodiversity.length,poiCategory:poi.category,ascii,symbolic,status:els.biodiversityStatus.textContent,runtime:{...biodiversityRuntime}};
+      return {cells:cells.length,species:biodiversityUniqueSpecies(cells),rawFields:serialized.includes("decimalLatitude")||serialized.includes("decimalLongitude"),rawCoordinate:serialized.includes(String(rawLat))||serialized.includes(String(rawLon)),precision:Math.min(...feature.species.map(item=>item.uncertaintyM)),featureCount:feature.speciesCount,filtered,snapshotCount:snapshot.data.biodiversity.length,carnetCount:carnet.sources.extracts.biodiversity.length,poiCategory:poi.category,ascii,symbolic,primary:primaryDocumentarySection(feature),status:els.biodiversityStatus.textContent,runtime:{...biodiversityRuntime}};
     });
     assert.equal(result.cells,1);assert.equal(result.species,3);assert.equal(result.rawFields,false);assert.equal(result.rawCoordinate,false);assert.ok(result.precision>=1000);
-    assert.equal(result.featureCount,3);assert.equal(result.filtered,2);assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.equal(result.poiCategory,"biodiversity");assert.equal(result.ascii,true);assert.equal(result.symbolic,true);assert.match(result.status,/3 espèces/);assert.equal(result.runtime.occurrenceRequests,3);
+    assert.equal(result.featureCount,3);assert.equal(result.filtered,2);assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.equal(result.poiCategory,"biodiversity");assert.equal(result.ascii,true);assert.equal(result.symbolic,true);assert.match(result.primary,/Animal témoin/);assert.match(result.primary,/Plante témoin/);assert.match(result.primary,/Champignon témoin/);assert.match(result.status,/3 espèces/);assert.equal(result.runtime.occurrenceRequests,3);
   });
 
   await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {
