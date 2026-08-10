@@ -754,6 +754,8 @@ try {
         debugLocation:document.getElementById("debugToggle")?.closest('[data-section="sources"]')?.dataset.section,
         orphanCards:[...document.querySelectorAll("#sidebar > .card")].filter(card=>!card.hidden&&card.id!=="offlineNotice").map(card=>card.querySelector(":scope > h2")?.textContent.trim()),
         tabLinks:[...document.querySelectorAll(".sidebar-section-tab")].every(tab=>document.getElementById(tab.getAttribute("aria-controls"))?.getAttribute("aria-labelledby")===tab.id),
+        typography:{sidebar:getComputedStyle(document.getElementById("sidebar")).fontFamily,statusbar:getComputedStyle(document.querySelector(".statusbar")).fontFamily,readout:getComputedStyle(document.getElementById("readout")).fontFamily,canvas:getComputedStyle(document.getElementById("mapCanvas")).fontFamily},
+        decorativeIndicatorsHidden:[...document.querySelectorAll(".cluster-meta,.cluster-status")].every(element=>getComputedStyle(element).display==="none"),
         shellStyle:styleOf("#sidebar"),cardStyle:styleOf(".sidebar-cluster .card"),buttonStyle:styleOf(".sidebar-section-tab"),
         palette:{
           sidebar:{color:getComputedStyle(document.getElementById("sidebar")).color,background:getComputedStyle(document.getElementById("sidebar")).backgroundColor},
@@ -767,6 +769,7 @@ try {
     assert.equal(initial.active,"explorer");assert.deepEqual(initial.visible,["explorer"]);assert.equal(initial.tabs[1].selected,"true");
     assert.ok(initial.merged>=3);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
     assert.equal(initial.audioLocation,"sources");assert.equal(initial.debugLocation,"sources");assert.deepEqual(initial.orphanCards,[]);assert.equal(initial.tabLinks,true);
+    assert.equal(initial.decorativeIndicatorsHidden,true);for(const font of [initial.typography.sidebar,initial.typography.statusbar,initial.typography.readout])assert.match(font,/Arial|Helvetica/);assert.match(initial.typography.canvas,/mono/i);
     for(const style of [initial.shellStyle,initial.cardStyle,initial.buttonStyle]){assert.equal(style.radius,"0px");assert.equal(style.shadow,"none");assert.equal(style.image,"none");assert.equal(style.animation,"none")}
     for(const [name,pair] of Object.entries(initial.palette)){
       const background=parseCssRgb(pair.background);assert.ok(background&&Math.max(...background)<64,`${name} n’utilise pas un fond sombre : ${pair.background}`);

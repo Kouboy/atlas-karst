@@ -10,6 +10,7 @@ Ce journal condense les notes historiques auparavant réparties dans les fichier
 - Une seule suppression de carnet et une seule actualisation globale restent visibles ; imports, tests de serveurs et effacements de sources passent dans les options techniques.
 - Accès directs Carnets, Affichage et Noter depuis la carte, avec la fiche documentaire séparée du menu.
 - Coque « carnet de terrain » sombre, fidèle aux tonalités vert-noir, phosphore et ambre de la carte, sans arrondis, dégradés, ombres, halos ni animations décoratives ; hiérarchie portée par les caractères, l’espace et les traits.
+- Finition brutaliste : sans-serif neutre dans la coque, monospace réservée à la carte, grille plus ferme et suppression des derniers statuts pseudo-techniques décoratifs.
 - Moteur cartographique, données et contrôleurs inchangés pendant cette passe d’architecture.
 
 ## 0.18d — Format canonique du carnet

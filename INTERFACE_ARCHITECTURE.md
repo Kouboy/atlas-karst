@@ -33,6 +33,8 @@ La coque suit une règle simple : un élément doit aider à regarder le territo
 - aucun dégradé, ombre, halo, flou ou texture décorative dans la coque ;
 - aucune animation d’interface décorative ;
 - une palette sombre vert-noir, texte clair, phosphore doux et ambre issue de la carte ;
+- une sans-serif neutre pour la coque, la monospace étant réservée à la carte ;
+- une grille brutaliste stricte : titres francs, traits continus, aucun indicateur pseudo-technique décoratif ;
 - une action principale par bloc ;
 - les détails techniques sont fermés par défaut ;
 - les états utilisent du texte et une structure, jamais la couleur seule ;

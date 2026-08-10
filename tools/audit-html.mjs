@@ -283,6 +283,8 @@ check("architecture carnet minimaliste", () =>
   atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-cluster') &&
   atlasCss.includes("--ui-bg:#07100c") &&
   atlasCss.includes("--ui-text:#dce9e1") &&
+  atlasCss.includes("font-family:Arial,Helvetica,sans-serif") &&
+  atlasCss.includes(".cluster-meta,") &&
   !atlasCss.includes("--ui-paper:") &&
   html.includes('data-interface-retired="map-scale-duplicate"') &&
   html.includes('data-interface-retired="map-depth-duplicate"')
