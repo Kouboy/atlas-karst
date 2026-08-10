@@ -424,7 +424,7 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {before,after:{...lifecycleControllerRuntime},calls,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,9);
+    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,10);
     assert.equal(result.after.unlockAttempts-result.before.unlockAttempts,4,"le branchement idempotent a doublé les gestes");
     assert.equal(result.after.visibilityChanges-result.before.visibilityChanges,2);
     assert.equal(result.after.focusChanges-result.before.focusChanges,2);
@@ -694,7 +694,7 @@ try {
       const ids=SOURCE_REGISTRY.map(source=>source.id);
       const references=sourceReferencesForSnapshot({data:{
         osm:[{id:1}],osmMeta:{loadedAt:"2026-08-10T10:00:00Z"},address:{label:"test"},
-        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],elevation:{min:1},
+        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],biodiversity:[{id:"bio1",syncedAt:"2026-08-10"}],elevation:{min:1},
         heritageItems:[{id:"m1",category:"monument",syncedAt:"2026-08-09"},{id:"w1",category:"wikipedia",syncedAt:"2026-08-08"}]
       }});
       setSourceStatus("heritage","ok","2 notices");
@@ -703,10 +703,11 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {schema:SOURCE_REGISTRY_SCHEMA_VERSION,ids,catalog,references,attribution,runtime:{...sourceRegistryRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.schema,1);assert.equal(result.ids.length,10);assert.equal(new Set(result.ids).size,10);assert.equal(result.catalog.length,10);
+    assert.equal(result.schema,1);assert.equal(result.ids.length,11);assert.equal(new Set(result.ids).size,11);assert.equal(result.catalog.length,11);
     assert.equal(result.catalog.find(source=>source.id==="culture")?.status,"2 notices");assert.equal(result.catalog.find(source=>source.id==="wikipedia")?.status,"2 notices");
     assert.equal(result.references.find(source=>source.id==="culture")?.count,1);assert.equal(result.references.find(source=>source.id==="wikipedia")?.count,1);
     assert.equal(result.references.find(source=>source.id==="hydrometry")?.count,1);assert.equal(result.references.find(source=>source.id==="hydrometry")?.disposition,"embedded");
+    assert.equal(result.references.find(source=>source.id==="biodiversity")?.count,1);assert.equal(result.references.find(source=>source.id==="biodiversity")?.disposition,"embedded");
     assert.equal(result.references.find(source=>source.id==="openstreetmap")?.disposition,"consulted");assert.equal(result.references.find(source=>source.id==="adresse")?.disposition,"embedded");
     assert.match(result.attribution,/OpenStreetMap \(ODbL\)/);assert.match(result.attribution,/Wikipédia francophone \(CC BY-SA\)/);assert.match(result.attribution,/restent privés/);
     assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.catalogRenders>=1);assert.ok(result.runtime.attributionRenders>=1);assert.ok(result.runtime.statusUpdates>=1);
@@ -732,6 +733,23 @@ try {
     });
     assert.equal(result.count,1);assert.equal(result.height,.634);assert.equal(result.flow,3.38);assert.equal(result.poiCategory,"hydrology");
     assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.match(result.status,/1 stations/);assert.ok(result.requests.stationRequests>=1);assert.ok(result.requests.observationRequests>=1);
+  });
+
+  await withPage("biodiversité agrégée sans coordonnées brutes", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const originalFetch=window.fetch,extent=largestExtent(),rawLat=extent.south+(extent.north-extent.south)*.4137,rawLon=extent.west+(extent.east-extent.west)*.5289;
+      window.fetch=async url=>{
+        const value=String(url),params=new URL(value).searchParams,taxon=params.get("taxonKey"),record=taxon==="1"?{key:101,speciesKey:1001,species:"Animalia testii",vernacularName:"Animal témoin",kingdom:"Animalia",family:"Testidae",decimalLatitude:rawLat,decimalLongitude:rawLon,eventDate:"2026-05-03",year:2026,coordinateUncertaintyInMeters:24,datasetTitle:"Faune témoin",license:"http://creativecommons.org/licenses/by/4.0/"}:taxon==="6"?{key:102,speciesKey:1002,species:"Planta testii",vernacularName:"Plante témoin",kingdom:"Plantae",family:"Testaceae",decimalLatitude:rawLat+.0001,decimalLongitude:rawLon+.0001,eventDate:"2018-04-01",year:2018,coordinateUncertaintyInMeters:50,datasetTitle:"Flore témoin",license:"http://creativecommons.org/publicdomain/zero/1.0/"}:{key:103,speciesKey:1003,species:"Fungus testii",vernacularName:"Champignon témoin",kingdom:"Fungi",family:"Testaceae",decimalLatitude:rawLat+.0002,decimalLongitude:rawLon+.0002,eventDate:"2008-10-10",year:2008,coordinateUncertaintyInMeters:10,datasetTitle:"Fonge témoin",license:"http://creativecommons.org/licenses/by-nc/4.0/"};
+        return new Response(JSON.stringify({count:40000,results:[record]}),{status:200,headers:{"Content-Type":"application/json"}});
+      };
+      state.allowNetwork=true;const cells=await syncBiodiversity();window.fetch=originalFetch;ensureSpatialIndexes();
+      const serialized=JSON.stringify(cells),poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="biodiversity"),feature=symbolicPoiFeatureInfo(poi),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(),composition=composeMapGrid(largestExtent(),0),ascii=composition.grid.grid.flat().some(cell=>String(cell.cls||"").includes("c-biodiversity")),symbolic=symbolicVisiblePois(composition.grid).some(item=>item.sourceType==="biodiversity");
+      state.biodiversityEnabled.fungi=false;const filtered=biodiversityVisibleSpecies(cells[0]).length;state.biodiversityEnabled.fungi=true;
+      return {cells:cells.length,species:biodiversityUniqueSpecies(cells),rawFields:serialized.includes("decimalLatitude")||serialized.includes("decimalLongitude"),rawCoordinate:serialized.includes(String(rawLat))||serialized.includes(String(rawLon)),precision:Math.min(...feature.species.map(item=>item.uncertaintyM)),featureCount:feature.speciesCount,filtered,snapshotCount:snapshot.data.biodiversity.length,carnetCount:carnet.sources.extracts.biodiversity.length,poiCategory:poi.category,ascii,symbolic,status:els.biodiversityStatus.textContent,runtime:{...biodiversityRuntime}};
+    });
+    assert.equal(result.cells,1);assert.equal(result.species,3);assert.equal(result.rawFields,false);assert.equal(result.rawCoordinate,false);assert.ok(result.precision>=1000);
+    assert.equal(result.featureCount,3);assert.equal(result.filtered,2);assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.equal(result.poiCategory,"biodiversity");assert.equal(result.ascii,true);assert.equal(result.symbolic,true);assert.match(result.status,/3 espèces/);assert.equal(result.runtime.occurrenceRequests,3);
   });
 
   await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {

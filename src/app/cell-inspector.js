@@ -100,7 +100,7 @@ function coarsePointer(){
 }
 function selectableFeature(cell){
   const f=cell?.feature;
-  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.hydrometry||f.cartofriches));
+  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.hydrometry||f.biodiversity||f.cartofriches));
 }
 function assistedCell(x,y,radius=2){
   if(!state.lastGrid)return {x,y,snapped:false};
@@ -143,7 +143,7 @@ function closeSelectionAssist(){
 }
 function cellSelectionSound(cell){
   const f=cell?.feature||{},cls=String(cell?.cls||""),tags=f.tags||{};
-  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
+  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",biodiversity:"cellForest",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
   if(normalized)return normalized;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0||cell?.confidence)return "cellUnderground";
@@ -163,7 +163,7 @@ function cellSelectionSound(cell){
 }
 function playCellSelectionSound(cell,{snapped=false}={}){
   const poiKind=poiSelectionKind(cell);
-  const poiSound={cavity:"poiCavity",bss:"poiBss",hydrology:"poiNatural",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
+  const poiSound={cavity:"poiCavity",bss:"poiBss",hydrology:"poiNatural",biodiversity:"poiNatural",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
   retroAudio.play(poiSound||cellSelectionSound(cell));
   if(snapped)setTimeout(()=>retroAudio.play("snapAccent"),110);
 }
@@ -177,6 +177,7 @@ function poiSelectionKind(cell){
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "cavity";
   if(f.bss||f.indice||cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
   if(f.hydrometry||cls.includes("c-hydrometry"))return "hydrology";
+  if(f.biodiversity||cls.includes("c-biodiversity"))return "biodiversity";
   if(f.heritage||cls.includes("c-heritage"))return "heritage";
   if(f.cartofriches||cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
   if(f.observation||f.lore||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
@@ -330,6 +331,10 @@ function featureNarrative(f){
   if(!f)return "";
   const name=f.name?` <strong>${esc(f.name)}</strong>`:"";
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`;
+  if(f.biodiversity){
+    const names=(f.species||[]).slice(0,6).map(item=>esc(item.vernacularName||item.scientificName)).join(", ");
+    return `Cette maille d’environ un kilomètre rassemble <strong>${f.speciesCount||0} espèces</strong> dans l’échantillon publié${names?` : ${names}${f.species.length>6?"…":""}`:""}. Elle indique des observations passées et imparfaitement localisées, jamais une présence actuelle garantie.`;
+  }
   if(f.hydrometry){
     const values=[Number.isFinite(f.heightM)&&`hauteur ${f.heightM.toFixed(3)} m`,Number.isFinite(f.flowM3s)&&`débit ${f.flowM3s.toFixed(3)} m³/s`].filter(Boolean).join(" · ");
     return `Une station hydrométrique documente ici${name||" le cours d’eau"}.${values?` Dernière lecture disponible : ${values}.`:" Aucune mesure récente n’accompagne la station."} Cette valeur ponctuelle décrit la station, pas à elle seule le risque de crue local.`;
@@ -366,7 +371,7 @@ function featureNarrative(f){
 }
 function evidenceProfile(cell){
   const f=cell?.feature||{};
-  const documented=!!(f.source||f.bss||f.hydrometry||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
+  const documented=!!(f.source||f.bss||f.hydrometry||f.biodiversity||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
   const observed=!!(f.observation||f.lore||f.confidenceLabel);
   const hypothesis=currentDepth()<0||!!cell?.confidence||!!f.hypothesisModel;
   return {documented,observed,interpreted:true,hypothesis};
@@ -379,6 +384,7 @@ function criticalReading(cell){
   const f=cell?.feature||{},descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0)return "La coupe aide à comparer les niveaux et à garder une continuité spatiale. Elle ne permet pas d’affirmer qu’une galerie passe sous cette cellule, ni que la profondeur affichée est mesurée localement.";
   if(f.hydrometry)return "La mesure est issue de la station et peut être récente, mais elle ne remplace ni les bulletins Vigicrues, ni les consignes des autorités, ni une observation de terrain.";
+  if(f.biodiversity)return "La maille évite une fausse précision. Le nombre affiché dépend des jeux publiés, de leur effort d’observation et de l’échantillon borné de l’Atlas ; il ne mesure ni l’abondance, ni l’absence des espèces non citées.";
   if(f.bss||f.indice||/forage|sondage|puits|pi[eé]zo/.test(descriptor))return "Cet ouvrage décrit un point vertical du sous-sol. Il peut éclairer la nature ou l’épaisseur des terrains traversés, mais il ne transforme pas le voisinage en cavité connue.";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "La présence du repère est documentée. En revanche, l’emprise, les accès, la stabilité et les connexions éventuelles restent inconnus tant qu’aucun plan ou levé local ne les établit.";
   if(f.heritage)return "La notice permet d’identifier et de contextualiser le lieu. Elle ne prouve pas que chaque détail historique, chaque dépendance ou chaque état du bâtiment soit encore observable aujourd’hui.";
@@ -386,7 +392,7 @@ function criticalReading(cell){
   if(f.cartofriches||f.siteType)return "Le statut du site renseigne son histoire d’usage. Il ne suffit pas à conclure sur une pollution, une accessibilité ou une structure souterraine particulière.";
   return "Ici, l’Atlas décrit surtout un contexte de terrain. Toute conclusion plus précise demanderait une source dédiée, une observation datée ou une mesure locale.";
 }
-function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
+function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",biodiversity:"maille de biodiversité",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
 function nearbyEntries(x,y){
   if(!state.lastGrid)return [];
   const center=gridToCoord(x,y,state.lastGrid.extent),z=currentZoom();
@@ -435,6 +441,14 @@ function technicalCellLines(cell,x,y){
     if(Number.isFinite(f.heightM))parts.push(`Hauteur mesurée : <strong>${f.heightM.toFixed(3)} m</strong>`);
     if(Number.isFinite(f.flowM3s))parts.push(`Débit mesuré : <strong>${f.flowM3s.toFixed(3)} m³/s</strong>`);
     if(f.observedAt)parts.push(`Mesure datée du : ${esc(new Date(f.observedAt).toLocaleString("fr-FR"))}`);
+    if(f.biodiversity){
+      parts.push(`Maille agrégée : <strong>${esc(f.cellCode||"—")}</strong> · précision minimale ${Math.round(f.precisionM||1000)} m`);
+      parts.push(`Espèces dans le filtre actif : <strong>${f.speciesCount||0}</strong> · occurrences échantillonnées ${f.sampledRecords||0}`);
+      if(f.latestDate)parts.push(`Observation la plus récente de l’échantillon : ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`);
+      if(f.species?.length)parts.push(`<strong>Espèces publiées :</strong><br>${f.species.slice(0,20).map(item=>`${esc(item.vernacularName||item.scientificName)}${item.vernacularName?` <em>(${esc(item.scientificName)})</em>`:""} · ${esc(item.group==="animals"?"faune":item.group==="plants"?"flore":"champignons")}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`).join("<br>")}${f.species.length>20?"<br>…":""}`);
+      if(f.datasets?.length)parts.push(`Jeux contributeurs : ${f.datasets.map(esc).join(" · ")}`);
+      if(f.licenses?.length)parts.push(`Licences déclarées : ${f.licenses.map(esc).join(" · ")}`);
+    }
     if(f.indice)parts.push(`Indice BSS : ${esc(f.indice)}`);
     if(f.place)parts.push(`Lieu-dit : ${esc(f.place)}`);
     if(f.record?.coordinateSource)parts.push(`Coordonnées : ${esc(f.record.coordinateSource)}`);

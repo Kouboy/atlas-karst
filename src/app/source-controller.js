@@ -65,6 +65,12 @@ function bindSourceController(){
   els.clearBss.addEventListener("click",resetBssSource);
   bindSourceAction(els.syncHydrometry,"click","synchronisation hydrométrique",syncHydrometry);
   els.clearHydrometry.addEventListener("click",()=>{accountSourceAction("effacement hydrométrie");sourceControllerRuntime.clears++;clearHydrometry()});
+  bindSourceAction(els.syncBiodiversity,"click","synchronisation biodiversité",syncBiodiversity);
+  els.clearBiodiversity.addEventListener("click",()=>{accountSourceAction("effacement biodiversité");sourceControllerRuntime.clears++;clearBiodiversity()});
+  for(const group of BIODIVERSITY_GROUPS){
+    const id=`biodiversity${group.id[0].toUpperCase()}${group.id.slice(1)}`;
+    els[id].addEventListener("change",event=>{accountSourceAction(`filtre biodiversité ${group.id}`);sourceControllerRuntime.filterChanges++;state.biodiversityEnabled[group.id]=event.target.checked;saveBiodiversity();updateBiodiversityUI();markSpatialIndexesDirty();render("biodiversity-filter")});
+  }
 
   bindSourceAction(els.syncCartofriches,"click","synchronisation Cartofriches",syncCartofriches);
   bindSourceAction(els.downloadCartofriches,"click","téléchargement Cartofriches",()=>window.open(CARTOFRICHES_DOWNLOAD,"_blank","noopener"));
