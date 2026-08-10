@@ -520,6 +520,7 @@ label.switch{font-size:11px;color:#c9d8cf}
 .cell-section{position:relative;padding:9px 10px 9px 13px;border-left-width:2px;border-radius:0;background:rgba(14,26,20,.82)}
 .cell-section::before{content:"";position:absolute;left:5px;top:13px;width:3px;height:3px;background:currentColor;opacity:.55}
 .cell-section h3{font-size:8px;letter-spacing:.15em}
+.cell-section-primary{border-left-color:#9dde72;background:#101d14;color:#dce9e1}.cell-primary-title{margin:2px 0 7px;color:#f0f4e7;font-size:12px;font-weight:800;line-height:1.35}.cell-primary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cell-primary-metrics span{display:grid;gap:2px;border-top:1px solid #41634b;padding-top:5px}.cell-primary-metrics small{color:#8fad99;font-size:8px;text-transform:uppercase;letter-spacing:.1em}.cell-primary-metrics strong{color:#9dde72;font-size:14px}.cell-primary-species{display:grid;gap:5px;margin:0;padding:0;list-style:none}.cell-primary-species li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;border-top:1px solid #294536;padding-top:5px}.cell-primary-species em{color:#9eb2a5;font-size:9px}.cell-primary-species span{grid-column:1/-1;color:#7f9c89;font-size:8px;text-transform:uppercase;letter-spacing:.06em}
 .cell-section p,.cell-facts{font-size:10px;line-height:1.55}
 .cell-section-reading{border-left-color:#77a9bc;background:rgba(10,25,33,.72)}
 .cell-section-nearby{background:rgba(27,23,13,.72)}
