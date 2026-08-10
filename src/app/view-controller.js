@@ -1,4 +1,5 @@
-const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_FILTER_KEY="atlas-karst-layer-filter-v1";
 const viewControllerRuntime={ready:true,bound:false,modeChanges:0,scenarioChanges:0,layerChanges:0,cavitySelections:0,recenters:0,debugActions:0,lastAction:"initialisation"};
 
 function accountViewAction(action){viewControllerRuntime.lastAction=action}
@@ -20,6 +21,27 @@ function setLayerFromControl(id,enabled){
   }
   render(`layer-change:${id}`);
 }
+function layerControlIdsForCategory(category=els.layerCategoryFilter?.value||"all"){
+  if(category==="all")return [...VIEW_LAYER_CONTROL_IDS];
+  return [...els.layerSwitchList?.querySelectorAll(`[data-layer-category="${category}"] input[id]`)||[]].map(input=>input.id).filter(id=>VIEW_LAYER_CONTROL_IDS.includes(id));
+}
+function applyLayerCategoryFilter(category=els.layerCategoryFilter?.value||"all"){
+  const normalized=["all","terrain","documents","underground","interface"].includes(category)?category:"all";
+  if(els.layerCategoryFilter)els.layerCategoryFilter.value=normalized;
+  for(const label of els.layerSwitchList?.querySelectorAll("[data-layer-category]")||[])label.hidden=normalized!=="all"&&label.dataset.layerCategory!==normalized;
+  try{localStorage.setItem(VIEW_LAYER_FILTER_KEY,normalized)}catch{}
+}
+function setLayerControlGroup(ids,enabled,reason){
+  const targets=ids.filter(id=>VIEW_LAYER_CONTROL_IDS.includes(id));if(!targets.length)return;
+  viewControllerRuntime.layerChanges+=targets.length;accountViewAction(reason);
+  for(const id of targets){state[id]=enabled;if(els[id])els[id].checked=enabled}
+  if(targets.includes("layerHydrology"))hypothesisModelCache.clear();
+  if(targets.includes("ambientMotion")){
+    try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}
+    syncAmbientMotionState({pulse:state.ambientMotion,reason:"preference"});
+  }
+  render(reason);
+}
 function focusCavityFromControl(id){
   const cavity=state.cavities.find(item=>item.id===id);if(!cavity||!Number.isFinite(cavity.lat))return;
   viewControllerRuntime.cavitySelections++;accountViewAction("sélection de cavité");
@@ -35,6 +57,13 @@ function bindViewController(){
   els.renderModeSymbolic?.addEventListener("click",()=>{viewControllerRuntime.modeChanges++;accountViewAction("mode symbolique");setRenderMode("symbolic")});
   els.renderModeAscii?.addEventListener("click",()=>{viewControllerRuntime.modeChanges++;accountViewAction("mode ASCII");setRenderMode("ascii")});
   for(const id of VIEW_LAYER_CONTROL_IDS)els[id].addEventListener("change",event=>setLayerFromControl(id,event.target.checked));
+  let savedFilter="all";try{savedFilter=localStorage.getItem(VIEW_LAYER_FILTER_KEY)||"all"}catch{}
+  applyLayerCategoryFilter(savedFilter);
+  els.layerCategoryFilter?.addEventListener("change",event=>applyLayerCategoryFilter(event.target.value));
+  els.layersShowCategory?.addEventListener("click",()=>setLayerControlGroup(layerControlIdsForCategory(),true,"couches de la catégorie affichées"));
+  els.layersHideCategory?.addEventListener("click",()=>setLayerControlGroup(layerControlIdsForCategory(),false,"couches de la catégorie masquées"));
+  els.layersSelectAll?.addEventListener("click",()=>setLayerControlGroup(VIEW_LAYER_CONTROL_IDS,true,"toutes les couches affichées"));
+  els.layersClearAll?.addEventListener("click",()=>setLayerControlGroup(VIEW_LAYER_CONTROL_IDS,false,"toutes les couches masquées"));
   els.cavitySelect.addEventListener("change",event=>focusCavityFromControl(event.target.value));
   if(els.debugToggle)els.debugToggle.addEventListener("click",()=>runViewDebugAction("bascule du diagnostic",()=>setDebugEnabled(!debugState.enabled)));
   if(els.runSelfCheck)els.runSelfCheck.addEventListener("click",()=>runViewDebugAction("auto-diagnostic",runAtlasSelfCheck));

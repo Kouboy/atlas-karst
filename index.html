@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18h · hydrométrie locale</title>
+<title>Atlas Karst ASCII v0.18i · biodiversité locale</title>
 <style>
 :root{
   color-scheme:dark;
@@ -216,6 +216,10 @@ select{width:100%}
 .c-parcel{color:#536b60}.c-cad-building{color:#fff0d2;font-weight:900}.c-bss{color:#ffd866;font-weight:900}
 .c-piezo{color:#70d6ff;font-weight:900}
 .c-hydrometry{color:#70d6ff;font-weight:900}
+.c-biodiversity{color:#9dde72;font-weight:900}
+.c-biodiversity-animals{color:#e6c86f;font-weight:900}
+.c-biodiversity-plants{color:#9dde72;font-weight:900}
+.c-biodiversity-fungi{color:#c79ad8;font-weight:900}
 .c-observation{color:#ff8bd8;font-weight:900}.c-sight{color:#ef9ee8}.c-zone{color:#cf79be}.c-address{color:#ff7784;font-weight:900}
 .c-lore-heritage{color:#ffe08a;font-weight:900}.c-lore-ruin{color:#ffad7c;font-weight:900}.c-lore-friche{color:#d8b4ff;font-weight:900}.c-lore-abandoned{color:#8fd3c7;font-weight:900}.c-lore-anecdote{color:#ffd1f2;font-weight:900}.c-lore-mystery{color:#ff7ea2;font-weight:900}.c-lore-view{color:#8fd8ff;font-weight:900}
 .c-heritage-monument{color:#ffd569;font-weight:900;text-shadow:0 0 5px rgba(255,213,105,.35)}
@@ -527,6 +531,7 @@ label.switch{font-size:11px;color:#c9d8cf}
 .cell-section{position:relative;padding:9px 10px 9px 13px;border-left-width:2px;border-radius:0;background:rgba(14,26,20,.82)}
 .cell-section::before{content:"";position:absolute;left:5px;top:13px;width:3px;height:3px;background:currentColor;opacity:.55}
 .cell-section h3{font-size:8px;letter-spacing:.15em}
+.cell-section-primary{border-left-color:#9dde72;background:#101d14;color:#dce9e1}.cell-primary-title{margin:2px 0 7px;color:#f0f4e7;font-size:12px;font-weight:800;line-height:1.35}.cell-primary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cell-primary-metrics span{display:grid;gap:2px;border-top:1px solid #41634b;padding-top:5px}.cell-primary-metrics small{color:#8fad99;font-size:8px;text-transform:uppercase;letter-spacing:.1em}.cell-primary-metrics strong{color:#9dde72;font-size:14px}.cell-primary-species{display:grid;gap:5px;margin:0;padding:0;list-style:none}.cell-primary-species li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;border-top:1px solid #294536;padding-top:5px}.cell-primary-species em{color:#9eb2a5;font-size:9px}.cell-primary-species span{grid-column:1/-1;color:#7f9c89;font-size:8px;text-transform:uppercase;letter-spacing:.06em}.cell-species-link{grid-column:1/-1;width:max-content;color:#9dde72;font-size:8px;text-transform:uppercase;letter-spacing:.06em;text-decoration:none;border-bottom:1px solid #41634b}.cell-species-link:hover,.cell-species-link:focus-visible{color:#f0f4e7;border-bottom-color:currentColor}
 .cell-section p,.cell-facts{font-size:10px;line-height:1.55}
 .cell-section-reading{border-left-color:#77a9bc;background:rgba(10,25,33,.72)}
 .cell-section-nearby{background:rgba(27,23,13,.72)}
@@ -1282,14 +1287,19 @@ body[data-ui-version="field-notebook"] aside{
   padding:12px;background:var(--ui-bg);color:var(--ui-text);border-right:2px solid var(--ui-line-strong);
   font-family:Arial,Helvetica,sans-serif
 }
-body[data-ui-version="field-notebook"] .sidebar-head{padding:0 0 12px;border-bottom:2px solid var(--ui-line-strong);background:var(--ui-bg)}
+body[data-ui-version="field-notebook"] .sidebar-collapse-bar{
+  position:sticky;top:-12px;z-index:12;display:block;width:calc(100% + 24px);min-height:37px;margin:-12px -12px 0;padding:8px 12px;
+  border:0;border-bottom:2px solid var(--ui-accent);background:#09150f;color:var(--ui-accent);text-align:left;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase
+}
+body[data-ui-version="field-notebook"] .sidebar-collapse-bar:hover,body[data-ui-version="field-notebook"] .sidebar-collapse-bar:focus-visible{background:var(--ui-accent);color:#04100a;outline:0}
+body[data-ui-version="field-notebook"] .sidebar-head{position:relative;top:auto;z-index:1;margin:0;padding:12px 0;border-bottom:2px solid var(--ui-line-strong);background:var(--ui-bg)}
 body[data-ui-version="field-notebook"] .sidebar-title-copy{min-width:0}
 body[data-ui-version="field-notebook"] .eyebrow{color:var(--ui-warn);font-size:9px;font-weight:800;letter-spacing:.16em}
 body[data-ui-version="field-notebook"] h1{margin:5px 0 2px;color:#f0f4e8;font-size:25px;font-weight:900;letter-spacing:-.055em;line-height:1}
 body[data-ui-version="field-notebook"] .sub{max-width:290px;color:var(--ui-muted);font-size:11px;line-height:1.35}
 body[data-ui-version="field-notebook"] #territorySummary{margin-top:8px;color:var(--ui-text);font-weight:650}
 body[data-ui-version="field-notebook"] .sidebar-section-tabs{
-  position:sticky;top:-12px;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  position:sticky;top:25px;z-index:10;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
   margin:0 -12px;padding:0 12px;background:var(--ui-bg);border-bottom:2px solid var(--ui-line-strong)
 }
 body[data-ui-version="field-notebook"] .sidebar-section-tab{
@@ -1315,7 +1325,8 @@ body[data-ui-version="field-notebook"] aside .card.collapsed>.card-body{display:
 body[data-ui-version="field-notebook"] aside button,
 body[data-ui-version="field-notebook"] aside select,
 body[data-ui-version="field-notebook"] aside input[type="text"],
-body[data-ui-version="field-notebook"] aside input[type="number"]{
+body[data-ui-version="field-notebook"] aside input[type="number"],
+body[data-ui-version="field-notebook"] aside textarea{
   min-height:36px;padding:7px 8px;border:1px solid var(--ui-line-strong);background:var(--ui-panel);color:var(--ui-text);font-size:11px
 }
 body[data-ui-version="field-notebook"] aside button{font-weight:700;letter-spacing:.025em;text-transform:uppercase}
@@ -1324,6 +1335,7 @@ body[data-ui-version="field-notebook"] aside button:hover,
 body[data-ui-version="field-notebook"] aside button:focus-visible,
 body[data-ui-version="field-notebook"] aside select:focus-visible,
 body[data-ui-version="field-notebook"] aside input:focus-visible{border-color:var(--ui-accent);outline:1px solid var(--ui-accent);outline-offset:1px}
+body[data-ui-version="field-notebook"] aside textarea:focus-visible{border-color:var(--ui-accent);outline:1px solid var(--ui-accent);outline-offset:1px}
 body[data-ui-version="field-notebook"] aside button.active{background:#1d402e;border-color:var(--ui-accent);color:#effff5}
 body[data-ui-version="field-notebook"] aside .action-danger{color:var(--ui-danger);border-color:#714047}
 body[data-ui-version="field-notebook"] aside .small,
@@ -1375,6 +1387,14 @@ body[data-ui-version="field-notebook"] .map-actions button{
 }
 body[data-ui-version="field-notebook"] .card.card-awake{box-shadow:none!important}
 body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:none!important;filter:none!important}
+.layer-filter-panel{display:grid;gap:7px;margin:0 0 9px;padding:8px;border:1px solid var(--ui-line);background:#08110c}
+.layer-filter-panel select{width:100%;margin-top:4px}.layer-filter-actions{gap:5px}.layer-filter-actions button{min-height:30px!important;padding:5px!important;font-size:8px!important}
+.layer-switch-list{display:grid}.layer-switch-list .switch[hidden]{display:none!important}
+.poi-annotation-form{display:grid;gap:8px}.poi-annotation-form label{display:grid;gap:4px;color:#a7baad;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.poi-annotation-form input,.poi-annotation-form textarea{width:100%;padding:7px 8px;border:1px solid #41634b;background:#08110c;color:#e9f4ec;font:inherit}.poi-annotation-form textarea{min-height:72px;resize:vertical}
+.poi-species-aliases{display:grid;gap:7px;padding:8px;border:1px solid #294536;background:#0a1510}.poi-species-aliases h4{margin:0;color:#dce9e1;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.poi-species-aliases small{color:#81998a;font-size:8px;font-style:italic;text-transform:none;letter-spacing:0}
+.poi-annotation-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.poi-annotation-status{min-height:14px;color:#9dde72;font-size:9px}
+.personal-name-mark{display:inline-block;margin-left:4px;padding:1px 3px;border:1px solid #557b8d;color:#9fcce0;font-size:7px;font-style:normal;text-transform:uppercase;letter-spacing:.06em}
 @media(max-width:520px){
   body[data-ui-version="field-notebook"] .statusbar .badge{display:none}
   body[data-ui-version="field-notebook"] .statusbar .toolbar-button{flex:1 1 auto;padding-inline:5px;font-size:9px}
@@ -1386,6 +1406,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <div class="app">
 <aside id="sidebar">
+  <button id="sidebarClose" class="sidebar-collapse-bar" type="button" title="Réduire le panneau" aria-label="Réduire le panneau">← réduire le panneau</button>
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
       <div class="eyebrow">CARNET TERRITORIAL · <span id="appVersionLabel">V—</span></div>
@@ -1397,7 +1418,6 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
         <button id="expandCards" type="button">＋ déployer</button>
       </div>
     </div>
-    <button id="sidebarClose" class="sidebar-close" type="button" title="Fermer le panneau">✕</button>
   </div>
 
   <nav class="sidebar-section-tabs" role="tablist" aria-label="Sections du carnet">
@@ -1566,22 +1586,38 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <button id="renderModeAscii" type="button" aria-pressed="false">⌁ ASCII</button>
     </div>
     <div class="render-mode-note" id="renderModeHelp">Le mode symbolique couvre maintenant la surface et les coupes souterraines. Les volumes gardent une géométrie commune entre profondeurs ; l’ASCII reste disponible comme lecture alternative.</div>
-    <label class="switch"><input id="layerSurface" type="checkbox" checked> Surface / fantôme de surface</label>
-    <label class="switch"><input id="layerRelief" type="checkbox" checked> Relief et courbes de niveau</label>
-    <label class="switch"><input id="layerCadastreBuildings" type="checkbox" checked> Bâtiments cadastraux</label>
-    <label class="switch"><input id="layerParcels" type="checkbox"> Limites de parcelles au zoom proche</label>
-    <label class="switch"><input id="layerBss" type="checkbox" checked> Forages et ouvrages BSS</label>
-    <label class="switch"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
-    <label class="switch"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
-    <label class="switch"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
-    <label class="switch"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
-    <label class="switch"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
-    <label class="switch"><input id="layerCavities" type="checkbox" checked> Repères de cavités documentés</label>
-    <label class="switch"><input id="layerHypothesis" type="checkbox" checked> Volumes souterrains extrapolés · coupes cohérentes</label>
-    <label class="switch"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée · confiance très faible</label>
-    <label class="switch"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
-    <label class="switch"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
-    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Animations de l’interface et des points d’intérêt</label>
+    <div class="layer-filter-panel" role="group" aria-label="Filtrer et modifier les couches affichées">
+      <label class="field-label">Catégorie
+        <select id="layerCategoryFilter">
+          <option value="all">Toutes les catégories</option>
+          <option value="terrain">Terrain et fond de carte</option>
+          <option value="documents">Repères documentés</option>
+          <option value="underground">Sous-sol interprété</option>
+          <option value="interface">Interface</option>
+        </select>
+      </label>
+      <div class="grid2 layer-filter-actions"><button id="layersShowCategory" type="button">✓ afficher la catégorie</button><button id="layersHideCategory" type="button">× masquer la catégorie</button></div>
+      <div class="grid2 layer-filter-actions"><button id="layersSelectAll" type="button">Tout sélectionner</button><button id="layersClearAll" type="button">Tout désélectionner</button></div>
+    </div>
+    <div id="layerSwitchList" class="layer-switch-list">
+      <label class="switch" data-layer-category="terrain"><input id="layerSurface" type="checkbox" checked> Surface / fantôme de surface</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerRelief" type="checkbox" checked> Relief et courbes de niveau</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerCadastreBuildings" type="checkbox" checked> Bâtiments cadastraux</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerParcels" type="checkbox"> Limites de parcelles au zoom proche</label>
+      <label class="switch" data-layer-category="documents"><input id="layerBss" type="checkbox" checked> Forages et ouvrages BSS</label>
+      <label class="switch" data-layer-category="documents"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
+      <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
+      <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
+      <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
+      <label class="switch" data-layer-category="documents"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
+      <label class="switch" data-layer-category="documents"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
+      <label class="switch" data-layer-category="documents"><input id="layerCavities" type="checkbox" checked> Repères de cavités documentés</label>
+      <label class="switch" data-layer-category="underground"><input id="layerHypothesis" type="checkbox" checked> Volumes souterrains extrapolés · coupes cohérentes</label>
+      <label class="switch" data-layer-category="underground"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée · confiance très faible</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
+      <label class="switch" data-layer-category="interface"><input id="ambientMotion" type="checkbox" checked> Animations de l’interface et des points d’intérêt</label>
+    </div>
     <label class="switch">Scénario
       <select id="scenario">
         <option value="prudent">prudent</option>
@@ -1755,6 +1791,23 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <div class="small" id="hydrometryHelp" style="margin-top:8px">Les stations et leurs dernières hauteur ou débit disponibles sont recherchés dans l’emprise du carnet, puis mémorisés localement. Ces mesures sont indicatives et ne constituent pas une alerte de crue.</div>
   </section>
 
+  <section class="card" data-ui-card="biodiversity">
+    <h2>Biodiversité locale</h2>
+    <div class="grid2">
+      <div><div class="carto-count" id="biodiversityCount">0</div><div class="small">espèces dans l’échantillon local</div></div>
+      <div class="small" id="biodiversitySummary">Aucun extrait de biodiversité synchronisé.</div>
+    </div>
+    <div class="small">Sous-couches cartographiques</div>
+    <div class="heritage-sources">
+      <label><input id="biodiversityAnimals" type="checkbox" checked> Faune</label>
+      <label><input id="biodiversityPlants" type="checkbox" checked> Flore</label>
+      <label><input id="biodiversityFungi" type="checkbox" checked> Champignons</label>
+    </div>
+    <button id="syncBiodiversity" style="width:100%;margin-top:9px">Actualiser les observations GBIF</button>
+    <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div><button id="clearBiodiversity" style="width:100%">Vider cette source</button></div></details>
+    <div class="small" id="biodiversityHelp" style="margin-top:8px">L’Atlas échantillonne séparément plusieurs grands groupes animaux, la flore et les champignons, puis regroupe les observations dans des mailles d’environ 1 km. Les fiches donnent priorité au nom usuel lorsqu’il est publié, puis précisent le groupe biologique, la famille, la date et le type d’observation. Une occurrence n’établit ni une présence actuelle, ni une position exacte.</div>
+  </section>
+
   <section class="card" data-ui-card="source-status">
     <h2>État des sources</h2>
     <div class="data-status">
@@ -1766,6 +1819,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <div class="status-line"><span>Patrimoine & curiosités</span><strong id="heritageStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>BSS / piézomètres</span><strong id="bssStatus" class="pending">non chargé · optionnel</strong></div>
       <div class="status-line"><span>Hydrométrie</span><strong id="hydrometryStatus" class="pending">à synchroniser</strong></div>
+      <div class="status-line"><span>Biodiversité</span><strong id="biodiversityStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>
@@ -1815,6 +1869,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
         <div><code>·</code> chemin</div><div><code>█</code> bâtiment cadastral</div>
         <div><code>┄</code> limite de parcelle</div><div><code>B•</code> forage / ouvrage BSS</div><div><code>P≈</code> piézomètre Hub’Eau</div>
         <div><code>H≈</code> station hydrométrique</div>
+        <div><code>Fa</code> observations de faune</div><div><code>Fl</code> observations de flore</div><div><code>Fu</code> observations de champignons</div>
         <div><code>q</code> carrière à ciel ouvert</div><div><code>░</code> bâti / terrain dégagé</div>
       </div>
     </div>
@@ -1972,7 +2027,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18h";
+const APP_VERSION = "0.18i";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2207,8 +2262,9 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===4,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
-  checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===10&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
+  checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===11&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
   checks.push(debugCheckResult("Hydrométrie bornée",hydrometryRuntime.ready&&state.hydrometry.length<=HYDROMETRY_STATION_CAP,`${state.hydrometry.length}/${HYDROMETRY_STATION_CAP} stations · ${hydrometryRuntime.measured} mesurées · ${hydrometryRuntime.observationRequests} requêtes de mesure`));
+  checks.push(debugCheckResult("Biodiversité agrégée",biodiversityRuntime.ready&&state.biodiversity.length<=Math.ceil(CONFIG.dataWidthKm)*Math.ceil(CONFIG.dataHeightKm),`${biodiversityUniqueSpecies()} espèces · ${state.biodiversity.length} mailles · ${biodiversityRuntime.rawReceived} occurrences échantillonnées`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
@@ -2526,6 +2582,7 @@ const OFFLINE_DEMO_POINTS = [
 ];
 
 const RENDER_MODE_PREF_KEY = "atlas-karst-render-mode-v1";
+const POI_ANNOTATIONS_KEY = "atlas-karst-poi-annotations-v1";
 
 const state = {
   zoomIndex:1,
@@ -2551,6 +2608,7 @@ const state = {
   layerParcels:false,
   layerBss:true,
   layerHydrometry:true,
+  layerBiodiversity:true,
   layerObservations:true,
   layerHeritage:true,
   layerLore:true,
@@ -2588,6 +2646,9 @@ const state = {
   address:null,
   bss:[],
   hydrometry:[],
+  biodiversity:[],
+  biodiversityEnabled:{animals:true,plants:true,fungi:true},
+  poiAnnotations:{},
   cavityInventoryOnly:true,
   elevation:null,
   selectedCavity:null,
@@ -2598,7 +2659,7 @@ const state = {
   selectionAssistVisible:false,
   allowNetwork:FORCE_ONLINE||!EMBEDDED_SNAPSHOT,
   snapshotSource:EMBEDDED_SNAPSHOT?"embarqué":"session",
-  load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",elevation:"pending"}
+  load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",biodiversity:"pending",elevation:"pending"}
 };
 
 els = Object.fromEntries([
@@ -2608,8 +2669,8 @@ els = Object.fromEntries([
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
-  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
-  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
+  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
+  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 
@@ -2624,6 +2685,7 @@ const SOURCE_REGISTRY=Object.freeze([
   {id:"wikipedia",statusKey:"heritage",statusElementId:"heritageStatus",label:"Curiosités encyclopédiques",provider:"Wikipédia francophone",category:"documentation collaborative",coverage:"mondiale",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"wikipedia",license:"CC BY-SA",url:"https://fr.wikipedia.org/"},
   {id:"bss",statusKey:"bss",statusElementId:"bssStatus",label:"Forages et piézomètres",provider:"BRGM / Hub’Eau",category:"sous-sol documenté",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"bss",license:"Licence Ouverte 2.0",url:"https://infoterre.brgm.fr/"},
   {id:"hydrometry",statusKey:"hydrometry",statusElementId:"hydrometryStatus",label:"Stations hydrométriques",provider:"Hub’Eau / PHyC / Vigicrues",category:"hydrologie de surface",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"hydrometry",license:"Licence Ouverte 2.0",url:"https://hubeau.eaufrance.fr/page/api-hydrometrie"},
+  {id:"biodiversity",statusKey:"biodiversity",statusElementId:"biodiversityStatus",label:"Occurrences de biodiversité",provider:"GBIF",category:"biodiversité documentée",coverage:"mondiale",refresh:"manuelle",storage:"extrait agrégé local",portable:"embedded",metric:"biodiversity",license:"Selon chaque jeu source GBIF",url:"https://www.gbif.org/"},
   {id:"relief",statusKey:"elevation",statusElementId:"elevationStatus",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",category:"altimétrie",coverage:"mondiale avec priorité France",refresh:"à la création",storage:"cache local",portable:"referenced",metric:"elevation",license:"Selon le fournisseur",url:"https://geoservices.ign.fr/rgealti"}
 ]);
 const sourceRegistryRuntime={ready:true,schema:SOURCE_REGISTRY_SCHEMA_VERSION,catalogRenders:0,attributionRenders:0,statusUpdates:0,lastStatusKey:"—",lastError:""};
@@ -2641,12 +2703,13 @@ function sourceMetricCount(source,data={}){
   if(source.metric==="wikipedia")return heritage.filter(item=>item.category==="wikipedia").length;
   if(source.metric==="bss")return data.bss?.length||0;
   if(source.metric==="hydrometry")return data.hydrometry?.length||0;
+  if(source.metric==="biodiversity")return data.biodiversity?.length||0;
   if(source.metric==="elevation")return data.elevation?1:0;
   return 0;
 }
 function sourceRetrievedAt(source,data={}){
   if(source.id==="openstreetmap")return String(data.osmMeta?.loadedAt||"");
-  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss,hydrometry:data.hydrometry};
+  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss,hydrometry:data.hydrometry,biodiversity:data.biodiversity};
   let collection=source.metric==="culture"||source.metric==="wikipedia"?data.heritageItems:collections[source.metric]||data[source.metric];
   if(Array.isArray(collection)&&source.metric==="culture")collection=collection.filter(item=>item?.category!=="wikipedia");
   if(Array.isArray(collection)&&source.metric==="wikipedia")collection=collection.filter(item=>item?.category==="wikipedia");
@@ -3204,8 +3267,8 @@ function symbolicDrawFallbackGridLines(ctx,grid,m){
     ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.setLineDash(style.dash);ctx.beginPath();for(const [a,b] of segments){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}ctx.stroke();ctx.restore();
   }
 }
-function symbolicPoiColor(kind){return ({location:"#82f4c1",home:"#ff7f8a",bss:"#f2c75c",hydrology:"#70d6ff",heritage:"#eadcaa",industrial:"#f2a35d",memory:"#df8bd4",cavity:"#71dbca",natural:"#76d7c4"})[kind]||"#dce9e1"}
-function symbolicPoiCode(kind){return ({location:"GPS",home:"MAI",bss:"BSS",hydrology:"HYD",heritage:"PAT",industrial:"FRI",memory:"OBS",cavity:"CAV",natural:"NAT"})[kind]||"POI"}
+function symbolicPoiColor(kind){return ({location:"#82f4c1",home:"#ff7f8a",bss:"#f2c75c",hydrology:"#70d6ff",biodiversity:"#9dde72","biodiversity-animals":"#e6c86f","biodiversity-plants":"#9dde72","biodiversity-fungi":"#c79ad8",heritage:"#eadcaa",industrial:"#f2a35d",memory:"#df8bd4",cavity:"#71dbca",natural:"#76d7c4"})[kind]||"#dce9e1"}
+function symbolicPoiCode(kind){return ({location:"GPS",home:"MAI",bss:"BSS",hydrology:"HYD",biodiversity:"BIO","biodiversity-animals":"FAU","biodiversity-plants":"FLO","biodiversity-fungi":"FUN",heritage:"PAT",industrial:"FRI",memory:"OBS",cavity:"CAV",natural:"NAT"})[kind]||"POI"}
 function symbolicPoiHash(value){
   let h=2166136261;for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0;
 }
@@ -3213,6 +3276,7 @@ function symbolicPoiLayerEnabled(poi){
   if(!poi)return false;
   if(poi.sourceType==="bss")return !!state.layerBss;
   if(poi.sourceType==="hydrometry")return !!state.layerHydrometry&&currentDepth()===0;
+  if(poi.sourceType==="biodiversity")return !!state.layerBiodiversity&&currentDepth()===0&&biodiversityVisibleSpecies(poi.raw).length>0;
   if(poi.sourceType==="cavity"||poi.sourceType==="osm-natural")return !!state.layerCavities;
   if(poi.sourceType==="heritage")return !!state.layerHeritage&&state.heritageEnabled[poi.raw?.category]!==false;
   if(poi.sourceType==="observation")return !!state.layerObservations;
@@ -3234,6 +3298,7 @@ function symbolicPoiDensityVisible(poi){
     if(modulo>1&&h%modulo!==0&&!poi.raw?.piezo)return false;
   }
   if(poi.category==="natural"&&z<2&&h%(z===0?4:2)!==0)return false;
+  if(String(poi.category).startsWith("biodiversity-")&&z<2&&h%(z===0?4:2)!==0)return false;
   return true;
 }
 function symbolicVisiblePois(grid){
@@ -3274,6 +3339,7 @@ function symbolicDrawPoiIcon(ctx,kind,cx,cy,size,alpha=1){
 function symbolicPoiLabelAllowed(poi){
   if(!state.layerLabels||!poi.title)return false;
   const z=state.zoomIndex;
+  if(String(poi.category).startsWith("biodiversity-"))return z>=5;
   if(z===0)return poi.category==="home"||poi.category==="location";
   if(z===1)return ["home","location","heritage","industrial"].includes(poi.category)&&poi.priority>=20;
   if(z===2)return poi.category!=="bss"&&poi.category!=="natural";
@@ -3336,6 +3402,7 @@ function symbolicPoiFeatureInfo(poi){
   if(poi.sourceType==="heritage")return poiFeatureInfo(poi,heritageFeatureInfo(r));
   if(poi.sourceType==="bss")return poiFeatureInfo(poi,{kind:r.piezo?"station piézométrique":"forage ou ouvrage BSS",depth:r.depth,nature:r.nature,altitude:r.altitude,commune:r.commune,indice:r.indice,place:r.place,bss:true,piezo:!!r.piezo});
   if(poi.sourceType==="hydrometry")return poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:r.river,commune:r.commune,code:r.code,heightM:r.heightM,flowM3s:r.flowM3s,observedAt:r.observedAt,url:r.url,license:r.license});
+  if(poi.sourceType==="biodiversity")return biodiversityFeatureInfo(poi);
   if(poi.sourceType==="cartofriches")return poiFeatureInfo(poi,{kind:poi.kind,cartofriches:true,siteType:r.type,siteStatus:r.status,address:r.address,surface:r.surface,occupation:r.occupation,activity:r.activity,activityEnd:r.activityEnd,commune:r.commune,url:r.url});
   return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",heritage:poi.sourceType==="heritage"});
 }
@@ -4401,6 +4468,7 @@ function featureBounds(feature){
 function normalizedPoiCategory(sourceType,raw){
   if(sourceType==="bss")return "bss";
   if(sourceType==="hydrometry")return "hydrology";
+  if(sourceType==="biodiversity")return "biodiversity";
   if(sourceType==="cavity")return "cavity";
   if(sourceType==="heritage")return "heritage";
   if(sourceType==="observation"||sourceType==="lore")return "memory";
@@ -4444,7 +4512,7 @@ function ensureSpatialIndexes(){
   let changed=spatialRuntime.dirty;
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
-    bss:state.bss,hydrometry:state.hydrometry,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
+    bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
     lore:state.loreItems,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
@@ -4463,7 +4531,17 @@ function ensureSpatialIndexes(){
     if(raw&&typeof raw==="object")spatialRuntime.poiByRaw.set(raw,poi);
   };
   for(const b of state.bss||[])addPoi("bss",b,{kind:b.piezo?"station piézométrique":"forage ou ouvrage BSS",priority:b.piezo?19:17});
-  for(const h of state.hydrometry||[])addPoi("hydrometry",h,{kind:"station hydrométrique",title:h.name||h.river||`Station ${h.code}`,priority:20});
+  for(const h of state.hydrometry||[])addPoi("hydrometry",h,{kind:"station hydrométrique",title:h.river||h.name||`Station ${h.code}`,priority:20});
+  for(const b of state.biodiversity||[]){
+    const extent=largestExtent(),cols=b.cellCols||Math.max(1,Math.round(CONFIG.dataWidthKm||16)),rows=b.cellRows||Math.max(1,Math.round(CONFIG.dataHeightKm||16));
+    const offsets={animals:[-.18,.12],plants:[.18,.12],fungi:[0,-.18]};
+    for(const group of BIODIVERSITY_GROUPS){
+      const species=(b.species||[]).filter(item=>item.group===group.id);if(!species.length)continue;
+      const raw={...b,id:`${b.id}-${group.id}`,displayGroup:group.id,species,speciesCount:species.length,groupCounts:{[group.id]:species.length}};
+      const first=species[0],[ox,oy]=offsets[group.id];
+      addPoi("biodiversity",raw,{id:raw.id,kind:`maille de ${group.label} documentée`,title:`${first.vernacularName||first.scientificName} · ${species.length} esp.`,category:`biodiversity-${group.id}`,subtype:group.id,lat:b.lat+oy*(extent.north-extent.south)/rows,lon:b.lon+ox*(extent.east-extent.west)/cols,priority:group.id==="animals"?18:group.id==="fungi"?17:16});
+    }
+  }
   for(const c of state.cavities||[])addPoi("cavity",c,{kind:cavityType(c),title:cavityName(c),priority:18});
   for(const o of state.observations||[])addPoi("observation",o,{kind:o.mode==="sight"?"ligne de visée observée":o.mode==="zone"?"zone d’observation approximative":"observation ponctuelle",title:o.name||"Observation locale",priority:19});
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
@@ -7456,6 +7534,212 @@ async function syncHydrometry(){
   }finally{if(els.syncHydrometry)els.syncHydrometry.disabled=false}
 }
 
+const BIODIVERSITY_KEY="atlas-karst-biodiversity-v1";
+const BIODIVERSITY_API="https://api.gbif.org/v1";
+const BIODIVERSITY_RECORD_CAP_PER_GROUP=120;
+const BIODIVERSITY_SPECIES_CAP_PER_CELL=32;
+const BIODIVERSITY_NAME_CAP_PER_GROUP=8;
+const BIODIVERSITY_GROUPS=Object.freeze([
+  {id:"animals",label:"faune",taxonKey:1},
+  {id:"plants",label:"flore",taxonKey:6},
+  {id:"fungi",label:"champignons",taxonKey:5}
+]);
+const BIODIVERSITY_QUERIES=Object.freeze([
+  {groupId:"animals",label:"oiseaux",classKeys:[212],limit:60},
+  {groupId:"animals",label:"mammifères et amphibiens",classKeys:[359,131],limit:80},
+  {groupId:"animals",label:"autres animaux",taxonKey:1,limit:80},
+  {groupId:"plants",label:"flore",taxonKey:6,limit:BIODIVERSITY_RECORD_CAP_PER_GROUP},
+  {groupId:"fungi",label:"champignons",taxonKey:5,limit:BIODIVERSITY_RECORD_CAP_PER_GROUP}
+]);
+const biodiversityRuntime={ready:true,syncs:0,occurrenceRequests:0,nameRequests:0,rawReceived:0,cells:0,species:0,totalAvailable:0,lastError:""};
+
+function biodiversityGeometry(extent=largestExtent()){
+  const west=Number(extent.west).toFixed(6),east=Number(extent.east).toFixed(6),south=Number(extent.south).toFixed(6),north=Number(extent.north).toFixed(6);
+  return `POLYGON((${west} ${south},${east} ${south},${east} ${north},${west} ${north},${west} ${south}))`;
+}
+function biodiversityGridPosition(lat,lon,extent=largestExtent()){
+  const cols=Math.max(1,Math.round(CONFIG.dataWidthKm||16)),rows=Math.max(1,Math.round(CONFIG.dataHeightKm||16));
+  const x=clamp(Math.floor((lon-extent.west)/Math.max(1e-9,extent.east-extent.west)*cols),0,cols-1);
+  const y=clamp(Math.floor((lat-extent.south)/Math.max(1e-9,extent.north-extent.south)*rows),0,rows-1);
+  return {x,y,cols,rows,lat:extent.south+(y+.5)/rows*(extent.north-extent.south),lon:extent.west+(x+.5)/cols*(extent.east-extent.west)};
+}
+function biodiversityRecord(raw,group,extent=largestExtent()){
+  const lat=Number(raw?.decimalLatitude),lon=Number(raw?.decimalLongitude),speciesKey=String(raw?.speciesKey||"").trim(),scientificName=String(raw?.species||raw?.scientificName||"").trim();
+  if(!speciesKey||!scientificName||!Number.isFinite(lat)||!Number.isFinite(lon)||!inExtent(lat,lon,extent))return null;
+  const grid=biodiversityGridPosition(lat,lon,extent),uncertainty=Number(raw.coordinateUncertaintyInMeters),year=Number(raw.year),eventDate=String(raw.eventDate||raw.lastInterpreted||"");
+  return {
+    speciesKey,scientificName,vernacularName:String(raw.vernacularName||"").trim(),group:group.id,kingdom:String(raw.kingdom||group.label),taxonClass:String(raw.class||""),order:String(raw.order||""),family:String(raw.family||""),genus:String(raw.genus||""),basisOfRecord:String(raw.basisOfRecord||""),
+    eventDate,year:Number.isFinite(year)?year:null,uncertaintyM:Math.max(1000,Number.isFinite(uncertainty)?uncertainty:1000),
+    dataset:String(raw.datasetTitle||raw.datasetName||raw.publishingOrgKey||"Jeu diffusé par GBIF"),license:String(raw.license||"licence du jeu source"),
+    occurrenceKey:String(raw.key||""),cellX:grid.x,cellY:grid.y,cellLat:grid.lat,cellLon:grid.lon,cellCols:grid.cols,cellRows:grid.rows
+  };
+}
+function biodiversityTaxonGroupLabel(species){
+  const known={Aves:"oiseau",Mammalia:"mammifère",Amphibia:"amphibien",Reptilia:"reptile",Actinopterygii:"poisson",Insecta:"insecte",Arachnida:"arachnide",Gastropoda:"gastéropode",Bivalvia:"bivalve",Malacostraca:"crustacé",Clitellata:"annélide",Magnoliopsida:"plante à fleurs",Liliopsida:"plante monocotylédone",Pinopsida:"conifère",Polypodiopsida:"fougère",Bryopsida:"mousse"};
+  return known[species?.taxonClass]||(species?.group==="animals"?"animal":species?.group==="plants"?"plante":species?.group==="fungi"?"champignon":"organisme");
+}
+function biodiversityObservationLabel(value){
+  return {HUMAN_OBSERVATION:"observation humaine",MACHINE_OBSERVATION:"observation automatisée",OBSERVATION:"observation",PRESERVED_SPECIMEN:"spécimen de collection",LIVING_SPECIMEN:"spécimen vivant",MATERIAL_SAMPLE:"échantillon",LITERATURE:"mention bibliographique"}[value]||"occurrence publiée";
+}
+function biodiversityInterleave(queues,limit=Infinity){
+  const selected=[];let cursor=0;
+  while(selected.length<limit&&queues.some(queue=>queue.length)){
+    const queue=queues[cursor++%queues.length];if(queue.length)selected.push(queue.shift());
+  }
+  return selected;
+}
+function biodiversityOrderedGroupSpecies(items,groupId){
+  const sorted=items.filter(item=>item.group===groupId).sort((a,b)=>String(b.latestDate).localeCompare(String(a.latestDate))||Number(b.sampledRecords??b.score??0)-Number(a.sampledRecords??a.score??0));
+  if(groupId!=="animals")return sorted;
+  const classes=[...new Set(sorted.map(item=>item.taxonClass||"other"))];
+  return biodiversityInterleave(classes.map(name=>sorted.filter(item=>(item.taxonClass||"other")===name)));
+}
+function balancedBiodiversitySpecies(items,limit=BIODIVERSITY_SPECIES_CAP_PER_CELL){
+  return biodiversityInterleave(BIODIVERSITY_GROUPS.map(group=>biodiversityOrderedGroupSpecies(items,group.id)),limit);
+}
+function aggregateBiodiversityRecords(records,syncedAt){
+  const cells=new Map();
+  for(const record of records){
+    const cellKey=`${record.cellX}:${record.cellY}`,cell=cells.get(cellKey)||{id:`BIO-${record.cellX}-${record.cellY}`,cellCode:`${record.cellX+1}-${record.cellY+1}`,lat:record.cellLat,lon:record.cellLon,cellCols:record.cellCols,cellRows:record.cellRows,species:new Map(),sampledRecords:0,datasets:new Set(),licenses:new Set(),syncedAt};
+    cell.sampledRecords++;cell.datasets.add(record.dataset);cell.licenses.add(record.license);
+    const species=cell.species.get(record.speciesKey)||{speciesKey:record.speciesKey,scientificName:record.scientificName,vernacularName:record.vernacularName,group:record.group,kingdom:record.kingdom,taxonClass:record.taxonClass,order:record.order,family:record.family,genus:record.genus,basisOfRecord:record.basisOfRecord,sampledRecords:0,latestDate:"",earliestDate:"",uncertaintyM:record.uncertaintyM,occurrenceKey:record.occurrenceKey};
+    species.sampledRecords++;if(!species.vernacularName&&record.vernacularName)species.vernacularName=record.vernacularName;
+    if(record.eventDate&&(!species.latestDate||record.eventDate>species.latestDate)){species.latestDate=record.eventDate;species.occurrenceKey=record.occurrenceKey;species.basisOfRecord=record.basisOfRecord}
+    if(record.eventDate&&(!species.earliestDate||record.eventDate<species.earliestDate))species.earliestDate=record.eventDate;
+    species.uncertaintyM=Math.max(species.uncertaintyM,record.uncertaintyM);cell.species.set(record.speciesKey,species);cells.set(cellKey,cell);
+  }
+  return [...cells.values()].map(cell=>{
+    const species=balancedBiodiversitySpecies([...cell.species.values()]);
+    const groupCounts=Object.fromEntries(BIODIVERSITY_GROUPS.map(group=>[group.id,species.filter(item=>item.group===group.id).length]));
+    return {id:cell.id,cellCode:cell.cellCode,name:`Maille biodiversité ${cell.cellCode}`,lat:cell.lat,lon:cell.lon,cellCols:cell.cellCols,cellRows:cell.cellRows,species,speciesCount:species.length,sampledRecords:cell.sampledRecords,groupCounts,datasets:[...cell.datasets].slice(0,8),licenses:[...cell.licenses].slice(0,8),syncedAt,source:"GBIF · occurrences publiées",url:"https://www.gbif.org/occurrence/search"};
+  }).sort((a,b)=>a.cellCode.localeCompare(b.cellCode,undefined,{numeric:true}));
+}
+function biodiversityVisibleSpecies(cell){return (cell?.species||[]).filter(species=>state.biodiversityEnabled?.[species.group]!==false)}
+function biodiversityUniqueSpecies(items=state.biodiversity){return new Set((items||[]).flatMap(cell=>(cell.species||[]).map(species=>species.speciesKey))).size}
+function biodiversityGroupSpeciesCounts(items=state.biodiversity){
+  return Object.fromEntries(BIODIVERSITY_GROUPS.map(group=>[group.id,new Set((items||[]).flatMap(cell=>(cell.species||[]).filter(species=>species.group===group.id).map(species=>species.speciesKey))).size]));
+}
+function biodiversityFeatureInfo(poi){
+  const cell=poi.raw||{},species=biodiversityVisibleSpecies(cell),group=cell.displayGroup||species[0]?.group||"",groupLabel=BIODIVERSITY_GROUPS.find(item=>item.id===group)?.label||"biodiversité",latest=species.map(item=>item.latestDate).filter(Boolean).sort().at(-1)||"",oldest=species.map(item=>item.earliestDate).filter(Boolean).sort()[0]||"";
+  return poiFeatureInfo(poi,{kind:`maille de ${groupLabel} documentée`,biodiversity:true,biodiversityGroup:group,biodiversityGroupLabel:groupLabel,cellCode:cell.cellCode,speciesCount:species.length,sampledRecords:species.reduce((sum,item)=>sum+Number(item.sampledRecords||0),0),species,latestDate:latest,earliestDate:oldest,datasets:cell.datasets||[],licenses:cell.licenses||[],url:cell.url,precisionM:1000});
+}
+async function biodiversityFrenchName(species){
+  biodiversityRuntime.nameRequests++;
+  try{
+    const response=await fetchWithTimeout(`${BIODIVERSITY_API}/species/${encodeURIComponent(species.speciesKey)}/vernacularNames`,{mode:"cors",credentials:"omit",cache:"force-cache",headers:{Accept:"application/json"}},10000);
+    if(!response.ok)return "";const payload=await response.json();
+    const french=(payload.results||[]).find(item=>/^(fr|fra|fre|french|français)$/i.test(String(item.language||"")));
+    return String(french?.vernacularName||"").trim();
+  }catch{return ""}
+}
+async function enrichBiodiversityNames(cells){
+  const byKey=new Map();
+  for(const cell of cells)for(const species of cell.species)if(!species.vernacularName){const item=byKey.get(species.speciesKey)||{speciesKey:species.speciesKey,group:species.group,taxonClass:species.taxonClass,latestDate:species.latestDate,score:0,refs:[]};item.score+=species.sampledRecords;item.refs.push(species);byKey.set(species.speciesKey,item)}
+  const ranked=[...byKey.values()].sort((a,b)=>b.score-a.score||String(b.latestDate).localeCompare(String(a.latestDate))),candidates=BIODIVERSITY_GROUPS.flatMap(group=>biodiversityOrderedGroupSpecies(ranked,group.id).slice(0,BIODIVERSITY_NAME_CAP_PER_GROUP));let cursor=0;
+  const worker=async()=>{while(cursor<candidates.length){const item=candidates[cursor++],name=await biodiversityFrenchName(item);if(name)for(const ref of item.refs)ref.vernacularName=name}};
+  await Promise.all(Array.from({length:Math.min(4,candidates.length)},worker));return cells;
+}
+function saveBiodiversity(){try{localStorage.setItem(territoryStorageKey(BIODIVERSITY_KEY),JSON.stringify({items:state.biodiversity,enabled:state.biodiversityEnabled,savedAt:new Date().toISOString()}))}catch{}}
+function updateBiodiversityUI(message=""){
+  const cells=state.biodiversity||[],species=biodiversityUniqueSpecies(cells),groups=biodiversityGroupSpeciesCounts(cells),visible=cells.filter(cell=>biodiversityVisibleSpecies(cell).length).length;
+  for(const group of BIODIVERSITY_GROUPS){const id=`biodiversity${group.id[0].toUpperCase()}${group.id.slice(1)}`;if(els[id])els[id].checked=state.biodiversityEnabled[group.id]!==false}
+  if(els.biodiversityCount)els.biodiversityCount.textContent=String(species);
+  if(els.biodiversitySummary)els.biodiversitySummary.textContent=message||(cells.length?`${groups.animals} faune · ${groups.plants} flore · ${groups.fungi} champignons · ${visible} mailles visibles`:`Aucun extrait de biodiversité synchronisé.`);
+  setStatus("biodiversity",cells.length?"ok":"pending",cells.length?`${species} espèces · ${cells.length} mailles`:"à synchroniser");
+}
+function loadBiodiversity(){
+  try{const saved=JSON.parse(localStorage.getItem(territoryStorageKey(BIODIVERSITY_KEY))||"null");state.biodiversity=Array.isArray(saved?.items)?saved.items:[];state.biodiversityEnabled={...state.biodiversityEnabled,...(saved?.enabled||{})}}catch{state.biodiversity=[]}
+  updateBiodiversityUI();
+}
+function clearBiodiversity(){state.biodiversity=[];try{localStorage.removeItem(territoryStorageKey(BIODIVERSITY_KEY))}catch{}biodiversityRuntime.cells=0;biodiversityRuntime.species=0;updateBiodiversityUI("Extrait local de biodiversité vidé.");markSpatialIndexesDirty();render("biodiversity-clear")}
+async function fetchBiodiversityQuery(plan,geometry,yearRange){
+  const group=BIODIVERSITY_GROUPS.find(item=>item.id===plan.groupId),query=new URLSearchParams({geometry,hasCoordinate:"true",hasGeospatialIssue:"false",occurrenceStatus:"PRESENT",year:yearRange,taxonKey:String(plan.taxonKey||group.taxonKey),limit:String(plan.limit||BIODIVERSITY_RECORD_CAP_PER_GROUP)});
+  for(const classKey of plan.classKeys||[])query.append("classKey",String(classKey));
+  biodiversityRuntime.occurrenceRequests++;
+  const response=await fetchWithTimeout(`${BIODIVERSITY_API}/occurrence/search?${query}`,{mode:"cors",credentials:"omit",cache:"no-store",headers:{Accept:"application/json"}},22000);
+  if(!response.ok)throw new Error(`${plan.label} HTTP ${response.status}`);const payload=await response.json();return {group,plan,payload};
+}
+async function syncBiodiversity(){
+  const stamp=territoryRequestStamp(),syncedAt=new Date().toISOString(),extent=largestExtent(),geometry=biodiversityGeometry(extent),yearRange=`2000,${new Date().getFullYear()}`;
+  biodiversityRuntime.syncs++;biodiversityRuntime.lastError="";if(els.syncBiodiversity)els.syncBiodiversity.disabled=true;setStatus("biodiversity","pending","échantillonnage GBIF…");if(els.biodiversityHelp)els.biodiversityHelp.textContent="Les grands groupes animaux, la flore et les champignons sont échantillonnés séparément, puis immédiatement agrégés en mailles d’environ 1 km…";
+  try{
+    const settled=[];for(const plan of BIODIVERSITY_QUERIES){try{settled.push({status:"fulfilled",value:await fetchBiodiversityQuery(plan,geometry,yearRange)})}catch(reason){settled.push({status:"rejected",reason})}if(!territoryRequestIsCurrent(stamp))return null}
+    const successful=settled.filter(result=>result.status==="fulfilled").map(result=>result.value),errors=settled.filter(result=>result.status==="rejected");
+    const records=successful.flatMap(({group,payload})=>(payload.results||[]).map(raw=>biodiversityRecord(raw,group,extent)).filter(Boolean));
+    if(!records.length)throw new Error(errors[0]?.reason?.message||"aucune occurrence exploitable");
+    biodiversityRuntime.rawReceived=records.length;biodiversityRuntime.totalAvailable=successful.reduce((sum,item)=>sum+Number(item.payload.count||0),0);
+    const cells=await enrichBiodiversityNames(aggregateBiodiversityRecords(records,syncedAt));if(!territoryRequestIsCurrent(stamp))return null;
+    state.biodiversity=cells;saveBiodiversity();biodiversityRuntime.cells=cells.length;biodiversityRuntime.species=biodiversityUniqueSpecies(cells);updateBiodiversityUI();
+    if(els.biodiversityHelp)els.biodiversityHelp.textContent=`Échantillon équilibré : ${records.length} occurrences publiées réduites à ${cells.length} mailles et ${biodiversityRuntime.species} espèces. Les oiseaux disposent d’un prélèvement dédié, les mammifères et amphibiens d’un second, puis une recherche animale générale complète l’ensemble ; cela réduit le biais sans constituer un inventaire exhaustif.${errors.length?` ${errors.length} recherche${errors.length>1?"s n’ont":" n’a"} pas répondu.`:""}`;
+    markSpatialIndexesDirty();scheduleDataRender("biodiversity-sync");return cells;
+  }catch(error){
+    if(!territoryRequestIsCurrent(stamp))return null;biodiversityRuntime.lastError=String(error?.message||error);setStatus("biodiversity",state.biodiversity.length?"ok":"bad",state.biodiversity.length?`${biodiversityUniqueSpecies()} espèces · anciennes`:"indisponible");if(els.biodiversityHelp)els.biodiversityHelp.textContent=`GBIF n’a pas répondu (${biodiversityRuntime.lastError}). L’extrait déjà mémorisé reste disponible.`;return null;
+  }finally{if(els.syncBiodiversity)els.syncBiodiversity.disabled=false}
+}
+
+const poiAnnotationRuntime={ready:true,bound:false,loads:0,saves:0,clears:0,lastKey:"",lastError:""};
+
+function normalizePoiAnnotations(value){
+  const source=value&&typeof value==="object"&&!Array.isArray(value)?value:{},out={};
+  for(const [key,raw] of Object.entries(source)){
+    if(!key||!raw||typeof raw!=="object"||Array.isArray(raw))continue;
+    const title=String(raw.title||"").trim().slice(0,120),note=String(raw.note||"").trim().slice(0,2400),speciesNames={};
+    for(const [speciesKey,name] of Object.entries(raw.speciesNames&&typeof raw.speciesNames==="object"?raw.speciesNames:{})){
+      const clean=String(name||"").trim().slice(0,120);if(clean)speciesNames[String(speciesKey)]=clean;
+    }
+    if(title||note||Object.keys(speciesNames).length)out[String(key)]={title,note,speciesNames,updatedAt:String(raw.updatedAt||"")};
+  }
+  return out;
+}
+function loadPoiAnnotations(){
+  try{state.poiAnnotations=normalizePoiAnnotations(JSON.parse(localStorage.getItem(territoryStorageKey(POI_ANNOTATIONS_KEY))||"{}"));poiAnnotationRuntime.loads++;poiAnnotationRuntime.lastError=""}
+  catch(error){state.poiAnnotations={};poiAnnotationRuntime.lastError=String(error?.message||error)}
+  return state.poiAnnotations;
+}
+function persistPoiAnnotations(){
+  try{localStorage.setItem(territoryStorageKey(POI_ANNOTATIONS_KEY),JSON.stringify(state.poiAnnotations||{}));poiAnnotationRuntime.saves++;poiAnnotationRuntime.lastError=""}
+  catch(error){poiAnnotationRuntime.lastError=String(error?.message||error)}
+}
+function poiAnnotationKey(feature){
+  if(!feature)return "";
+  const direct=String(feature.poiId||feature.normalizedPoi?.uid||"").trim();if(direct)return direct;
+  if(!feature.poi&&!feature.poiSourceType)return "";
+  const source=String(feature.poiSourceType||feature.sourceType||"poi"),id=String(feature.id||feature.indice||feature.name||"").trim();
+  return id?`${source}:${id}`:"";
+}
+function poiAnnotationFor(feature){const key=poiAnnotationKey(feature);return key?(state.poiAnnotations?.[key]||null):null}
+function poiAnnotationDisplayTitle(feature,fallback=""){return poiAnnotationFor(feature)?.title||fallback}
+function poiSpeciesDisplayName(feature,species){return poiAnnotationFor(feature)?.speciesNames?.[String(species?.speciesKey||"")]||species?.vernacularName||""}
+function poiAnnotationSection(feature){
+  const key=poiAnnotationKey(feature);if(!key)return "";
+  const annotation=poiAnnotationFor(feature)||{title:"",note:"",speciesNames:{}},species=(feature.species||[]).slice(0,12),aliases=species.length?`<div class="poi-species-aliases"><h4>Noms usuels personnels</h4>${species.map(item=>`<label>${esc(item.scientificName||item.speciesKey)}<input type="text" data-poi-species-key="${esc(String(item.speciesKey||""))}" maxlength="120" value="${esc(annotation.speciesNames?.[String(item.speciesKey)]||"")}" placeholder="${esc(item.vernacularName||"Ajouter un nom usuel")}"><small>${item.vernacularName?`nom publié : ${esc(item.vernacularName)}`:"aucun nom usuel fourni par la source"}</small></label>`).join("")}${(feature.species||[]).length>species.length?`<small>${feature.species.length-species.length} autres espèces restent accessibles dans les autres mailles ou fiches.</small>`:""}</div>`:"";
+  return `<section class="cell-section cell-section-annotation"><h3>Mes annotations de carnet</h3><form class="poi-annotation-form" data-poi-annotation-key="${esc(key)}"><label>Nom personnel du point<input name="poiAnnotationTitle" type="text" maxlength="120" value="${esc(annotation.title||"")}" placeholder="Conserver le nom de la source"></label><label>Note personnelle<textarea name="poiAnnotationNote" maxlength="2400" placeholder="Observation, contexte, piste à vérifier…">${esc(annotation.note||"")}</textarea></label>${aliases}<div class="poi-annotation-actions"><button type="submit">▣ enregistrer</button><button type="button" data-clear-poi-annotation>× effacer</button></div><div class="poi-annotation-status" aria-live="polite">${annotation.updatedAt?`Enregistré dans ce carnet le ${esc(new Date(annotation.updatedAt).toLocaleString("fr-FR"))}.`:"Ces champs seront inclus dans le carnet partagé."}</div></form></section>`;
+}
+function refreshPoiAnnotationReadout(message="Annotation enregistrée dans le carnet"){
+  const selected=state.selectedCell;if(!selected||!state.lastGrid)return;
+  const base=state.lastGrid.grid[selected.y]?.[selected.x];if(!base)return;
+  const cell={...base,feature:selected.feature||base.feature};
+  presentCellDescription(cell,selected.x,selected.y,{note:message,title:poiAnnotationDisplayTitle(cell.feature,cell.feature?.name||cell.feature?.kind||"Point d’intérêt"),sheet:"full"});
+}
+function savePoiAnnotationForm(form){
+  const key=String(form?.dataset.poiAnnotationKey||"");if(!key)return;
+  const title=String(form.elements.poiAnnotationTitle?.value||"").trim().slice(0,120),note=String(form.elements.poiAnnotationNote?.value||"").trim().slice(0,2400),speciesNames={};
+  for(const input of form.querySelectorAll("[data-poi-species-key]")){const value=String(input.value||"").trim().slice(0,120);if(value)speciesNames[input.dataset.poiSpeciesKey]=value}
+  if(title||note||Object.keys(speciesNames).length)state.poiAnnotations[key]={title,note,speciesNames,updatedAt:new Date().toISOString()};else delete state.poiAnnotations[key];
+  poiAnnotationRuntime.lastKey=key;persistPoiAnnotations();descriptionRuntime.revision++;descriptionRuntime.cache.clear();
+  if(typeof autosaveActiveTerritory==="function")autosaveActiveTerritory();refreshPoiAnnotationReadout();
+}
+function clearPoiAnnotationForm(form){
+  const key=String(form?.dataset.poiAnnotationKey||"");if(!key)return;
+  delete state.poiAnnotations[key];poiAnnotationRuntime.clears++;poiAnnotationRuntime.lastKey=key;persistPoiAnnotations();descriptionRuntime.revision++;descriptionRuntime.cache.clear();
+  if(typeof autosaveActiveTerritory==="function")autosaveActiveTerritory();refreshPoiAnnotationReadout("Annotation retirée du carnet");
+}
+function bindPoiAnnotations(){
+  if(poiAnnotationRuntime.bound)return;poiAnnotationRuntime.bound=true;
+  document.addEventListener("submit",event=>{const form=event.target.closest?.("form[data-poi-annotation-key]");if(!form)return;event.preventDefault();savePoiAnnotationForm(form)});
+  document.addEventListener("click",event=>{const clear=event.target.closest?.("[data-clear-poi-annotation]");if(!clear)return;clearPoiAnnotationForm(clear.closest("form[data-poi-annotation-key]"))});
+}
+
 const STARTUP_DATA_CONCURRENCY=2;
 const STARTUP_IDLE_TIMEOUT=180;
 const startupRuntime={
@@ -7598,6 +7882,12 @@ function bindSourceController(){
   els.clearBss.addEventListener("click",resetBssSource);
   bindSourceAction(els.syncHydrometry,"click","synchronisation hydrométrique",syncHydrometry);
   els.clearHydrometry.addEventListener("click",()=>{accountSourceAction("effacement hydrométrie");sourceControllerRuntime.clears++;clearHydrometry()});
+  bindSourceAction(els.syncBiodiversity,"click","synchronisation biodiversité",syncBiodiversity);
+  els.clearBiodiversity.addEventListener("click",()=>{accountSourceAction("effacement biodiversité");sourceControllerRuntime.clears++;clearBiodiversity()});
+  for(const group of BIODIVERSITY_GROUPS){
+    const id=`biodiversity${group.id[0].toUpperCase()}${group.id.slice(1)}`;
+    els[id].addEventListener("change",event=>{accountSourceAction(`filtre biodiversité ${group.id}`);sourceControllerRuntime.filterChanges++;state.biodiversityEnabled[group.id]=event.target.checked;saveBiodiversity();updateBiodiversityUI();markSpatialIndexesDirty();render("biodiversity-filter")});
+  }
 
   bindSourceAction(els.syncCartofriches,"click","synchronisation Cartofriches",syncCartofriches);
   bindSourceAction(els.downloadCartofriches,"click","téléchargement Cartofriches",()=>window.open(CARTOFRICHES_DOWNLOAD,"_blank","noopener"));
@@ -7627,7 +7917,7 @@ const territoryControllerRuntime={
   lastAction:"initialisation",lastError:""
 };
 const TERRITORY_LOCAL_STORAGE_BASES=[
-  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,HYDROMETRY_KEY,
+  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,HYDROMETRY_KEY,BIODIVERSITY_KEY,POI_ANNOTATIONS_KEY,
   ENCOUNTER_COLLECTION_KEY,"atlas-karst-cavities-v06","atlas-karst-elevation-v09d","atlas-karst-cadastre-v06","atlas-karst-cadastre-v07","atlas-karst-address-v06"
 ];
 let territoryAutosavePromise=null;
@@ -7685,9 +7975,9 @@ function resetTerritoryRuntimeData(){
   if(state.osmLoading)cancelOsmSync();
   state.osm=[];state.osmMeta=null;state.osmBaseCoverage=[];state.osmDetailCoverage=[];state.osmCavities=[];markMapDataRevision("osm");
   state.officialCavities=[];state.cartofriches=[];state.heritageItems=[];state.cadastreBuildings=[];state.cadastreParcels=[];
-  state.address=null;state.bss=[];state.hydrometry=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
+  state.address=null;state.bss=[];state.hydrometry=[];state.biodiversity=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
-  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadEncounterCollection();updateEncounterUI();
+  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
   setStatus("cartofriches",state.cartofriches.length?"ok":"pending",state.cartofriches.length?`${state.cartofriches.length} sites locaux`:"à charger");
@@ -8067,7 +8357,8 @@ function bindExperienceController(){
   els.guidedTourStop.addEventListener("click",()=>{experienceControllerRuntime.tourStops++;accountExperienceAction("fin du parcours");stopGuidedTour()});
 }
 
-const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_FILTER_KEY="atlas-karst-layer-filter-v1";
 const viewControllerRuntime={ready:true,bound:false,modeChanges:0,scenarioChanges:0,layerChanges:0,cavitySelections:0,recenters:0,debugActions:0,lastAction:"initialisation"};
 
 function accountViewAction(action){viewControllerRuntime.lastAction=action}
@@ -8089,6 +8380,27 @@ function setLayerFromControl(id,enabled){
   }
   render(`layer-change:${id}`);
 }
+function layerControlIdsForCategory(category=els.layerCategoryFilter?.value||"all"){
+  if(category==="all")return [...VIEW_LAYER_CONTROL_IDS];
+  return [...els.layerSwitchList?.querySelectorAll(`[data-layer-category="${category}"] input[id]`)||[]].map(input=>input.id).filter(id=>VIEW_LAYER_CONTROL_IDS.includes(id));
+}
+function applyLayerCategoryFilter(category=els.layerCategoryFilter?.value||"all"){
+  const normalized=["all","terrain","documents","underground","interface"].includes(category)?category:"all";
+  if(els.layerCategoryFilter)els.layerCategoryFilter.value=normalized;
+  for(const label of els.layerSwitchList?.querySelectorAll("[data-layer-category]")||[])label.hidden=normalized!=="all"&&label.dataset.layerCategory!==normalized;
+  try{localStorage.setItem(VIEW_LAYER_FILTER_KEY,normalized)}catch{}
+}
+function setLayerControlGroup(ids,enabled,reason){
+  const targets=ids.filter(id=>VIEW_LAYER_CONTROL_IDS.includes(id));if(!targets.length)return;
+  viewControllerRuntime.layerChanges+=targets.length;accountViewAction(reason);
+  for(const id of targets){state[id]=enabled;if(els[id])els[id].checked=enabled}
+  if(targets.includes("layerHydrology"))hypothesisModelCache.clear();
+  if(targets.includes("ambientMotion")){
+    try{localStorage.setItem(AMBIENT_PREF_KEY,state.ambientMotion?"on":"off")}catch{}
+    syncAmbientMotionState({pulse:state.ambientMotion,reason:"preference"});
+  }
+  render(reason);
+}
 function focusCavityFromControl(id){
   const cavity=state.cavities.find(item=>item.id===id);if(!cavity||!Number.isFinite(cavity.lat))return;
   viewControllerRuntime.cavitySelections++;accountViewAction("sélection de cavité");
@@ -8104,6 +8416,13 @@ function bindViewController(){
   els.renderModeSymbolic?.addEventListener("click",()=>{viewControllerRuntime.modeChanges++;accountViewAction("mode symbolique");setRenderMode("symbolic")});
   els.renderModeAscii?.addEventListener("click",()=>{viewControllerRuntime.modeChanges++;accountViewAction("mode ASCII");setRenderMode("ascii")});
   for(const id of VIEW_LAYER_CONTROL_IDS)els[id].addEventListener("change",event=>setLayerFromControl(id,event.target.checked));
+  let savedFilter="all";try{savedFilter=localStorage.getItem(VIEW_LAYER_FILTER_KEY)||"all"}catch{}
+  applyLayerCategoryFilter(savedFilter);
+  els.layerCategoryFilter?.addEventListener("change",event=>applyLayerCategoryFilter(event.target.value));
+  els.layersShowCategory?.addEventListener("click",()=>setLayerControlGroup(layerControlIdsForCategory(),true,"couches de la catégorie affichées"));
+  els.layersHideCategory?.addEventListener("click",()=>setLayerControlGroup(layerControlIdsForCategory(),false,"couches de la catégorie masquées"));
+  els.layersSelectAll?.addEventListener("click",()=>setLayerControlGroup(VIEW_LAYER_CONTROL_IDS,true,"toutes les couches affichées"));
+  els.layersClearAll?.addEventListener("click",()=>setLayerControlGroup(VIEW_LAYER_CONTROL_IDS,false,"toutes les couches masquées"));
   els.cavitySelect.addEventListener("change",event=>focusCavityFromControl(event.target.value));
   if(els.debugToggle)els.debugToggle.addEventListener("click",()=>runViewDebugAction("bascule du diagnostic",()=>setDebugEnabled(!debugState.enabled)));
   if(els.runSelfCheck)els.runSelfCheck.addEventListener("click",()=>runViewDebugAction("auto-diagnostic",runAtlasSelfCheck));
@@ -8122,6 +8441,7 @@ const LIFECYCLE_SYNC_SOUND_TARGETS={
   syncCartofriches:()=>[els.cartofrichesStatus],
   syncPiezo:()=>[els.bssStatus],
   syncHydrometry:()=>[els.hydrometryStatus],
+  syncBiodiversity:()=>[els.biodiversityStatus],
   retryData:()=>[els.osmStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus]
 };
 const LIFECYCLE_QUIET_BUTTON_IDS=new Set([
@@ -8179,7 +8499,7 @@ function bindLifecycleController(){
   document.addEventListener("click",handleGlobalActionSound,true);
   document.addEventListener("change",handleGlobalControlSound);
   els.audioToggle.addEventListener("click",()=>{lifecycleControllerRuntime.audioActions++;accountLifecycleEvent("bascule audio");retroAudio.toggle()});
-  const statuses=[els.osmStatus,els.heritageStatus,els.cartofrichesStatus,els.bssStatus,els.hydrometryStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus].filter(Boolean);
+  const statuses=[els.osmStatus,els.heritageStatus,els.cartofrichesStatus,els.bssStatus,els.hydrometryStatus,els.biodiversityStatus,els.addressStatus,els.cadastreStatus,els.cavityStatus,els.elevationStatus].filter(Boolean);
   statuses.forEach(status=>operationStatusObserver.observe(status,{subtree:true,childList:true,attributes:true,attributeFilter:["class"]}));
   lifecycleControllerRuntime.statusObservers=statuses.length;
   accountLifecycleEvent("contrôleur lié");
@@ -8420,6 +8740,15 @@ function drawHydrometry(g){
     const info=poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:h.river,commune:h.commune,code:h.code,heightM:h.heightM,flowM3s:h.flowM3s,observedAt:h.observedAt,url:h.url,license:h.license});
     putText(g,p.x,p.y,"H≈","c-hydrometry",18,info);
     if(state.layerLabels&&state.zoomIndex>=3)tryMapLabel(g,p,h.name||h.river||h.code,"c-label",14,info,"hydrometry",1,false);
+  }
+}
+function drawBiodiversity(g){
+  if(!state.layerBiodiversity||currentDepth()!==0||!state.biodiversity.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"biodiversity")){
+    const species=biodiversityVisibleSpecies(poi.raw);if(!species.length)continue;
+    const group=poi.raw?.displayGroup||species[0]?.group,glyph=group==="animals"?"Fa":group==="plants"?"Fl":"Fu",cls=group==="animals"?"c-biodiversity-animals":group==="plants"?"c-biodiversity-plants":"c-biodiversity-fungi",p=coordToGrid(poi.lat,poi.lon,g.extent),info=biodiversityFeatureInfo(poi);
+    putText(g,p.x,p.y,glyph,cls,16,info);
+    if(state.layerLabels&&state.zoomIndex>=4)tryMapLabel(g,p,`${species.length} esp.`,"c-label",13,info,"biodiversity",1,false);
   }
 }
 function drawObservations(g){
@@ -9022,6 +9351,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     applyRelief(grid);
     drawBss(grid);
     drawHydrometry(grid);
+    drawBiodiversity(grid);
     drawObservations(grid);
     drawHeritage(grid);
     drawLore(grid);
@@ -9141,7 +9471,7 @@ function coarsePointer(){
 }
 function selectableFeature(cell){
   const f=cell?.feature;
-  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.hydrometry||f.cartofriches));
+  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.hydrometry||f.biodiversity||f.cartofriches));
 }
 function assistedCell(x,y,radius=2){
   if(!state.lastGrid)return {x,y,snapped:false};
@@ -9184,7 +9514,7 @@ function closeSelectionAssist(){
 }
 function cellSelectionSound(cell){
   const f=cell?.feature||{},cls=String(cell?.cls||""),tags=f.tags||{};
-  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
+  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",biodiversity:"cellForest","biodiversity-animals":"cellForest","biodiversity-plants":"cellForest","biodiversity-fungi":"cellForest",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
   if(normalized)return normalized;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0||cell?.confidence)return "cellUnderground";
@@ -9204,7 +9534,7 @@ function cellSelectionSound(cell){
 }
 function playCellSelectionSound(cell,{snapped=false}={}){
   const poiKind=poiSelectionKind(cell);
-  const poiSound={cavity:"poiCavity",bss:"poiBss",hydrology:"poiNatural",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
+  const poiSound={cavity:"poiCavity",bss:"poiBss",hydrology:"poiNatural",biodiversity:"poiNatural",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
   retroAudio.play(poiSound||cellSelectionSound(cell));
   if(snapped)setTimeout(()=>retroAudio.play("snapAccent"),110);
 }
@@ -9212,12 +9542,14 @@ function playCellSelectionSound(cell,{snapped=false}={}){
 function poiSelectionKind(cell){
   if(!cell)return "";
   const cls=String(cell.cls||""),f=cell.feature||{},tags=f.tags||{};
+  if(String(f.poiCategory||"").startsWith("biodiversity-"))return "biodiversity";
   if(f.poiCategory)return f.poiCategory;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(f.kind==="maison"||cls.includes("c-house")||cls.includes("c-address"))return "home";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "cavity";
   if(f.bss||f.indice||cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
   if(f.hydrometry||cls.includes("c-hydrometry"))return "hydrology";
+  if(f.biodiversity||cls.includes("c-biodiversity"))return "biodiversity";
   if(f.heritage||cls.includes("c-heritage"))return "heritage";
   if(f.cartofriches||cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
   if(f.observation||f.lore||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
@@ -9371,6 +9703,10 @@ function featureNarrative(f){
   if(!f)return "";
   const name=f.name?` <strong>${esc(f.name)}</strong>`:"";
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`;
+  if(f.biodiversity){
+    const names=(f.species||[]).slice(0,6).map(item=>esc(poiSpeciesDisplayName(f,item)||`${biodiversityTaxonGroupLabel(item)} · ${item.scientificName}`)).join(", ");
+    return `Cette maille d’environ un kilomètre rassemble <strong>${f.speciesCount||0} espèces</strong> dans l’échantillon publié${names?` : ${names}${f.species.length>6?"…":""}`:""}. Elle indique des observations passées et imparfaitement localisées, jamais une présence actuelle garantie.`;
+  }
   if(f.hydrometry){
     const values=[Number.isFinite(f.heightM)&&`hauteur ${f.heightM.toFixed(3)} m`,Number.isFinite(f.flowM3s)&&`débit ${f.flowM3s.toFixed(3)} m³/s`].filter(Boolean).join(" · ");
     return `Une station hydrométrique documente ici${name||" le cours d’eau"}.${values?` Dernière lecture disponible : ${values}.`:" Aucune mesure récente n’accompagne la station."} Cette valeur ponctuelle décrit la station, pas à elle seule le risque de crue local.`;
@@ -9407,7 +9743,7 @@ function featureNarrative(f){
 }
 function evidenceProfile(cell){
   const f=cell?.feature||{};
-  const documented=!!(f.source||f.bss||f.hydrometry||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
+  const documented=!!(f.source||f.bss||f.hydrometry||f.biodiversity||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
   const observed=!!(f.observation||f.lore||f.confidenceLabel);
   const hypothesis=currentDepth()<0||!!cell?.confidence||!!f.hypothesisModel;
   return {documented,observed,interpreted:true,hypothesis};
@@ -9416,10 +9752,25 @@ function readingLedgerHtml(cell){
   const p=evidenceProfile(cell),chip=(cls,label,on)=>`<span class="reading-chip ${cls}${on?" active":""}">${label}</span>`;
   return `<div class="cell-reading-ledger" aria-label="Nature de la lecture">${chip("documented","fait",p.documented)}${chip("observed","observation",p.observed)}${chip("interpreted","interprétation",p.interpreted)}${chip("hypothesis","hypothèse",p.hypothesis)}</div>`;
 }
+function documentaryDateLabel(value){const date=new Date(value);return value&&!Number.isNaN(date.getTime())?date.toLocaleString("fr-FR",{dateStyle:"medium",timeStyle:"short"}):"date non précisée"}
+function primaryDocumentarySection(f){
+  if(!f)return "";
+  if(f.hydrometry){
+    const river=esc(f.river||f.name||"Cours d’eau non précisé"),height=Number.isFinite(f.heightM)?`${f.heightM.toFixed(3)} m`:"non disponible",flow=Number.isFinite(f.flowM3s)?`${f.flowM3s.toFixed(3)} m³/s`:"non disponible";
+    return `<section class="cell-section cell-section-primary"><h3>Mesure hydrométrique</h3><div class="cell-primary-title">${river}</div><div class="cell-primary-metrics"><span><small>Hauteur</small><strong>${height}</strong></span><span><small>Débit</small><strong>${flow}</strong></span></div><div class="cell-source-line">${esc(f.commune||"")}${f.commune?" · ":""}${esc(documentaryDateLabel(f.observedAt))}</div></section>`;
+  }
+  if(f.biodiversity){
+    const species=(f.species||[]),shown=species.slice(0,8),latest=f.latestDate?` · plus récente ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`:"";
+    const groupTitle=f.biodiversityGroup==="animals"?"Faune publiée":f.biodiversityGroup==="plants"?"Flore publiée":f.biodiversityGroup==="fungi"?"Champignons publiés":"Espèces publiées";
+    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),displayName=poiSpeciesDisplayName(f,item),personal=!!poiAnnotationFor(f)?.speciesNames?.[String(item.speciesKey)],details=[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(displayName||"Nom usuel non renseigné")}${personal?' <small class="personal-name-mark">personnel</small>':""}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">fiche GBIF ↗</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
+  }
+  return "";
+}
 function criticalReading(cell){
   const f=cell?.feature||{},descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0)return "La coupe aide à comparer les niveaux et à garder une continuité spatiale. Elle ne permet pas d’affirmer qu’une galerie passe sous cette cellule, ni que la profondeur affichée est mesurée localement.";
   if(f.hydrometry)return "La mesure est issue de la station et peut être récente, mais elle ne remplace ni les bulletins Vigicrues, ni les consignes des autorités, ni une observation de terrain.";
+  if(f.biodiversity)return "La maille évite une fausse précision. Le nombre affiché dépend des jeux publiés, de leur effort d’observation et de l’échantillon borné de l’Atlas ; il ne mesure ni l’abondance, ni l’absence des espèces non citées.";
   if(f.bss||f.indice||/forage|sondage|puits|pi[eé]zo/.test(descriptor))return "Cet ouvrage décrit un point vertical du sous-sol. Il peut éclairer la nature ou l’épaisseur des terrains traversés, mais il ne transforme pas le voisinage en cavité connue.";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "La présence du repère est documentée. En revanche, l’emprise, les accès, la stabilité et les connexions éventuelles restent inconnus tant qu’aucun plan ou levé local ne les établit.";
   if(f.heritage)return "La notice permet d’identifier et de contextualiser le lieu. Elle ne prouve pas que chaque détail historique, chaque dépendance ou chaque état du bâtiment soit encore observable aujourd’hui.";
@@ -9427,7 +9778,7 @@ function criticalReading(cell){
   if(f.cartofriches||f.siteType)return "Le statut du site renseigne son histoire d’usage. Il ne suffit pas à conclure sur une pollution, une accessibilité ou une structure souterraine particulière.";
   return "Ici, l’Atlas décrit surtout un contexte de terrain. Toute conclusion plus précise demanderait une source dédiée, une observation datée ou une mesure locale.";
 }
-function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
+function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",biodiversity:"maille de biodiversité","biodiversity-animals":"maille de faune","biodiversity-plants":"maille de flore","biodiversity-fungi":"maille de champignons",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
 function nearbyEntries(x,y){
   if(!state.lastGrid)return [];
   const center=gridToCoord(x,y,state.lastGrid.extent),z=currentZoom();
@@ -9476,6 +9827,14 @@ function technicalCellLines(cell,x,y){
     if(Number.isFinite(f.heightM))parts.push(`Hauteur mesurée : <strong>${f.heightM.toFixed(3)} m</strong>`);
     if(Number.isFinite(f.flowM3s))parts.push(`Débit mesuré : <strong>${f.flowM3s.toFixed(3)} m³/s</strong>`);
     if(f.observedAt)parts.push(`Mesure datée du : ${esc(new Date(f.observedAt).toLocaleString("fr-FR"))}`);
+    if(f.biodiversity){
+      parts.push(`Maille agrégée : <strong>${esc(f.cellCode||"—")}</strong> · précision minimale ${Math.round(f.precisionM||1000)} m`);
+      parts.push(`Espèces dans le filtre actif : <strong>${f.speciesCount||0}</strong> · occurrences échantillonnées ${f.sampledRecords||0}`);
+      if(f.latestDate)parts.push(`Observation la plus récente de l’échantillon : ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`);
+      if(f.species?.length)parts.push(`<strong>Espèces publiées :</strong><br>${f.species.slice(0,20).map(item=>`${esc(item.vernacularName||item.scientificName)}${item.vernacularName?` <em>(${esc(item.scientificName)})</em>`:""} · ${esc(item.group==="animals"?"faune":item.group==="plants"?"flore":"champignons")}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`).join("<br>")}${f.species.length>20?"<br>…":""}`);
+      if(f.datasets?.length)parts.push(`Jeux contributeurs : ${f.datasets.map(esc).join(" · ")}`);
+      if(f.licenses?.length)parts.push(`Licences déclarées : ${f.licenses.map(esc).join(" · ")}`);
+    }
     if(f.indice)parts.push(`Indice BSS : ${esc(f.indice)}`);
     if(f.place)parts.push(`Lieu-dit : ${esc(f.place)}`);
     if(f.record?.coordinateSource)parts.push(`Coordonnées : ${esc(f.record.coordinateSource)}`);
@@ -9526,6 +9885,16 @@ function documentedCellFacts(cell){
     if(f.categoryLabel)facts.push(`<span class="cell-fact-kind">catégorie</span>${esc(f.categoryLabel)}`);
     if(f.siteStatus)facts.push(`<span class="cell-fact-kind">état</span>${esc(f.siteStatus)}`);
     if(Number.isFinite(f.depth))facts.push(`<span class="cell-fact-kind">mesure</span>Profondeur déclarée : ${f.depth} m`);
+    if(f.hydrometry){
+      facts.push(`<span class="cell-fact-kind">cours d’eau</span>${esc(f.river||f.name||"non précisé")}`);
+      if(Number.isFinite(f.heightM))facts.push(`<span class="cell-fact-kind">hauteur</span>${f.heightM.toFixed(3)} m`);
+      if(Number.isFinite(f.flowM3s))facts.push(`<span class="cell-fact-kind">débit</span>${f.flowM3s.toFixed(3)} m³/s`);
+      if(f.observedAt)facts.push(`<span class="cell-fact-kind">date</span>${esc(documentaryDateLabel(f.observedAt))}`);
+    }
+    if(f.biodiversity){
+      facts.push(`<span class="cell-fact-kind">maille</span>${f.speciesCount||f.species?.length||0} espèces publiées sur environ 1 km`);
+      for(const item of (f.species||[]).slice(0,8)){const displayName=poiSpeciesDisplayName(f,item);facts.push(`<span class="cell-fact-kind">${item.group==="animals"?"faune":item.group==="plants"?"flore":"fonge"}</span><strong>${esc(displayName||item.scientificName)}</strong>${displayName?` <em>${esc(item.scientificName)}</em>`:""}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`)}
+    }
     if(f.confidenceLabel)facts.push(`<span class="cell-fact-kind">confiance</span>${esc(f.confidenceLabel)}`);
     if(f.source)facts.push(`<span class="cell-fact-kind">origine</span>${esc(f.source)}`);
   }else facts.push("Aucun repère ponctuel n’est attaché à cette case ; la lecture repose sur le terrain et les couches de surface.");
@@ -9534,7 +9903,7 @@ function documentedCellFacts(cell){
 }
 function featureDescriptionFingerprint(f){
   if(!f)return "none";
-  return [f.poiId,f.id,f.indice,f.name,f.kind,f.type,f.nature,f.source,f.updated,f.depth,f.confidenceLabel,f.siteStatus,f.period].map(v=>String(v??"").slice(0,80)).join("~");
+  return [f.poiId,f.id,f.indice,f.name,f.kind,f.type,f.nature,f.source,f.updated,f.depth,f.confidenceLabel,f.siteStatus,f.period,poiAnnotationFor(f)?.updatedAt].map(v=>String(v??"").slice(0,80)).join("~");
 }
 function cellDescriptionCacheKey(cell,x,y){
   const coord=gridToCoord(x,y,state.lastGrid.extent),slope=localSlopeDegrees(x,y);
@@ -9547,13 +9916,13 @@ function trimDescriptionCache(){
 }
 function buildCellDescriptionBundle(cell,x,y){
   const slope=localSlopeDegrees(x,y),f=cell.feature;
-  const title=f?.name||f?.kind||"Case sans nom";
-  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f);
+  const title=poiAnnotationDisplayTitle(f,f?.name||f?.kind||"Case sans nom");
+  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f),primary=primaryDocumentarySection(f);
   const meta=[Number.isFinite(cell.elev)?`altitude ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",currentDepth()<0?`niveau ${depthSliceLabel()}`:"surface"].filter(Boolean).join(" · ");
   const [category,symbol]=cellPresentationCategory(cell);
   const immediate=`<article class="cell-sheet-card">
     <header class="cell-sheet-head"><div class="cell-sheet-symbol">${esc(symbol)}</div><div><div class="cell-sheet-kicker">${esc(category)}</div><div class="cell-sheet-title">${esc(title)}</div><div class="cell-sheet-meta">${esc(meta)}</div>${documentarySignalHtml(cell)}${readingLedgerHtml(cell)}</div></header>
-    <section class="cell-section cell-section-reading"><h3>Lecture du lieu</h3><p>${terrain}${feature?` ${feature}`:""}</p></section>`;
+    ${primary}<section class="cell-section cell-section-reading"><h3>${primary?"Contexte de la maille":"Lecture du lieu"}</h3><p>${terrain}${!primary&&feature?` ${feature}`:""}</p></section>`;
   return {key:cellDescriptionCacheKey(cell,x,y),immediate,cell,x,y,title,details:null};
 }
 function buildCellDescriptionDetails(bundle){
@@ -9562,6 +9931,7 @@ function buildCellDescriptionDetails(bundle){
   bundle.details=`<section class="cell-section"><h3>Ce qui est documenté</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
     ${nearby?`<section class="cell-section cell-section-nearby"><h3>À proximité</h3>${nearby}</section>`:""}
     ${relations}
+    ${poiAnnotationSection(cell.feature)}
     <section class="cell-section cell-section-critical"><h3>Ce que l’on peut en déduire</h3><p><strong>Lecture prudente.</strong> ${critical}</p></section>
     <details class="technical-details"><summary>Données techniques et sources</summary><div>${technicalCellLines(cell,x,y).join("<br>")}</div></details>`;
   return bundle.details;
@@ -9823,7 +10193,7 @@ function openSidebarPanel(section,title=""){
 function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
   const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
-    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","hydrometry","diagnostic"]
+    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","diagnostic"]
   };
   for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
     const section=tab.dataset.sectionTarget;
@@ -9851,7 +10221,7 @@ function prepareSidebarCards(){
   const panelMeta={
     "Carnets":["navigation","⊕"],"À proximité":["navigation","⌖"],"Affichage":["layers","▦"],"Point de départ":["navigation","⌖"],
     "Importer et exporter":["memory","◫"],"Rechercher une cavité":["navigation","⌁"],"Notes de terrain":["field","◎"],"Repères, récits et mémoire locale":["field","◇"],
-    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Cours d’eau mesurés":["sources","H"],"État des sources":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende":["layers","?"]
+    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Cours d’eau mesurés":["sources","H"],"Biodiversité locale":["sources","V"],"État des sources":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende":["layers","?"]
   };
   const openByDefault=new Set(["Se situer","Carnets","Affichage","État des sources","Notes de terrain"]);
   for(const card of els.sidebar.querySelectorAll("#sidebarCardPool > .card:not([data-prototype-reserve]):not([data-interface-retired])")){
@@ -10368,8 +10738,8 @@ function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
     observations:content.observations?.length||0,
-    notes:content.notes?.length||0,
-    embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.address?1:0),
+    notes:content.notes?.length||0,annotations:Object.keys(content.annotations||{}).length,
+    embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.biodiversity?.length||0)+(extracts.address?1:0),
     sourceReferences:document.sources?.references?.length||0
   };
 }
@@ -10382,7 +10752,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     territory,
     content:{
       startPoint:carnetJsonClone(snapshot.house||territory.center),
-      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),
+      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
       experiences:{collection:carnetJsonClone(d.encounterCollection||{}),enabled:!!d.encounterEnabled}
     },
     presentation:{
@@ -10392,7 +10762,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     },
     sources:{
       references:sourceReferencesForSnapshot(snapshot),
-      extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss),hydrometry:carnetArray(d.hydrometry)}
+      extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss),hydrometry:carnetArray(d.hydrometry),biodiversity:carnetArray(d.biodiversity),biodiversityEnabled:carnetJsonClone(d.biodiversityEnabled||{})}
     },
     cachePolicy:{embedded:false,excluded:["osm","cadastreBuildings","cadastreParcels","elevation","coverage"],refresh:"manual"}
   };
@@ -10426,15 +10796,15 @@ async function atlasCarnetToSnapshot(document){
     view:{mode:"classic",renderMode:presentation.renderMode==="ascii"?"ascii":"symbolic",zoomIndex:Number(presentation.zoomIndex)||0,depthIndex:Number(presentation.depthIndex)||0,center:carnetJsonClone(presentation.center||carnet.territory.center),scenario:String(presentation.scenario||"default"),layers:carnetJsonClone(presentation.layers||{})},
     data:{
       osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
-      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),
-      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
+      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),
+      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
     }
   };
 }
 
 const SNAPSHOT_SCHEMA_VERSION=3;
 const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
-const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const snapshotRuntime={
   ready:true,bound:false,built:0,applied:0,imports:0,exports:0,standaloneExports:0,
   dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
@@ -10474,20 +10844,20 @@ function buildAtlasSnapshot(){
       osm:state.osm||[],osmMeta:state.osmMeta||null,osmBaseCoverage:state.osmBaseCoverage||[],osmDetailCoverage:state.osmDetailCoverage||[],
       officialCavities:state.officialCavities||[],cartofriches:state.cartofriches||[],heritageItems:state.heritageItems||[],heritageEnabled:state.heritageEnabled||{},
       cadastreBuildings:state.cadastreBuildings||[],cadastreParcels:state.cadastreParcels||[],address:state.address||null,
-      bss:state.bss||[],hydrometry:state.hydrometry||[],elevation:state.elevation||null,observations:state.observations||[],loreItems:state.loreItems||[],encounterCollection:state.encounterCollection||{},encounterEnabled:!!state.encounterEnabled
+      bss:state.bss||[],hydrometry:state.hydrometry||[],biodiversity:state.biodiversity||[],biodiversityEnabled:state.biodiversityEnabled||{},poiAnnotations:state.poiAnnotations||{},elevation:state.elevation||null,observations:state.observations||[],loreItems:state.loreItems||[],encounterCollection:state.encounterCollection||{},encounterEnabled:!!state.encounterEnabled
     }
   };
 }
 
 function snapshotCounts(s=buildAtlasSnapshot()){
   const d=s.data||{};
-  return {osm:d.osm?.length||0,buildings:d.cadastreBuildings?.length||0,parcels:d.cadastreParcels?.length||0,cavities:d.officialCavities?.length||0,carto:d.cartofriches?.length||0,bss:d.bss?.length||0,hydrometry:d.hydrometry?.length||0,observations:d.observations?.length||0,lore:d.loreItems?.length||0,heritage:d.heritageItems?.length||0,codex:Object.values(d.encounterCollection||{}).filter(v=>encounterStatusRank(v?.status)>=2).length,elevation:d.elevation?"oui":"non"};
+  return {osm:d.osm?.length||0,buildings:d.cadastreBuildings?.length||0,parcels:d.cadastreParcels?.length||0,cavities:d.officialCavities?.length||0,carto:d.cartofriches?.length||0,bss:d.bss?.length||0,hydrometry:d.hydrometry?.length||0,biodiversity:d.biodiversity?.length||0,biodiversitySpecies:biodiversityUniqueSpecies(d.biodiversity||[]),annotations:Object.keys(d.poiAnnotations||{}).length,observations:d.observations?.length||0,lore:d.loreItems?.length||0,heritage:d.heritageItems?.length||0,codex:Object.values(d.encounterCollection||{}).filter(v=>encounterStatusRank(v?.status)>=2).length,elevation:d.elevation?"oui":"non"};
 }
 
 function updateSnapshotUI(source=state.snapshotSource){
   if(!els.snapshotStatus)return;
   const c=snapshotCounts();
-  els.snapshotStatus.innerHTML=`<span><strong>État actif :</strong> ${esc(source||"session courante")}</span><span>Territoire ${esc(CONFIG.territory.label)} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km</span><span>OSM ${c.osm.toLocaleString("fr-FR")} · bâti ${c.buildings.toLocaleString("fr-FR")} · parcelles ${c.parcels.toLocaleString("fr-FR")}</span><span>Cavités ${c.cavities} · Cartofriches ${c.carto} · patrimoine ${c.heritage} · BSS ${c.bss.toLocaleString("fr-FR")} · hydro ${c.hydrometry}</span><span>Observations ${c.observations} · mémoire locale ${c.lore} · codex ${c.codex}/${LOCAL_ENCOUNTERS.length} · relief ${c.elevation}</span>`;
+  els.snapshotStatus.innerHTML=`<span><strong>État actif :</strong> ${esc(source||"session courante")}</span><span>Territoire ${esc(CONFIG.territory.label)} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km</span><span>OSM ${c.osm.toLocaleString("fr-FR")} · bâti ${c.buildings.toLocaleString("fr-FR")} · parcelles ${c.parcels.toLocaleString("fr-FR")}</span><span>Cavités ${c.cavities} · Cartofriches ${c.carto} · patrimoine ${c.heritage} · BSS ${c.bss.toLocaleString("fr-FR")} · hydro ${c.hydrometry}</span><span>Biodiversité ${c.biodiversitySpecies} espèces/${c.biodiversity} mailles · annotations ${c.annotations} · observations ${c.observations} · mémoire locale ${c.lore} · relief ${c.elevation}</span>`;
 }
 
 function openSnapshotDb(){
@@ -10633,7 +11003,8 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   state.officialCavities=Array.isArray(d.officialCavities)?d.officialCavities:[];
   state.cartofriches=Array.isArray(d.cartofriches)?d.cartofriches:[];state.heritageItems=Array.isArray(d.heritageItems)?d.heritageItems.map(normalizeHeritageItem).filter(Boolean):[];state.heritageEnabled={...state.heritageEnabled,...(d.heritageEnabled||{})};
   state.cadastreBuildings=Array.isArray(d.cadastreBuildings)?d.cadastreBuildings:[];state.cadastreParcels=Array.isArray(d.cadastreParcels)?d.cadastreParcels:[];
-  state.address=d.address||null;state.bss=Array.isArray(d.bss)&&d.bss.length?d.bss:mergeBssItems(territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[]);state.hydrometry=Array.isArray(d.hydrometry)?d.hydrometry:[];state.elevation=d.elevation||null;
+  state.address=d.address||null;state.bss=Array.isArray(d.bss)&&d.bss.length?d.bss:mergeBssItems(territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[]);state.hydrometry=Array.isArray(d.hydrometry)?d.hydrometry:[];state.biodiversity=Array.isArray(d.biodiversity)?d.biodiversity:[];state.biodiversityEnabled={...state.biodiversityEnabled,...(d.biodiversityEnabled||{})};state.elevation=d.elevation||null;
+  if(d.poiAnnotations&&typeof d.poiAnnotations==="object"&&!Array.isArray(d.poiAnnotations)){state.poiAnnotations=normalizePoiAnnotations(d.poiAnnotations);persistPoiAnnotations()}else loadPoiAnnotations();
   state.observations=Array.isArray(d.observations)?d.observations:[];state.loreItems=Array.isArray(d.loreItems)?d.loreItems:[];state.encounterCollection=d.encounterCollection&&typeof d.encounterCollection==="object"&&!Array.isArray(d.encounterCollection)?d.encounterCollection:state.encounterCollection;state.encounterEnabled=d.encounterEnabled!==undefined?!!d.encounterEnabled:state.encounterEnabled;saveEncounterCollection();
   state.zoomIndex=clamp(Number(v.zoomIndex??state.zoomIndex),0,CONFIG.zooms.length-1);state.depthIndex=clamp(Number(v.depthIndex??state.depthIndex),0,CONFIG.depths.length-1);
   state.center=v.center&&Number.isFinite(+v.center.lat)&&Number.isFinite(+v.center.lon)?clampCenter({lat:+v.center.lat,lon:+v.center.lon},CONFIG.zooms[state.zoomIndex]):{...CONFIG.house};
@@ -10641,7 +11012,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   state.renderMode=v.renderMode==="ascii"?"ascii":v.renderMode==="symbolic"?"symbolic":state.renderMode;
   if(v.layers&&typeof v.layers==="object")for(const [k,value] of Object.entries(v.layers)){if(SNAPSHOT_LAYER_KEYS.includes(k)&&k in state){state[k]=!!value;if(els[k])els[k].checked=!!value}}
   state.allowNetwork=FORCE_ONLINE;state.snapshotSource=source;state.selectedCell=null;state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;
-  refreshCavities();updateBssUI();updateHydrometryUI();updateCartofrichesUI();updateHeritageUI();populateCavitySelect();
+  refreshCavities();updateBssUI();updateHydrometryUI();updateBiodiversityUI();updateCartofrichesUI();updateHeritageUI();populateCavitySelect();
   setStatus("osm","ok",state.osm.length?`${state.osm.length} objets · instantané`:"instantané sans OSM");
   setStatus("address",state.address?"ok":"bad",state.address?"instantané":"non embarqué");
   const cadastreEmbedded=state.cadastreBuildings.length||state.cadastreParcels.length;
@@ -10922,6 +11293,7 @@ function bindApplicationController(){
   bindSourceController();
   bindExperienceController();
   bindViewController();
+  bindPoiAnnotations();
   bindLifecycleController();
   bindSessionHealth();
   els.readoutSheetHandle.addEventListener("click",()=>{accountApplicationAction("bascule de la fiche");cycleReadoutSheet()});
@@ -10965,9 +11337,12 @@ async function bootAtlas(){
     loadCartofriches();
     loadBssLocal();
     loadHydrometry();
+    loadBiodiversity();
+    loadPoiAnnotations();
     loadEncounterCollection();
     els.layerBss.checked=true;state.layerBss=true;
     els.layerHydrometry.checked=true;state.layerHydrometry=true;
+    els.layerBiodiversity.checked=true;state.layerBiodiversity=true;
     updateLocationUI();
     updateEncounterUI();
     populateControls();
@@ -11009,6 +11384,7 @@ async function bootAtlas(){
       updateHeritageUI();
       updateBssUI();
       updateHydrometryUI();
+      updateBiodiversityUI();
       setStatus("elevation","bad","non embarqué");
       els.sourceNote.innerHTML="Mode de démonstration hors ligne. Exporte une sauvegarde ou un HTML autonome après synchronisation pour conserver un état plus complet.";
       populateCavitySelect();

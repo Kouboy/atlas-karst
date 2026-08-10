@@ -9,6 +9,7 @@ const SOURCE_REGISTRY=Object.freeze([
   {id:"wikipedia",statusKey:"heritage",statusElementId:"heritageStatus",label:"Curiosités encyclopédiques",provider:"Wikipédia francophone",category:"documentation collaborative",coverage:"mondiale",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"wikipedia",license:"CC BY-SA",url:"https://fr.wikipedia.org/"},
   {id:"bss",statusKey:"bss",statusElementId:"bssStatus",label:"Forages et piézomètres",provider:"BRGM / Hub’Eau",category:"sous-sol documenté",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"bss",license:"Licence Ouverte 2.0",url:"https://infoterre.brgm.fr/"},
   {id:"hydrometry",statusKey:"hydrometry",statusElementId:"hydrometryStatus",label:"Stations hydrométriques",provider:"Hub’Eau / PHyC / Vigicrues",category:"hydrologie de surface",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"hydrometry",license:"Licence Ouverte 2.0",url:"https://hubeau.eaufrance.fr/page/api-hydrometrie"},
+  {id:"biodiversity",statusKey:"biodiversity",statusElementId:"biodiversityStatus",label:"Occurrences de biodiversité",provider:"GBIF",category:"biodiversité documentée",coverage:"mondiale",refresh:"manuelle",storage:"extrait agrégé local",portable:"embedded",metric:"biodiversity",license:"Selon chaque jeu source GBIF",url:"https://www.gbif.org/"},
   {id:"relief",statusKey:"elevation",statusElementId:"elevationStatus",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",category:"altimétrie",coverage:"mondiale avec priorité France",refresh:"à la création",storage:"cache local",portable:"referenced",metric:"elevation",license:"Selon le fournisseur",url:"https://geoservices.ign.fr/rgealti"}
 ]);
 const sourceRegistryRuntime={ready:true,schema:SOURCE_REGISTRY_SCHEMA_VERSION,catalogRenders:0,attributionRenders:0,statusUpdates:0,lastStatusKey:"—",lastError:""};
@@ -26,12 +27,13 @@ function sourceMetricCount(source,data={}){
   if(source.metric==="wikipedia")return heritage.filter(item=>item.category==="wikipedia").length;
   if(source.metric==="bss")return data.bss?.length||0;
   if(source.metric==="hydrometry")return data.hydrometry?.length||0;
+  if(source.metric==="biodiversity")return data.biodiversity?.length||0;
   if(source.metric==="elevation")return data.elevation?1:0;
   return 0;
 }
 function sourceRetrievedAt(source,data={}){
   if(source.id==="openstreetmap")return String(data.osmMeta?.loadedAt||"");
-  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss,hydrometry:data.hydrometry};
+  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss,hydrometry:data.hydrometry,biodiversity:data.biodiversity};
   let collection=source.metric==="culture"||source.metric==="wikipedia"?data.heritageItems:collections[source.metric]||data[source.metric];
   if(Array.isArray(collection)&&source.metric==="culture")collection=collection.filter(item=>item?.category!=="wikipedia");
   if(Array.isArray(collection)&&source.metric==="wikipedia")collection=collection.filter(item=>item?.category==="wikipedia");

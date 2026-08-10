@@ -100,7 +100,7 @@ function coarsePointer(){
 }
 function selectableFeature(cell){
   const f=cell?.feature;
-  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.hydrometry||f.cartofriches));
+  return !!(f&&(f.poiId||f.name||f.id||f.cavity||f.observation||f.lore||f.bss||f.hydrometry||f.biodiversity||f.cartofriches));
 }
 function assistedCell(x,y,radius=2){
   if(!state.lastGrid)return {x,y,snapped:false};
@@ -143,7 +143,7 @@ function closeSelectionAssist(){
 }
 function cellSelectionSound(cell){
   const f=cell?.feature||{},cls=String(cell?.cls||""),tags=f.tags||{};
-  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
+  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",biodiversity:"cellForest","biodiversity-animals":"cellForest","biodiversity-plants":"cellForest","biodiversity-fungi":"cellForest",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
   if(normalized)return normalized;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0||cell?.confidence)return "cellUnderground";
@@ -163,7 +163,7 @@ function cellSelectionSound(cell){
 }
 function playCellSelectionSound(cell,{snapped=false}={}){
   const poiKind=poiSelectionKind(cell);
-  const poiSound={cavity:"poiCavity",bss:"poiBss",hydrology:"poiNatural",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
+  const poiSound={cavity:"poiCavity",bss:"poiBss",hydrology:"poiNatural",biodiversity:"poiNatural",heritage:"poiHeritage",memory:"poiMemory",industrial:"poiIndustrial",natural:"poiNatural",home:"poiHome",location:"poiLocation"}[poiKind];
   retroAudio.play(poiSound||cellSelectionSound(cell));
   if(snapped)setTimeout(()=>retroAudio.play("snapAccent"),110);
 }
@@ -171,12 +171,14 @@ function playCellSelectionSound(cell,{snapped=false}={}){
 function poiSelectionKind(cell){
   if(!cell)return "";
   const cls=String(cell.cls||""),f=cell.feature||{},tags=f.tags||{};
+  if(String(f.poiCategory||"").startsWith("biodiversity-"))return "biodiversity";
   if(f.poiCategory)return f.poiCategory;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(f.kind==="maison"||cls.includes("c-house")||cls.includes("c-address"))return "home";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "cavity";
   if(f.bss||f.indice||cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
   if(f.hydrometry||cls.includes("c-hydrometry"))return "hydrology";
+  if(f.biodiversity||cls.includes("c-biodiversity"))return "biodiversity";
   if(f.heritage||cls.includes("c-heritage"))return "heritage";
   if(f.cartofriches||cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
   if(f.observation||f.lore||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
@@ -330,6 +332,10 @@ function featureNarrative(f){
   if(!f)return "";
   const name=f.name?` <strong>${esc(f.name)}</strong>`:"";
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`;
+  if(f.biodiversity){
+    const names=(f.species||[]).slice(0,6).map(item=>esc(poiSpeciesDisplayName(f,item)||`${biodiversityTaxonGroupLabel(item)} · ${item.scientificName}`)).join(", ");
+    return `Cette maille d’environ un kilomètre rassemble <strong>${f.speciesCount||0} espèces</strong> dans l’échantillon publié${names?` : ${names}${f.species.length>6?"…":""}`:""}. Elle indique des observations passées et imparfaitement localisées, jamais une présence actuelle garantie.`;
+  }
   if(f.hydrometry){
     const values=[Number.isFinite(f.heightM)&&`hauteur ${f.heightM.toFixed(3)} m`,Number.isFinite(f.flowM3s)&&`débit ${f.flowM3s.toFixed(3)} m³/s`].filter(Boolean).join(" · ");
     return `Une station hydrométrique documente ici${name||" le cours d’eau"}.${values?` Dernière lecture disponible : ${values}.`:" Aucune mesure récente n’accompagne la station."} Cette valeur ponctuelle décrit la station, pas à elle seule le risque de crue local.`;
@@ -366,7 +372,7 @@ function featureNarrative(f){
 }
 function evidenceProfile(cell){
   const f=cell?.feature||{};
-  const documented=!!(f.source||f.bss||f.hydrometry||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
+  const documented=!!(f.source||f.bss||f.hydrometry||f.biodiversity||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
   const observed=!!(f.observation||f.lore||f.confidenceLabel);
   const hypothesis=currentDepth()<0||!!cell?.confidence||!!f.hypothesisModel;
   return {documented,observed,interpreted:true,hypothesis};
@@ -375,10 +381,25 @@ function readingLedgerHtml(cell){
   const p=evidenceProfile(cell),chip=(cls,label,on)=>`<span class="reading-chip ${cls}${on?" active":""}">${label}</span>`;
   return `<div class="cell-reading-ledger" aria-label="Nature de la lecture">${chip("documented","fait",p.documented)}${chip("observed","observation",p.observed)}${chip("interpreted","interprétation",p.interpreted)}${chip("hypothesis","hypothèse",p.hypothesis)}</div>`;
 }
+function documentaryDateLabel(value){const date=new Date(value);return value&&!Number.isNaN(date.getTime())?date.toLocaleString("fr-FR",{dateStyle:"medium",timeStyle:"short"}):"date non précisée"}
+function primaryDocumentarySection(f){
+  if(!f)return "";
+  if(f.hydrometry){
+    const river=esc(f.river||f.name||"Cours d’eau non précisé"),height=Number.isFinite(f.heightM)?`${f.heightM.toFixed(3)} m`:"non disponible",flow=Number.isFinite(f.flowM3s)?`${f.flowM3s.toFixed(3)} m³/s`:"non disponible";
+    return `<section class="cell-section cell-section-primary"><h3>Mesure hydrométrique</h3><div class="cell-primary-title">${river}</div><div class="cell-primary-metrics"><span><small>Hauteur</small><strong>${height}</strong></span><span><small>Débit</small><strong>${flow}</strong></span></div><div class="cell-source-line">${esc(f.commune||"")}${f.commune?" · ":""}${esc(documentaryDateLabel(f.observedAt))}</div></section>`;
+  }
+  if(f.biodiversity){
+    const species=(f.species||[]),shown=species.slice(0,8),latest=f.latestDate?` · plus récente ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`:"";
+    const groupTitle=f.biodiversityGroup==="animals"?"Faune publiée":f.biodiversityGroup==="plants"?"Flore publiée":f.biodiversityGroup==="fungi"?"Champignons publiés":"Espèces publiées";
+    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),displayName=poiSpeciesDisplayName(f,item),personal=!!poiAnnotationFor(f)?.speciesNames?.[String(item.speciesKey)],details=[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(displayName||"Nom usuel non renseigné")}${personal?' <small class="personal-name-mark">personnel</small>':""}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">fiche GBIF ↗</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
+  }
+  return "";
+}
 function criticalReading(cell){
   const f=cell?.feature||{},descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0)return "La coupe aide à comparer les niveaux et à garder une continuité spatiale. Elle ne permet pas d’affirmer qu’une galerie passe sous cette cellule, ni que la profondeur affichée est mesurée localement.";
   if(f.hydrometry)return "La mesure est issue de la station et peut être récente, mais elle ne remplace ni les bulletins Vigicrues, ni les consignes des autorités, ni une observation de terrain.";
+  if(f.biodiversity)return "La maille évite une fausse précision. Le nombre affiché dépend des jeux publiés, de leur effort d’observation et de l’échantillon borné de l’Atlas ; il ne mesure ni l’abondance, ni l’absence des espèces non citées.";
   if(f.bss||f.indice||/forage|sondage|puits|pi[eé]zo/.test(descriptor))return "Cet ouvrage décrit un point vertical du sous-sol. Il peut éclairer la nature ou l’épaisseur des terrains traversés, mais il ne transforme pas le voisinage en cavité connue.";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "La présence du repère est documentée. En revanche, l’emprise, les accès, la stabilité et les connexions éventuelles restent inconnus tant qu’aucun plan ou levé local ne les établit.";
   if(f.heritage)return "La notice permet d’identifier et de contextualiser le lieu. Elle ne prouve pas que chaque détail historique, chaque dépendance ou chaque état du bâtiment soit encore observable aujourd’hui.";
@@ -386,7 +407,7 @@ function criticalReading(cell){
   if(f.cartofriches||f.siteType)return "Le statut du site renseigne son histoire d’usage. Il ne suffit pas à conclure sur une pollution, une accessibilité ou une structure souterraine particulière.";
   return "Ici, l’Atlas décrit surtout un contexte de terrain. Toute conclusion plus précise demanderait une source dédiée, une observation datée ou une mesure locale.";
 }
-function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
+function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",biodiversity:"maille de biodiversité","biodiversity-animals":"maille de faune","biodiversity-plants":"maille de flore","biodiversity-fungi":"maille de champignons",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
 function nearbyEntries(x,y){
   if(!state.lastGrid)return [];
   const center=gridToCoord(x,y,state.lastGrid.extent),z=currentZoom();
@@ -435,6 +456,14 @@ function technicalCellLines(cell,x,y){
     if(Number.isFinite(f.heightM))parts.push(`Hauteur mesurée : <strong>${f.heightM.toFixed(3)} m</strong>`);
     if(Number.isFinite(f.flowM3s))parts.push(`Débit mesuré : <strong>${f.flowM3s.toFixed(3)} m³/s</strong>`);
     if(f.observedAt)parts.push(`Mesure datée du : ${esc(new Date(f.observedAt).toLocaleString("fr-FR"))}`);
+    if(f.biodiversity){
+      parts.push(`Maille agrégée : <strong>${esc(f.cellCode||"—")}</strong> · précision minimale ${Math.round(f.precisionM||1000)} m`);
+      parts.push(`Espèces dans le filtre actif : <strong>${f.speciesCount||0}</strong> · occurrences échantillonnées ${f.sampledRecords||0}`);
+      if(f.latestDate)parts.push(`Observation la plus récente de l’échantillon : ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`);
+      if(f.species?.length)parts.push(`<strong>Espèces publiées :</strong><br>${f.species.slice(0,20).map(item=>`${esc(item.vernacularName||item.scientificName)}${item.vernacularName?` <em>(${esc(item.scientificName)})</em>`:""} · ${esc(item.group==="animals"?"faune":item.group==="plants"?"flore":"champignons")}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`).join("<br>")}${f.species.length>20?"<br>…":""}`);
+      if(f.datasets?.length)parts.push(`Jeux contributeurs : ${f.datasets.map(esc).join(" · ")}`);
+      if(f.licenses?.length)parts.push(`Licences déclarées : ${f.licenses.map(esc).join(" · ")}`);
+    }
     if(f.indice)parts.push(`Indice BSS : ${esc(f.indice)}`);
     if(f.place)parts.push(`Lieu-dit : ${esc(f.place)}`);
     if(f.record?.coordinateSource)parts.push(`Coordonnées : ${esc(f.record.coordinateSource)}`);
@@ -485,6 +514,16 @@ function documentedCellFacts(cell){
     if(f.categoryLabel)facts.push(`<span class="cell-fact-kind">catégorie</span>${esc(f.categoryLabel)}`);
     if(f.siteStatus)facts.push(`<span class="cell-fact-kind">état</span>${esc(f.siteStatus)}`);
     if(Number.isFinite(f.depth))facts.push(`<span class="cell-fact-kind">mesure</span>Profondeur déclarée : ${f.depth} m`);
+    if(f.hydrometry){
+      facts.push(`<span class="cell-fact-kind">cours d’eau</span>${esc(f.river||f.name||"non précisé")}`);
+      if(Number.isFinite(f.heightM))facts.push(`<span class="cell-fact-kind">hauteur</span>${f.heightM.toFixed(3)} m`);
+      if(Number.isFinite(f.flowM3s))facts.push(`<span class="cell-fact-kind">débit</span>${f.flowM3s.toFixed(3)} m³/s`);
+      if(f.observedAt)facts.push(`<span class="cell-fact-kind">date</span>${esc(documentaryDateLabel(f.observedAt))}`);
+    }
+    if(f.biodiversity){
+      facts.push(`<span class="cell-fact-kind">maille</span>${f.speciesCount||f.species?.length||0} espèces publiées sur environ 1 km`);
+      for(const item of (f.species||[]).slice(0,8)){const displayName=poiSpeciesDisplayName(f,item);facts.push(`<span class="cell-fact-kind">${item.group==="animals"?"faune":item.group==="plants"?"flore":"fonge"}</span><strong>${esc(displayName||item.scientificName)}</strong>${displayName?` <em>${esc(item.scientificName)}</em>`:""}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`)}
+    }
     if(f.confidenceLabel)facts.push(`<span class="cell-fact-kind">confiance</span>${esc(f.confidenceLabel)}`);
     if(f.source)facts.push(`<span class="cell-fact-kind">origine</span>${esc(f.source)}`);
   }else facts.push("Aucun repère ponctuel n’est attaché à cette case ; la lecture repose sur le terrain et les couches de surface.");
@@ -493,7 +532,7 @@ function documentedCellFacts(cell){
 }
 function featureDescriptionFingerprint(f){
   if(!f)return "none";
-  return [f.poiId,f.id,f.indice,f.name,f.kind,f.type,f.nature,f.source,f.updated,f.depth,f.confidenceLabel,f.siteStatus,f.period].map(v=>String(v??"").slice(0,80)).join("~");
+  return [f.poiId,f.id,f.indice,f.name,f.kind,f.type,f.nature,f.source,f.updated,f.depth,f.confidenceLabel,f.siteStatus,f.period,poiAnnotationFor(f)?.updatedAt].map(v=>String(v??"").slice(0,80)).join("~");
 }
 function cellDescriptionCacheKey(cell,x,y){
   const coord=gridToCoord(x,y,state.lastGrid.extent),slope=localSlopeDegrees(x,y);
@@ -506,13 +545,13 @@ function trimDescriptionCache(){
 }
 function buildCellDescriptionBundle(cell,x,y){
   const slope=localSlopeDegrees(x,y),f=cell.feature;
-  const title=f?.name||f?.kind||"Case sans nom";
-  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f);
+  const title=poiAnnotationDisplayTitle(f,f?.name||f?.kind||"Case sans nom");
+  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f),primary=primaryDocumentarySection(f);
   const meta=[Number.isFinite(cell.elev)?`altitude ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",currentDepth()<0?`niveau ${depthSliceLabel()}`:"surface"].filter(Boolean).join(" · ");
   const [category,symbol]=cellPresentationCategory(cell);
   const immediate=`<article class="cell-sheet-card">
     <header class="cell-sheet-head"><div class="cell-sheet-symbol">${esc(symbol)}</div><div><div class="cell-sheet-kicker">${esc(category)}</div><div class="cell-sheet-title">${esc(title)}</div><div class="cell-sheet-meta">${esc(meta)}</div>${documentarySignalHtml(cell)}${readingLedgerHtml(cell)}</div></header>
-    <section class="cell-section cell-section-reading"><h3>Lecture du lieu</h3><p>${terrain}${feature?` ${feature}`:""}</p></section>`;
+    ${primary}<section class="cell-section cell-section-reading"><h3>${primary?"Contexte de la maille":"Lecture du lieu"}</h3><p>${terrain}${!primary&&feature?` ${feature}`:""}</p></section>`;
   return {key:cellDescriptionCacheKey(cell,x,y),immediate,cell,x,y,title,details:null};
 }
 function buildCellDescriptionDetails(bundle){
@@ -521,6 +560,7 @@ function buildCellDescriptionDetails(bundle){
   bundle.details=`<section class="cell-section"><h3>Ce qui est documenté</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
     ${nearby?`<section class="cell-section cell-section-nearby"><h3>À proximité</h3>${nearby}</section>`:""}
     ${relations}
+    ${poiAnnotationSection(cell.feature)}
     <section class="cell-section cell-section-critical"><h3>Ce que l’on peut en déduire</h3><p><strong>Lecture prudente.</strong> ${critical}</p></section>
     <details class="technical-details"><summary>Données techniques et sources</summary><div>${technicalCellLines(cell,x,y).join("<br>")}</div></details>`;
   return bundle.details;

@@ -19,6 +19,7 @@ function bindApplicationController(){
   bindSourceController();
   bindExperienceController();
   bindViewController();
+  bindPoiAnnotations();
   bindLifecycleController();
   bindSessionHealth();
   els.readoutSheetHandle.addEventListener("click",()=>{accountApplicationAction("bascule de la fiche");cycleReadoutSheet()});
@@ -62,9 +63,12 @@ async function bootAtlas(){
     loadCartofriches();
     loadBssLocal();
     loadHydrometry();
+    loadBiodiversity();
+    loadPoiAnnotations();
     loadEncounterCollection();
     els.layerBss.checked=true;state.layerBss=true;
     els.layerHydrometry.checked=true;state.layerHydrometry=true;
+    els.layerBiodiversity.checked=true;state.layerBiodiversity=true;
     updateLocationUI();
     updateEncounterUI();
     populateControls();
@@ -106,6 +110,7 @@ async function bootAtlas(){
       updateHeritageUI();
       updateBssUI();
       updateHydrometryUI();
+      updateBiodiversityUI();
       setStatus("elevation","bad","non embarqué");
       els.sourceNote.innerHTML="Mode de démonstration hors ligne. Exporte une sauvegarde ou un HTML autonome après synchronisation pour conserver un état plus complet.";
       populateCavitySelect();

@@ -2,6 +2,14 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18i — Biodiversité locale
+
+- Synchronisation manuelle d’un échantillon GBIF séparé entre faune, flore et champignons, plafonné à 120 occurrences par groupe.
+- Les coordonnées publiées sont immédiatement agrégées en mailles d’environ 1 km ; aucune position brute d’observation n’est conservée dans l’Atlas.
+- Les mailles affichent les espèces, dates, jeux contributeurs, licences et incertitudes disponibles sans prétendre mesurer l’abondance ni garantir une présence actuelle.
+- Les trois groupes sont filtrables et possèdent un rendu partagé entre les modes symbolique et ASCII.
+- L’extrait agrégé est isolé par Territoire, disponible hors ligne et embarqué dans les carnets `.atlas` et les instantanés autonomes.
+
 ## 0.18h — Cours d’eau mesurés
 
 - Ajout manuel des stations hydrométriques françaises depuis l’API officielle Hub’Eau, limité à 48 stations dans l’emprise du Territoire.

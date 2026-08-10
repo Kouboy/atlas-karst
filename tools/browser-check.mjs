@@ -424,7 +424,7 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {before,after:{...lifecycleControllerRuntime},calls,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,9);
+    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,10);
     assert.equal(result.after.unlockAttempts-result.before.unlockAttempts,4,"le branchement idempotent a doublé les gestes");
     assert.equal(result.after.visibilityChanges-result.before.visibilityChanges,2);
     assert.equal(result.after.focusChanges-result.before.focusChanges,2);
@@ -694,7 +694,7 @@ try {
       const ids=SOURCE_REGISTRY.map(source=>source.id);
       const references=sourceReferencesForSnapshot({data:{
         osm:[{id:1}],osmMeta:{loadedAt:"2026-08-10T10:00:00Z"},address:{label:"test"},
-        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],elevation:{min:1},
+        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],biodiversity:[{id:"bio1",syncedAt:"2026-08-10"}],elevation:{min:1},
         heritageItems:[{id:"m1",category:"monument",syncedAt:"2026-08-09"},{id:"w1",category:"wikipedia",syncedAt:"2026-08-08"}]
       }});
       setSourceStatus("heritage","ok","2 notices");
@@ -703,10 +703,11 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {schema:SOURCE_REGISTRY_SCHEMA_VERSION,ids,catalog,references,attribution,runtime:{...sourceRegistryRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.schema,1);assert.equal(result.ids.length,10);assert.equal(new Set(result.ids).size,10);assert.equal(result.catalog.length,10);
+    assert.equal(result.schema,1);assert.equal(result.ids.length,11);assert.equal(new Set(result.ids).size,11);assert.equal(result.catalog.length,11);
     assert.equal(result.catalog.find(source=>source.id==="culture")?.status,"2 notices");assert.equal(result.catalog.find(source=>source.id==="wikipedia")?.status,"2 notices");
     assert.equal(result.references.find(source=>source.id==="culture")?.count,1);assert.equal(result.references.find(source=>source.id==="wikipedia")?.count,1);
     assert.equal(result.references.find(source=>source.id==="hydrometry")?.count,1);assert.equal(result.references.find(source=>source.id==="hydrometry")?.disposition,"embedded");
+    assert.equal(result.references.find(source=>source.id==="biodiversity")?.count,1);assert.equal(result.references.find(source=>source.id==="biodiversity")?.disposition,"embedded");
     assert.equal(result.references.find(source=>source.id==="openstreetmap")?.disposition,"consulted");assert.equal(result.references.find(source=>source.id==="adresse")?.disposition,"embedded");
     assert.match(result.attribution,/OpenStreetMap \(ODbL\)/);assert.match(result.attribution,/Wikipédia francophone \(CC BY-SA\)/);assert.match(result.attribution,/restent privés/);
     assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.catalogRenders>=1);assert.ok(result.runtime.attributionRenders>=1);assert.ok(result.runtime.statusUpdates>=1);
@@ -727,11 +728,29 @@ try {
       const items=await syncHydrometry();
       window.fetch=originalFetch;
       ensureSpatialIndexes();
-      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="hydrometry"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet();
-      return {count:items?.length||0,height:items?.[0]?.heightM,flow:items?.[0]?.flowM3s,poiCategory:poi?.category,snapshotCount:snapshot.data.hydrometry?.length||0,carnetCount:carnet.sources.extracts.hydrometry?.length||0,status:document.getElementById("hydrometryStatus").textContent,requests:{...hydrometryRuntime}};
+      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="hydrometry"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(),primary=primaryDocumentarySection(symbolicPoiFeatureInfo(poi));
+      return {count:items?.length||0,height:items?.[0]?.heightM,flow:items?.[0]?.flowM3s,poiCategory:poi?.category,snapshotCount:snapshot.data.hydrometry?.length||0,carnetCount:carnet.sources.extracts.hydrometry?.length||0,primary,status:document.getElementById("hydrometryStatus").textContent,requests:{...hydrometryRuntime}};
     });
     assert.equal(result.count,1);assert.equal(result.height,.634);assert.equal(result.flow,3.38);assert.equal(result.poiCategory,"hydrology");
-    assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.match(result.status,/1 stations/);assert.ok(result.requests.stationRequests>=1);assert.ok(result.requests.observationRequests>=1);
+    assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.match(result.primary,/La rivière témoin/);assert.match(result.primary,/0\.634 m/);assert.match(result.primary,/3\.380 m³\/s/);assert.match(result.status,/1 stations/);assert.ok(result.requests.stationRequests>=1);assert.ok(result.requests.observationRequests>=1);
+  });
+
+  await withPage("biodiversité agrégée sans coordonnées brutes", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const originalFetch=window.fetch,extent=largestExtent(),rawLat=extent.south+(extent.north-extent.south)*.4137,rawLon=extent.west+(extent.east-extent.west)*.5289;
+      window.fetch=async url=>{
+        const value=String(url),params=new URL(value).searchParams,taxon=params.get("taxonKey"),record=taxon==="1"?{key:101,speciesKey:1001,species:"Animalia testii",vernacularName:"Animal témoin",kingdom:"Animalia",class:"Aves",order:"Passeriformes",family:"Testidae",genus:"Animalia",basisOfRecord:"HUMAN_OBSERVATION",decimalLatitude:rawLat,decimalLongitude:rawLon,eventDate:"2026-05-03",year:2026,coordinateUncertaintyInMeters:24,datasetTitle:"Faune témoin",license:"http://creativecommons.org/licenses/by/4.0/"}:taxon==="6"?{key:102,speciesKey:1002,species:"Planta testii",vernacularName:"Plante témoin",kingdom:"Plantae",class:"Magnoliopsida",family:"Testaceae",basisOfRecord:"PRESERVED_SPECIMEN",decimalLatitude:rawLat+.0001,decimalLongitude:rawLon+.0001,eventDate:"2018-04-01",year:2018,coordinateUncertaintyInMeters:50,datasetTitle:"Flore témoin",license:"http://creativecommons.org/publicdomain/zero/1.0/"}:{key:103,speciesKey:1003,species:"Fungus testii",vernacularName:"Champignon témoin",kingdom:"Fungi",family:"Testaceae",basisOfRecord:"OBSERVATION",decimalLatitude:rawLat+.0002,decimalLongitude:rawLon+.0002,eventDate:"2008-10-10",year:2008,coordinateUncertaintyInMeters:10,datasetTitle:"Fonge témoin",license:"http://creativecommons.org/licenses/by-nc/4.0/"};
+        return new Response(JSON.stringify({count:40000,results:[record]}),{status:200,headers:{"Content-Type":"application/json"}});
+      };
+      state.allowNetwork=true;const cells=await syncBiodiversity();window.fetch=originalFetch;ensureSpatialIndexes();
+      const serialized=JSON.stringify(cells),pois=spatialRuntime.normalizedPois.filter(item=>item.sourceType==="biodiversity"),features=pois.map(symbolicPoiFeatureInfo),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(),composition=composeMapGrid(largestExtent(),0),asciiClasses=new Set(composition.grid.grid.flat().map(cell=>String(cell.cls||"")).filter(cls=>cls.includes("c-biodiversity"))),symbolicCategories=new Set(symbolicVisiblePois(composition.grid).filter(item=>item.sourceType==="biodiversity").map(item=>item.category));
+      state.biodiversityEnabled.fungi=false;const filtered=biodiversityVisibleSpecies(cells[0]).length;state.biodiversityEnabled.fungi=true;
+      const crowded=[];for(let i=0;i<40;i++)crowded.push(biodiversityRecord({key:`p${i}`,speciesKey:`p${i}`,species:`Plante ${i}`,decimalLatitude:rawLat,decimalLongitude:rawLon,eventDate:`2026-07-${String(i%28+1).padStart(2,"0")}`},BIODIVERSITY_GROUPS[1],extent));for(let i=0;i<10;i++)crowded.push(biodiversityRecord({key:`a${i}`,speciesKey:`a${i}`,species:`Animal ${i}`,class:i<6?"Insecta":i<8?"Aves":"Mammalia",decimalLatitude:rawLat,decimalLongitude:rawLon,eventDate:i<6?"2026-01-01":"2010-01-01"},BIODIVERSITY_GROUPS[0],extent));for(let i=0;i<5;i++)crowded.push(biodiversityRecord({key:`f${i}`,speciesKey:`f${i}`,species:`Champignon ${i}`,decimalLatitude:rawLat,decimalLongitude:rawLon,eventDate:"2005-01-01"},BIODIVERSITY_GROUPS[2],extent));const balancedCell=aggregateBiodiversityRecords(crowded,"2026-08-10")[0],balanced=balancedCell.groupCounts,animalClasses=[...new Set(balancedCell.species.filter(item=>item.group==="animals").map(item=>item.taxonClass))];
+      return {cells:cells.length,species:biodiversityUniqueSpecies(cells),rawFields:serialized.includes("decimalLatitude")||serialized.includes("decimalLongitude"),rawCoordinate:serialized.includes(String(rawLat))||serialized.includes(String(rawLon)),precision:Math.min(...features.flatMap(feature=>feature.species).map(item=>item.uncertaintyM)),featureCounts:features.map(feature=>feature.speciesCount),filtered,snapshotCount:snapshot.data.biodiversity.length,carnetCount:carnet.sources.extracts.biodiversity.length,poiCategories:pois.map(poi=>poi.category),asciiClasses:[...asciiClasses],symbolicCategories:[...symbolicCategories],primary:features.map(primaryDocumentarySection).join(" "),balanced,animalClasses,summary:els.biodiversitySummary.textContent,status:els.biodiversityStatus.textContent,runtime:{...biodiversityRuntime}};
+    });
+    assert.equal(result.cells,1);assert.equal(result.species,3);assert.equal(result.rawFields,false);assert.equal(result.rawCoordinate,false);assert.ok(result.precision>=1000);
+    assert.deepEqual(result.featureCounts,[1,1,1]);assert.equal(result.filtered,2);assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.deepEqual(result.poiCategories.sort(),["biodiversity-animals","biodiversity-fungi","biodiversity-plants"]);assert.deepEqual(result.asciiClasses.sort(),["c-biodiversity-animals","c-biodiversity-fungi","c-biodiversity-plants"]);assert.deepEqual(result.symbolicCategories.sort(),["biodiversity-animals","biodiversity-fungi","biodiversity-plants"]);assert.match(result.primary,/Animal témoin/);assert.match(result.primary,/oiseau/);assert.match(result.primary,/famille Testidae/);assert.match(result.primary,/observation humaine/);assert.match(result.primary,/Plante témoin/);assert.match(result.primary,/Champignon témoin/);assert.equal(result.balanced.animals,10);assert.equal(result.balanced.fungi,5);assert.equal(result.balanced.plants,17);assert.deepEqual(result.animalClasses.sort(),["Aves","Insecta","Mammalia"]);assert.match(result.summary,/1 faune/);assert.match(result.summary,/1 flore/);assert.match(result.status,/3 espèces/);assert.equal(result.runtime.occurrenceRequests,5);
   });
 
   await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {
@@ -756,6 +775,42 @@ try {
     assert.equal(result.afterTamper.id,result.imported.id);assert.deepEqual(result.afterTamper.entries,result.imported.entries);assert.match(result.afterTamper.help,/intégrité incorrect/);assert.equal(result.runtime.imports,1);assert.ok(result.runtime.validated>=1);
   });
 
+  await withPage("annotations personnelles portables", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.evaluate(()=>{
+      const extent=largestExtent(),grid=biodiversityGridPosition(CONFIG.house.lat,CONFIG.house.lon,extent);
+      state.biodiversity=[{id:`BIO-${grid.x}-${grid.y}`,cellCode:`${grid.x+1}-${grid.y+1}`,name:"Maille biodiversité annotable",lat:grid.lat,lon:grid.lon,cellCols:grid.cols,cellRows:grid.rows,species:[{speciesKey:"ANNOT-1",scientificName:"Avis exemplaris",vernacularName:"",group:"animals",taxonClass:"Aves",family:"Exemplaridae",basisOfRecord:"HUMAN_OBSERVATION",sampledRecords:2,latestDate:"2026-05-01",earliestDate:"2025-04-01",uncertaintyM:1000}],speciesCount:1,sampledRecords:2,groupCounts:{animals:1},datasets:["Jeu témoin"],licenses:["CC BY"],source:"GBIF · test",url:"https://www.gbif.org/"}];
+      state.layerBiodiversity=true;markSpatialIndexesDirty();ensureSpatialIndexes();render("test-annotation");
+      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="biodiversity"&&item.raw?.displayGroup==="animals");if(!poi)throw new Error("POI biodiversité absent");selectSymbolicPoi(poi,"Test d’annotation");
+    });
+    const form=page.locator("form[data-poi-annotation-key]");await form.waitFor();
+    await form.locator('[name="poiAnnotationTitle"]').fill("Le petit guetteur");
+    await form.locator('[name="poiAnnotationNote"]').fill("Vu près de la haie après la pluie.");
+    await form.locator('[data-poi-species-key="ANNOT-1"]').fill("Oiseau des haies");
+    await form.getByRole("button",{name:/enregistrer/i}).click();
+    await page.waitForFunction(()=>document.getElementById("readoutBody").textContent.includes("Oiseau des haies")&&document.getElementById("readoutSheetLabel").textContent==="Le petit guetteur");
+    const result=await page.evaluate(async()=>{
+      const key=Object.keys(state.poiAnnotations)[0],snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(snapshot),portable=await atlasCarnetToSnapshot(carnet),stored=JSON.parse(localStorage.getItem(territoryStorageKey(POI_ANNOTATIONS_KEY))||"{}");
+      state.poiAnnotations={};applyAtlasSnapshot(portable,{source:"test annotations",renderNow:false});
+      return {key,active:state.poiAnnotations[key],snapshot:snapshot.data.poiAnnotations[key],carnet:carnet.content.annotations[key],portable:portable.data.poiAnnotations[key],stored:stored[key],summary:carnet.summary.annotations};
+    });
+    assert.ok(result.key);for(const copy of [result.active,result.snapshot,result.carnet,result.portable,result.stored]){assert.equal(copy.title,"Le petit guetteur");assert.equal(copy.note,"Vu près de la haie après la pluie.");assert.equal(copy.speciesNames["ANNOT-1"],"Oiseau des haies")};assert.equal(result.summary,1);
+  });
+
+  await withPage("filtres groupés des couches", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const terrainBefore=await page.evaluate(()=>state.layerSurface);
+    await page.selectOption("#layerCategoryFilter","documents");
+    const filtered=await page.evaluate(()=>({visible:[...document.querySelectorAll("#layerSwitchList [data-layer-category]")].filter(item=>!item.hidden).map(item=>item.dataset.layerCategory),terrainHidden:document.querySelector('[data-layer-category="terrain"]').hidden}));
+    assert.ok(filtered.visible.length>=8&&filtered.visible.every(value=>value==="documents"));assert.equal(filtered.terrainHidden,true);
+    await page.locator("#layersHideCategory").click();
+    assert.equal(await page.evaluate(()=>["layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities"].every(id=>state[id]===false&&document.getElementById(id).checked===false)),true);
+    assert.equal(await page.evaluate(()=>state.layerSurface),terrainBefore);
+    await page.locator("#layersSelectAll").click();const inactiveAfterSelectAll=await page.evaluate(()=>VIEW_LAYER_CONTROL_IDS.filter(id=>id!=="ambientMotion"&&(state[id]!==true||document.getElementById(id).checked!==true)));assert.deepEqual(inactiveAfterSelectAll,[]);
+    await page.locator("#layersClearAll").click();assert.equal(await page.evaluate(()=>VIEW_LAYER_CONTROL_IDS.every(id=>state[id]===false&&document.getElementById(id).checked===false)),true);
+    await page.locator("#layersSelectAll").click();
+  });
+
   await withPage("coque responsive regroupée", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForTimeout(350);
@@ -773,6 +828,8 @@ try {
     assert.ok(batching.requests>=8&&batching.requests<=12,`${batching.requests} demandes pour la rafale étalon`);
     assert.ok(batching.runs<=2,`${batching.runs} ajustements pour une seule rafale`);
     assert.ok(batching.coalesced>=batching.requests-batching.runs-1,`seulement ${batching.coalesced} ajustements regroupés`);assert.equal(batching.clusters,4);
+    const collapseBar=await page.evaluate(()=>{const sidebar=document.getElementById("sidebar"),button=document.getElementById("sidebarClose");sidebar.scrollTop=sidebar.scrollHeight;const s=sidebar.getBoundingClientRect(),b=button.getBoundingClientRect(),style=getComputedStyle(button);return {position:style.position,top:b.top,sidebarTop:s.top,leftGap:Math.abs(b.left-s.left),rightGap:Math.abs(b.right-s.right),width:b.width,sidebarWidth:s.width,scrollTop:sidebar.scrollTop}});
+    assert.equal(collapseBar.position,"sticky");assert.ok(collapseBar.scrollTop>100);assert.ok(Math.abs(collapseBar.top-collapseBar.sidebarTop)<=2);assert.ok(collapseBar.leftGap<=2&&collapseBar.rightGap<=20);assert.ok(collapseBar.width>=collapseBar.sidebarWidth-20);
     await page.locator("#sidebarToggle").click();
     await page.locator("body.sidebar-collapsed").waitFor();
     await page.locator("#sidebarToggle").click();

@@ -493,8 +493,8 @@ function symbolicDrawFallbackGridLines(ctx,grid,m){
     ctx.strokeStyle=style.color;ctx.lineWidth=style.width;ctx.setLineDash(style.dash);ctx.beginPath();for(const [a,b] of segments){ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y)}ctx.stroke();ctx.restore();
   }
 }
-function symbolicPoiColor(kind){return ({location:"#82f4c1",home:"#ff7f8a",bss:"#f2c75c",hydrology:"#70d6ff",heritage:"#eadcaa",industrial:"#f2a35d",memory:"#df8bd4",cavity:"#71dbca",natural:"#76d7c4"})[kind]||"#dce9e1"}
-function symbolicPoiCode(kind){return ({location:"GPS",home:"MAI",bss:"BSS",hydrology:"HYD",heritage:"PAT",industrial:"FRI",memory:"OBS",cavity:"CAV",natural:"NAT"})[kind]||"POI"}
+function symbolicPoiColor(kind){return ({location:"#82f4c1",home:"#ff7f8a",bss:"#f2c75c",hydrology:"#70d6ff",biodiversity:"#9dde72","biodiversity-animals":"#e6c86f","biodiversity-plants":"#9dde72","biodiversity-fungi":"#c79ad8",heritage:"#eadcaa",industrial:"#f2a35d",memory:"#df8bd4",cavity:"#71dbca",natural:"#76d7c4"})[kind]||"#dce9e1"}
+function symbolicPoiCode(kind){return ({location:"GPS",home:"MAI",bss:"BSS",hydrology:"HYD",biodiversity:"BIO","biodiversity-animals":"FAU","biodiversity-plants":"FLO","biodiversity-fungi":"FUN",heritage:"PAT",industrial:"FRI",memory:"OBS",cavity:"CAV",natural:"NAT"})[kind]||"POI"}
 function symbolicPoiHash(value){
   let h=2166136261;for(const ch of String(value||"")){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0;
 }
@@ -502,6 +502,7 @@ function symbolicPoiLayerEnabled(poi){
   if(!poi)return false;
   if(poi.sourceType==="bss")return !!state.layerBss;
   if(poi.sourceType==="hydrometry")return !!state.layerHydrometry&&currentDepth()===0;
+  if(poi.sourceType==="biodiversity")return !!state.layerBiodiversity&&currentDepth()===0&&biodiversityVisibleSpecies(poi.raw).length>0;
   if(poi.sourceType==="cavity"||poi.sourceType==="osm-natural")return !!state.layerCavities;
   if(poi.sourceType==="heritage")return !!state.layerHeritage&&state.heritageEnabled[poi.raw?.category]!==false;
   if(poi.sourceType==="observation")return !!state.layerObservations;
@@ -523,6 +524,7 @@ function symbolicPoiDensityVisible(poi){
     if(modulo>1&&h%modulo!==0&&!poi.raw?.piezo)return false;
   }
   if(poi.category==="natural"&&z<2&&h%(z===0?4:2)!==0)return false;
+  if(String(poi.category).startsWith("biodiversity-")&&z<2&&h%(z===0?4:2)!==0)return false;
   return true;
 }
 function symbolicVisiblePois(grid){
@@ -563,6 +565,7 @@ function symbolicDrawPoiIcon(ctx,kind,cx,cy,size,alpha=1){
 function symbolicPoiLabelAllowed(poi){
   if(!state.layerLabels||!poi.title)return false;
   const z=state.zoomIndex;
+  if(String(poi.category).startsWith("biodiversity-"))return z>=5;
   if(z===0)return poi.category==="home"||poi.category==="location";
   if(z===1)return ["home","location","heritage","industrial"].includes(poi.category)&&poi.priority>=20;
   if(z===2)return poi.category!=="bss"&&poi.category!=="natural";
@@ -625,6 +628,7 @@ function symbolicPoiFeatureInfo(poi){
   if(poi.sourceType==="heritage")return poiFeatureInfo(poi,heritageFeatureInfo(r));
   if(poi.sourceType==="bss")return poiFeatureInfo(poi,{kind:r.piezo?"station piézométrique":"forage ou ouvrage BSS",depth:r.depth,nature:r.nature,altitude:r.altitude,commune:r.commune,indice:r.indice,place:r.place,bss:true,piezo:!!r.piezo});
   if(poi.sourceType==="hydrometry")return poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:r.river,commune:r.commune,code:r.code,heightM:r.heightM,flowM3s:r.flowM3s,observedAt:r.observedAt,url:r.url,license:r.license});
+  if(poi.sourceType==="biodiversity")return biodiversityFeatureInfo(poi);
   if(poi.sourceType==="cartofriches")return poiFeatureInfo(poi,{kind:poi.kind,cartofriches:true,siteType:r.type,siteStatus:r.status,address:r.address,surface:r.surface,occupation:r.occupation,activity:r.activity,activityEnd:r.activityEnd,commune:r.commune,url:r.url});
   return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",heritage:poi.sourceType==="heritage"});
 }

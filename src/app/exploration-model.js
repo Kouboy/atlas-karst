@@ -252,6 +252,7 @@ function featureBounds(feature){
 function normalizedPoiCategory(sourceType,raw){
   if(sourceType==="bss")return "bss";
   if(sourceType==="hydrometry")return "hydrology";
+  if(sourceType==="biodiversity")return "biodiversity";
   if(sourceType==="cavity")return "cavity";
   if(sourceType==="heritage")return "heritage";
   if(sourceType==="observation"||sourceType==="lore")return "memory";
@@ -295,7 +296,7 @@ function ensureSpatialIndexes(){
   let changed=spatialRuntime.dirty;
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
-    bss:state.bss,hydrometry:state.hydrometry,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
+    bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
     lore:state.loreItems,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
@@ -314,7 +315,17 @@ function ensureSpatialIndexes(){
     if(raw&&typeof raw==="object")spatialRuntime.poiByRaw.set(raw,poi);
   };
   for(const b of state.bss||[])addPoi("bss",b,{kind:b.piezo?"station piézométrique":"forage ou ouvrage BSS",priority:b.piezo?19:17});
-  for(const h of state.hydrometry||[])addPoi("hydrometry",h,{kind:"station hydrométrique",title:h.name||h.river||`Station ${h.code}`,priority:20});
+  for(const h of state.hydrometry||[])addPoi("hydrometry",h,{kind:"station hydrométrique",title:h.river||h.name||`Station ${h.code}`,priority:20});
+  for(const b of state.biodiversity||[]){
+    const extent=largestExtent(),cols=b.cellCols||Math.max(1,Math.round(CONFIG.dataWidthKm||16)),rows=b.cellRows||Math.max(1,Math.round(CONFIG.dataHeightKm||16));
+    const offsets={animals:[-.18,.12],plants:[.18,.12],fungi:[0,-.18]};
+    for(const group of BIODIVERSITY_GROUPS){
+      const species=(b.species||[]).filter(item=>item.group===group.id);if(!species.length)continue;
+      const raw={...b,id:`${b.id}-${group.id}`,displayGroup:group.id,species,speciesCount:species.length,groupCounts:{[group.id]:species.length}};
+      const first=species[0],[ox,oy]=offsets[group.id];
+      addPoi("biodiversity",raw,{id:raw.id,kind:`maille de ${group.label} documentée`,title:`${first.vernacularName||first.scientificName} · ${species.length} esp.`,category:`biodiversity-${group.id}`,subtype:group.id,lat:b.lat+oy*(extent.north-extent.south)/rows,lon:b.lon+ox*(extent.east-extent.west)/cols,priority:group.id==="animals"?18:group.id==="fungi"?17:16});
+    }
+  }
   for(const c of state.cavities||[])addPoi("cavity",c,{kind:cavityType(c),title:cavityName(c),priority:18});
   for(const o of state.observations||[])addPoi("observation",o,{kind:o.mode==="sight"?"ligne de visée observée":o.mode==="zone"?"zone d’observation approximative":"observation ponctuelle",title:o.name||"Observation locale",priority:19});
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});

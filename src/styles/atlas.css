@@ -208,6 +208,10 @@ select{width:100%}
 .c-parcel{color:#536b60}.c-cad-building{color:#fff0d2;font-weight:900}.c-bss{color:#ffd866;font-weight:900}
 .c-piezo{color:#70d6ff;font-weight:900}
 .c-hydrometry{color:#70d6ff;font-weight:900}
+.c-biodiversity{color:#9dde72;font-weight:900}
+.c-biodiversity-animals{color:#e6c86f;font-weight:900}
+.c-biodiversity-plants{color:#9dde72;font-weight:900}
+.c-biodiversity-fungi{color:#c79ad8;font-weight:900}
 .c-observation{color:#ff8bd8;font-weight:900}.c-sight{color:#ef9ee8}.c-zone{color:#cf79be}.c-address{color:#ff7784;font-weight:900}
 .c-lore-heritage{color:#ffe08a;font-weight:900}.c-lore-ruin{color:#ffad7c;font-weight:900}.c-lore-friche{color:#d8b4ff;font-weight:900}.c-lore-abandoned{color:#8fd3c7;font-weight:900}.c-lore-anecdote{color:#ffd1f2;font-weight:900}.c-lore-mystery{color:#ff7ea2;font-weight:900}.c-lore-view{color:#8fd8ff;font-weight:900}
 .c-heritage-monument{color:#ffd569;font-weight:900;text-shadow:0 0 5px rgba(255,213,105,.35)}
@@ -519,6 +523,7 @@ label.switch{font-size:11px;color:#c9d8cf}
 .cell-section{position:relative;padding:9px 10px 9px 13px;border-left-width:2px;border-radius:0;background:rgba(14,26,20,.82)}
 .cell-section::before{content:"";position:absolute;left:5px;top:13px;width:3px;height:3px;background:currentColor;opacity:.55}
 .cell-section h3{font-size:8px;letter-spacing:.15em}
+.cell-section-primary{border-left-color:#9dde72;background:#101d14;color:#dce9e1}.cell-primary-title{margin:2px 0 7px;color:#f0f4e7;font-size:12px;font-weight:800;line-height:1.35}.cell-primary-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.cell-primary-metrics span{display:grid;gap:2px;border-top:1px solid #41634b;padding-top:5px}.cell-primary-metrics small{color:#8fad99;font-size:8px;text-transform:uppercase;letter-spacing:.1em}.cell-primary-metrics strong{color:#9dde72;font-size:14px}.cell-primary-species{display:grid;gap:5px;margin:0;padding:0;list-style:none}.cell-primary-species li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;border-top:1px solid #294536;padding-top:5px}.cell-primary-species em{color:#9eb2a5;font-size:9px}.cell-primary-species span{grid-column:1/-1;color:#7f9c89;font-size:8px;text-transform:uppercase;letter-spacing:.06em}.cell-species-link{grid-column:1/-1;width:max-content;color:#9dde72;font-size:8px;text-transform:uppercase;letter-spacing:.06em;text-decoration:none;border-bottom:1px solid #41634b}.cell-species-link:hover,.cell-species-link:focus-visible{color:#f0f4e7;border-bottom-color:currentColor}
 .cell-section p,.cell-facts{font-size:10px;line-height:1.55}
 .cell-section-reading{border-left-color:#77a9bc;background:rgba(10,25,33,.72)}
 .cell-section-nearby{background:rgba(27,23,13,.72)}
@@ -1274,14 +1279,19 @@ body[data-ui-version="field-notebook"] aside{
   padding:12px;background:var(--ui-bg);color:var(--ui-text);border-right:2px solid var(--ui-line-strong);
   font-family:Arial,Helvetica,sans-serif
 }
-body[data-ui-version="field-notebook"] .sidebar-head{padding:0 0 12px;border-bottom:2px solid var(--ui-line-strong);background:var(--ui-bg)}
+body[data-ui-version="field-notebook"] .sidebar-collapse-bar{
+  position:sticky;top:-12px;z-index:12;display:block;width:calc(100% + 24px);min-height:37px;margin:-12px -12px 0;padding:8px 12px;
+  border:0;border-bottom:2px solid var(--ui-accent);background:#09150f;color:var(--ui-accent);text-align:left;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase
+}
+body[data-ui-version="field-notebook"] .sidebar-collapse-bar:hover,body[data-ui-version="field-notebook"] .sidebar-collapse-bar:focus-visible{background:var(--ui-accent);color:#04100a;outline:0}
+body[data-ui-version="field-notebook"] .sidebar-head{position:relative;top:auto;z-index:1;margin:0;padding:12px 0;border-bottom:2px solid var(--ui-line-strong);background:var(--ui-bg)}
 body[data-ui-version="field-notebook"] .sidebar-title-copy{min-width:0}
 body[data-ui-version="field-notebook"] .eyebrow{color:var(--ui-warn);font-size:9px;font-weight:800;letter-spacing:.16em}
 body[data-ui-version="field-notebook"] h1{margin:5px 0 2px;color:#f0f4e8;font-size:25px;font-weight:900;letter-spacing:-.055em;line-height:1}
 body[data-ui-version="field-notebook"] .sub{max-width:290px;color:var(--ui-muted);font-size:11px;line-height:1.35}
 body[data-ui-version="field-notebook"] #territorySummary{margin-top:8px;color:var(--ui-text);font-weight:650}
 body[data-ui-version="field-notebook"] .sidebar-section-tabs{
-  position:sticky;top:-12px;z-index:5;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  position:sticky;top:25px;z-index:10;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
   margin:0 -12px;padding:0 12px;background:var(--ui-bg);border-bottom:2px solid var(--ui-line-strong)
 }
 body[data-ui-version="field-notebook"] .sidebar-section-tab{
@@ -1307,7 +1317,8 @@ body[data-ui-version="field-notebook"] aside .card.collapsed>.card-body{display:
 body[data-ui-version="field-notebook"] aside button,
 body[data-ui-version="field-notebook"] aside select,
 body[data-ui-version="field-notebook"] aside input[type="text"],
-body[data-ui-version="field-notebook"] aside input[type="number"]{
+body[data-ui-version="field-notebook"] aside input[type="number"],
+body[data-ui-version="field-notebook"] aside textarea{
   min-height:36px;padding:7px 8px;border:1px solid var(--ui-line-strong);background:var(--ui-panel);color:var(--ui-text);font-size:11px
 }
 body[data-ui-version="field-notebook"] aside button{font-weight:700;letter-spacing:.025em;text-transform:uppercase}
@@ -1316,6 +1327,7 @@ body[data-ui-version="field-notebook"] aside button:hover,
 body[data-ui-version="field-notebook"] aside button:focus-visible,
 body[data-ui-version="field-notebook"] aside select:focus-visible,
 body[data-ui-version="field-notebook"] aside input:focus-visible{border-color:var(--ui-accent);outline:1px solid var(--ui-accent);outline-offset:1px}
+body[data-ui-version="field-notebook"] aside textarea:focus-visible{border-color:var(--ui-accent);outline:1px solid var(--ui-accent);outline-offset:1px}
 body[data-ui-version="field-notebook"] aside button.active{background:#1d402e;border-color:var(--ui-accent);color:#effff5}
 body[data-ui-version="field-notebook"] aside .action-danger{color:var(--ui-danger);border-color:#714047}
 body[data-ui-version="field-notebook"] aside .small,
@@ -1367,6 +1379,14 @@ body[data-ui-version="field-notebook"] .map-actions button{
 }
 body[data-ui-version="field-notebook"] .card.card-awake{box-shadow:none!important}
 body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:none!important;filter:none!important}
+.layer-filter-panel{display:grid;gap:7px;margin:0 0 9px;padding:8px;border:1px solid var(--ui-line);background:#08110c}
+.layer-filter-panel select{width:100%;margin-top:4px}.layer-filter-actions{gap:5px}.layer-filter-actions button{min-height:30px!important;padding:5px!important;font-size:8px!important}
+.layer-switch-list{display:grid}.layer-switch-list .switch[hidden]{display:none!important}
+.poi-annotation-form{display:grid;gap:8px}.poi-annotation-form label{display:grid;gap:4px;color:#a7baad;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.poi-annotation-form input,.poi-annotation-form textarea{width:100%;padding:7px 8px;border:1px solid #41634b;background:#08110c;color:#e9f4ec;font:inherit}.poi-annotation-form textarea{min-height:72px;resize:vertical}
+.poi-species-aliases{display:grid;gap:7px;padding:8px;border:1px solid #294536;background:#0a1510}.poi-species-aliases h4{margin:0;color:#dce9e1;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.poi-species-aliases small{color:#81998a;font-size:8px;font-style:italic;text-transform:none;letter-spacing:0}
+.poi-annotation-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.poi-annotation-status{min-height:14px;color:#9dde72;font-size:9px}
+.personal-name-mark{display:inline-block;margin-left:4px;padding:1px 3px;border:1px solid #557b8d;color:#9fcce0;font-size:7px;font-style:normal;text-transform:uppercase;letter-spacing:.06em}
 @media(max-width:520px){
   body[data-ui-version="field-notebook"] .statusbar .badge{display:none}
   body[data-ui-version="field-notebook"] .statusbar .toolbar-button{flex:1 1 auto;padding-inline:5px;font-size:9px}

@@ -47,8 +47,8 @@ function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
     observations:content.observations?.length||0,
-    notes:content.notes?.length||0,
-    embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.address?1:0),
+    notes:content.notes?.length||0,annotations:Object.keys(content.annotations||{}).length,
+    embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.biodiversity?.length||0)+(extracts.address?1:0),
     sourceReferences:document.sources?.references?.length||0
   };
 }
@@ -61,7 +61,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     territory,
     content:{
       startPoint:carnetJsonClone(snapshot.house||territory.center),
-      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),
+      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
       experiences:{collection:carnetJsonClone(d.encounterCollection||{}),enabled:!!d.encounterEnabled}
     },
     presentation:{
@@ -71,7 +71,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     },
     sources:{
       references:sourceReferencesForSnapshot(snapshot),
-      extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss),hydrometry:carnetArray(d.hydrometry)}
+      extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss),hydrometry:carnetArray(d.hydrometry),biodiversity:carnetArray(d.biodiversity),biodiversityEnabled:carnetJsonClone(d.biodiversityEnabled||{})}
     },
     cachePolicy:{embedded:false,excluded:["osm","cadastreBuildings","cadastreParcels","elevation","coverage"],refresh:"manual"}
   };
@@ -105,8 +105,8 @@ async function atlasCarnetToSnapshot(document){
     view:{mode:"classic",renderMode:presentation.renderMode==="ascii"?"ascii":"symbolic",zoomIndex:Number(presentation.zoomIndex)||0,depthIndex:Number(presentation.depthIndex)||0,center:carnetJsonClone(presentation.center||carnet.territory.center),scenario:String(presentation.scenario||"default"),layers:carnetJsonClone(presentation.layers||{})},
     data:{
       osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
-      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),
-      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
+      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),
+      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
     }
   };
 }
