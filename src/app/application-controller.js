@@ -47,6 +47,7 @@ async function bootAtlas(){
     if(els.aroundRadius)els.aroundRadius.value=String(state.aroundRadius);
     prepareSidebarCards();
     bindNativeSidebarShell();
+    initializeSourceRegistryUI();
     if(mobileSidebarMode()){
       setSidebarOpen(false);
       setInfoVisible(false);

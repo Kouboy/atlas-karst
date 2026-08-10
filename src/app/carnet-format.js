@@ -43,22 +43,6 @@ async function sealAtlasCarnet(document){
   return {...unsigned,integrity:{algorithm:result.algorithm,digest:result.digest,bytes:result.bytes}};
 }
 function carnetArray(value){return Array.isArray(value)?carnetJsonClone(value):[]}
-function carnetSourceReference({id,label,provider,license="",url="",count=0,embedded=false,consulted=false,retrievedAt=""}){
-  return {id,label,provider,license,url,count:Math.max(0,Number(count)||0),disposition:embedded?"embedded":consulted?"consulted":"referenced",retrievedAt:String(retrievedAt||"")};
-}
-function carnetSourceRegistry(snapshot){
-  const d=snapshot.data||{},references=[];
-  const add=entry=>{if(entry.count||entry.consulted||entry.embedded)references.push(carnetSourceReference(entry))};
-  add({id:"openstreetmap",label:"Fond cartographique",provider:"OpenStreetMap",license:"ODbL",url:"https://www.openstreetmap.org/copyright",count:d.osm?.length,consulted:!!d.osm?.length,retrievedAt:d.osmMeta?.loadedAt});
-  add({id:"cadastre",label:"Parcelles et bâtiments",provider:"DGFiP / Etalab / IGN",license:"Licence Ouverte 2.0",url:"https://cadastre.data.gouv.fr/",count:(d.cadastreBuildings?.length||0)+(d.cadastreParcels?.length||0),consulted:!!(d.cadastreBuildings?.length||d.cadastreParcels?.length)});
-  add({id:"adresse",label:"Adresse de référence",provider:"Base Adresse Nationale",license:"Licence Ouverte 2.0",url:"https://adresse.data.gouv.fr/",count:d.address?1:0,embedded:!!d.address});
-  add({id:"cavites",label:"Cavités",provider:"Géorisques / BRGM",license:"Licence Ouverte 2.0",url:"https://www.georisques.gouv.fr/",count:d.officialCavities?.length,embedded:!!d.officialCavities?.length});
-  add({id:"cartofriches",label:"Friches",provider:"Cartofriches / Cerema",license:"Licence Ouverte 2.0",url:"https://cartofriches.cerema.fr/",count:d.cartofriches?.length,embedded:!!d.cartofriches?.length});
-  add({id:"culture",label:"Patrimoine et curiosités",provider:"Ministère de la Culture / Wikipédia",license:"Licences propres aux notices",url:"https://www.pop.culture.gouv.fr/",count:d.heritageItems?.length,embedded:!!d.heritageItems?.length});
-  add({id:"bss",label:"Forages et piézomètres",provider:"BRGM / Hub’Eau",license:"Licence Ouverte 2.0",url:"https://infoterre.brgm.fr/",count:d.bss?.length,embedded:!!d.bss?.length});
-  add({id:"relief",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",license:"Selon le fournisseur",count:d.elevation?1:0,consulted:!!d.elevation});
-  return references;
-}
 function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
@@ -86,7 +70,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
       filters:{heritage:carnetJsonClone(d.heritageEnabled||{})}
     },
     sources:{
-      references:carnetSourceRegistry(snapshot),
+      references:sourceReferencesForSnapshot(snapshot),
       extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss)}
     },
     cachePolicy:{embedded:false,excluded:["osm","cadastreBuildings","cadastreParcels","elevation","coverage"],refresh:"manual"}

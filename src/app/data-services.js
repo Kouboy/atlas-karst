@@ -17,9 +17,7 @@ function queryCadastreFeatures(extent,kind){
 
 
 function setStatus(kind,status,label){
-  state.load[kind]=status;
-  const el={osm:els.osmStatus,address:els.addressStatus,cadastre:els.cadastreStatus,cavities:els.cavityStatus,cartofriches:els.cartofrichesStatus,heritage:els.heritageStatus,bss:els.bssStatus,elevation:els.elevationStatus}[kind];
-  if(el){el.className=status==="ok"?"ok":status==="bad"?"bad":"pending";el.textContent=label}
+  setSourceStatus(kind,status,label);
   const core=["osm","address","cadastre","cavities","elevation"];
   const done=core.filter(k=>state.load[k]!=="pending").length;
   els.loadProgress.style.width=`${done/core.length*100}%`;
@@ -662,10 +660,7 @@ function updateCartofrichesUI(message=""){
   els.cartofrichesSummary.textContent=message||(visible.length
     ? `${communes.length} commune${communes.length>1?"s":""} · source mémorisée dans ce navigateur`
     : "Aucune donnée locale chargée.");
-  if(els.cartofrichesStatus){
-    els.cartofrichesStatus.textContent=visible.length?`${visible.length} sites`:"à charger";
-    els.cartofrichesStatus.className=visible.length?"ok":"pending";
-  }
+  setStatus("cartofriches",visible.length?"ok":"pending",visible.length?`${visible.length} sites`:"à charger");
 }
 function cartofrichesQueryExtent(){
   const e=largestExtent();

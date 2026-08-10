@@ -1321,6 +1321,15 @@ body[data-ui-version="field-notebook"] aside .interface-subsection>summary,
 body[data-ui-version="field-notebook"] aside .technical-details>summary{padding:8px;color:var(--ui-text);font-size:10px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;cursor:pointer}
 body[data-ui-version="field-notebook"] aside .interface-subsection-body,
 body[data-ui-version="field-notebook"] aside .technical-details>div{padding:0 8px 9px;color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] .source-catalog-list{display:grid;gap:0;padding:0!important}
+body[data-ui-version="field-notebook"] .source-catalog-entry{padding:8px;border-top:1px solid var(--ui-line)}
+body[data-ui-version="field-notebook"] .source-catalog-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+body[data-ui-version="field-notebook"] .source-catalog-heading a{color:var(--ui-text);font-weight:800;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+body[data-ui-version="field-notebook"] .source-catalog-status{flex:0 0 auto;padding:1px 4px;border:1px solid var(--ui-line);color:var(--ui-muted);font-size:9px;text-transform:uppercase}
+body[data-ui-version="field-notebook"] .source-catalog-status.ok{border-color:var(--ui-accent);color:var(--ui-accent)}
+body[data-ui-version="field-notebook"] .source-catalog-status.bad{border-color:var(--danger);color:var(--danger)}
+body[data-ui-version="field-notebook"] .source-catalog-detail,body[data-ui-version="field-notebook"] .source-catalog-license{margin-top:3px;color:var(--ui-muted);font-size:9px;line-height:1.4}
+body[data-ui-version="field-notebook"] .source-catalog-license{text-transform:uppercase;letter-spacing:.04em}
 body[data-ui-version="field-notebook"] aside .warning{margin-top:12px;padding:9px;border:1px solid #5b4b2b;background:#1d1910;color:#ead197}
 body[data-ui-version="field-notebook"] aside .progress{background:var(--ui-panel-2);border:1px solid var(--ui-line)}
 body[data-ui-version="field-notebook"] aside .progress>span{background:var(--ui-accent)}

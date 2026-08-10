@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18f · coque native</title>
+<title>Atlas Karst ASCII v0.18g · registre des sources</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1329,6 +1329,15 @@ body[data-ui-version="field-notebook"] aside .interface-subsection>summary,
 body[data-ui-version="field-notebook"] aside .technical-details>summary{padding:8px;color:var(--ui-text);font-size:10px;font-weight:800;letter-spacing:.055em;text-transform:uppercase;cursor:pointer}
 body[data-ui-version="field-notebook"] aside .interface-subsection-body,
 body[data-ui-version="field-notebook"] aside .technical-details>div{padding:0 8px 9px;color:var(--ui-muted)}
+body[data-ui-version="field-notebook"] .source-catalog-list{display:grid;gap:0;padding:0!important}
+body[data-ui-version="field-notebook"] .source-catalog-entry{padding:8px;border-top:1px solid var(--ui-line)}
+body[data-ui-version="field-notebook"] .source-catalog-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+body[data-ui-version="field-notebook"] .source-catalog-heading a{color:var(--ui-text);font-weight:800;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
+body[data-ui-version="field-notebook"] .source-catalog-status{flex:0 0 auto;padding:1px 4px;border:1px solid var(--ui-line);color:var(--ui-muted);font-size:9px;text-transform:uppercase}
+body[data-ui-version="field-notebook"] .source-catalog-status.ok{border-color:var(--ui-accent);color:var(--ui-accent)}
+body[data-ui-version="field-notebook"] .source-catalog-status.bad{border-color:var(--danger);color:var(--danger)}
+body[data-ui-version="field-notebook"] .source-catalog-detail,body[data-ui-version="field-notebook"] .source-catalog-license{margin-top:3px;color:var(--ui-muted);font-size:9px;line-height:1.4}
+body[data-ui-version="field-notebook"] .source-catalog-license{text-transform:uppercase;letter-spacing:.04em}
 body[data-ui-version="field-notebook"] aside .warning{margin-top:12px;padding:9px;border:1px solid #5b4b2b;background:#1d1910;color:#ead197}
 body[data-ui-version="field-notebook"] aside .progress{background:var(--ui-panel-2);border:1px solid var(--ui-line)}
 body[data-ui-version="field-notebook"] aside .progress>span{background:var(--ui-accent)}
@@ -1738,6 +1747,10 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>
+    <details class="technical-details source-catalog" style="margin-top:7px">
+      <summary>Catalogue et portabilité</summary>
+      <div id="sourceCatalogList" class="source-catalog-list"></div>
+    </details>
     <input class="file-input-hidden" id="osmFile" type="file" accept=".json,application/json">
     <div class="small" id="osmHelp" style="margin-top:8px">OSM est chargé par petites fenêtres autour de la vue. Pendant l’attente, un chrono et l’étape active sont affichés ; le même bouton permet d’annuler sans perdre les données déjà reçues.</div>
     <button id="retryData" style="width:100%;margin-top:8px">Actualiser le territoire</button>
@@ -1919,7 +1932,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     </div>
   </section>
 
-  <div class="source-note map-bound" id="mainAttribution">Attribution : © contributeurs OpenStreetMap ; Cadastre Etalab / DGFiP, avec API Carto IGN / Parcellaire Express PCI en repli ; Géoplateforme / BAN ; BRGM InfoTerre et BSS ; inventaire BDCavités/Géorisques ; Cartofriches / Cerema, Licence Ouverte 2.0 ; Ministère de la Culture / POP et labels nationaux, Licence Ouverte 2.0 (API tabulaire data.gouv.fr prioritaire, portails Culture en repli) ; Wikipédia, CC BY-SA ; relief IGN RGE ALTI, avec Open‑Meteo / Copernicus en solution de repli. Le repère de maison et les observations locales restent privés dans le navigateur tant que le fichier n’est pas publié avec ces informations.</div>
+  <div class="source-note map-bound" id="mainAttribution">Attributions des sources en cours de préparation…</div>
 </main>
 </div>
 
@@ -1936,7 +1949,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18f";
+const APP_VERSION = "0.18g";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2171,6 +2184,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===4,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
+  checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===9&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
   const phaseValues=Object.values(debugState.lastRenderPhases||{});
   checks.push(debugCheckResult("Phases CPU mesurées",phaseValues.length===6&&phaseValues.every(Number.isFinite),debugRenderPhasesText()));
   checks.push(debugCheckResult("Rafales de données bornées",dataRenderRuntime.renders<=dataRenderRuntime.requests&&dataRenderRuntime.maxBatchSize<=32,`${debugDataRendersText()} · lot max ${dataRenderRuntime.maxBatchSize}`));
@@ -2225,6 +2239,7 @@ function createDebugReport(){
     `Architecture du carnet : section ${uiShellRuntime.activeSection} · ${uiShellRuntime.sectionSwitches} changements · ${uiShellRuntime.nativeSubsections} sous-sections natives`,
     `Instantanés : schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.built} constructions · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.imports} imports · ${snapshotRuntime.standaloneExports} HTML · IndexedDB ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads}/${snapshotRuntime.dbDeletes}/${snapshotRuntime.dbLists} écritures/lectures/suppressions/listes · ${snapshotRuntime.migrations} migrations`,
     `Carnets : schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.exports}/${carnetRuntime.imports} exports/imports · ${debugFormatBytes(carnetRuntime.lastBytes)} · intégrité ${carnetRuntime.lastAlgorithm} · ${carnetRuntime.migrations} anciennes sauvegardes reconnues`,
+    `Registre des sources : schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} entrées · ${sourceRegistryRuntime.catalogRenders}/${sourceRegistryRuntime.attributionRenders} rendus catalogue/attribution · ${sourceRegistryRuntime.statusUpdates} mises à jour · erreur ${sourceRegistryRuntime.lastError||"aucune"}`,
     `Phases CPU : ${debugRenderPhasesText()}`,
     `Canvas : ${performanceRuntime.canvasPixels} pixels · budget ${performanceRuntime.canvasPixelBudget} · DPR demandé ${performanceRuntime.requestedDpr} / effectif ${performanceRuntime.effectiveDpr}`,
     `FX : ${performanceRuntime.fxActive?"actifs":"au repos"} · ${performanceRuntime.fxReason}`,
@@ -2232,11 +2247,7 @@ function createDebugReport(){
     `Index spatial : ${spatialRuntime.rebuilds} reconstructions · dernière ${spatialRuntime.lastBuildMs.toFixed(2)} ms · candidats ${spatialRuntime.lastQueryCandidates} / résultats ${spatialRuntime.lastQueryResults}`,
     `Cache local Atlas : ${debugFormatBytes(debugState.storageBytes)} · ${debugState.storageKeys} clés`,
     `Pipeline Canvas : ${renderPipelineRuntime.lastStages.join(" -> ")} · frame ${renderPipelineRuntime.lastFinalizedFrame} · FX ${renderPipelineRuntime.fxRevision} · OSM ${renderPipelineRuntime.osmRevision}`,
-    `OSM : ${debugStatusText("osmStatus")}`,
-    `Culture : ${debugStatusText("heritageStatus")}`,
-    `Cadastre : ${debugStatusText("cadastreStatus")}`,
-    `Cavités : ${debugStatusText("cavityStatus")}`,
-    `Relief : ${debugStatusText("elevationStatus")}`,
+    `État des sources : ${sourceRegistryDiagnosticText()}`,
     `Dernier pointeur : ${debugState.lastPointer}`,
     `Dernière sélection : ${debugState.lastSelection}`,
     `Erreurs : ${debugState.errors.length?debugState.errors.map(e=>`${e.at} ${e.kind}: ${e.message}`).join(" | "):"aucune capturée"}`
@@ -2571,10 +2582,104 @@ els = Object.fromEntries([
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
-  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceNote",
+  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
+
+const SOURCE_REGISTRY_SCHEMA_VERSION=1;
+const SOURCE_REGISTRY=Object.freeze([
+  {id:"openstreetmap",statusKey:"osm",statusElementId:"osmStatus",label:"Surface cartographique",provider:"OpenStreetMap",category:"cartographie",coverage:"mondiale",refresh:"à la demande",storage:"cache local",portable:"referenced",metric:"osm",license:"ODbL",url:"https://www.openstreetmap.org/copyright"},
+  {id:"adresse",statusKey:"address",statusElementId:"addressStatus",label:"Adresse de référence",provider:"Base Adresse Nationale / Géoplateforme",category:"adresse",coverage:"France",refresh:"à la création",storage:"extrait local",portable:"embedded",metric:"address",license:"Licence Ouverte 2.0",url:"https://adresse.data.gouv.fr/"},
+  {id:"cadastre",statusKey:"cadastre",statusElementId:"cadastreStatus",label:"Parcelles et bâtiments",provider:"DGFiP / Etalab / IGN",category:"foncier",coverage:"France",refresh:"à la demande",storage:"cache local",portable:"referenced",metric:"cadastre",license:"Licence Ouverte 2.0",url:"https://cadastre.data.gouv.fr/"},
+  {id:"cavites",statusKey:"cavities",statusElementId:"cavityStatus",label:"Cavités documentées",provider:"Géorisques / BRGM",category:"sous-sol documenté",coverage:"France",refresh:"à la création",storage:"extrait local",portable:"embedded",metric:"cavities",license:"Licence Ouverte 2.0",url:"https://www.georisques.gouv.fr/"},
+  {id:"cartofriches",statusKey:"cartofriches",statusElementId:"cartofrichesStatus",label:"Friches",provider:"Cartofriches / Cerema",category:"occupation du sol",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"cartofriches",license:"Licence Ouverte 2.0",url:"https://cartofriches.cerema.fr/"},
+  {id:"culture",statusKey:"heritage",statusElementId:"heritageStatus",label:"Patrimoine officiel",provider:"Ministère de la Culture",category:"patrimoine",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"culture",license:"Licence Ouverte 2.0",url:"https://www.pop.culture.gouv.fr/"},
+  {id:"wikipedia",statusKey:"heritage",statusElementId:"heritageStatus",label:"Curiosités encyclopédiques",provider:"Wikipédia francophone",category:"documentation collaborative",coverage:"mondiale",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"wikipedia",license:"CC BY-SA",url:"https://fr.wikipedia.org/"},
+  {id:"bss",statusKey:"bss",statusElementId:"bssStatus",label:"Forages et piézomètres",provider:"BRGM / Hub’Eau",category:"sous-sol documenté",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"bss",license:"Licence Ouverte 2.0",url:"https://infoterre.brgm.fr/"},
+  {id:"relief",statusKey:"elevation",statusElementId:"elevationStatus",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",category:"altimétrie",coverage:"mondiale avec priorité France",refresh:"à la création",storage:"cache local",portable:"referenced",metric:"elevation",license:"Selon le fournisseur",url:"https://geoservices.ign.fr/rgealti"}
+]);
+const sourceRegistryRuntime={ready:true,schema:SOURCE_REGISTRY_SCHEMA_VERSION,catalogRenders:0,attributionRenders:0,statusUpdates:0,lastStatusKey:"—",lastError:""};
+
+function sourceDefinition(id){return SOURCE_REGISTRY.find(source=>source.id===id)||null}
+function sourceDefinitionsForStatus(statusKey){return SOURCE_REGISTRY.filter(source=>source.statusKey===statusKey)}
+function sourceMetricCount(source,data={}){
+  const heritage=Array.isArray(data.heritageItems)?data.heritageItems:[];
+  if(source.metric==="osm")return data.osm?.length||0;
+  if(source.metric==="address")return data.address?1:0;
+  if(source.metric==="cadastre")return (data.cadastreBuildings?.length||0)+(data.cadastreParcels?.length||0);
+  if(source.metric==="cavities")return data.officialCavities?.length||0;
+  if(source.metric==="cartofriches")return data.cartofriches?.length||0;
+  if(source.metric==="culture")return heritage.filter(item=>item.category!=="wikipedia").length;
+  if(source.metric==="wikipedia")return heritage.filter(item=>item.category==="wikipedia").length;
+  if(source.metric==="bss")return data.bss?.length||0;
+  if(source.metric==="elevation")return data.elevation?1:0;
+  return 0;
+}
+function sourceRetrievedAt(source,data={}){
+  if(source.id==="openstreetmap")return String(data.osmMeta?.loadedAt||"");
+  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss};
+  let collection=source.metric==="culture"||source.metric==="wikipedia"?data.heritageItems:collections[source.metric]||data[source.metric];
+  if(Array.isArray(collection)&&source.metric==="culture")collection=collection.filter(item=>item?.category!=="wikipedia");
+  if(Array.isArray(collection)&&source.metric==="wikipedia")collection=collection.filter(item=>item?.category==="wikipedia");
+  if(Array.isArray(collection))return String(collection.find(item=>item?.syncedAt)?.syncedAt||"");
+  return "";
+}
+function sourceReferenceForSnapshot(source,data={}){
+  const count=sourceMetricCount(source,data),embedded=source.portable==="embedded"&&count>0,consulted=count>0;
+  return {id:source.id,label:source.label,provider:source.provider,license:source.license,url:source.url,count,disposition:embedded?"embedded":consulted?"consulted":"referenced",retrievedAt:sourceRetrievedAt(source,data)};
+}
+function sourceReferencesForSnapshot(snapshot){
+  const data=snapshot?.data||{};
+  return SOURCE_REGISTRY.map(source=>sourceReferenceForSnapshot(source,data)).filter(reference=>reference.count>0);
+}
+function sourceCatalogStatus(source){
+  const element=document.getElementById(source.statusElementId);
+  return {state:element?.classList.contains("ok")?"ok":element?.classList.contains("bad")?"bad":"pending",label:(element?.textContent||"en attente").trim()};
+}
+function updateSourceCatalogStatus(statusKey){
+  for(const source of sourceDefinitionsForStatus(statusKey)){
+    const target=els.sourceCatalogList?.querySelector(`[data-source-id="${source.id}"] [data-source-catalog-status]`);if(!target)continue;
+    const status=sourceCatalogStatus(source);target.className=`source-catalog-status ${status.state}`;target.textContent=status.label;
+  }
+}
+function setSourceStatus(statusKey,status,label){
+  state.load[statusKey]=status;sourceRegistryRuntime.statusUpdates++;sourceRegistryRuntime.lastStatusKey=statusKey;
+  const definitions=sourceDefinitionsForStatus(statusKey),element=document.getElementById(definitions[0]?.statusElementId||"");
+  if(element){element.className=status==="ok"?"ok":status==="bad"?"bad":"pending";element.textContent=label;element.dataset.sourceStatus=status}
+  updateSourceCatalogStatus(statusKey);
+}
+function renderSourceCatalog(){
+  if(!els.sourceCatalogList)return;
+  const fragment=document.createDocumentFragment();
+  for(const source of SOURCE_REGISTRY){
+    const entry=document.createElement("article");entry.className="source-catalog-entry";entry.dataset.sourceId=source.id;
+    const heading=document.createElement("div");heading.className="source-catalog-heading";
+    const link=document.createElement("a");link.href=source.url;link.target="_blank";link.rel="noopener";link.textContent=source.provider;
+    const status=document.createElement("span");status.dataset.sourceCatalogStatus="";
+    heading.append(link,status);
+    const detail=document.createElement("div");detail.className="source-catalog-detail";detail.textContent=`${source.category} · ${source.coverage} · ${source.refresh} · ${source.portable==="embedded"?"extrait conservé dans le carnet":"donnée à resynchroniser"}`;
+    const license=document.createElement("div");license.className="source-catalog-license";license.textContent=source.license;
+    entry.append(heading,detail,license);fragment.appendChild(entry);
+  }
+  els.sourceCatalogList.replaceChildren(fragment);sourceRegistryRuntime.catalogRenders++;
+  for(const key of new Set(SOURCE_REGISTRY.map(source=>source.statusKey)))updateSourceCatalogStatus(key);
+}
+function renderSourceAttribution(){
+  if(!els.mainAttribution)return;
+  const sources=SOURCE_REGISTRY.map(source=>`${source.provider} (${source.license})`).join(" ; ");
+  els.mainAttribution.textContent=`Attributions : ${sources}. Le repère de départ et les observations locales restent privés tant que l’utilisateur ne partage pas son carnet.`;
+  sourceRegistryRuntime.attributionRenders++;
+}
+function initializeSourceRegistryUI(){
+  try{
+    for(const source of SOURCE_REGISTRY){const element=document.getElementById(source.statusElementId);if(element)element.dataset.sourceIds=sourceDefinitionsForStatus(source.statusKey).map(item=>item.id).join(" ")}
+    renderSourceCatalog();renderSourceAttribution();sourceRegistryRuntime.lastError="";
+  }catch(error){sourceRegistryRuntime.lastError=String(error?.message||error)}
+}
+function sourceRegistryDiagnosticText(){
+  return SOURCE_REGISTRY.map(source=>{const status=sourceCatalogStatus(source);return `${source.id}=${status.state}:${status.label}`}).join(" · ");
+}
 
 function activeMapSurface(){return els.mapCanvas}
 const canvasRuntime={metrics:null,layoutSignature:"",styleCache:new Map(),probe:null,lastGrid:null,dpr:1,ctx:null,measureCanvas:null,measureCtx:null,signalCanvas:null,signalCtx:null};
@@ -5012,9 +5117,7 @@ function queryCadastreFeatures(extent,kind){
 
 
 function setStatus(kind,status,label){
-  state.load[kind]=status;
-  const el={osm:els.osmStatus,address:els.addressStatus,cadastre:els.cadastreStatus,cavities:els.cavityStatus,cartofriches:els.cartofrichesStatus,heritage:els.heritageStatus,bss:els.bssStatus,elevation:els.elevationStatus}[kind];
-  if(el){el.className=status==="ok"?"ok":status==="bad"?"bad":"pending";el.textContent=label}
+  setSourceStatus(kind,status,label);
   const core=["osm","address","cadastre","cavities","elevation"];
   const done=core.filter(k=>state.load[k]!=="pending").length;
   els.loadProgress.style.width=`${done/core.length*100}%`;
@@ -5657,10 +5760,7 @@ function updateCartofrichesUI(message=""){
   els.cartofrichesSummary.textContent=message||(visible.length
     ? `${communes.length} commune${communes.length>1?"s":""} · source mémorisée dans ce navigateur`
     : "Aucune donnée locale chargée.");
-  if(els.cartofrichesStatus){
-    els.cartofrichesStatus.textContent=visible.length?`${visible.length} sites`:"à charger";
-    els.cartofrichesStatus.className=visible.length?"ok":"pending";
-  }
+  setStatus("cartofriches",visible.length?"ok":"pending",visible.length?`${visible.length} sites`:"à charger");
 }
 function cartofrichesQueryExtent(){
   const e=largestExtent();
@@ -10101,22 +10201,6 @@ async function sealAtlasCarnet(document){
   return {...unsigned,integrity:{algorithm:result.algorithm,digest:result.digest,bytes:result.bytes}};
 }
 function carnetArray(value){return Array.isArray(value)?carnetJsonClone(value):[]}
-function carnetSourceReference({id,label,provider,license="",url="",count=0,embedded=false,consulted=false,retrievedAt=""}){
-  return {id,label,provider,license,url,count:Math.max(0,Number(count)||0),disposition:embedded?"embedded":consulted?"consulted":"referenced",retrievedAt:String(retrievedAt||"")};
-}
-function carnetSourceRegistry(snapshot){
-  const d=snapshot.data||{},references=[];
-  const add=entry=>{if(entry.count||entry.consulted||entry.embedded)references.push(carnetSourceReference(entry))};
-  add({id:"openstreetmap",label:"Fond cartographique",provider:"OpenStreetMap",license:"ODbL",url:"https://www.openstreetmap.org/copyright",count:d.osm?.length,consulted:!!d.osm?.length,retrievedAt:d.osmMeta?.loadedAt});
-  add({id:"cadastre",label:"Parcelles et bâtiments",provider:"DGFiP / Etalab / IGN",license:"Licence Ouverte 2.0",url:"https://cadastre.data.gouv.fr/",count:(d.cadastreBuildings?.length||0)+(d.cadastreParcels?.length||0),consulted:!!(d.cadastreBuildings?.length||d.cadastreParcels?.length)});
-  add({id:"adresse",label:"Adresse de référence",provider:"Base Adresse Nationale",license:"Licence Ouverte 2.0",url:"https://adresse.data.gouv.fr/",count:d.address?1:0,embedded:!!d.address});
-  add({id:"cavites",label:"Cavités",provider:"Géorisques / BRGM",license:"Licence Ouverte 2.0",url:"https://www.georisques.gouv.fr/",count:d.officialCavities?.length,embedded:!!d.officialCavities?.length});
-  add({id:"cartofriches",label:"Friches",provider:"Cartofriches / Cerema",license:"Licence Ouverte 2.0",url:"https://cartofriches.cerema.fr/",count:d.cartofriches?.length,embedded:!!d.cartofriches?.length});
-  add({id:"culture",label:"Patrimoine et curiosités",provider:"Ministère de la Culture / Wikipédia",license:"Licences propres aux notices",url:"https://www.pop.culture.gouv.fr/",count:d.heritageItems?.length,embedded:!!d.heritageItems?.length});
-  add({id:"bss",label:"Forages et piézomètres",provider:"BRGM / Hub’Eau",license:"Licence Ouverte 2.0",url:"https://infoterre.brgm.fr/",count:d.bss?.length,embedded:!!d.bss?.length});
-  add({id:"relief",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",license:"Selon le fournisseur",count:d.elevation?1:0,consulted:!!d.elevation});
-  return references;
-}
 function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
@@ -10144,7 +10228,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
       filters:{heritage:carnetJsonClone(d.heritageEnabled||{})}
     },
     sources:{
-      references:carnetSourceRegistry(snapshot),
+      references:sourceReferencesForSnapshot(snapshot),
       extracts:{address:carnetJsonClone(d.address||null),officialCavities:carnetArray(d.officialCavities),cartofriches:carnetArray(d.cartofriches),heritageItems:carnetArray(d.heritageItems),bss:carnetArray(d.bss)}
     },
     cachePolicy:{embedded:false,excluded:["osm","cadastreBuildings","cadastreParcels","elevation","coverage"],refresh:"manual"}
@@ -10703,6 +10787,7 @@ async function bootAtlas(){
     if(els.aroundRadius)els.aroundRadius.value=String(state.aroundRadius);
     prepareSidebarCards();
     bindNativeSidebarShell();
+    initializeSourceRegistryUI();
     if(mobileSidebarMode()){
       setSidebarOpen(false);
       setInfoVisible(false);
