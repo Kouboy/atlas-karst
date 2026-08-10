@@ -775,6 +775,42 @@ try {
     assert.equal(result.afterTamper.id,result.imported.id);assert.deepEqual(result.afterTamper.entries,result.imported.entries);assert.match(result.afterTamper.help,/intégrité incorrect/);assert.equal(result.runtime.imports,1);assert.ok(result.runtime.validated>=1);
   });
 
+  await withPage("annotations personnelles portables", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.evaluate(()=>{
+      const extent=largestExtent(),grid=biodiversityGridPosition(CONFIG.house.lat,CONFIG.house.lon,extent);
+      state.biodiversity=[{id:`BIO-${grid.x}-${grid.y}`,cellCode:`${grid.x+1}-${grid.y+1}`,name:"Maille biodiversité annotable",lat:grid.lat,lon:grid.lon,cellCols:grid.cols,cellRows:grid.rows,species:[{speciesKey:"ANNOT-1",scientificName:"Avis exemplaris",vernacularName:"",group:"animals",taxonClass:"Aves",family:"Exemplaridae",basisOfRecord:"HUMAN_OBSERVATION",sampledRecords:2,latestDate:"2026-05-01",earliestDate:"2025-04-01",uncertaintyM:1000}],speciesCount:1,sampledRecords:2,groupCounts:{animals:1},datasets:["Jeu témoin"],licenses:["CC BY"],source:"GBIF · test",url:"https://www.gbif.org/"}];
+      state.layerBiodiversity=true;markSpatialIndexesDirty();ensureSpatialIndexes();render("test-annotation");
+      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="biodiversity"&&item.raw?.displayGroup==="animals");if(!poi)throw new Error("POI biodiversité absent");selectSymbolicPoi(poi,"Test d’annotation");
+    });
+    const form=page.locator("form[data-poi-annotation-key]");await form.waitFor();
+    await form.locator('[name="poiAnnotationTitle"]').fill("Le petit guetteur");
+    await form.locator('[name="poiAnnotationNote"]').fill("Vu près de la haie après la pluie.");
+    await form.locator('[data-poi-species-key="ANNOT-1"]').fill("Oiseau des haies");
+    await form.getByRole("button",{name:/enregistrer/i}).click();
+    await page.waitForFunction(()=>document.getElementById("readoutBody").textContent.includes("Oiseau des haies")&&document.getElementById("readoutSheetLabel").textContent==="Le petit guetteur");
+    const result=await page.evaluate(async()=>{
+      const key=Object.keys(state.poiAnnotations)[0],snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(snapshot),portable=await atlasCarnetToSnapshot(carnet),stored=JSON.parse(localStorage.getItem(territoryStorageKey(POI_ANNOTATIONS_KEY))||"{}");
+      state.poiAnnotations={};applyAtlasSnapshot(portable,{source:"test annotations",renderNow:false});
+      return {key,active:state.poiAnnotations[key],snapshot:snapshot.data.poiAnnotations[key],carnet:carnet.content.annotations[key],portable:portable.data.poiAnnotations[key],stored:stored[key],summary:carnet.summary.annotations};
+    });
+    assert.ok(result.key);for(const copy of [result.active,result.snapshot,result.carnet,result.portable,result.stored]){assert.equal(copy.title,"Le petit guetteur");assert.equal(copy.note,"Vu près de la haie après la pluie.");assert.equal(copy.speciesNames["ANNOT-1"],"Oiseau des haies")};assert.equal(result.summary,1);
+  });
+
+  await withPage("filtres groupés des couches", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const terrainBefore=await page.evaluate(()=>state.layerSurface);
+    await page.selectOption("#layerCategoryFilter","documents");
+    const filtered=await page.evaluate(()=>({visible:[...document.querySelectorAll("#layerSwitchList [data-layer-category]")].filter(item=>!item.hidden).map(item=>item.dataset.layerCategory),terrainHidden:document.querySelector('[data-layer-category="terrain"]').hidden}));
+    assert.ok(filtered.visible.length>=8&&filtered.visible.every(value=>value==="documents"));assert.equal(filtered.terrainHidden,true);
+    await page.locator("#layersHideCategory").click();
+    assert.equal(await page.evaluate(()=>["layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities"].every(id=>state[id]===false&&document.getElementById(id).checked===false)),true);
+    assert.equal(await page.evaluate(()=>state.layerSurface),terrainBefore);
+    await page.locator("#layersSelectAll").click();const inactiveAfterSelectAll=await page.evaluate(()=>VIEW_LAYER_CONTROL_IDS.filter(id=>id!=="ambientMotion"&&(state[id]!==true||document.getElementById(id).checked!==true)));assert.deepEqual(inactiveAfterSelectAll,[]);
+    await page.locator("#layersClearAll").click();assert.equal(await page.evaluate(()=>VIEW_LAYER_CONTROL_IDS.every(id=>state[id]===false&&document.getElementById(id).checked===false)),true);
+    await page.locator("#layersSelectAll").click();
+  });
+
   await withPage("coque responsive regroupée", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     await page.waitForTimeout(350);
@@ -792,6 +828,8 @@ try {
     assert.ok(batching.requests>=8&&batching.requests<=12,`${batching.requests} demandes pour la rafale étalon`);
     assert.ok(batching.runs<=2,`${batching.runs} ajustements pour une seule rafale`);
     assert.ok(batching.coalesced>=batching.requests-batching.runs-1,`seulement ${batching.coalesced} ajustements regroupés`);assert.equal(batching.clusters,4);
+    const collapseBar=await page.evaluate(()=>{const sidebar=document.getElementById("sidebar"),button=document.getElementById("sidebarClose");sidebar.scrollTop=sidebar.scrollHeight;const s=sidebar.getBoundingClientRect(),b=button.getBoundingClientRect(),style=getComputedStyle(button);return {position:style.position,top:b.top,sidebarTop:s.top,leftGap:Math.abs(b.left-s.left),rightGap:Math.abs(b.right-s.right),width:b.width,sidebarWidth:s.width,scrollTop:sidebar.scrollTop}});
+    assert.equal(collapseBar.position,"sticky");assert.ok(collapseBar.scrollTop>100);assert.ok(Math.abs(collapseBar.top-collapseBar.sidebarTop)<=2);assert.ok(collapseBar.leftGap<=2&&collapseBar.rightGap<=20);assert.ok(collapseBar.width>=collapseBar.sidebarWidth-20);
     await page.locator("#sidebarToggle").click();
     await page.locator("body.sidebar-collapsed").waitFor();
     await page.locator("#sidebarToggle").click();

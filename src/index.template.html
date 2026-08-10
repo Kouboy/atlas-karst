@@ -23,6 +23,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
 <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 <div class="app">
 <aside id="sidebar">
+  <button id="sidebarClose" class="sidebar-collapse-bar" type="button" title="Réduire le panneau" aria-label="Réduire le panneau">← réduire le panneau</button>
   <div class="sidebar-head">
     <div class="sidebar-title-copy">
       <div class="eyebrow">CARNET TERRITORIAL · <span id="appVersionLabel">V—</span></div>
@@ -34,7 +35,6 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
         <button id="expandCards" type="button">＋ déployer</button>
       </div>
     </div>
-    <button id="sidebarClose" class="sidebar-close" type="button" title="Fermer le panneau">✕</button>
   </div>
 
   <nav class="sidebar-section-tabs" role="tablist" aria-label="Sections du carnet">
@@ -203,23 +203,38 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <button id="renderModeAscii" type="button" aria-pressed="false">⌁ ASCII</button>
     </div>
     <div class="render-mode-note" id="renderModeHelp">Le mode symbolique couvre maintenant la surface et les coupes souterraines. Les volumes gardent une géométrie commune entre profondeurs ; l’ASCII reste disponible comme lecture alternative.</div>
-    <label class="switch"><input id="layerSurface" type="checkbox" checked> Surface / fantôme de surface</label>
-    <label class="switch"><input id="layerRelief" type="checkbox" checked> Relief et courbes de niveau</label>
-    <label class="switch"><input id="layerCadastreBuildings" type="checkbox" checked> Bâtiments cadastraux</label>
-    <label class="switch"><input id="layerParcels" type="checkbox"> Limites de parcelles au zoom proche</label>
-    <label class="switch"><input id="layerBss" type="checkbox" checked> Forages et ouvrages BSS</label>
-    <label class="switch"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
-    <label class="switch"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
-    <label class="switch"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
-    <label class="switch"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
-    <label class="switch"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
-    <label class="switch"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
-    <label class="switch"><input id="layerCavities" type="checkbox" checked> Repères de cavités documentés</label>
-    <label class="switch"><input id="layerHypothesis" type="checkbox" checked> Volumes souterrains extrapolés · coupes cohérentes</label>
-    <label class="switch"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée · confiance très faible</label>
-    <label class="switch"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
-    <label class="switch"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
-    <label class="switch"><input id="ambientMotion" type="checkbox" checked> Animations de l’interface et des points d’intérêt</label>
+    <div class="layer-filter-panel" role="group" aria-label="Filtrer et modifier les couches affichées">
+      <label class="field-label">Catégorie
+        <select id="layerCategoryFilter">
+          <option value="all">Toutes les catégories</option>
+          <option value="terrain">Terrain et fond de carte</option>
+          <option value="documents">Repères documentés</option>
+          <option value="underground">Sous-sol interprété</option>
+          <option value="interface">Interface</option>
+        </select>
+      </label>
+      <div class="grid2 layer-filter-actions"><button id="layersShowCategory" type="button">✓ afficher la catégorie</button><button id="layersHideCategory" type="button">× masquer la catégorie</button></div>
+      <div class="grid2 layer-filter-actions"><button id="layersSelectAll" type="button">Tout sélectionner</button><button id="layersClearAll" type="button">Tout désélectionner</button></div>
+    </div>
+    <div id="layerSwitchList" class="layer-switch-list">
+      <label class="switch" data-layer-category="terrain"><input id="layerSurface" type="checkbox" checked> Surface / fantôme de surface</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerRelief" type="checkbox" checked> Relief et courbes de niveau</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerCadastreBuildings" type="checkbox" checked> Bâtiments cadastraux</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerParcels" type="checkbox"> Limites de parcelles au zoom proche</label>
+      <label class="switch" data-layer-category="documents"><input id="layerBss" type="checkbox" checked> Forages et ouvrages BSS</label>
+      <label class="switch" data-layer-category="documents"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
+      <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
+      <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
+      <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
+      <label class="switch" data-layer-category="documents"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
+      <label class="switch" data-layer-category="documents"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
+      <label class="switch" data-layer-category="documents"><input id="layerCavities" type="checkbox" checked> Repères de cavités documentés</label>
+      <label class="switch" data-layer-category="underground"><input id="layerHypothesis" type="checkbox" checked> Volumes souterrains extrapolés · coupes cohérentes</label>
+      <label class="switch" data-layer-category="underground"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée · confiance très faible</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
+      <label class="switch" data-layer-category="interface"><input id="ambientMotion" type="checkbox" checked> Animations de l’interface et des points d’intérêt</label>
+    </div>
     <label class="switch">Scénario
       <select id="scenario">
         <option value="prudent">prudent</option>
