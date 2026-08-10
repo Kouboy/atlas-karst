@@ -61,8 +61,10 @@ async function bootAtlas(){
     loadHeritage();
     loadCartofriches();
     loadBssLocal();
+    loadHydrometry();
     loadEncounterCollection();
     els.layerBss.checked=true;state.layerBss=true;
+    els.layerHydrometry.checked=true;state.layerHydrometry=true;
     updateLocationUI();
     updateEncounterUI();
     populateControls();
@@ -103,6 +105,7 @@ async function bootAtlas(){
       updateCartofrichesUI();
       updateHeritageUI();
       updateBssUI();
+      updateHydrometryUI();
       setStatus("elevation","bad","non embarqué");
       els.sourceNote.innerHTML="Mode de démonstration hors ligne. Exporte une sauvegarde ou un HTML autonome après synchronisation pour conserver un état plus complet.";
       populateCavitySelect();

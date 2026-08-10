@@ -4,7 +4,7 @@ const territoryControllerRuntime={
   lastAction:"initialisation",lastError:""
 };
 const TERRITORY_LOCAL_STORAGE_BASES=[
-  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,
+  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,HYDROMETRY_KEY,
   ENCOUNTER_COLLECTION_KEY,"atlas-karst-cavities-v06","atlas-karst-elevation-v09d","atlas-karst-cadastre-v06","atlas-karst-cadastre-v07","atlas-karst-address-v06"
 ];
 let territoryAutosavePromise=null;
@@ -62,9 +62,9 @@ function resetTerritoryRuntimeData(){
   if(state.osmLoading)cancelOsmSync();
   state.osm=[];state.osmMeta=null;state.osmBaseCoverage=[];state.osmDetailCoverage=[];state.osmCavities=[];markMapDataRevision("osm");
   state.officialCavities=[];state.cartofriches=[];state.heritageItems=[];state.cadastreBuildings=[];state.cadastreParcels=[];
-  state.address=null;state.bss=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
+  state.address=null;state.bss=[];state.hydrometry=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
-  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadEncounterCollection();updateEncounterUI();
+  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
   setStatus("cartofriches",state.cartofriches.length?"ok":"pending",state.cartofriches.length?`${state.cartofriches.length} sites locaux`:"à charger");

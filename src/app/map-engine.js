@@ -226,6 +226,15 @@ function drawBss(g){
     }
   }
 }
+function drawHydrometry(g){
+  if(!state.layerHydrometry||currentDepth()!==0||!state.hydrometry.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"hydrometry")){
+    const h=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent);
+    const info=poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:h.river,commune:h.commune,code:h.code,heightM:h.heightM,flowM3s:h.flowM3s,observedAt:h.observedAt,url:h.url,license:h.license});
+    putText(g,p.x,p.y,"H≈","c-hydrometry",18,info);
+    if(state.layerLabels&&state.zoomIndex>=3)tryMapLabel(g,p,h.name||h.river||h.code,"c-label",14,info,"hydrometry",1,false);
+  }
+}
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
@@ -825,6 +834,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     if(state.layerSurface)renderSurface(grid);
     applyRelief(grid);
     drawBss(grid);
+    drawHydrometry(grid);
     drawObservations(grid);
     drawHeritage(grid);
     drawLore(grid);

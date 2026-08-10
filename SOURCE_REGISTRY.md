@@ -1,6 +1,6 @@
 # Registre des sources
 
-La version 0.18g établit une seule description canonique des données consultées par l’Atlas. Le registre exécutable vit dans `src/app/source-registry.js` ; ce document en expose la politique humaine.
+La version 0.18g établit une seule description canonique des données consultées par l’Atlas ; la 0.18h l’étend à l’hydrométrie. Le registre exécutable vit dans `src/app/source-registry.js` ; ce document en expose la politique humaine.
 
 | Identifiant | Fournisseur | Couverture | Conservation dans un carnet `.atlas` |
 | --- | --- | --- | --- |
@@ -12,6 +12,7 @@ La version 0.18g établit une seule description canonique des données consulté
 | `culture` | Ministère de la Culture | France | extrait embarqué |
 | `wikipedia` | Wikipédia francophone | mondiale | extrait embarqué |
 | `bss` | BRGM / Hub’Eau | France | extrait embarqué |
+| `hydrometry` | Hub’Eau / PHyC / Vigicrues | France | extrait embarqué |
 | `relief` | IGN / Copernicus / Open-Meteo | mondiale, priorité France | référence, resynchronisation nécessaire |
 
 ## Principes
