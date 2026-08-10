@@ -333,7 +333,7 @@ function featureNarrative(f){
   const name=f.name?` <strong>${esc(f.name)}</strong>`:"";
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`;
   if(f.biodiversity){
-    const names=(f.species||[]).slice(0,6).map(item=>esc(item.vernacularName||item.scientificName)).join(", ");
+    const names=(f.species||[]).slice(0,6).map(item=>esc(item.vernacularName||`${biodiversityTaxonGroupLabel(item)} · ${item.scientificName}`)).join(", ");
     return `Cette maille d’environ un kilomètre rassemble <strong>${f.speciesCount||0} espèces</strong> dans l’échantillon publié${names?` : ${names}${f.species.length>6?"…":""}`:""}. Elle indique des observations passées et imparfaitement localisées, jamais une présence actuelle garantie.`;
   }
   if(f.hydrometry){
@@ -391,7 +391,7 @@ function primaryDocumentarySection(f){
   if(f.biodiversity){
     const species=(f.species||[]),shown=species.slice(0,8),latest=f.latestDate?` · plus récente ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`:"";
     const groupTitle=f.biodiversityGroup==="animals"?"Faune publiée":f.biodiversityGroup==="plants"?"Flore publiée":f.biodiversityGroup==="fungi"?"Champignons publiés":"Espèces publiées";
-    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>`<li><strong>${esc(item.vernacularName||item.scientificName)}</strong>${item.vernacularName?` <em>${esc(item.scientificName)}</em>`:""}<span>${item.group==="animals"?"faune":item.group==="plants"?"flore":"champignons"}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}</span></li>`).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
+    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),details=[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(item.vernacularName||"Nom usuel non renseigné")}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">fiche GBIF ↗</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
   }
   return "";
 }
