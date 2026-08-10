@@ -399,6 +399,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <div><div class="carto-count" id="biodiversityCount">0</div><div class="small">espèces dans l’échantillon local</div></div>
       <div class="small" id="biodiversitySummary">Aucun extrait de biodiversité synchronisé.</div>
     </div>
+    <div class="small">Sous-couches cartographiques</div>
     <div class="heritage-sources">
       <label><input id="biodiversityAnimals" type="checkbox" checked> Faune</label>
       <label><input id="biodiversityPlants" type="checkbox" checked> Flore</label>
@@ -406,7 +407,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
     <button id="syncBiodiversity" style="width:100%;margin-top:9px">Actualiser les observations GBIF</button>
     <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div><button id="clearBiodiversity" style="width:100%">Vider cette source</button></div></details>
-    <div class="small" id="biodiversityHelp" style="margin-top:8px">L’Atlas prélève un échantillon borné, puis regroupe les observations publiées dans des mailles d’environ 1 km. Une occurrence n’établit ni une présence actuelle, ni une position exacte ; les coordonnées brutes ne sont pas conservées.</div>
+    <div class="small" id="biodiversityHelp" style="margin-top:8px">L’Atlas prélève trois échantillons distincts, puis regroupe les observations publiées dans des mailles d’environ 1 km. Faune, flore et champignons restent séparés sur la carte. Une occurrence n’établit ni une présence actuelle, ni une position exacte ; les coordonnées brutes ne sont pas conservées.</div>
   </section>
 
   <section class="card" data-ui-card="source-status">
@@ -470,7 +471,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
         <div><code>·</code> chemin</div><div><code>█</code> bâtiment cadastral</div>
         <div><code>┄</code> limite de parcelle</div><div><code>B•</code> forage / ouvrage BSS</div><div><code>P≈</code> piézomètre Hub’Eau</div>
         <div><code>H≈</code> station hydrométrique</div>
-        <div><code>Bio</code> maille de plusieurs groupes</div><div><code>Fa / Fl / Fu</code> faune, flore ou champignons</div>
+        <div><code>Fa</code> observations de faune</div><div><code>Fl</code> observations de flore</div><div><code>Fu</code> observations de champignons</div>
         <div><code>q</code> carrière à ciel ouvert</div><div><code>░</code> bâti / terrain dégagé</div>
       </div>
     </div>

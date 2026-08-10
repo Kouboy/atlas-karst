@@ -209,6 +209,9 @@ select{width:100%}
 .c-piezo{color:#70d6ff;font-weight:900}
 .c-hydrometry{color:#70d6ff;font-weight:900}
 .c-biodiversity{color:#9dde72;font-weight:900}
+.c-biodiversity-animals{color:#e6c86f;font-weight:900}
+.c-biodiversity-plants{color:#9dde72;font-weight:900}
+.c-biodiversity-fungi{color:#c79ad8;font-weight:900}
 .c-observation{color:#ff8bd8;font-weight:900}.c-sight{color:#ef9ee8}.c-zone{color:#cf79be}.c-address{color:#ff7784;font-weight:900}
 .c-lore-heritage{color:#ffe08a;font-weight:900}.c-lore-ruin{color:#ffad7c;font-weight:900}.c-lore-friche{color:#d8b4ff;font-weight:900}.c-lore-abandoned{color:#8fd3c7;font-weight:900}.c-lore-anecdote{color:#ffd1f2;font-weight:900}.c-lore-mystery{color:#ff7ea2;font-weight:900}.c-lore-view{color:#8fd8ff;font-weight:900}
 .c-heritage-monument{color:#ffd569;font-weight:900;text-shadow:0 0 5px rgba(255,213,105,.35)}
