@@ -20,6 +20,7 @@ const scriptUrls = [
   new URL("src/app/data-services.js", root),
   new URL("src/app/hydrometry-service.js", root),
   new URL("src/app/biodiversity-service.js", root),
+  new URL("src/app/poi-annotations.js", root),
   new URL("src/app/startup-loader.js", root),
   new URL("src/app/source-controller.js", root),
   new URL("src/app/territory-controller.js", root),

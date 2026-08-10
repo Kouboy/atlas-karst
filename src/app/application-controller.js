@@ -19,6 +19,7 @@ function bindApplicationController(){
   bindSourceController();
   bindExperienceController();
   bindViewController();
+  bindPoiAnnotations();
   bindLifecycleController();
   bindSessionHealth();
   els.readoutSheetHandle.addEventListener("click",()=>{accountApplicationAction("bascule de la fiche");cycleReadoutSheet()});
@@ -63,6 +64,7 @@ async function bootAtlas(){
     loadBssLocal();
     loadHydrometry();
     loadBiodiversity();
+    loadPoiAnnotations();
     loadEncounterCollection();
     els.layerBss.checked=true;state.layerBss=true;
     els.layerHydrometry.checked=true;state.layerHydrometry=true;

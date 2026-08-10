@@ -333,7 +333,7 @@ function featureNarrative(f){
   const name=f.name?` <strong>${esc(f.name)}</strong>`:"";
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`;
   if(f.biodiversity){
-    const names=(f.species||[]).slice(0,6).map(item=>esc(item.vernacularName||`${biodiversityTaxonGroupLabel(item)} · ${item.scientificName}`)).join(", ");
+    const names=(f.species||[]).slice(0,6).map(item=>esc(poiSpeciesDisplayName(f,item)||`${biodiversityTaxonGroupLabel(item)} · ${item.scientificName}`)).join(", ");
     return `Cette maille d’environ un kilomètre rassemble <strong>${f.speciesCount||0} espèces</strong> dans l’échantillon publié${names?` : ${names}${f.species.length>6?"…":""}`:""}. Elle indique des observations passées et imparfaitement localisées, jamais une présence actuelle garantie.`;
   }
   if(f.hydrometry){
@@ -391,7 +391,7 @@ function primaryDocumentarySection(f){
   if(f.biodiversity){
     const species=(f.species||[]),shown=species.slice(0,8),latest=f.latestDate?` · plus récente ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`:"";
     const groupTitle=f.biodiversityGroup==="animals"?"Faune publiée":f.biodiversityGroup==="plants"?"Flore publiée":f.biodiversityGroup==="fungi"?"Champignons publiés":"Espèces publiées";
-    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),details=[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(item.vernacularName||"Nom usuel non renseigné")}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">fiche GBIF ↗</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
+    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),displayName=poiSpeciesDisplayName(f,item),personal=!!poiAnnotationFor(f)?.speciesNames?.[String(item.speciesKey)],details=[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(displayName||"Nom usuel non renseigné")}${personal?' <small class="personal-name-mark">personnel</small>':""}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">fiche GBIF ↗</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
   }
   return "";
 }
@@ -522,7 +522,7 @@ function documentedCellFacts(cell){
     }
     if(f.biodiversity){
       facts.push(`<span class="cell-fact-kind">maille</span>${f.speciesCount||f.species?.length||0} espèces publiées sur environ 1 km`);
-      for(const item of (f.species||[]).slice(0,8))facts.push(`<span class="cell-fact-kind">${item.group==="animals"?"faune":item.group==="plants"?"flore":"fonge"}</span><strong>${esc(item.vernacularName||item.scientificName)}</strong>${item.vernacularName?` <em>${esc(item.scientificName)}</em>`:""}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`);
+      for(const item of (f.species||[]).slice(0,8)){const displayName=poiSpeciesDisplayName(f,item);facts.push(`<span class="cell-fact-kind">${item.group==="animals"?"faune":item.group==="plants"?"flore":"fonge"}</span><strong>${esc(displayName||item.scientificName)}</strong>${displayName?` <em>${esc(item.scientificName)}</em>`:""}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}`)}
     }
     if(f.confidenceLabel)facts.push(`<span class="cell-fact-kind">confiance</span>${esc(f.confidenceLabel)}`);
     if(f.source)facts.push(`<span class="cell-fact-kind">origine</span>${esc(f.source)}`);
@@ -532,7 +532,7 @@ function documentedCellFacts(cell){
 }
 function featureDescriptionFingerprint(f){
   if(!f)return "none";
-  return [f.poiId,f.id,f.indice,f.name,f.kind,f.type,f.nature,f.source,f.updated,f.depth,f.confidenceLabel,f.siteStatus,f.period].map(v=>String(v??"").slice(0,80)).join("~");
+  return [f.poiId,f.id,f.indice,f.name,f.kind,f.type,f.nature,f.source,f.updated,f.depth,f.confidenceLabel,f.siteStatus,f.period,poiAnnotationFor(f)?.updatedAt].map(v=>String(v??"").slice(0,80)).join("~");
 }
 function cellDescriptionCacheKey(cell,x,y){
   const coord=gridToCoord(x,y,state.lastGrid.extent),slope=localSlopeDegrees(x,y);
@@ -545,7 +545,7 @@ function trimDescriptionCache(){
 }
 function buildCellDescriptionBundle(cell,x,y){
   const slope=localSlopeDegrees(x,y),f=cell.feature;
-  const title=f?.name||f?.kind||"Case sans nom";
+  const title=poiAnnotationDisplayTitle(f,f?.name||f?.kind||"Case sans nom");
   const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f),primary=primaryDocumentarySection(f);
   const meta=[Number.isFinite(cell.elev)?`altitude ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",currentDepth()<0?`niveau ${depthSliceLabel()}`:"surface"].filter(Boolean).join(" · ");
   const [category,symbol]=cellPresentationCategory(cell);
@@ -560,6 +560,7 @@ function buildCellDescriptionDetails(bundle){
   bundle.details=`<section class="cell-section"><h3>Ce qui est documenté</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
     ${nearby?`<section class="cell-section cell-section-nearby"><h3>À proximité</h3>${nearby}</section>`:""}
     ${relations}
+    ${poiAnnotationSection(cell.feature)}
     <section class="cell-section cell-section-critical"><h3>Ce que l’on peut en déduire</h3><p><strong>Lecture prudente.</strong> ${critical}</p></section>
     <details class="technical-details"><summary>Données techniques et sources</summary><div>${technicalCellLines(cell,x,y).join("<br>")}</div></details>`;
   return bundle.details;
