@@ -913,6 +913,8 @@ try {
         if(viewport.name==="mobile portrait"){
           await page.locator("#sidebarToggle").click();
           await page.locator("body.sidebar-open").waitFor();
+          const backdropFilter=await page.locator("#sidebarBackdrop").evaluate(element=>getComputedStyle(element).backdropFilter);
+          assert.match(backdropFilter,/blur\(5px\)/,"le flou de fond du panneau mobile est absent");
           await page.locator("#sidebarBackdrop").click({position:{x:385,y:100}});
           await page.waitForFunction(()=>!document.body.classList.contains("sidebar-open"));
           await page.locator("#infoToggle").click();
