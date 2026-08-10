@@ -32,7 +32,7 @@ La coque suit une règle simple : un élément doit aider à regarder le territo
 - aucune bordure arrondie ;
 - aucun dégradé, ombre, halo, flou ou texture décorative dans la coque ;
 - aucune animation d’interface décorative ;
-- une palette papier, encre, gris et un accent fonctionnel ;
+- une palette sombre vert-noir, texte clair, phosphore doux et ambre issue de la carte ;
 - une action principale par bloc ;
 - les détails techniques sont fermés par défaut ;
 - les états utilisent du texte et une structure, jamais la couleur seule ;

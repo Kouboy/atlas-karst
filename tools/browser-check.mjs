@@ -33,6 +33,21 @@ function runtimeErrors(page) {
   return errors;
 }
 
+function parseCssRgb(value) {
+  const parts=String(value).match(/[\d.]+/g)?.slice(0,3).map(Number)||[];
+  return parts.length===3?parts:null;
+}
+
+function contrastRatio(foreground,background) {
+  const luminance=value=>{
+    const rgb=parseCssRgb(value);assert.ok(rgb,`couleur CSS illisible : ${value}`);
+    const channels=rgb.map(channel=>{const normalized=channel/255;return normalized<=.04045?normalized/12.92:((normalized+.055)/1.055)**2.4});
+    return .2126*channels[0]+.7152*channels[1]+.0722*channels[2];
+  };
+  const lighter=Math.max(luminance(foreground),luminance(background)),darker=Math.min(luminance(foreground),luminance(background));
+  return (lighter+.05)/(darker+.05);
+}
+
 async function openOfflineAtlas(page, query = "?offline&debug") {
   await page.goto(`${baseURL}/${query}`, { waitUntil: "domcontentloaded" });
   assert.match(await page.title(), titleVersionPattern);
@@ -739,7 +754,13 @@ try {
         debugLocation:document.getElementById("debugToggle")?.closest('[data-section="sources"]')?.dataset.section,
         orphanCards:[...document.querySelectorAll("#sidebar > .card")].filter(card=>!card.hidden&&card.id!=="offlineNotice").map(card=>card.querySelector(":scope > h2")?.textContent.trim()),
         tabLinks:[...document.querySelectorAll(".sidebar-section-tab")].every(tab=>document.getElementById(tab.getAttribute("aria-controls"))?.getAttribute("aria-labelledby")===tab.id),
-        shellStyle:styleOf("#sidebar"),cardStyle:styleOf(".sidebar-cluster .card"),buttonStyle:styleOf(".sidebar-section-tab")
+        shellStyle:styleOf("#sidebar"),cardStyle:styleOf(".sidebar-cluster .card"),buttonStyle:styleOf(".sidebar-section-tab"),
+        palette:{
+          sidebar:{color:getComputedStyle(document.getElementById("sidebar")).color,background:getComputedStyle(document.getElementById("sidebar")).backgroundColor},
+          heading:{color:getComputedStyle(document.querySelector(".sidebar-cluster-head h2")).color,background:getComputedStyle(document.getElementById("sidebar")).backgroundColor},
+          control:{color:getComputedStyle(document.querySelector('.sidebar-cluster button:not(.sidebar-section-tab)')).color,background:getComputedStyle(document.querySelector('.sidebar-cluster button:not(.sidebar-section-tab)')).backgroundColor},
+          statusbar:{color:getComputedStyle(document.querySelector(".statusbar")).color,background:getComputedStyle(document.querySelector(".statusbar")).backgroundColor}
+        }
       };
     });
     assert.deepEqual(initial.tabs.map(tab=>tab.label),["Carnets","Explorer","Noter","Sources"]);
@@ -747,6 +768,10 @@ try {
     assert.ok(initial.merged>=3);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
     assert.equal(initial.audioLocation,"sources");assert.equal(initial.debugLocation,"sources");assert.deepEqual(initial.orphanCards,[]);assert.equal(initial.tabLinks,true);
     for(const style of [initial.shellStyle,initial.cardStyle,initial.buttonStyle]){assert.equal(style.radius,"0px");assert.equal(style.shadow,"none");assert.equal(style.image,"none");assert.equal(style.animation,"none")}
+    for(const [name,pair] of Object.entries(initial.palette)){
+      const background=parseCssRgb(pair.background);assert.ok(background&&Math.max(...background)<64,`${name} n’utilise pas un fond sombre : ${pair.background}`);
+      assert.ok(contrastRatio(pair.color,pair.background)>=4.5,`${name} manque de contraste : ${pair.color} sur ${pair.background}`);
+    }
     await page.locator("#mapCarnets").click();await page.waitForFunction(()=>document.getElementById("sidebar").dataset.activeSection==="carnets");
     await page.locator("#mapDisplay").click();await page.waitForFunction(()=>document.getElementById("sidebar").dataset.activeSection==="explorer");
     assert.equal(await page.locator('.card:has(> h2:text-is("Affichage"))').evaluate(card=>card.classList.contains("collapsed")),false);

@@ -281,6 +281,9 @@ check("architecture carnet minimaliste", () =>
   ["carnets","explorer","noter","sources"].every((section)=>sourceByName["ui-shell.js"].includes(`section:"${section}"`)) &&
   atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-section-tabs') &&
   atlasCss.includes('body[data-ui-version="field-notebook"] .sidebar-cluster') &&
+  atlasCss.includes("--ui-bg:#07100c") &&
+  atlasCss.includes("--ui-text:#dce9e1") &&
+  !atlasCss.includes("--ui-paper:") &&
   html.includes('data-interface-retired="map-scale-duplicate"') &&
   html.includes('data-interface-retired="map-depth-duplicate"')
 );
