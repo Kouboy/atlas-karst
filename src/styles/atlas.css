@@ -717,6 +717,14 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   .map-tip{left:7px;bottom:7px;max-width:calc(100% - 18px)}
 }
 
+@media(max-width:940px){
+  body[data-ui-version="field-notebook"] .sidebar-backdrop{
+    background:rgba(0,7,4,.42);
+    -webkit-backdrop-filter:blur(5px);
+    backdrop-filter:blur(5px)
+  }
+}
+
 /* Diagnostic intégré : invisible par défaut, activable avec ?debug ou Ctrl+Maj+D. */
 .debug-only{display:none!important}
 body.debug-mode .debug-only{display:flex!important}
