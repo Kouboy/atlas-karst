@@ -31,10 +31,18 @@ function biodiversityRecord(raw,group,extent=largestExtent()){
     occurrenceKey:String(raw.key||""),cellX:grid.x,cellY:grid.y,cellLat:grid.lat,cellLon:grid.lon,cellCols:grid.cols,cellRows:grid.rows
   };
 }
+function balancedBiodiversitySpecies(items,limit=BIODIVERSITY_SPECIES_CAP_PER_CELL){
+  const queues=BIODIVERSITY_GROUPS.map(group=>items.filter(item=>item.group===group.id).sort((a,b)=>String(b.latestDate).localeCompare(String(a.latestDate))||b.sampledRecords-a.sampledRecords));
+  const selected=[];let cursor=0;
+  while(selected.length<limit&&queues.some(queue=>queue.length)){
+    const queue=queues[cursor++%queues.length];if(queue.length)selected.push(queue.shift());
+  }
+  return selected;
+}
 function aggregateBiodiversityRecords(records,syncedAt){
   const cells=new Map();
   for(const record of records){
-    const cellKey=`${record.cellX}:${record.cellY}`,cell=cells.get(cellKey)||{id:`BIO-${record.cellX}-${record.cellY}`,cellCode:`${record.cellX+1}-${record.cellY+1}`,lat:record.cellLat,lon:record.cellLon,species:new Map(),sampledRecords:0,datasets:new Set(),licenses:new Set(),syncedAt};
+    const cellKey=`${record.cellX}:${record.cellY}`,cell=cells.get(cellKey)||{id:`BIO-${record.cellX}-${record.cellY}`,cellCode:`${record.cellX+1}-${record.cellY+1}`,lat:record.cellLat,lon:record.cellLon,cellCols:record.cellCols,cellRows:record.cellRows,species:new Map(),sampledRecords:0,datasets:new Set(),licenses:new Set(),syncedAt};
     cell.sampledRecords++;cell.datasets.add(record.dataset);cell.licenses.add(record.license);
     const species=cell.species.get(record.speciesKey)||{speciesKey:record.speciesKey,scientificName:record.scientificName,vernacularName:record.vernacularName,group:record.group,kingdom:record.kingdom,family:record.family,sampledRecords:0,latestDate:"",earliestDate:"",uncertaintyM:record.uncertaintyM,occurrenceKey:record.occurrenceKey};
     species.sampledRecords++;if(!species.vernacularName&&record.vernacularName)species.vernacularName=record.vernacularName;
@@ -43,16 +51,19 @@ function aggregateBiodiversityRecords(records,syncedAt){
     species.uncertaintyM=Math.max(species.uncertaintyM,record.uncertaintyM);cell.species.set(record.speciesKey,species);cells.set(cellKey,cell);
   }
   return [...cells.values()].map(cell=>{
-    const species=[...cell.species.values()].sort((a,b)=>String(b.latestDate).localeCompare(String(a.latestDate))||b.sampledRecords-a.sampledRecords).slice(0,BIODIVERSITY_SPECIES_CAP_PER_CELL);
+    const species=balancedBiodiversitySpecies([...cell.species.values()]);
     const groupCounts=Object.fromEntries(BIODIVERSITY_GROUPS.map(group=>[group.id,species.filter(item=>item.group===group.id).length]));
-    return {id:cell.id,cellCode:cell.cellCode,name:`Maille biodiversité ${cell.cellCode}`,lat:cell.lat,lon:cell.lon,species,speciesCount:species.length,sampledRecords:cell.sampledRecords,groupCounts,datasets:[...cell.datasets].slice(0,8),licenses:[...cell.licenses].slice(0,8),syncedAt,source:"GBIF · occurrences publiées",url:"https://www.gbif.org/occurrence/search"};
+    return {id:cell.id,cellCode:cell.cellCode,name:`Maille biodiversité ${cell.cellCode}`,lat:cell.lat,lon:cell.lon,cellCols:cell.cellCols,cellRows:cell.cellRows,species,speciesCount:species.length,sampledRecords:cell.sampledRecords,groupCounts,datasets:[...cell.datasets].slice(0,8),licenses:[...cell.licenses].slice(0,8),syncedAt,source:"GBIF · occurrences publiées",url:"https://www.gbif.org/occurrence/search"};
   }).sort((a,b)=>a.cellCode.localeCompare(b.cellCode,undefined,{numeric:true}));
 }
 function biodiversityVisibleSpecies(cell){return (cell?.species||[]).filter(species=>state.biodiversityEnabled?.[species.group]!==false)}
 function biodiversityUniqueSpecies(items=state.biodiversity){return new Set((items||[]).flatMap(cell=>(cell.species||[]).map(species=>species.speciesKey))).size}
+function biodiversityGroupSpeciesCounts(items=state.biodiversity){
+  return Object.fromEntries(BIODIVERSITY_GROUPS.map(group=>[group.id,new Set((items||[]).flatMap(cell=>(cell.species||[]).filter(species=>species.group===group.id).map(species=>species.speciesKey))).size]));
+}
 function biodiversityFeatureInfo(poi){
-  const cell=poi.raw||{},species=biodiversityVisibleSpecies(cell),latest=species.map(item=>item.latestDate).filter(Boolean).sort().at(-1)||"",oldest=species.map(item=>item.earliestDate).filter(Boolean).sort()[0]||"";
-  return poiFeatureInfo(poi,{kind:"maille de biodiversité documentée",biodiversity:true,cellCode:cell.cellCode,speciesCount:species.length,sampledRecords:species.reduce((sum,item)=>sum+Number(item.sampledRecords||0),0),species,latestDate:latest,earliestDate:oldest,datasets:cell.datasets||[],licenses:cell.licenses||[],url:cell.url,precisionM:1000});
+  const cell=poi.raw||{},species=biodiversityVisibleSpecies(cell),group=cell.displayGroup||species[0]?.group||"",groupLabel=BIODIVERSITY_GROUPS.find(item=>item.id===group)?.label||"biodiversité",latest=species.map(item=>item.latestDate).filter(Boolean).sort().at(-1)||"",oldest=species.map(item=>item.earliestDate).filter(Boolean).sort()[0]||"";
+  return poiFeatureInfo(poi,{kind:`maille de ${groupLabel} documentée`,biodiversity:true,biodiversityGroup:group,biodiversityGroupLabel:groupLabel,cellCode:cell.cellCode,speciesCount:species.length,sampledRecords:species.reduce((sum,item)=>sum+Number(item.sampledRecords||0),0),species,latestDate:latest,earliestDate:oldest,datasets:cell.datasets||[],licenses:cell.licenses||[],url:cell.url,precisionM:1000});
 }
 async function biodiversityFrenchName(species){
   biodiversityRuntime.nameRequests++;
@@ -72,10 +83,10 @@ async function enrichBiodiversityNames(cells){
 }
 function saveBiodiversity(){try{localStorage.setItem(territoryStorageKey(BIODIVERSITY_KEY),JSON.stringify({items:state.biodiversity,enabled:state.biodiversityEnabled,savedAt:new Date().toISOString()}))}catch{}}
 function updateBiodiversityUI(message=""){
-  const cells=state.biodiversity||[],species=biodiversityUniqueSpecies(cells),visible=cells.filter(cell=>biodiversityVisibleSpecies(cell).length).length;
+  const cells=state.biodiversity||[],species=biodiversityUniqueSpecies(cells),groups=biodiversityGroupSpeciesCounts(cells),visible=cells.filter(cell=>biodiversityVisibleSpecies(cell).length).length;
   for(const group of BIODIVERSITY_GROUPS){const id=`biodiversity${group.id[0].toUpperCase()}${group.id.slice(1)}`;if(els[id])els[id].checked=state.biodiversityEnabled[group.id]!==false}
   if(els.biodiversityCount)els.biodiversityCount.textContent=String(species);
-  if(els.biodiversitySummary)els.biodiversitySummary.textContent=message||(cells.length?`${species} espèces · ${visible} mailles visibles`:`Aucun extrait de biodiversité synchronisé.`);
+  if(els.biodiversitySummary)els.biodiversitySummary.textContent=message||(cells.length?`${groups.animals} faune · ${groups.plants} flore · ${groups.fungi} champignons · ${visible} mailles visibles`:`Aucun extrait de biodiversité synchronisé.`);
   setStatus("biodiversity",cells.length?"ok":"pending",cells.length?`${species} espèces · ${cells.length} mailles`:"à synchroniser");
 }
 function loadBiodiversity(){

@@ -143,7 +143,7 @@ function closeSelectionAssist(){
 }
 function cellSelectionSound(cell){
   const f=cell?.feature||{},cls=String(cell?.cls||""),tags=f.tags||{};
-  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",biodiversity:"cellForest",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
+  const normalized={cavity:"cellCavity",bss:"cellBss",hydrology:"cellWater",biodiversity:"cellForest","biodiversity-animals":"cellForest","biodiversity-plants":"cellForest","biodiversity-fungi":"cellForest",heritage:"cellHeritage",memory:"cellMemory",industrial:"cellIndustrial",home:"cellHome",location:"cellLocation",natural:"cellTerrain"}[f.poiCategory];
   if(normalized)return normalized;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(currentDepth()<0||cell?.confidence)return "cellUnderground";
@@ -171,6 +171,7 @@ function playCellSelectionSound(cell,{snapped=false}={}){
 function poiSelectionKind(cell){
   if(!cell)return "";
   const cls=String(cell.cls||""),f=cell.feature||{},tags=f.tags||{};
+  if(String(f.poiCategory||"").startsWith("biodiversity-"))return "biodiversity";
   if(f.poiCategory)return f.poiCategory;
   const descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
   if(f.kind==="maison"||cls.includes("c-house")||cls.includes("c-address"))return "home";
@@ -389,7 +390,8 @@ function primaryDocumentarySection(f){
   }
   if(f.biodiversity){
     const species=(f.species||[]),shown=species.slice(0,8),latest=f.latestDate?` · plus récente ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`:"";
-    return `<section class="cell-section cell-section-primary"><h3>Espèces publiées dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>`<li><strong>${esc(item.vernacularName||item.scientificName)}</strong>${item.vernacularName?` <em>${esc(item.scientificName)}</em>`:""}<span>${item.group==="animals"?"faune":item.group==="plants"?"flore":"champignons"}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}</span></li>`).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
+    const groupTitle=f.biodiversityGroup==="animals"?"Faune publiée":f.biodiversityGroup==="plants"?"Flore publiée":f.biodiversityGroup==="fungi"?"Champignons publiés":"Espèces publiées";
+    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>`<li><strong>${esc(item.vernacularName||item.scientificName)}</strong>${item.vernacularName?` <em>${esc(item.scientificName)}</em>`:""}<span>${item.group==="animals"?"faune":item.group==="plants"?"flore":"champignons"}${item.latestDate?` · ${esc(new Date(item.latestDate).toLocaleDateString("fr-FR"))}`:""}</span></li>`).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
   }
   return "";
 }
@@ -405,7 +407,7 @@ function criticalReading(cell){
   if(f.cartofriches||f.siteType)return "Le statut du site renseigne son histoire d’usage. Il ne suffit pas à conclure sur une pollution, une accessibilité ou une structure souterraine particulière.";
   return "Ici, l’Atlas décrit surtout un contexte de terrain. Toute conclusion plus précise demanderait une source dédiée, une observation datée ou une mesure locale.";
 }
-function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",biodiversity:"maille de biodiversité",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
+function poiCategoryLabel(category){return {cavity:"cavité",bss:"ouvrage du sous-sol",hydrology:"station hydrométrique",biodiversity:"maille de biodiversité","biodiversity-animals":"maille de faune","biodiversity-plants":"maille de flore","biodiversity-fungi":"maille de champignons",heritage:"patrimoine",memory:"mémoire locale",industrial:"site anthropisé",natural:"repère naturel",home:"maison",location:"position"}[category]||"repère"}
 function nearbyEntries(x,y){
   if(!state.lastGrid)return [];
   const center=gridToCoord(x,y,state.lastGrid.extent),z=currentZoom();
