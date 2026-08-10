@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18g · registre des sources</title>
+<title>Atlas Karst ASCII v0.18h · hydrométrie locale</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -208,6 +208,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <label class="switch"><input id="layerCadastreBuildings" type="checkbox" checked> Bâtiments cadastraux</label>
     <label class="switch"><input id="layerParcels" type="checkbox"> Limites de parcelles au zoom proche</label>
     <label class="switch"><input id="layerBss" type="checkbox" checked> Forages et ouvrages BSS</label>
+    <label class="switch"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
     <label class="switch"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
     <label class="switch"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
     <label class="switch"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
@@ -380,6 +381,17 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
+  <section class="card" data-ui-card="hydrometry">
+    <h2>Cours d’eau mesurés</h2>
+    <div class="grid2">
+      <div><div class="carto-count" id="hydrometryCount">0</div><div class="small">stations dans le Territoire</div></div>
+      <div class="small" id="hydrometrySummary">Aucune station synchronisée pour ce territoire.</div>
+    </div>
+    <button id="syncHydrometry" style="width:100%;margin-top:9px">Actualiser Hub’Eau Hydrométrie</button>
+    <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div><button id="clearHydrometry" style="width:100%">Vider cette source</button></div></details>
+    <div class="small" id="hydrometryHelp" style="margin-top:8px">Les stations et leurs dernières hauteur ou débit disponibles sont recherchés dans l’emprise du carnet, puis mémorisés localement. Ces mesures sont indicatives et ne constituent pas une alerte de crue.</div>
+  </section>
+
   <section class="card" data-ui-card="source-status">
     <h2>État des sources</h2>
     <div class="data-status">
@@ -390,6 +402,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <div class="status-line"><span>Cartofriches</span><strong id="cartofrichesStatus" class="pending">à charger</strong></div>
       <div class="status-line"><span>Patrimoine & curiosités</span><strong id="heritageStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>BSS / piézomètres</span><strong id="bssStatus" class="pending">non chargé · optionnel</strong></div>
+      <div class="status-line"><span>Hydrométrie</span><strong id="hydrometryStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>
@@ -438,6 +451,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
         <div><code>═</code> axe majeur</div><div><code>─</code> voie locale</div>
         <div><code>·</code> chemin</div><div><code>█</code> bâtiment cadastral</div>
         <div><code>┄</code> limite de parcelle</div><div><code>B•</code> forage / ouvrage BSS</div><div><code>P≈</code> piézomètre Hub’Eau</div>
+        <div><code>H≈</code> station hydrométrique</div>
         <div><code>q</code> carrière à ciel ouvert</div><div><code>░</code> bâti / terrain dégagé</div>
       </div>
     </div>

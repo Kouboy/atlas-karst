@@ -63,6 +63,8 @@ function bindSourceController(){
   els.importBss.addEventListener("click",()=>openSourceFilePicker(els.bssFile,"BSS"));
   els.bssFile.addEventListener("change",event=>importSourceFile(event.target.files?.[0],"BSS",importBssFile));
   els.clearBss.addEventListener("click",resetBssSource);
+  bindSourceAction(els.syncHydrometry,"click","synchronisation hydrométrique",syncHydrometry);
+  els.clearHydrometry.addEventListener("click",()=>{accountSourceAction("effacement hydrométrie");sourceControllerRuntime.clears++;clearHydrometry()});
 
   bindSourceAction(els.syncCartofriches,"click","synchronisation Cartofriches",syncCartofriches);
   bindSourceAction(els.downloadCartofriches,"click","téléchargement Cartofriches",()=>window.open(CARTOFRICHES_DOWNLOAD,"_blank","noopener"));

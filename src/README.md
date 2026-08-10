@@ -16,6 +16,7 @@
 - `app/exploration-model.js` regroupe la géométrie commune, les index spatiaux et l’inventaire de proximité.
 - `app/experiences.js` porte les rencontres locales, le codex et les parcours guidés.
 - `app/data-services.js` regroupe les synchronisations, caches et conversions des sources cartographiques.
+- `app/hydrometry-service.js` synchronise un extrait borné des stations et dernières mesures Hub’Eau, isolé par territoire.
 - `app/startup-loader.js` étale les synchronisations initiales dans une file bornée qui respecte les créneaux libres et la visibilité de la page.
 - `app/source-controller.js` relie les synchronisations, imports, effacements et filtres des sources cartographiques à l’interface.
 - `app/fieldwork-controller.js` porte la localisation ponctuelle, le repère maison, les observations et les mémoires locales.

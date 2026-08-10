@@ -424,7 +424,7 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {before,after:{...lifecycleControllerRuntime},calls,badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,8);
+    assert.equal(result.after.ready,true);assert.equal(result.after.bound,true);assert.equal(result.after.statusObservers,9);
     assert.equal(result.after.unlockAttempts-result.before.unlockAttempts,4,"le branchement idempotent a doublé les gestes");
     assert.equal(result.after.visibilityChanges-result.before.visibilityChanges,2);
     assert.equal(result.after.focusChanges-result.before.focusChanges,2);
@@ -694,7 +694,7 @@ try {
       const ids=SOURCE_REGISTRY.map(source=>source.id);
       const references=sourceReferencesForSnapshot({data:{
         osm:[{id:1}],osmMeta:{loadedAt:"2026-08-10T10:00:00Z"},address:{label:"test"},
-        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],elevation:{min:1},
+        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],elevation:{min:1},
         heritageItems:[{id:"m1",category:"monument",syncedAt:"2026-08-09"},{id:"w1",category:"wikipedia",syncedAt:"2026-08-08"}]
       }});
       setSourceStatus("heritage","ok","2 notices");
@@ -703,13 +703,35 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {schema:SOURCE_REGISTRY_SCHEMA_VERSION,ids,catalog,references,attribution,runtime:{...sourceRegistryRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.schema,1);assert.equal(result.ids.length,9);assert.equal(new Set(result.ids).size,9);assert.equal(result.catalog.length,9);
+    assert.equal(result.schema,1);assert.equal(result.ids.length,10);assert.equal(new Set(result.ids).size,10);assert.equal(result.catalog.length,10);
     assert.equal(result.catalog.find(source=>source.id==="culture")?.status,"2 notices");assert.equal(result.catalog.find(source=>source.id==="wikipedia")?.status,"2 notices");
     assert.equal(result.references.find(source=>source.id==="culture")?.count,1);assert.equal(result.references.find(source=>source.id==="wikipedia")?.count,1);
+    assert.equal(result.references.find(source=>source.id==="hydrometry")?.count,1);assert.equal(result.references.find(source=>source.id==="hydrometry")?.disposition,"embedded");
     assert.equal(result.references.find(source=>source.id==="openstreetmap")?.disposition,"consulted");assert.equal(result.references.find(source=>source.id==="adresse")?.disposition,"embedded");
     assert.match(result.attribution,/OpenStreetMap \(ODbL\)/);assert.match(result.attribution,/Wikipédia francophone \(CC BY-SA\)/);assert.match(result.attribution,/restent privés/);
     assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.catalogRenders>=1);assert.ok(result.runtime.attributionRenders>=1);assert.ok(result.runtime.statusUpdates>=1);
     assert.deepEqual(result.badChecks,[],`diagnostic en échec avec le registre : ${result.badChecks.join(", ")}`);
+  });
+
+  await withPage("hydrométrie bornée et portable", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const originalFetch=window.fetch;
+      window.fetch=async url=>{
+        const value=String(url);
+        if(value.includes("referentiel/stations"))return new Response(JSON.stringify({api_version:"2.0.1",data:[{code_station:"R-TEST",libelle_station:"Station témoin",libelle_site:"La rivière témoin",libelle_commune:"Angoulême",latitude_station:CONFIG.house.lat,longitude_station:CONFIG.house.lon,type_station:"STANDARD"}]}),{status:200,headers:{"Content-Type":"application/json"}});
+        if(value.includes("observations_tr"))return new Response(JSON.stringify({data:[{code_station:"R-TEST",grandeur_hydro:"H",date_obs:"2026-08-10T10:00:00Z",resultat_obs:634},{code_station:"R-TEST",grandeur_hydro:"Q",date_obs:"2026-08-10T10:00:00Z",resultat_obs:3380}]}),{status:200,headers:{"Content-Type":"application/json"}});
+        return originalFetch(url);
+      };
+      state.allowNetwork=true;
+      const items=await syncHydrometry();
+      window.fetch=originalFetch;
+      ensureSpatialIndexes();
+      const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="hydrometry"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet();
+      return {count:items?.length||0,height:items?.[0]?.heightM,flow:items?.[0]?.flowM3s,poiCategory:poi?.category,snapshotCount:snapshot.data.hydrometry?.length||0,carnetCount:carnet.sources.extracts.hydrometry?.length||0,status:document.getElementById("hydrometryStatus").textContent,requests:{...hydrometryRuntime}};
+    });
+    assert.equal(result.count,1);assert.equal(result.height,.634);assert.equal(result.flow,3.38);assert.equal(result.poiCategory,"hydrology");
+    assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.match(result.status,/1 stations/);assert.ok(result.requests.stationRequests>=1);assert.ok(result.requests.observationRequests>=1);
   });
 
   await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {

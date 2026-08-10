@@ -2,6 +2,14 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18h — Cours d’eau mesurés
+
+- Ajout manuel des stations hydrométriques françaises depuis l’API officielle Hub’Eau, limité à 48 stations dans l’emprise du Territoire.
+- Les dernières hauteur et débit disponibles sont récupérés avec une concurrence bornée, sans requête automatique au démarrage.
+- Les stations disposent d’un rendu cohérent en modes symbolique et ASCII, d’une fiche documentaire et d’une couche désactivable.
+- L’extrait hydrométrique est cloisonné par Territoire, fonctionne hors ligne après synchronisation et voyage dans les carnets `.atlas` et les instantanés autonomes.
+- Une mesure affichée reste indicative : l’interface rappelle explicitement qu’elle ne constitue pas une alerte de crue.
+
 ## 0.18g — Registre des sources
 
 - Neuf sources documentaires sont décrites dans un registre central versionné : fournisseur, couverture, rythme de mise à jour, licence et comportement dans un carnet portable.

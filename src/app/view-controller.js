@@ -1,4 +1,4 @@
-const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const viewControllerRuntime={ready:true,bound:false,modeChanges:0,scenarioChanges:0,layerChanges:0,cavitySelections:0,recenters:0,debugActions:0,lastAction:"initialisation"};
 
 function accountViewAction(action){viewControllerRuntime.lastAction=action}

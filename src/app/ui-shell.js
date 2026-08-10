@@ -110,7 +110,7 @@ function openSidebarPanel(section,title=""){
 function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
   const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
-    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","diagnostic"]
+    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","hydrometry","diagnostic"]
   };
   for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
     const section=tab.dataset.sectionTarget;
@@ -138,7 +138,7 @@ function prepareSidebarCards(){
   const panelMeta={
     "Carnets":["navigation","⊕"],"À proximité":["navigation","⌖"],"Affichage":["layers","▦"],"Point de départ":["navigation","⌖"],
     "Importer et exporter":["memory","◫"],"Rechercher une cavité":["navigation","⌁"],"Notes de terrain":["field","◎"],"Repères, récits et mémoire locale":["field","◇"],
-    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"État des sources":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende":["layers","?"]
+    "Cartofriches · Cerema":["sources","F"],"Patrimoine & curiosités synchronisés":["sources","P"],"Forages BSS & piézomètres":["sources","B"],"Cours d’eau mesurés":["sources","H"],"État des sources":["sources","↻"],"Diagnostic":["sources","⚙"],"Légende":["layers","?"]
   };
   const openByDefault=new Set(["Se situer","Carnets","Affichage","État des sources","Notes de terrain"]);
   for(const card of els.sidebar.querySelectorAll("#sidebarCardPool > .card:not([data-prototype-reserve]):not([data-interface-retired])")){
