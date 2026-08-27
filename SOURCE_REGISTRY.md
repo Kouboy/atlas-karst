@@ -14,6 +14,7 @@ La version 0.18g établit une seule description canonique des données consulté
 | `bss` | BRGM / Hub’Eau | France | extrait embarqué |
 | `hydrometry` | Hub’Eau / PHyC / Vigicrues | France | extrait embarqué |
 | `biodiversity` | GBIF et jeux contributeurs | mondiale | extrait agrégé embarqué |
+| `nature` | API Carto Nature · IGN / INPN | France | extrait embarqué |
 | `relief` | IGN / Copernicus / Open-Meteo | mondiale, priorité France | référence, resynchronisation nécessaire |
 
 ## Principes
@@ -23,3 +24,4 @@ La version 0.18g établit une seule description canonique des données consulté
 - L’interface, les attributions, le diagnostic et les exports `.atlas` dérivent de la même définition.
 - L’ajout d’un fournisseur commence par une entrée dans le registre, puis par son adaptateur de synchronisation et ses tests. Une source expérimentale ne doit pas être présentée comme disponible tant que ces trois éléments ne sont pas réunis.
 - Les mentions de licence décrivent les jeux actuellement interrogés ; elles devront être revérifiées si un fournisseur, une route d’API ou un jeu de données change.
+- Les espaces naturels remarquables sont des statuts de protection ou des inventaires écologiques. Ils donnent du contexte, sans démontrer la présence actuelle d’une espèce ni épuiser les règles locales applicables.

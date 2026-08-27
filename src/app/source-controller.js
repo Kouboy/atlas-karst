@@ -40,7 +40,7 @@ async function retryAllDataSources(){
       .forEach(key=>localStorage.removeItem(territoryStorageKey(key)));
   }catch{}
   await syncOsmNow();
-  Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation()]);
+  Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation(),syncNatureAreas()]);
 }
 function bindSourceAction(element,eventName,action,handler){
   element.addEventListener(eventName,event=>{
@@ -67,6 +67,8 @@ function bindSourceController(){
   els.clearHydrometry.addEventListener("click",()=>{accountSourceAction("effacement hydrométrie");sourceControllerRuntime.clears++;clearHydrometry()});
   bindSourceAction(els.syncBiodiversity,"click","synchronisation biodiversité",syncBiodiversity);
   els.clearBiodiversity.addEventListener("click",()=>{accountSourceAction("effacement biodiversité");sourceControllerRuntime.clears++;clearBiodiversity()});
+  bindSourceAction(els.syncNatureAreas,"click","synchronisation espaces naturels",syncNatureAreas);
+  els.clearNatureAreas.addEventListener("click",()=>{accountSourceAction("effacement espaces naturels");sourceControllerRuntime.clears++;clearNatureAreas()});
   for(const group of BIODIVERSITY_GROUPS){
     const id=`biodiversity${group.id[0].toUpperCase()}${group.id.slice(1)}`;
     els[id].addEventListener("change",event=>{accountSourceAction(`filtre biodiversité ${group.id}`);sourceControllerRuntime.filterChanges++;state.biodiversityEnabled[group.id]=event.target.checked;saveBiodiversity();updateBiodiversityUI();markSpatialIndexesDirty();render("biodiversity-filter")});

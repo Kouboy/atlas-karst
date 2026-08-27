@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.18m — Enrichissement raisonné des sources
+
+- Ajout de l’API Carto Nature de l’IGN : Natura 2000, réserves naturelles, ZNIEFF et parcs sont interrogés sur l’emprise exacte d’un Territoire.
+- Les retours sont plafonnés, mémorisés localement, affichés sur une couche indépendante et intégrés au carnet `.atlas`, avec source et limites de lecture explicites.
+- Le registre central, le diagnostic, l’état des sources et les exports décrivent désormais douze fournisseurs au lieu de cacher cet enrichissement derrière une couche générique.
+
 ## 0.18l — Hypothèses de sous-sol éditables
 
 - Ajout d’un calque personnel distinct du modèle généré : circulation, vide, passage, changement de terrain ou incertitude peuvent être consignés comme interprétations.

@@ -18,6 +18,7 @@ function poiEffectKind(cell){
   if(cls.includes("c-user-position"))return "location";
   if(cls.includes("c-house")||cls.includes("c-address"))return "home";
   if(cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
+  if(cls.includes("c-nature-area"))return "natural";
   if(cls.includes("c-heritage"))return "heritage";
   if(cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
   if(cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-user-hypothesis")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
@@ -110,7 +111,7 @@ function openSidebarPanel(section,title=""){
 function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
   const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
-    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","diagnostic"]
+    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","nature","diagnostic"]
   };
   for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
     const section=tab.dataset.sectionTarget;
