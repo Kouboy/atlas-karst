@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18k · carte personnelle</title>
+<title>Atlas Karst ASCII v0.18l · hypothèses de sous-sol</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -231,6 +231,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <label class="switch" data-layer-category="documents"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
       <label class="switch" data-layer-category="documents"><input id="layerCavities" type="checkbox" checked> Repères de cavités documentés</label>
       <label class="switch" data-layer-category="underground"><input id="layerHypothesis" type="checkbox" checked> Volumes souterrains extrapolés · coupes cohérentes</label>
+      <label class="switch" data-layer-category="underground"><input id="layerUserHypotheses" type="checkbox" checked> Hypothèses personnelles de sous-sol</label>
       <label class="switch" data-layer-category="underground"><input id="layerHydrology" type="checkbox" checked> Hydrologie souterraine supposée · confiance très faible</label>
       <label class="switch" data-layer-category="terrain"><input id="layerLabels" type="checkbox" checked> Noms de lieux et cavités</label>
       <label class="switch" data-layer-category="terrain"><input id="layerHouse" type="checkbox" checked> Repère de la maison</label>
@@ -321,6 +322,13 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <label class="field-label" style="margin-top:7px">Date / période<input id="personalDate" type="text" placeholder="août 2026"></label><label class="field-label" style="margin-top:7px">Titre<input id="personalName" type="text" placeholder="ex. suintement après la pluie"></label><label class="field-label" style="margin-top:7px">Note<textarea id="personalNote" maxlength="2400" placeholder="Fait observé, incertitude ou piste de terrain…"></textarea></label>
       <div class="grid2" style="margin-top:7px"><button id="addPersonalMarker">＋ enregistrer sur la carte</button><button id="removePersonalMarker">✕ supprimer le repère</button></div>
       <div class="small" id="personalHelp" style="margin-top:8px">Un repère personnel ne devient pas une donnée publiée : l’Atlas le signale comme contribution de carnet, avec son niveau de confiance.</div>
+    </div></details>
+    <details class="interface-subsection" data-ui-subsection="underground-notes"><summary>Hypothèses de sous-sol</summary><div class="interface-subsection-body">
+      <div class="grid2"><label class="field-label">Nature<select id="undergroundKind"><option value="circulation">≈ circulation d’eau supposée</option><option value="void">○ volume / vide supposé</option><option value="access">↧ accès ou passage supposé</option><option value="material">▧ changement de terrain supposé</option><option value="unknown">? incertitude à éclaircir</option></select></label><label class="field-label">Profondeur<select id="undergroundDepth"><option value="-3">≈ −3 m</option><option value="-8">≈ −8 m</option><option value="-14" selected>≈ −14 m</option><option value="-22">≈ −22 m</option><option value="-35">≈ −35 m</option></select></label></div>
+      <div class="grid2" style="margin-top:7px"><label class="field-label">Forme<select id="undergroundGeometry"><option value="point">indice ponctuel</option><option value="zone">zone interprétée</option></select></label><label class="field-label">Confiance<select id="undergroundConfidence"><option value="low" selected>faible</option><option value="med">moyenne</option><option value="high">forte</option></select></label></div>
+      <label class="field-label" style="margin-top:7px">Rayon (m)<input id="undergroundRadius" type="number" value="80" min="10" max="1000" step="10"></label><label class="field-label" style="margin-top:7px">Titre<input id="undergroundName" type="text" placeholder="ex. continuité possible vers le ruisseau"></label><label class="field-label" style="margin-top:7px">Justification / note<textarea id="undergroundNote" maxlength="2400" placeholder="Observation, source locale ou raisonnement ; ce n’est pas une mesure ni un fait établi."></textarea></label>
+      <div class="grid2" style="margin-top:7px"><button id="addUndergroundHypothesis">＋ inscrire l’hypothèse</button><button id="removeUndergroundHypothesis">✕ supprimer l’hypothèse</button></div><div class="small" id="undergroundHelp" style="margin-top:8px">Une hypothèse personnelle n’est visible qu’à la profondeur choisie et reste distincte des données documentées comme des volumes générés par l’Atlas.</div>
+      <div id="undergroundHypothesisList" class="fieldwork-ledger-list" aria-live="polite"></div>
     </div></details>
     <details class="interface-subsection" data-ui-subsection="lore"><summary>Repères, récits et mémoire locale</summary><div class="interface-subsection-body">
       <div class="grid2">

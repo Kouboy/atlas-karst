@@ -281,6 +281,19 @@ function drawPersonalMarkers(g){
   }
 }
 
+function drawUndergroundHypotheses(g){
+  if(!state.layerUserHypotheses||currentDepth()===0)return;
+  const detailedGeometry=semanticZoom().observationGeometry;
+  for(const poi of queryNormalizedPois(g.extent,"underground")){
+    const item=poi.raw;if(Number(item.depth)!==currentDepth())continue;
+    const definition=undergroundHypothesisDefinition(item.kind),p=coordToGrid(poi.lat,poi.lon,g.extent);
+    const info=poiFeatureInfo(poi,{kind:`${definition.label} · ${depthSliceLabel(item.depth)}`,userHypothesis:true,hypothesis:true,category:item.kind,categoryLabel:definition.label,note:item.note||"",confidenceLabel:confidenceLabel(item.confidence||"low"),depth:item.depth});
+    if(item.geometry==="zone"&&detailedGeometry){const z=currentZoom(),rx=Math.max(1,Math.round((item.radius||80)/(z.widthKm*1000/CONFIG.gridW))),ry=Math.max(1,Math.round((item.radius||80)/(z.heightKm*1000/CONFIG.gridH)));for(let i=0;i<72;i++){const a=i/72*Math.PI*2;put(g,p.x+Math.round(Math.cos(a)*rx),p.y+Math.round(Math.sin(a)*ry),"·","c-zone c-user-hypothesis-zone",22,info,item.confidence)}}
+    putText(g,p.x,p.y,definition.glyph,definition.cls,22,info);
+    if(state.layerLabels&&semanticZoom().poiLabel>0&&item.name)tryMapLabel(g,p,item.name,"c-label",15,info,"poi",semanticZoom().poiLabel,false);
+  }
+}
+
 function drawCartofriches(g){
   if(!state.layerCartofriches||currentDepth()!==0||!state.cartofriches.length)return;
   for(const poi of queryNormalizedPois(g.extent,"cartofriches")){
@@ -859,6 +872,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawBiodiversity(grid);
     drawObservations(grid);
     drawPersonalMarkers(grid);
+    drawUndergroundHypotheses(grid);
     drawHeritage(grid);
     drawLore(grid);
     drawCavities(grid);

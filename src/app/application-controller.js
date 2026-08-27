@@ -60,6 +60,7 @@ async function bootAtlas(){
     loadLocalCavities();
     loadLoreItems();
     loadPersonalMarkers();
+    loadUndergroundHypotheses();
     loadHeritage();
     loadCartofriches();
     loadBssLocal();

@@ -20,7 +20,7 @@ function poiEffectKind(cell){
   if(cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
   if(cls.includes("c-heritage"))return "heritage";
   if(cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
-  if(cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
+  if(cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-user-hypothesis")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
   if((cls.includes("c-doc")||cls.includes("c-pillar"))&&selectableFeature(cell))return f.cavity?"cavity":"natural";
   if(cls.includes("c-demo")||cls.includes("c-explorer-hint"))return "natural";
   return "";

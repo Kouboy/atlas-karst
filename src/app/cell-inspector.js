@@ -181,7 +181,7 @@ function poiSelectionKind(cell){
   if(f.biodiversity||cls.includes("c-biodiversity"))return "biodiversity";
   if(f.heritage||cls.includes("c-heritage"))return "heritage";
   if(f.cartofriches||cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
-  if(f.observation||f.lore||f.personal||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
+  if(f.observation||f.lore||f.personal||f.userHypothesis||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-user-hypothesis")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
   if(cls.includes("c-user-position"))return "location";
   if(["spring","sinkhole","cave_entrance"].includes(tags.natural)||cls.includes("c-doc")||cls.includes("c-demo")||cls.includes("c-explorer-hint"))return "natural";
   return "";
@@ -373,7 +373,7 @@ function featureNarrative(f){
 function evidenceProfile(cell){
   const f=cell?.feature||{};
   const documented=!!(f.source||f.bss||f.hydrometry||f.biodiversity||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
-  const observed=!!(f.observation||f.lore||f.confidenceLabel);
+  const observed=!!(f.observation||f.lore||f.userHypothesis||f.confidenceLabel);
   const hypothesis=currentDepth()<0||!!cell?.confidence||!!f.hypothesisModel;
   return {documented,observed,interpreted:true,hypothesis};
 }
