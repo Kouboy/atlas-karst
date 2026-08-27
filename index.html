@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18i · biodiversité locale</title>
+<title>Atlas Karst ASCII v0.18j · carnet de terrain</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1395,6 +1395,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
 .poi-species-aliases{display:grid;gap:7px;padding:8px;border:1px solid #294536;background:#0a1510}.poi-species-aliases h4{margin:0;color:#dce9e1;font-size:9px;text-transform:uppercase;letter-spacing:.08em}.poi-species-aliases small{color:#81998a;font-size:8px;font-style:italic;text-transform:none;letter-spacing:0}
 .poi-annotation-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}.poi-annotation-status{min-height:14px;color:#9dde72;font-size:9px}
 .personal-name-mark{display:inline-block;margin-left:4px;padding:1px 3px;border:1px solid #557b8d;color:#9fcce0;font-size:7px;font-style:normal;text-transform:uppercase;letter-spacing:.06em}
+.fieldwork-ledger-toolbar{display:grid;grid-template-columns:minmax(0,1fr)92px;gap:6px;align-items:end;margin-bottom:8px}.fieldwork-ledger-toolbar button{min-height:36px!important;font-size:8px!important}.fieldwork-ledger-list{display:grid;gap:6px;margin:8px 0 10px}.fieldwork-ledger-entry{display:grid;gap:5px;padding:8px;border:1px solid var(--ui-line);background:#08110c}.fieldwork-ledger-entry-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}.fieldwork-ledger-entry h4{margin:0;color:var(--ui-text);font-size:11px;line-height:1.2}.fieldwork-ledger-kind{flex:0 0 auto;color:var(--ui-accent);font-size:8px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}.fieldwork-ledger-meta,.fieldwork-ledger-note{color:var(--ui-muted);font-size:9px;line-height:1.4}.fieldwork-ledger-note{color:#c3d4c9}.fieldwork-ledger-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}.fieldwork-ledger-actions button{min-height:28px!important;padding:4px!important;font-size:8px!important}.fieldwork-ledger-empty{padding:8px;border:1px dashed var(--ui-line);color:var(--ui-muted);font-size:10px}
 @media(max-width:520px){
   body[data-ui-version="field-notebook"] .statusbar .badge{display:none}
   body[data-ui-version="field-notebook"] .statusbar .toolbar-button{flex:1 1 auto;padding-inline:5px;font-size:9px}
@@ -1690,7 +1691,8 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <label class="field-label">Rayon de zone (m)<input id="observationRadius" type="number" value="80" min="10" max="1000" step="10"></label>
       <label class="field-label">Saison / date<input id="observationSeason" type="text" placeholder="hiver 2026"></label>
     </div>
-    <label class="field-label" style="margin-top:7px">Nom ou note<input id="localName" type="text" placeholder="ex. plusieurs ouvertures visibles sans feuillage"></label>
+    <label class="field-label" style="margin-top:7px">Nom du repère<input id="localName" type="text" placeholder="ex. ouverture au pied du talus"></label>
+    <label class="field-label" style="margin-top:7px">Note de terrain<textarea id="localNote" maxlength="2400" placeholder="Ce qui a été vu, entendu ou reste à vérifier…"></textarea></label>
     <div class="grid2" style="margin-top:7px">
       <button id="addLocalMarker">＋ enregistrer l’observation</button>
       <button id="removeLocalMarker">✕ supprimer l’observation</button>
@@ -1707,9 +1709,15 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       </div>
       <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
       <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
-      <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
+      <label class="field-label" style="margin-top:7px">Note de carnet<textarea id="loreNote" maxlength="2400" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></textarea></label>
       <div class="grid2" style="margin-top:7px"><button id="addLoreItem">＋ enregistrer le repère</button><button id="removeLoreItem">✕ supprimer le repère</button></div>
       <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
+    </div></details>
+    <details class="interface-subsection" data-ui-subsection="fieldwork-ledger" open><summary>Mes repères de carnet</summary><div class="interface-subsection-body">
+      <div class="fieldwork-ledger-toolbar"><label class="field-label">Afficher<select id="fieldworkLedgerFilter"><option value="all">tous les repères</option><option value="observation">observations</option><option value="lore">mémoire locale</option></select></label><button id="fieldworkLedgerRefresh" type="button">↻ liste</button></div>
+      <div class="small" id="fieldworkLedgerSummary">Aucun repère personnel dans ce carnet.</div>
+      <div id="fieldworkLedgerList" class="fieldwork-ledger-list" aria-live="polite"></div>
+      <div class="small">Ces repères, leurs précisions et leurs notes font partie du Territoire et du carnet .atlas partagé.</div>
     </div></details>
   </section>
 
@@ -2027,7 +2035,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18i";
+const APP_VERSION = "0.18j";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2259,7 +2267,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
   const sidebarSections=[...document.querySelectorAll(".sidebar-section-tab")],visibleSidebarSections=[...document.querySelectorAll("#sidebar > .sidebar-cluster")].filter(section=>!section.hidden);
-  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===4,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
+  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===5,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
   checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===11&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
@@ -2669,7 +2677,7 @@ els = Object.fromEntries([
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
-  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
+  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
@@ -7979,6 +7987,7 @@ function resetTerritoryRuntimeData(){
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
   loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
+  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
   setStatus("cartofriches",state.cartofriches.length?"ok":"pending",state.cartofriches.length?`${state.cartofriches.length} sites locaux`:"à charger");
   setStatus("heritage",state.heritageItems.length?"ok":"pending",state.heritageItems.length?`${state.heritageItems.length} notices locales`:"à synchroniser");
@@ -8158,7 +8167,7 @@ function bindTerritoryController(){
   territoryControllerRuntime.lastAction="contrôleur lié";
 }
 
-const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,loreAdded:0,loreRemoved:0};
+const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,ledgerActions:0,editing:null};
 
 function geolocationErrorLabel(err,context={}){
   const localFile=location.protocol==="file:";
@@ -8245,9 +8254,67 @@ function setHousePlacement(active){
   els.houseHelp.innerHTML=active?'<span class="house-placement-note">Clique maintenant l’emplacement de la maison sur la carte. Le glisser-déposer est temporairement désactivé.</span>':`Repère actuel : <strong>${CONFIG.house.lat.toFixed(6)}, ${CONFIG.house.lon.toFixed(6)}</strong>.`;
 }
 
+function fieldworkEntryDate(value){
+  const date=new Date(value);return Number.isNaN(date.getTime())?"date non renseignée":date.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
+}
+function fieldworkId(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
+function fieldworkRecords(filter=els.fieldworkLedgerFilter?.value||"all"){
+  const observations=(state.observations||[]).map(record=>({kind:"observation",record,id:String(record.id||""),title:record.name||"Observation sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.season||"",meta:[record.mode==="sight"?"visée":record.mode==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.season].filter(Boolean).join(" · ")}));
+  const lore=(state.loreItems||[]).map(record=>({kind:"lore",record,id:String(record.id||""),title:record.name||"Repère sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.period||"",meta:[record.category||"mémoire locale",record.period,record.source].filter(Boolean).join(" · ")}));
+  return [...observations,...lore].filter(entry=>filter==="all"||entry.kind===filter).sort((a,b)=>String(b.date).localeCompare(String(a.date))||a.title.localeCompare(b.title,"fr"));
+}
+function renderFieldworkLedger(){
+  if(!els.fieldworkLedgerList)return;
+  const all=fieldworkRecords("all"),entries=fieldworkRecords();
+  if(els.fieldworkLedgerSummary)els.fieldworkLedgerSummary.textContent=all.length?`${all.length} repère${all.length>1?"s":""} personnel${all.length>1?"s":""} dans ce carnet · ${all.filter(item=>item.kind==="observation").length} observation${all.filter(item=>item.kind==="observation").length>1?"s":""} · ${all.filter(item=>item.kind==="lore").length} mémoire${all.filter(item=>item.kind==="lore").length>1?"s":""}.`:"Aucun repère personnel dans ce carnet.";
+  els.fieldworkLedgerList.replaceChildren();
+  if(!entries.length){const empty=document.createElement("div");empty.className="fieldwork-ledger-empty";empty.textContent=all.length?"Aucun repère dans cette catégorie.":"Sélectionne une case, puis consigne une première observation ou un souvenir local.";els.fieldworkLedgerList.append(empty);return}
+  for(const entry of entries){
+    const article=document.createElement("article");article.className="fieldwork-ledger-entry";
+    const head=document.createElement("div");head.className="fieldwork-ledger-entry-head";
+    const title=document.createElement("h4");title.textContent=entry.title;
+    const kind=document.createElement("span");kind.className="fieldwork-ledger-kind";kind.textContent=entry.kind==="observation"?"observation":"mémoire";head.append(title,kind);
+    const meta=document.createElement("div");meta.className="fieldwork-ledger-meta";meta.textContent=[entry.meta,entry.date&&fieldworkEntryDate(entry.date)].filter(Boolean).join(" · ");article.append(head,meta);
+    if(entry.note){const note=document.createElement("div");note.className="fieldwork-ledger-note";note.textContent=entry.note;article.append(note)}
+    const actions=document.createElement("div");actions.className="fieldwork-ledger-actions";
+    for(const [action,label] of [["focus","⌖ voir"],["edit","✎ modifier"],["delete","× supprimer"]]){const button=document.createElement("button");button.type="button";button.dataset.fieldworkAction=action;button.dataset.fieldworkKind=entry.kind;button.dataset.fieldworkId=entry.id;button.textContent=label;if(action==="delete")button.className="action-danger";actions.append(button)}
+    article.append(actions);els.fieldworkLedgerList.append(article);
+  }
+}
+function fieldworkRecord(kind,id){return (kind==="observation"?state.observations:state.loreItems||[]).find(item=>String(item.id)===String(id))||null}
+function clearFieldworkEditing(kind=""){
+  if(kind!=="lore"){fieldworkRuntime.editing=null;if(els.addLocalMarker)els.addLocalMarker.textContent="＋ enregistrer l’observation"}
+  if(kind!=="observation"){fieldworkRuntime.editing=null;if(els.addLoreItem)els.addLoreItem.textContent="＋ enregistrer le repère"}
+}
+function startFieldworkEditing(kind,id){
+  const record=fieldworkRecord(kind,id);if(!record)return;
+  fieldworkRuntime.ledgerActions++;fieldworkRuntime.editing={kind,id:String(id)};
+  if(kind==="observation"){
+    els.observationMode.value=record.mode||"point";els.observationConfidence.value=record.confidence||"med";els.localType.value=record.glyph||"?o";els.observationRadius.value=String(record.radius||80);els.observationSeason.value=record.season||"";els.localName.value=record.name||"";els.localNote.value=record.note||"";els.addLocalMarker.textContent="✓ mettre à jour l’observation";els.localHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
+  }else{
+    els.loreCategory.value=record.category||"anecdote";els.lorePeriod.value=record.period||"";els.loreName.value=record.name||"";els.loreSource.value=record.source||"";els.loreNote.value=record.note||"";els.addLoreItem.textContent="✓ mettre à jour le repère";els.loreHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
+  }
+}
+function focusFieldworkRecord(kind,id){
+  const record=fieldworkRecord(kind,id);if(!record)return;
+  fieldworkRuntime.ledgerActions++;state.center=clampCenter({lat:record.lat,lon:record.lon},currentZoom());render("fieldwork-ledger-focus");
+  const poi=queryNormalizedPois(state.lastGrid?.extent||largestExtent(),kind).find(item=>String(item.id)===String(id));
+  if(poi)selectSymbolicPoi(poi,"Repère de carnet sélectionné");
+}
+function deleteFieldworkRecord(kind,id){
+  if(kind==="observation"){state.observations=state.observations.filter(item=>String(item.id)!==String(id));fieldworkRuntime.observationsRemoved++;saveLocalCavities();refreshCavities()}
+  else{state.loreItems=state.loreItems.filter(item=>String(item.id)!==String(id));fieldworkRuntime.loreRemoved++;saveLoreItems()}
+  fieldworkRuntime.ledgerActions++;clearFieldworkEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();renderFieldworkLedger();autosaveActiveTerritory();render("fieldwork-ledger-delete");
+}
+function bindFieldworkLedger(){
+  els.fieldworkLedgerFilter?.addEventListener("change",renderFieldworkLedger);els.fieldworkLedgerRefresh?.addEventListener("click",renderFieldworkLedger);
+  els.fieldworkLedgerList?.addEventListener("click",event=>{const button=event.target.closest?.("[data-fieldwork-action]");if(!button)return;const {fieldworkAction:action,fieldworkKind:kind,fieldworkId:id}=button.dataset;if(action==="focus")focusFieldworkRecord(kind,id);else if(action==="edit")startFieldworkEditing(kind,id);else if(action==="delete")deleteFieldworkRecord(kind,id)});
+}
+
 function bindFieldworkController(){
   if(fieldworkRuntime.bound)return;
   fieldworkRuntime.bound=true;
+  bindFieldworkLedger();renderFieldworkLedger();
   els.mapLocate.addEventListener("click",locateUser);
   els.locateMe.addEventListener("click",locateUser);
   els.clearLocation.addEventListener("click",clearUserLocation);
@@ -8273,27 +8340,30 @@ function bindFieldworkController(){
   });
   els.addLocalMarker.addEventListener("click",()=>{
     if(!state.selectedCell){els.localHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}
-    const mode=els.observationMode.value,glyph=els.localType.value,def=localMarkerDefinition(glyph),name=els.localName.value.trim()||def.detail;
+    const mode=els.observationMode.value,glyph=els.localType.value,def=localMarkerDefinition(glyph),name=els.localName.value.trim()||def.detail,editing=fieldworkRuntime.editing?.kind==="observation"?fieldworkRecord("observation",fieldworkRuntime.editing.id):null;
     const target=state.selectedCell.coord,confidence=els.observationConfidence.value,season=els.observationSeason.value.trim();
-    const o={id:`OBS-${Date.now()}`,mode,glyph,name,lat:target.lat,lon:target.lon,confidence,season,radius:clamp(Number(els.observationRadius.value)||80,10,1000),source:"Observation locale enregistrée dans cet atlas"};
+    const o={...(editing||{}),id:editing?.id||fieldworkId("OBS"),mode,glyph,name,note:els.localNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,confidence,season,radius:clamp(Number(els.observationRadius.value)||80,10,1000),source:"Observation locale enregistrée dans cet atlas",createdAt:editing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
     if(mode==="sight"){o.origin={...CONFIG.house};o.distance=distanceMeters(CONFIG.house,target);o.bearing=bearingDegrees(CONFIG.house,target)}
-    state.observations.push(o);fieldworkRuntime.observationsAdded++;markSpatialIndexesDirty();saveLocalCavities();refreshCavities();render();
-    els.localHelp.innerHTML=mode==="sight"?`Visée <strong>${o.bearing.toFixed(0)}°</strong> sur environ <strong>${Math.round(o.distance)} m</strong> enregistrée.`:`Observation <strong>${esc(name)}</strong> enregistrée avec une confiance ${confidenceLabel(confidence)}.`;
-    els.localName.value="";
+    else{delete o.origin;delete o.distance;delete o.bearing}
+    if(editing){state.observations=state.observations.map(item=>item.id===o.id?o:item);fieldworkRuntime.observationsEdited++}else{state.observations.push(o);fieldworkRuntime.observationsAdded++}
+    clearFieldworkEditing();markSpatialIndexesDirty();saveLocalCavities();refreshCavities();renderFieldworkLedger();autosaveActiveTerritory();render();
+    els.localHelp.innerHTML=editing?`Observation <strong>${esc(name)}</strong> mise à jour.`:mode==="sight"?`Visée <strong>${o.bearing.toFixed(0)}°</strong> sur environ <strong>${Math.round(o.distance)} m</strong> enregistrée.`:`Observation <strong>${esc(name)}</strong> enregistrée avec une confiance ${confidenceLabel(confidence)}.`;
+    els.localName.value="";els.localNote.value="";
   });
   els.removeLocalMarker.addEventListener("click",()=>{
     if(!state.selectedCell){els.localHelp.textContent="Sélectionne d’abord l’observation à supprimer.";return}
     const f=state.selectedCell.feature;let id=f?.observation?f.record?.id:f?.record?.observation?.id||null;
     if(!id){const nearby=state.observations.map(o=>({o,d:distanceMeters(o,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.o.id}
     if(!id){els.localHelp.textContent="Aucune observation locale suffisamment proche de la sélection.";return}
-    state.observations=state.observations.filter(o=>o.id!==id);fieldworkRuntime.observationsRemoved++;saveLocalCavities();refreshCavities();render();els.localHelp.textContent="Observation locale supprimée.";
+    deleteFieldworkRecord("observation",id);els.localHelp.textContent="Observation locale supprimée.";
   });
   els.addLoreItem.addEventListener("click",()=>{
     if(!state.selectedCell){els.loreHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}
-    const category=els.loreCategory.value,def=loreMarkerDefinition(category),target=state.selectedCell.coord;
-    const item={id:`LOR-${Date.now()}`,category,name:els.loreName.value.trim()||def.label,period:els.lorePeriod.value.trim(),source:els.loreSource.value.trim()||"Repère local enregistré dans cet atlas",note:els.loreNote.value.trim(),lat:target.lat,lon:target.lon};
-    state.loreItems.push(item);fieldworkRuntime.loreAdded++;markSpatialIndexesDirty();saveLoreItems();render();
-    els.loreHelp.innerHTML=`Repère <strong>${esc(item.name)}</strong> enregistré en catégorie <strong>${def.glyph}</strong>.`;
+    const category=els.loreCategory.value,def=loreMarkerDefinition(category),target=state.selectedCell.coord,editing=fieldworkRuntime.editing?.kind==="lore"?fieldworkRecord("lore",fieldworkRuntime.editing.id):null;
+    const item={...(editing||{}),id:editing?.id||fieldworkId("LOR"),category,name:els.loreName.value.trim()||def.label,period:els.lorePeriod.value.trim(),source:els.loreSource.value.trim()||"Repère local enregistré dans cet atlas",note:els.loreNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,createdAt:editing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    if(editing){state.loreItems=state.loreItems.map(record=>record.id===item.id?item:record);fieldworkRuntime.loreEdited++}else{state.loreItems.push(item);fieldworkRuntime.loreAdded++}
+    clearFieldworkEditing();markSpatialIndexesDirty();saveLoreItems();renderFieldworkLedger();autosaveActiveTerritory();render();
+    els.loreHelp.innerHTML=editing?`Repère <strong>${esc(item.name)}</strong> mis à jour.`:`Repère <strong>${esc(item.name)}</strong> enregistré en catégorie <strong>${def.glyph}</strong>.`;
     els.loreName.value="";els.lorePeriod.value="";els.loreSource.value="";els.loreNote.value="";
   });
   els.removeLoreItem.addEventListener("click",()=>{
@@ -8301,7 +8371,7 @@ function bindFieldworkController(){
     const f=state.selectedCell.feature;let id=f?.lore?f.record?.id:null;
     if(!id){const nearby=state.loreItems.map(o=>({o,d:distanceMeters(o,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.o.id}
     if(!id){els.loreHelp.textContent="Aucun repère patrimoine / mystère suffisamment proche de la sélection.";return}
-    state.loreItems=state.loreItems.filter(o=>o.id!==id);fieldworkRuntime.loreRemoved++;saveLoreItems();render();els.loreHelp.textContent="Repère patrimoine / mystère supprimé.";
+    deleteFieldworkRecord("lore",id);els.loreHelp.textContent="Repère patrimoine / mystère supprimé.";
   });
   els.aroundRadius.addEventListener("change",e=>{state.aroundRadius=Number(e.target.value)||500;updateAroundMe();retroAudio.play("toggle")});
   els.refreshAround.addEventListener("click",locateUser);
@@ -11013,6 +11083,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   if(v.layers&&typeof v.layers==="object")for(const [k,value] of Object.entries(v.layers)){if(SNAPSHOT_LAYER_KEYS.includes(k)&&k in state){state[k]=!!value;if(els[k])els[k].checked=!!value}}
   state.allowNetwork=FORCE_ONLINE;state.snapshotSource=source;state.selectedCell=null;state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;
   refreshCavities();updateBssUI();updateHydrometryUI();updateBiodiversityUI();updateCartofrichesUI();updateHeritageUI();populateCavitySelect();
+  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
   setStatus("osm","ok",state.osm.length?`${state.osm.length} objets · instantané`:"instantané sans OSM");
   setStatus("address",state.address?"ok":"bad",state.address?"instantané":"non embarqué");
   const cadastreEmbedded=state.cadastreBuildings.length||state.cadastreParcels.length;
@@ -11340,6 +11411,7 @@ async function bootAtlas(){
     loadBiodiversity();
     loadPoiAnnotations();
     loadEncounterCollection();
+    if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
     els.layerBss.checked=true;state.layerBss=true;
     els.layerHydrometry.checked=true;state.layerHydrometry=true;
     els.layerBiodiversity.checked=true;state.layerBiodiversity=true;

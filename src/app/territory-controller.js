@@ -66,6 +66,7 @@ function resetTerritoryRuntimeData(){
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
   loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
+  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
   setStatus("cartofriches",state.cartofriches.length?"ok":"pending",state.cartofriches.length?`${state.cartofriches.length} sites locaux`:"à charger");
   setStatus("heritage",state.heritageItems.length?"ok":"pending",state.heritageItems.length?`${state.heritageItems.length} notices locales`:"à synchroniser");

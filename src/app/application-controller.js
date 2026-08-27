@@ -66,6 +66,7 @@ async function bootAtlas(){
     loadBiodiversity();
     loadPoiAnnotations();
     loadEncounterCollection();
+    if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
     els.layerBss.checked=true;state.layerBss=true;
     els.layerHydrometry.checked=true;state.layerHydrometry=true;
     els.layerBiodiversity.checked=true;state.layerBiodiversity=true;
