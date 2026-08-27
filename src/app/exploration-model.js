@@ -296,7 +296,7 @@ function ensureSpatialIndexes(){
   let changed=spatialRuntime.dirty;
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
-    bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
+    bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,nature:state.natureAreas,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
     lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
@@ -329,6 +329,7 @@ function ensureSpatialIndexes(){
   for(const c of state.cavities||[])addPoi("cavity",c,{kind:cavityType(c),title:cavityName(c),priority:18});
   for(const o of state.observations||[])addPoi("observation",o,{kind:o.mode==="sight"?"ligne de visée observée":o.mode==="zone"?"zone d’observation approximative":"observation ponctuelle",title:o.name||"Observation locale",priority:19});
   for(const item of state.personalMarkers||[]){const definition=personalMarkerDefinition(item.category);addPoi("personal",item,{kind:item.geometry==="zone"?`${definition.label} · zone approximative`:definition.label,title:item.name||definition.label,priority:item.category==="hazard"?23:20})}
+  for(const item of state.natureAreas||[])addPoi("nature",item,{kind:item.kind||"espace naturel remarquable",title:item.name||"Espace naturel remarquable",priority:17});
   for(const item of state.undergroundHypotheses||[]){const definition=undergroundHypothesisDefinition(item.kind);addPoi("underground",item,{kind:`${definition.label} · ${depthSliceLabel(item.depth)}`,title:item.name||definition.label,priority:22})}
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
   for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});

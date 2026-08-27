@@ -179,6 +179,7 @@ function poiSelectionKind(cell){
   if(f.bss||f.indice||cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
   if(f.hydrometry||cls.includes("c-hydrometry"))return "hydrology";
   if(f.biodiversity||cls.includes("c-biodiversity"))return "biodiversity";
+  if(f.nature||cls.includes("c-nature-area"))return "natural";
   if(f.heritage||cls.includes("c-heritage"))return "heritage";
   if(f.cartofriches||cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
   if(f.observation||f.lore||f.personal||f.userHypothesis||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-user-hypothesis")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
@@ -400,6 +401,7 @@ function criticalReading(cell){
   if(currentDepth()<0)return "La coupe aide à comparer les niveaux et à garder une continuité spatiale. Elle ne permet pas d’affirmer qu’une galerie passe sous cette cellule, ni que la profondeur affichée est mesurée localement.";
   if(f.hydrometry)return "La mesure est issue de la station et peut être récente, mais elle ne remplace ni les bulletins Vigicrues, ni les consignes des autorités, ni une observation de terrain.";
   if(f.biodiversity)return "La maille évite une fausse précision. Le nombre affiché dépend des jeux publiés, de leur effort d’observation et de l’échantillon borné de l’Atlas ; il ne mesure ni l’abondance, ni l’absence des espèces non citées.";
+  if(f.nature)return "Cette zone relève d’un statut de protection ou d’un inventaire écologique. Elle apporte du contexte et des responsabilités de lecture, mais ne prouve ni la présence actuelle d’une espèce précise, ni une interdiction applicable sans consulter la source officielle.";
   if(f.bss||f.indice||/forage|sondage|puits|pi[eé]zo/.test(descriptor))return "Cet ouvrage décrit un point vertical du sous-sol. Il peut éclairer la nature ou l’épaisseur des terrains traversés, mais il ne transforme pas le voisinage en cavité connue.";
   if(f.cavity||/cavit|grotte|souterrain/.test(descriptor))return "La présence du repère est documentée. En revanche, l’emprise, les accès, la stabilité et les connexions éventuelles restent inconnus tant qu’aucun plan ou levé local ne les établit.";
   if(f.heritage)return "La notice permet d’identifier et de contextualiser le lieu. Elle ne prouve pas que chaque détail historique, chaque dépendance ou chaque état du bâtiment soit encore observable aujourd’hui.";

@@ -299,6 +299,7 @@ try {
       fetchCadastre=async()=>{window.__sourceRetryCalls.push("cadastre")};
       fetchCavities=async()=>{window.__sourceRetryCalls.push("cavités")};
       fetchElevation=async()=>{window.__sourceRetryCalls.push("relief")};
+      syncNatureAreas=async()=>{window.__sourceRetryCalls.push("nature")};
       document.getElementById("retryData").click();
       await new Promise(resolve=>setTimeout(resolve,30));
       const checks=runAtlasSelfCheck();
@@ -311,7 +312,7 @@ try {
     });
     assert.equal(result.runtime.ready,true);assert.equal(result.runtime.bound,true);
     assert.equal(result.runtime.operations,8);assert.equal(result.runtime.imports,3);assert.equal(result.runtime.clears,3);assert.equal(result.runtime.filterChanges,1);assert.equal(result.runtime.retries,1);
-    assert.deepEqual(result.calls,["osm","adresse","cadastre","cavités","relief"]);
+    assert.deepEqual(result.calls,["osm","adresse","cadastre","cavités","relief","nature"]);
     assert.deepEqual(result.state,{bssTest:false,cartofriches:0,heritageMonuments:false});
     assert.deepEqual(result.storage,{bss:null,cartofriches:null});
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après gestion des sources : ${result.badChecks.join(", ")}`);
@@ -694,7 +695,7 @@ try {
       const ids=SOURCE_REGISTRY.map(source=>source.id);
       const references=sourceReferencesForSnapshot({data:{
         osm:[{id:1}],osmMeta:{loadedAt:"2026-08-10T10:00:00Z"},address:{label:"test"},
-        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],biodiversity:[{id:"bio1",syncedAt:"2026-08-10"}],elevation:{min:1},
+        officialCavities:[{id:"c1"}],cartofriches:[{id:"f1"}],bss:[{id:"b1"}],hydrometry:[{id:"h1",syncedAt:"2026-08-10"}],biodiversity:[{id:"bio1",syncedAt:"2026-08-10"}],natureAreas:[{id:"n1",syncedAt:"2026-08-10"}],elevation:{min:1},
         heritageItems:[{id:"m1",category:"monument",syncedAt:"2026-08-09"},{id:"w1",category:"wikipedia",syncedAt:"2026-08-08"}]
       }});
       setSourceStatus("heritage","ok","2 notices");
@@ -703,11 +704,12 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {schema:SOURCE_REGISTRY_SCHEMA_VERSION,ids,catalog,references,attribution,runtime:{...sourceRegistryRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.schema,1);assert.equal(result.ids.length,11);assert.equal(new Set(result.ids).size,11);assert.equal(result.catalog.length,11);
+    assert.equal(result.schema,1);assert.equal(result.ids.length,12);assert.equal(new Set(result.ids).size,12);assert.equal(result.catalog.length,12);
     assert.equal(result.catalog.find(source=>source.id==="culture")?.status,"2 notices");assert.equal(result.catalog.find(source=>source.id==="wikipedia")?.status,"2 notices");
     assert.equal(result.references.find(source=>source.id==="culture")?.count,1);assert.equal(result.references.find(source=>source.id==="wikipedia")?.count,1);
     assert.equal(result.references.find(source=>source.id==="hydrometry")?.count,1);assert.equal(result.references.find(source=>source.id==="hydrometry")?.disposition,"embedded");
     assert.equal(result.references.find(source=>source.id==="biodiversity")?.count,1);assert.equal(result.references.find(source=>source.id==="biodiversity")?.disposition,"embedded");
+    assert.equal(result.references.find(source=>source.id==="nature")?.count,1);assert.equal(result.references.find(source=>source.id==="nature")?.disposition,"embedded");
     assert.equal(result.references.find(source=>source.id==="openstreetmap")?.disposition,"consulted");assert.equal(result.references.find(source=>source.id==="adresse")?.disposition,"embedded");
     assert.match(result.attribution,/OpenStreetMap \(ODbL\)/);assert.match(result.attribution,/Wikipédia francophone \(CC BY-SA\)/);assert.match(result.attribution,/restent privés/);
     assert.equal(result.runtime.lastError,"");assert.ok(result.runtime.catalogRenders>=1);assert.ok(result.runtime.attributionRenders>=1);assert.ok(result.runtime.statusUpdates>=1);
@@ -751,6 +753,15 @@ try {
     });
     assert.equal(result.cells,1);assert.equal(result.species,3);assert.equal(result.rawFields,false);assert.equal(result.rawCoordinate,false);assert.ok(result.precision>=1000);
     assert.deepEqual(result.featureCounts,[1,1,1]);assert.equal(result.filtered,2);assert.equal(result.snapshotCount,1);assert.equal(result.carnetCount,1);assert.deepEqual(result.poiCategories.sort(),["biodiversity-animals","biodiversity-fungi","biodiversity-plants"]);assert.deepEqual(result.asciiClasses.sort(),["c-biodiversity-animals","c-biodiversity-fungi","c-biodiversity-plants"]);assert.deepEqual(result.symbolicCategories.sort(),["biodiversity-animals","biodiversity-fungi","biodiversity-plants"]);assert.match(result.primary,/Animal témoin/);assert.match(result.primary,/oiseau/);assert.match(result.primary,/famille Testidae/);assert.match(result.primary,/observation humaine/);assert.match(result.primary,/Plante témoin/);assert.match(result.primary,/Champignon témoin/);assert.equal(result.balanced.animals,10);assert.equal(result.balanced.fungi,5);assert.equal(result.balanced.plants,17);assert.deepEqual(result.animalClasses.sort(),["Aves","Insecta","Mammalia"]);assert.match(result.summary,/1 faune/);assert.match(result.summary,/1 flore/);assert.match(result.status,/3 espèces/);assert.equal(result.runtime.occurrenceRequests,5);
+  });
+
+  await withPage("espaces naturels documentés et portables", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    const result=await page.evaluate(async()=>{
+      const originalFetch=window.fetch,extent=largestExtent();window.fetch=async url=>{const endpoint=NATURE_ENDPOINTS.find(item=>String(url).includes(`/${item.id}?`));if(!endpoint)return originalFetch(url);return new Response(JSON.stringify({type:"FeatureCollection",features:[{type:"Feature",id:`TEST-${endpoint.id}`,properties:{id_mnhn:`TEST-${endpoint.id}`,nom:`${endpoint.label} témoin`,surf_off:42,url:"https://example.test/nature"},geometry:{type:"Polygon",coordinates:[[[extent.west,extent.south],[extent.east,extent.south],[extent.east,extent.north],[extent.west,extent.north],[extent.west,extent.south]]]}}]}),{status:200,headers:{"Content-Type":"application/json"}})};
+      state.allowNetwork=true;const items=await syncNatureAreas();window.fetch=originalFetch;ensureSpatialIndexes();const poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="nature"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(snapshot),portable=await atlasCarnetToSnapshot(carnet);state.layerNatureAreas=true;const composition=composeMapGrid(largestExtent(),0),ascii=composition.grid.grid.flat().some(cell=>String(cell.cls||"").includes("c-nature-area"));return {items,poi,feature:symbolicPoiFeatureInfo(poi),snapshot:snapshot.data.natureAreas,carnet:carnet.sources.extracts.natureAreas,portable:portable.data.natureAreas,visible:symbolicVisiblePois(composition.grid).some(item=>item.sourceType==="nature"),ascii,summary:els.natureAreasSummary.textContent,status:els.natureStatus.textContent,runtime:{...natureAreasRuntime}};
+    });
+    assert.equal(result.items.length,7);assert.equal(result.snapshot.length,7);assert.equal(result.carnet.length,7);assert.equal(result.portable.length,7);assert.equal(result.poi.sourceType,"nature");assert.equal(result.feature.nature,true);assert.equal(result.visible,true);assert.equal(result.ascii,true);assert.match(result.summary,/7 zones/);assert.match(result.status,/7 zones/);assert.equal(result.runtime.requests,7);
   });
 
   await withPage("carnet portable importé sans écrasement", { width: 1280, height: 720 }, async (page) => {

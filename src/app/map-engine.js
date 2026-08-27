@@ -244,6 +244,15 @@ function drawBiodiversity(g){
     if(state.layerLabels&&state.zoomIndex>=4)tryMapLabel(g,p,`${species.length} esp.`,"c-label",13,info,"biodiversity",1,false);
   }
 }
+function drawNatureAreas(g){
+  if(!state.layerNatureAreas||currentDepth()!==0||!state.natureAreas.length)return;
+  const compact=state.zoomIndex<2;
+  for(const poi of queryNormalizedPois(g.extent,"nature")){
+    const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),info=poiFeatureInfo(poi,{kind:item.kind,nature:true,reference:item.reference||"",areaHa:item.areaHa,url:item.url||"",source:item.source||"API Carto Nature · IGN / INPN"});
+    putText(g,p.x,p.y,compact?"N":"NAT","c-nature-area",17,info);
+    if(state.layerLabels&&state.zoomIndex>=3&&item.name)tryMapLabel(g,p,item.name,"c-label",13,info,"nature",1,false);
+  }
+}
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
@@ -870,6 +879,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawBss(grid);
     drawHydrometry(grid);
     drawBiodiversity(grid);
+    drawNatureAreas(grid);
     drawObservations(grid);
     drawPersonalMarkers(grid);
     drawUndergroundHypotheses(grid);

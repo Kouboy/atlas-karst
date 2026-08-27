@@ -61,6 +61,7 @@ async function bootAtlas(){
     loadLoreItems();
     loadPersonalMarkers();
     loadUndergroundHypotheses();
+    loadNatureAreas();
     loadHeritage();
     loadCartofriches();
     loadBssLocal();
@@ -114,6 +115,7 @@ async function bootAtlas(){
       updateBssUI();
       updateHydrometryUI();
       updateBiodiversityUI();
+      updateNatureAreasUI();
       setStatus("elevation","bad","non embarqué");
       els.sourceNote.innerHTML="Mode de démonstration hors ligne. Exporte une sauvegarde ou un HTML autonome après synchronisation pour conserver un état plus complet.";
       populateCavitySelect();
