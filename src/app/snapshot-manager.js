@@ -209,6 +209,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   if(v.layers&&typeof v.layers==="object")for(const [k,value] of Object.entries(v.layers)){if(SNAPSHOT_LAYER_KEYS.includes(k)&&k in state){state[k]=!!value;if(els[k])els[k].checked=!!value}}
   state.allowNetwork=FORCE_ONLINE;state.snapshotSource=source;state.selectedCell=null;state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;
   refreshCavities();updateBssUI();updateHydrometryUI();updateBiodiversityUI();updateCartofrichesUI();updateHeritageUI();populateCavitySelect();
+  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
   setStatus("osm","ok",state.osm.length?`${state.osm.length} objets · instantané`:"instantané sans OSM");
   setStatus("address",state.address?"ok":"bad",state.address?"instantané":"non embarqué");
   const cadastreEmbedded=state.cadastreBuildings.length||state.cadastreParcels.length;

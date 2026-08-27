@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18i · biodiversité locale</title>
+<title>Atlas Karst ASCII v0.18j · carnet de terrain</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -307,7 +307,8 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <label class="field-label">Rayon de zone (m)<input id="observationRadius" type="number" value="80" min="10" max="1000" step="10"></label>
       <label class="field-label">Saison / date<input id="observationSeason" type="text" placeholder="hiver 2026"></label>
     </div>
-    <label class="field-label" style="margin-top:7px">Nom ou note<input id="localName" type="text" placeholder="ex. plusieurs ouvertures visibles sans feuillage"></label>
+    <label class="field-label" style="margin-top:7px">Nom du repère<input id="localName" type="text" placeholder="ex. ouverture au pied du talus"></label>
+    <label class="field-label" style="margin-top:7px">Note de terrain<textarea id="localNote" maxlength="2400" placeholder="Ce qui a été vu, entendu ou reste à vérifier…"></textarea></label>
     <div class="grid2" style="margin-top:7px">
       <button id="addLocalMarker">＋ enregistrer l’observation</button>
       <button id="removeLocalMarker">✕ supprimer l’observation</button>
@@ -324,9 +325,15 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       </div>
       <label class="field-label" style="margin-top:7px">Nom / titre<input id="loreName" type="text" placeholder="ex. ancienne maison effondrée, ancien four, hangar étrange"></label>
       <label class="field-label" style="margin-top:7px">Source / provenance<input id="loreSource" type="text" placeholder="observation perso, souvenir, voisin, archives, article…"></label>
-      <label class="field-label" style="margin-top:7px">Note courte<input id="loreNote" type="text" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></label>
+      <label class="field-label" style="margin-top:7px">Note de carnet<textarea id="loreNote" maxlength="2400" placeholder="ce qui rend le lieu intéressant, inquiétant ou historiquement notable"></textarea></label>
       <div class="grid2" style="margin-top:7px"><button id="addLoreItem">＋ enregistrer le repère</button><button id="removeLoreItem">✕ supprimer le repère</button></div>
       <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
+    </div></details>
+    <details class="interface-subsection" data-ui-subsection="fieldwork-ledger" open><summary>Mes repères de carnet</summary><div class="interface-subsection-body">
+      <div class="fieldwork-ledger-toolbar"><label class="field-label">Afficher<select id="fieldworkLedgerFilter"><option value="all">tous les repères</option><option value="observation">observations</option><option value="lore">mémoire locale</option></select></label><button id="fieldworkLedgerRefresh" type="button">↻ liste</button></div>
+      <div class="small" id="fieldworkLedgerSummary">Aucun repère personnel dans ce carnet.</div>
+      <div id="fieldworkLedgerList" class="fieldwork-ledger-list" aria-live="polite"></div>
+      <div class="small">Ces repères, leurs précisions et leurs notes font partie du Territoire et du carnet .atlas partagé.</div>
     </div></details>
   </section>
 
