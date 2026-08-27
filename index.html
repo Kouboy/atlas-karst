@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas Karst ASCII v0.18o · lire le sol</title>
+  <title>Atlas Karst ASCII v0.18p · fiches de lieu utiles</title>
 <style>
 :root{
   color-scheme:dark;
@@ -2098,7 +2098,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18o";
+const APP_VERSION = "0.18p";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -10303,6 +10303,16 @@ function trimDescriptionCache(){
     const first=descriptionRuntime.cache.keys().next().value;descriptionRuntime.cache.delete(first);
   }
 }
+function territoryPortraitHtml(cell,x,y){
+  const coord=gridToCoord(x,y,state.lastGrid.extent),radius=1600,nearby=(items=[])=>items.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)&&distanceMeters(coord,item)<=radius),lines=[];
+  const covers=nearby(state.landCover);if(covers.length)lines.push(`<li><span class="cell-fact-kind">sol</span>${esc(covers.slice(0,3).map(item=>item.name).filter(Boolean).join(" · "))} <small>BD CARTO® · IGN</small></li>`);
+  const nature=nearby(state.natureAreas);if(nature.length)lines.push(`<li><span class="cell-fact-kind">nature</span>${nature.length} espace${nature.length>1?"s":""} naturel${nature.length>1?"s":""} remarquable${nature.length>1?"s":""} à proximité <small>IGN / INPN</small></li>`);
+  const hydro=nearby(state.hydrometry);if(hydro.length)lines.push(`<li><span class="cell-fact-kind">eau</span>${esc(hydro.slice(0,2).map(item=>item.river||item.name||"station hydrométrique").join(" · "))} <small>Hub’Eau</small></li>`);
+  const bio=nearby(state.biodiversity);if(bio.length){const count=new Set(bio.flatMap(item=>(item.species||[]).map(species=>species.speciesKey))).size;lines.push(`<li><span class="cell-fact-kind">vivant</span>${count} espèce${count>1?"s":""} publiée${count>1?"s":""} dans les mailles voisines <small>GBIF</small></li>`)}
+  const historical=[...nearby(state.heritageItems),...nearby(state.cartofriches),...nearby(state.landscapeChanges)];if(historical.length)lines.push(`<li><span class="cell-fact-kind">temps</span>${historical.length} repère${historical.length>1?"s":""} historique${historical.length>1?"s":""}, patrimonial${historical.length>1?"ux":""} ou personnel${historical.length>1?"s":""} <small>sources mixtes</small></li>`);
+  if(!lines.length)return "";
+  return `<section class="cell-section cell-section-portrait"><h3>Portrait du lieu</h3><ul class="cell-facts">${lines.join("")}</ul><p class="cell-source-line">Rayon de lecture ≈ 1,6 km. Cette synthèse rapproche des couches ; elle ne les fusionne pas en une nouvelle donnée.</p></section>`;
+}
 function buildCellDescriptionBundle(cell,x,y){
   const slope=localSlopeDegrees(x,y),f=cell.feature;
   const title=poiAnnotationDisplayTitle(f,f?.name||f?.kind||"Case sans nom");
@@ -10316,8 +10326,8 @@ function buildCellDescriptionBundle(cell,x,y){
 }
 function buildCellDescriptionDetails(bundle){
   if(bundle.details)return bundle.details;
-  const {cell,x,y}=bundle,facts=documentedCellFacts(cell),nearby=nearbyNarrative(x,y),relations=relationsNarrative(cell,x,y),critical=criticalReading(cell);
-  bundle.details=`<section class="cell-section"><h3>Ce qui est documenté</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
+  const {cell,x,y}=bundle,facts=documentedCellFacts(cell),nearby=nearbyNarrative(x,y),relations=relationsNarrative(cell,x,y),critical=criticalReading(cell),portrait=territoryPortraitHtml(cell,x,y);
+  bundle.details=`${portrait}<section class="cell-section"><h3>Ce qui est documenté</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
     ${nearby?`<section class="cell-section cell-section-nearby"><h3>À proximité</h3>${nearby}</section>`:""}
     ${relations}
     ${poiAnnotationSection(cell.feature)}

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.18p — Fiches de lieu utiles
+
+- Ajout d’un portrait de lieu dans les fiches de sélection : occupation du sol, nature, eau, biodiversité et traces historiques sont rapprochées avec leurs sources explicites.
+- La synthèse reste locale, bornée à environ 1,6 km, et précise qu’elle ne transforme pas ce rapprochement en donnée nouvelle.
+
 ## 0.18o — Lire le sol
 
 - Ajout de l’occupation du sol BD CARTO® de l’IGN : extraction bornée à l’emprise du Territoire, couche désactivable et repères lisibles dans les deux rendus.
