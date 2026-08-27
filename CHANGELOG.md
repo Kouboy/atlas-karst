@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.18o — Lire le sol
+
+- Ajout de l’occupation du sol BD CARTO® de l’IGN : extraction bornée à l’emprise du Territoire, couche désactivable et repères lisibles dans les deux rendus.
+- Les extraits sont mémorisés par Territoire et inclus dans les instantanés ainsi que les carnets `.atlas`.
+- La formulation distingue l’occupation cartographiée de l’état réel ou des usages actuels.
+
 ## 0.18n — Territoire dans le temps
 
 - Accès contextuel à Remonter le Temps : la comparaison IGN s’ouvre au repère de départ ou à la case sélectionnée.

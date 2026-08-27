@@ -506,6 +506,7 @@ function symbolicPoiLayerEnabled(poi){
   if(poi.sourceType==="biodiversity")return !!state.layerBiodiversity&&currentDepth()===0&&biodiversityVisibleSpecies(poi.raw).length>0;
   if(poi.sourceType==="nature")return !!state.layerNatureAreas&&currentDepth()===0;
   if(poi.sourceType==="landscape-change")return !!state.layerIndustrialHistory&&currentDepth()===0;
+  if(poi.sourceType==="landcover")return !!state.layerLandCover&&currentDepth()===0;
   if(poi.sourceType==="cavity"||poi.sourceType==="osm-natural")return !!state.layerCavities;
   if(poi.sourceType==="heritage")return !!state.layerHeritage&&state.heritageEnabled[poi.raw?.category]!==false;
   if(poi.sourceType==="observation")return !!state.layerObservations;
@@ -634,6 +635,7 @@ function symbolicPoiFeatureInfo(poi){
   if(poi.sourceType==="hydrometry")return poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:r.river,commune:r.commune,code:r.code,heightM:r.heightM,flowM3s:r.flowM3s,observedAt:r.observedAt,url:r.url,license:r.license});
   if(poi.sourceType==="biodiversity")return biodiversityFeatureInfo(poi);
   if(poi.sourceType==="landscape-change")return poiFeatureInfo(poi,{memory:true,landscapeChange:true,period:poi.raw?.period||"",before:poi.raw?.before||"",after:poi.raw?.after||"",note:poi.raw?.note||""});
+  if(poi.sourceType==="landcover")return poiFeatureInfo(poi,{landCover:true,occupation:poi.raw?.name||"",url:poi.raw?.url||"",source:poi.raw?.source||"BD CARTO® · IGN"});
   if(poi.sourceType==="cartofriches")return poiFeatureInfo(poi,{kind:poi.kind,cartofriches:true,siteType:r.type,siteStatus:r.status,address:r.address,surface:r.surface,occupation:r.occupation,activity:r.activity,activityEnd:r.activityEnd,commune:r.commune,url:r.url});
   return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||r.date||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",personal:poi.sourceType==="personal",nature:poi.sourceType==="nature",reference:poi.sourceType==="nature"?r.reference:"",areaHa:poi.sourceType==="nature"?r.areaHa:null,url:r.url||"",userHypothesis:poi.sourceType==="underground",hypothesis:poi.sourceType==="underground",depth:poi.sourceType==="underground"?r.depth:undefined,confidenceLabel:r.confidence?confidenceLabel(r.confidence):"",heritage:poi.sourceType==="heritage"});
 }
