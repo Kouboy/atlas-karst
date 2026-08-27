@@ -1,5 +1,11 @@
 # Journal des versions
 
+## 0.18l — Hypothèses de sous-sol éditables
+
+- Ajout d’un calque personnel distinct du modèle généré : circulation, vide, passage, changement de terrain ou incertitude peuvent être consignés comme interprétations.
+- Chaque hypothèse porte une profondeur, une forme ponctuelle ou zonale, un niveau de confiance et une justification ; elle peut être reprise ou supprimée depuis le carnet.
+- Les hypothèses s’affichent uniquement dans la coupe concernée et voyagent avec les instantanés et les carnets `.atlas`.
+
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
 ## 0.18k — Carte personnelle

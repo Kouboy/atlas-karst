@@ -501,6 +501,7 @@ function symbolicPoiHash(value){
 function symbolicPoiLayerEnabled(poi){
   if(!poi)return false;
   if(poi.sourceType==="bss")return !!state.layerBss;
+  if(poi.sourceType==="underground")return !!state.layerUserHypotheses&&currentDepth()===Number(poi.raw?.depth);
   if(poi.sourceType==="hydrometry")return !!state.layerHydrometry&&currentDepth()===0;
   if(poi.sourceType==="biodiversity")return !!state.layerBiodiversity&&currentDepth()===0&&biodiversityVisibleSpecies(poi.raw).length>0;
   if(poi.sourceType==="cavity"||poi.sourceType==="osm-natural")return !!state.layerCavities;
@@ -631,7 +632,7 @@ function symbolicPoiFeatureInfo(poi){
   if(poi.sourceType==="hydrometry")return poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:r.river,commune:r.commune,code:r.code,heightM:r.heightM,flowM3s:r.flowM3s,observedAt:r.observedAt,url:r.url,license:r.license});
   if(poi.sourceType==="biodiversity")return biodiversityFeatureInfo(poi);
   if(poi.sourceType==="cartofriches")return poiFeatureInfo(poi,{kind:poi.kind,cartofriches:true,siteType:r.type,siteStatus:r.status,address:r.address,surface:r.surface,occupation:r.occupation,activity:r.activity,activityEnd:r.activityEnd,commune:r.commune,url:r.url});
-  return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||r.date||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",personal:poi.sourceType==="personal",confidenceLabel:r.confidence?confidenceLabel(r.confidence):"",heritage:poi.sourceType==="heritage"});
+  return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||r.date||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",personal:poi.sourceType==="personal",userHypothesis:poi.sourceType==="underground",hypothesis:poi.sourceType==="underground",depth:poi.sourceType==="underground"?r.depth:undefined,confidenceLabel:r.confidence?confidenceLabel(r.confidence):"",heritage:poi.sourceType==="heritage"});
 }
 function symbolicPoiRegionClientRect(region){
   const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();if(!m||!r||!region)return null;

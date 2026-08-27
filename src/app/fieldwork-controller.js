@@ -1,4 +1,4 @@
-const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,personalAdded:0,personalRemoved:0,personalEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,ledgerActions:0,editing:null};
+const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,personalAdded:0,personalRemoved:0,personalEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,undergroundAdded:0,undergroundRemoved:0,undergroundEdited:0,ledgerActions:0,editing:null,undergroundEditing:null};
 
 function geolocationErrorLabel(err,context={}){
   const localFile=location.protocol==="file:";
@@ -147,10 +147,24 @@ function bindFieldworkLedger(){
   els.fieldworkLedgerList?.addEventListener("click",event=>{const button=event.target.closest?.("[data-fieldwork-action]");if(!button)return;const {fieldworkAction:action,fieldworkKind:kind,fieldworkId:id}=button.dataset;if(action==="focus")focusFieldworkRecord(kind,id);else if(action==="edit")startFieldworkEditing(kind,id);else if(action==="delete")deleteFieldworkRecord(kind,id)});
 }
 
+function renderUndergroundHypothesisList(){
+  if(!els.undergroundHypothesisList)return;
+  const entries=(state.undergroundHypotheses||[]).slice().sort((a,b)=>String(b.updatedAt||b.createdAt||"").localeCompare(String(a.updatedAt||a.createdAt||"")));
+  els.undergroundHypothesisList.replaceChildren();
+  if(!entries.length){const empty=document.createElement("div");empty.className="fieldwork-ledger-empty";empty.textContent="Aucune hypothèse personnelle à cette étape. Ces notes restent des interprétations, pas des données de terrain.";els.undergroundHypothesisList.append(empty);return}
+  for(const item of entries){const definition=undergroundHypothesisDefinition(item.kind),article=document.createElement("article");article.className="fieldwork-ledger-entry";const head=document.createElement("div");head.className="fieldwork-ledger-entry-head";const title=document.createElement("h4");title.textContent=item.name||definition.label;const kind=document.createElement("span");kind.className="fieldwork-ledger-kind";kind.textContent=`hypothèse · ${depthSliceLabel(item.depth)}`;head.append(title,kind);const meta=document.createElement("div");meta.className="fieldwork-ledger-meta";meta.textContent=[definition.label,item.geometry==="zone"?`zone ≈ ${Math.round(item.radius||0)} m`:"indice ponctuel",confidenceLabel(item.confidence||"low")].join(" · ");article.append(head,meta);if(item.note){const note=document.createElement("div");note.className="fieldwork-ledger-note";note.textContent=item.note;article.append(note)}const actions=document.createElement("div");actions.className="fieldwork-ledger-actions";for(const [action,label] of [["focus","⌖ voir"],["edit","✎ modifier"],["delete","× supprimer"]]){const button=document.createElement("button");button.type="button";button.dataset.undergroundAction=action;button.dataset.undergroundId=item.id;button.textContent=label;if(action==="delete")button.className="action-danger";actions.append(button)}article.append(actions);els.undergroundHypothesisList.append(article)}
+}
+function undergroundHypothesisRecord(id){return(state.undergroundHypotheses||[]).find(item=>String(item.id)===String(id))||null}
+function clearUndergroundEditing(){fieldworkRuntime.undergroundEditing=null;if(els.addUndergroundHypothesis)els.addUndergroundHypothesis.textContent="＋ inscrire l’hypothèse"}
+function startUndergroundEditing(id){const item=undergroundHypothesisRecord(id);if(!item)return;fieldworkRuntime.undergroundEditing=String(id);els.undergroundKind.value=item.kind||"unknown";els.undergroundDepth.value=String(item.depth||-14);els.undergroundGeometry.value=item.geometry||"point";els.undergroundConfidence.value=item.confidence||"low";els.undergroundRadius.value=String(item.radius||80);els.undergroundName.value=item.name||"";els.undergroundNote.value=item.note||"";els.addUndergroundHypothesis.textContent="✓ mettre à jour l’hypothèse";els.undergroundHelp.textContent="Modification active : choisis une autre case si tu veux déplacer cette interprétation, puis enregistre."}
+function deleteUndergroundHypothesis(id){state.undergroundHypotheses=state.undergroundHypotheses.filter(item=>String(item.id)!==String(id));fieldworkRuntime.undergroundRemoved++;clearUndergroundEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();saveUndergroundHypotheses();renderUndergroundHypothesisList();autosaveActiveTerritory();render("underground-hypothesis-delete")}
+function focusUndergroundHypothesis(id){const item=undergroundHypothesisRecord(id);if(!item)return;state.depthIndex=Math.max(0,CONFIG.depths.indexOf(Number(item.depth)));state.center=clampCenter({lat:item.lat,lon:item.lon},currentZoom());if(els.depthControl)els.depthControl.value=String(state.depthIndex);render("underground-hypothesis-focus");const poi=queryNormalizedPois(state.lastGrid?.extent||largestExtent(),"underground").find(value=>String(value.id)===String(id));if(poi)selectSymbolicPoi(poi,"Hypothèse personnelle sélectionnée")}
+
 function bindFieldworkController(){
   if(fieldworkRuntime.bound)return;
   fieldworkRuntime.bound=true;
-  bindFieldworkLedger();renderFieldworkLedger();
+  bindFieldworkLedger();renderFieldworkLedger();renderUndergroundHypothesisList();
+  els.undergroundHypothesisList?.addEventListener("click",event=>{const button=event.target.closest?.("[data-underground-action]");if(!button)return;const action=button.dataset.undergroundAction,id=button.dataset.undergroundId;if(action==="focus")focusUndergroundHypothesis(id);else if(action==="edit")startUndergroundEditing(id);else if(action==="delete")deleteUndergroundHypothesis(id)});
   els.mapLocate.addEventListener("click",locateUser);
   els.locateMe.addEventListener("click",locateUser);
   els.clearLocation.addEventListener("click",clearUserLocation);
@@ -208,6 +222,20 @@ function bindFieldworkController(){
     if(!id){const nearby=state.personalMarkers.map(item=>({item,d:distanceMeters(item,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.item.id}
     if(!id){els.personalHelp.textContent="Aucun repère personnel suffisamment proche de la sélection.";return}
     deleteFieldworkRecord("personal",id);els.personalHelp.textContent="Repère personnel supprimé.";
+  });
+  els.addUndergroundHypothesis.addEventListener("click",()=>{
+    if(!state.selectedCell){els.undergroundHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}
+    const editing=fieldworkRuntime.undergroundEditing?undergroundHypothesisRecord(fieldworkRuntime.undergroundEditing):null,kind=els.undergroundKind.value,definition=undergroundHypothesisDefinition(kind),target=state.selectedCell.coord;
+    const item={...(editing||{}),id:editing?.id||fieldworkId("HYP"),kind,depth:Number(els.undergroundDepth.value)||-14,geometry:els.undergroundGeometry.value==="zone"?"zone":"point",confidence:els.undergroundConfidence.value||"low",radius:clamp(Number(els.undergroundRadius.value)||80,10,1000),name:els.undergroundName.value.trim().slice(0,160)||definition.label,note:els.undergroundNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,source:"Hypothèse personnelle enregistrée dans ce carnet",createdAt:editing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    if(editing){state.undergroundHypotheses=state.undergroundHypotheses.map(record=>record.id===item.id?item:record);fieldworkRuntime.undergroundEdited++}else{state.undergroundHypotheses.push(item);fieldworkRuntime.undergroundAdded++}
+    clearUndergroundEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();saveUndergroundHypotheses();renderUndergroundHypothesisList();autosaveActiveTerritory();render();
+    els.undergroundHelp.innerHTML=editing?`Hypothèse <strong>${esc(item.name)}</strong> mise à jour.`:`Hypothèse <strong>${esc(item.name)}</strong> enregistrée à <strong>${esc(depthSliceLabel(item.depth))}</strong>, avec une confiance ${confidenceLabel(item.confidence)}.`;els.undergroundName.value="";els.undergroundNote.value="";
+  });
+  els.removeUndergroundHypothesis.addEventListener("click",()=>{
+    if(!state.selectedCell){els.undergroundHelp.textContent="Sélectionne d’abord l’hypothèse à supprimer.";return}
+    const feature=state.selectedCell.feature;let id=feature?.userHypothesis?feature.record?.id:null;
+    if(!id){const nearby=state.undergroundHypotheses.filter(item=>Number(item.depth)===currentDepth()).map(item=>({item,d:distanceMeters(item,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.item.id}
+    if(!id){els.undergroundHelp.textContent="Aucune hypothèse personnelle suffisamment proche à cette profondeur.";return}deleteUndergroundHypothesis(id);els.undergroundHelp.textContent="Hypothèse personnelle supprimée.";
   });
   els.addLoreItem.addEventListener("click",()=>{
     if(!state.selectedCell){els.loreHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}

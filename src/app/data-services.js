@@ -494,6 +494,11 @@ function loadPersonalMarkers(){
   catch{state.personalMarkers=[]}
 }
 function savePersonalMarkers(){try{localStorage.setItem(territoryStorageKey(PERSONAL_MARKER_KEY),JSON.stringify(state.personalMarkers||[]))}catch{}}
+function loadUndergroundHypotheses(){
+  try{const value=JSON.parse(localStorage.getItem(territoryStorageKey(UNDERGROUND_HYPOTHESIS_KEY))||"[]");state.undergroundHypotheses=Array.isArray(value)?value.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)).map(item=>({...item,lat:+item.lat,lon:+item.lon,depth:CONFIG.depths.includes(Number(item.depth))?Number(item.depth):-14,geometry:item.geometry==="zone"?"zone":"point",confidence:item.confidence||"low",kind:item.kind||"unknown"})):[]}
+  catch{state.undergroundHypotheses=[]}
+}
+function saveUndergroundHypotheses(){try{localStorage.setItem(territoryStorageKey(UNDERGROUND_HYPOTHESIS_KEY),JSON.stringify(state.undergroundHypotheses||[]))}catch{}}
 
 function normalizeLooseText(v){
   if(v==null)return "";
@@ -1356,6 +1361,10 @@ function personalMarkerDefinition(category){
     water:{glyph:"EA",cls:"c-personal-water",label:"eau / humidité"},living:{glyph:"VI",cls:"c-personal-living",label:"vivant / milieu"},geology:{glyph:"GE",cls:"c-personal-geology",label:"sol / roche"},human:{glyph:"HU",cls:"c-personal-human",label:"trace humaine"},access:{glyph:"AC",cls:"c-personal-access",label:"passage / accès"},hazard:{glyph:"!",cls:"c-personal-hazard",label:"danger / prudence"},question:{glyph:"?",cls:"c-personal-question",label:"question ouverte"},hypothesis:{glyph:"≈",cls:"c-personal-hypothesis",label:"hypothèse personnelle"}
   };
   return defs[category]||defs.question;
+}
+function undergroundHypothesisDefinition(kind){
+  const defs={circulation:{glyph:"≈",cls:"c-user-hypothesis-flow",label:"circulation d’eau supposée"},void:{glyph:"○",cls:"c-user-hypothesis-void",label:"volume ou vide supposé"},access:{glyph:"↧",cls:"c-user-hypothesis-access",label:"accès ou passage supposé"},material:{glyph:"▧",cls:"c-user-hypothesis-material",label:"changement de terrain supposé"},unknown:{glyph:"?",cls:"c-user-hypothesis-unknown",label:"incertitude à éclaircir"}};
+  return defs[kind]||defs.unknown;
 }
 function extractOsmCavities(features){
   if(!Array.isArray(features))return [];
