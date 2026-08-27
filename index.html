@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18j · carnet de terrain</title>
+<title>Atlas Karst ASCII v0.18k · carte personnelle</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1609,6 +1609,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <label class="switch" data-layer-category="documents"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
       <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
       <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
+      <label class="switch" data-layer-category="documents"><input id="layerPersonal" type="checkbox" checked> Repères personnels de carnet</label>
       <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
       <label class="switch" data-layer-category="documents"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
       <label class="switch" data-layer-category="documents"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
@@ -1698,6 +1699,13 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <button id="removeLocalMarker">✕ supprimer l’observation</button>
     </div>
     <div class="small" id="localHelp" style="margin-top:8px">Sélectionne une case. Une visée dessine une direction depuis la maison ; une zone exprime une localisation imprécise sans inventer un point exact.</div>
+    <details class="interface-subsection" data-ui-subsection="personal-map"><summary>Carte personnelle</summary><div class="interface-subsection-body">
+      <div class="grid2"><label class="field-label">Catégorie<select id="personalCategory"><option value="water">EA eau / humidité</option><option value="living">VI vivant / milieu</option><option value="geology">GE sol / roche</option><option value="human">HU trace humaine</option><option value="access">AC passage / accès</option><option value="hazard">! danger / prudence</option><option value="question">? question ouverte</option><option value="hypothesis">≈ hypothèse personnelle</option></select></label><label class="field-label">Forme<select id="personalGeometry"><option value="point">point repéré</option><option value="zone">zone approximative</option></select></label></div>
+      <div class="grid2" style="margin-top:7px"><label class="field-label">Confiance<select id="personalConfidence"><option value="low">faible</option><option value="med" selected>moyenne</option><option value="high">forte</option></select></label><label class="field-label">Rayon (m)<input id="personalRadius" type="number" value="80" min="10" max="1000" step="10"></label></div>
+      <label class="field-label" style="margin-top:7px">Date / période<input id="personalDate" type="text" placeholder="août 2026"></label><label class="field-label" style="margin-top:7px">Titre<input id="personalName" type="text" placeholder="ex. suintement après la pluie"></label><label class="field-label" style="margin-top:7px">Note<textarea id="personalNote" maxlength="2400" placeholder="Fait observé, incertitude ou piste de terrain…"></textarea></label>
+      <div class="grid2" style="margin-top:7px"><button id="addPersonalMarker">＋ enregistrer sur la carte</button><button id="removePersonalMarker">✕ supprimer le repère</button></div>
+      <div class="small" id="personalHelp" style="margin-top:8px">Un repère personnel ne devient pas une donnée publiée : l’Atlas le signale comme contribution de carnet, avec son niveau de confiance.</div>
+    </div></details>
     <details class="interface-subsection" data-ui-subsection="lore"><summary>Repères, récits et mémoire locale</summary><div class="interface-subsection-body">
       <div class="grid2">
         <label class="field-label">Catégorie
@@ -1714,7 +1722,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
     </div></details>
     <details class="interface-subsection" data-ui-subsection="fieldwork-ledger" open><summary>Mes repères de carnet</summary><div class="interface-subsection-body">
-      <div class="fieldwork-ledger-toolbar"><label class="field-label">Afficher<select id="fieldworkLedgerFilter"><option value="all">tous les repères</option><option value="observation">observations</option><option value="lore">mémoire locale</option></select></label><button id="fieldworkLedgerRefresh" type="button">↻ liste</button></div>
+      <div class="fieldwork-ledger-toolbar"><label class="field-label">Afficher<select id="fieldworkLedgerFilter"><option value="all">tous les repères</option><option value="observation">observations</option><option value="personal">carte personnelle</option><option value="lore">mémoire locale</option></select></label><button id="fieldworkLedgerRefresh" type="button">↻ liste</button></div>
       <div class="small" id="fieldworkLedgerSummary">Aucun repère personnel dans ce carnet.</div>
       <div id="fieldworkLedgerList" class="fieldwork-ledger-list" aria-live="polite"></div>
       <div class="small">Ces repères, leurs précisions et leurs notes font partie du Territoire et du carnet .atlas partagé.</div>
@@ -2035,7 +2043,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18j";
+const APP_VERSION = "0.18k";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2267,7 +2275,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Inspecteur de cellule",cellInspectorRuntime.ready&&descriptionRuntime.cache.size<=descriptionRuntime.maxEntries,`${cellInspectorRuntime.selections} sélections · ${cellInspectorRuntime.touchSelections} tactiles · cache ${descriptionRuntime.cache.size}/${descriptionRuntime.maxEntries}`));
   checks.push(debugCheckResult("Coque responsive",uiShellRuntime.ready&&uiShellRuntime.bound&&uiShellRuntime.fitRuns<=uiShellRuntime.fitRequests+1,`${uiShellRuntime.fitRuns}/${uiShellRuntime.fitRequests} ajustements/demandes · ${uiShellRuntime.fitCoalesced} regroupées · grille ${uiShellRuntime.lastGridProfile}`));
   const sidebarSections=[...document.querySelectorAll(".sidebar-section-tab")],visibleSidebarSections=[...document.querySelectorAll("#sidebar > .sidebar-cluster")].filter(section=>!section.hidden);
-  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===5,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
+  checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===6,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
   checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===11&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
@@ -2500,6 +2508,7 @@ const EMBEDDED_SNAPSHOT = parseEmbeddedSnapshot();
 let ACTIVE_TERRITORY = normalizeTerritoryProfile(EMBEDDED_SNAPSHOT?.territory,LEGACY_TERRITORY_PROFILE);
 let HOUSE_ESTIMATE = {...ACTIVE_TERRITORY.center};
 const LORE_KEY = "atlas-karst-lore-v07";
+const PERSONAL_MARKER_KEY = "atlas-karst-personal-markers-v01";
 const CARTOFRICHES_KEY = "atlas-karst-cartofriches-v09h";
 const HERITAGE_KEY = "atlas-karst-heritage-v010b";
 const CULTURE_API_PORTALS = [
@@ -2618,6 +2627,7 @@ const state = {
   layerHydrometry:true,
   layerBiodiversity:true,
   layerObservations:true,
+  layerPersonal:true,
   layerHeritage:true,
   layerLore:true,
   layerCartofriches:true,
@@ -2644,6 +2654,7 @@ const state = {
   osmCavities:[],
   localCavities:[],
   observations:[],
+  personalMarkers:[],
   loreItems:[],
   heritageItems:[],
   heritageEnabled:{monument:true,garden:true,house:true,museum:true,wikipedia:true},
@@ -2677,8 +2688,8 @@ els = Object.fromEntries([
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
-  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
-  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
+  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","personalCategory","personalGeometry","personalConfidence","personalRadius","personalDate","personalName","personalNote","addPersonalMarker","removePersonalMarker","personalHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
+  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 
@@ -3288,6 +3299,7 @@ function symbolicPoiLayerEnabled(poi){
   if(poi.sourceType==="cavity"||poi.sourceType==="osm-natural")return !!state.layerCavities;
   if(poi.sourceType==="heritage")return !!state.layerHeritage&&state.heritageEnabled[poi.raw?.category]!==false;
   if(poi.sourceType==="observation")return !!state.layerObservations;
+  if(poi.sourceType==="personal")return !!state.layerPersonal;
   if(poi.sourceType==="lore"||poi.sourceType==="demo")return !!state.layerLore;
   if(poi.sourceType==="cartofriches")return !!state.layerCartofriches&&(state.cartofrichesIncludeReconverted||!String(poi.raw?.status||"").toLowerCase().includes("reconvert"));
   if(poi.sourceType==="house")return !!state.layerHouse;
@@ -3412,7 +3424,7 @@ function symbolicPoiFeatureInfo(poi){
   if(poi.sourceType==="hydrometry")return poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:r.river,commune:r.commune,code:r.code,heightM:r.heightM,flowM3s:r.flowM3s,observedAt:r.observedAt,url:r.url,license:r.license});
   if(poi.sourceType==="biodiversity")return biodiversityFeatureInfo(poi);
   if(poi.sourceType==="cartofriches")return poiFeatureInfo(poi,{kind:poi.kind,cartofriches:true,siteType:r.type,siteStatus:r.status,address:r.address,surface:r.surface,occupation:r.occupation,activity:r.activity,activityEnd:r.activityEnd,commune:r.commune,url:r.url});
-  return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",heritage:poi.sourceType==="heritage"});
+  return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||r.date||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",personal:poi.sourceType==="personal",confidenceLabel:r.confidence?confidenceLabel(r.confidence):"",heritage:poi.sourceType==="heritage"});
 }
 function symbolicPoiRegionClientRect(region){
   const m=canvasRuntime.metrics||syncCanvasSize(),r=els.mapCanvas?.getBoundingClientRect();if(!m||!r||!region)return null;
@@ -4479,7 +4491,7 @@ function normalizedPoiCategory(sourceType,raw){
   if(sourceType==="biodiversity")return "biodiversity";
   if(sourceType==="cavity")return "cavity";
   if(sourceType==="heritage")return "heritage";
-  if(sourceType==="observation"||sourceType==="lore")return "memory";
+  if(sourceType==="observation"||sourceType==="lore"||sourceType==="personal")return "memory";
   if(sourceType==="cartofriches")return "industrial";
   if(sourceType==="house")return "home";
   if(sourceType==="location")return "location";
@@ -4521,7 +4533,7 @@ function ensureSpatialIndexes(){
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
     bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
-    lore:state.loreItems,cartofriches:state.cartofriches,userLocation:state.userLocation
+    lore:state.loreItems,personal:state.personalMarkers,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
   const houseStamp=`${CONFIG.house.lat}:${CONFIG.house.lon}`;
@@ -4552,6 +4564,7 @@ function ensureSpatialIndexes(){
   }
   for(const c of state.cavities||[])addPoi("cavity",c,{kind:cavityType(c),title:cavityName(c),priority:18});
   for(const o of state.observations||[])addPoi("observation",o,{kind:o.mode==="sight"?"ligne de visée observée":o.mode==="zone"?"zone d’observation approximative":"observation ponctuelle",title:o.name||"Observation locale",priority:19});
+  for(const item of state.personalMarkers||[]){const definition=personalMarkerDefinition(item.category);addPoi("personal",item,{kind:item.geometry==="zone"?`${definition.label} · zone approximative`:definition.label,title:item.name||definition.label,priority:item.category==="hazard"?23:20})}
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
   for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});
   for(const f of state.cartofriches||[])addPoi("cartofriches",f,{kind:f.type||"site Cartofriches",title:f.name||"Site recensé",priority:22});
@@ -5006,7 +5019,7 @@ function ensurePoiLayerVisible(poi){
   }else if(poi.category==="industrial"){
     if(poi.sourceType==="cartofriches"){state.layerCartofriches=true;if(els.layerCartofriches)els.layerCartofriches.checked=true}else{state.layerLore=true;if(els.layerLore)els.layerLore.checked=true}
   }else if(poi.category==="memory"){
-    if(poi.sourceType==="observation"){state.layerObservations=true;if(els.layerObservations)els.layerObservations.checked=true}else{state.layerLore=true;if(els.layerLore)els.layerLore.checked=true}
+    if(poi.sourceType==="observation"){state.layerObservations=true;if(els.layerObservations)els.layerObservations.checked=true}else if(poi.sourceType==="personal"){state.layerPersonal=true;if(els.layerPersonal)els.layerPersonal.checked=true}else{state.layerLore=true;if(els.layerLore)els.layerLore.checked=true}
   }else if(poi.category==="home"){state.layerHouse=true;if(els.layerHouse)els.layerHouse.checked=true}
 }
 function focusNormalizedPoi(uid){
@@ -5707,6 +5720,11 @@ function loadLoreItems(){
 function saveLoreItems(){
   try{localStorage.setItem(territoryStorageKey(LORE_KEY),JSON.stringify(state.loreItems))}catch{}
 }
+function loadPersonalMarkers(){
+  try{const value=JSON.parse(localStorage.getItem(territoryStorageKey(PERSONAL_MARKER_KEY))||"[]");state.personalMarkers=Array.isArray(value)?value.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)).map(item=>({...item,lat:+item.lat,lon:+item.lon,category:item.category||"question",geometry:item.geometry==="zone"?"zone":"point",confidence:item.confidence||"med"})):[]}
+  catch{state.personalMarkers=[]}
+}
+function savePersonalMarkers(){try{localStorage.setItem(territoryStorageKey(PERSONAL_MARKER_KEY),JSON.stringify(state.personalMarkers||[]))}catch{}}
 
 function normalizeLooseText(v){
   if(v==null)return "";
@@ -6563,6 +6581,12 @@ function loreMarkerDefinition(category){
     view:{glyph:"VP",cls:"c-lore-view",label:"curiosité paysagère / point de vue"}
   };
   return defs[category]||defs.anecdote;
+}
+function personalMarkerDefinition(category){
+  const defs={
+    water:{glyph:"EA",cls:"c-personal-water",label:"eau / humidité"},living:{glyph:"VI",cls:"c-personal-living",label:"vivant / milieu"},geology:{glyph:"GE",cls:"c-personal-geology",label:"sol / roche"},human:{glyph:"HU",cls:"c-personal-human",label:"trace humaine"},access:{glyph:"AC",cls:"c-personal-access",label:"passage / accès"},hazard:{glyph:"!",cls:"c-personal-hazard",label:"danger / prudence"},question:{glyph:"?",cls:"c-personal-question",label:"question ouverte"},hypothesis:{glyph:"≈",cls:"c-personal-hypothesis",label:"hypothèse personnelle"}
+  };
+  return defs[category]||defs.question;
 }
 function extractOsmCavities(features){
   if(!Array.isArray(features))return [];
@@ -7925,7 +7949,7 @@ const territoryControllerRuntime={
   lastAction:"initialisation",lastError:""
 };
 const TERRITORY_LOCAL_STORAGE_BASES=[
-  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,HYDROMETRY_KEY,BIODIVERSITY_KEY,POI_ANNOTATIONS_KEY,
+  "atlas-karst-house-v06",OBSERVATION_KEY,LORE_KEY,PERSONAL_MARKER_KEY,CARTOFRICHES_KEY,HERITAGE_KEY,BSS_LOCAL_KEY,HYDROMETRY_KEY,BIODIVERSITY_KEY,POI_ANNOTATIONS_KEY,
   ENCOUNTER_COLLECTION_KEY,"atlas-karst-cavities-v06","atlas-karst-elevation-v09d","atlas-karst-cadastre-v06","atlas-karst-cadastre-v07","atlas-karst-address-v06"
 ];
 let territoryAutosavePromise=null;
@@ -7985,7 +8009,7 @@ function resetTerritoryRuntimeData(){
   state.officialCavities=[];state.cartofriches=[];state.heritageItems=[];state.cadastreBuildings=[];state.cadastreParcels=[];
   state.address=null;state.bss=[];state.hydrometry=[];state.biodiversity=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
-  loadLocalCavities();loadLoreItems();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
+  loadLocalCavities();loadLoreItems();loadPersonalMarkers();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
   if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
@@ -8167,7 +8191,7 @@ function bindTerritoryController(){
   territoryControllerRuntime.lastAction="contrôleur lié";
 }
 
-const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,ledgerActions:0,editing:null};
+const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,personalAdded:0,personalRemoved:0,personalEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,ledgerActions:0,editing:null};
 
 function geolocationErrorLabel(err,context={}){
   const localFile=location.protocol==="file:";
@@ -8260,20 +8284,21 @@ function fieldworkEntryDate(value){
 function fieldworkId(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
 function fieldworkRecords(filter=els.fieldworkLedgerFilter?.value||"all"){
   const observations=(state.observations||[]).map(record=>({kind:"observation",record,id:String(record.id||""),title:record.name||"Observation sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.season||"",meta:[record.mode==="sight"?"visée":record.mode==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.season].filter(Boolean).join(" · ")}));
+  const personal=(state.personalMarkers||[]).map(record=>({kind:"personal",record,id:String(record.id||""),title:record.name||personalMarkerDefinition(record.category).label,note:record.note||"",date:record.updatedAt||record.createdAt||record.date||"",meta:[personalMarkerDefinition(record.category).label,record.geometry==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.date].filter(Boolean).join(" · ")}));
   const lore=(state.loreItems||[]).map(record=>({kind:"lore",record,id:String(record.id||""),title:record.name||"Repère sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.period||"",meta:[record.category||"mémoire locale",record.period,record.source].filter(Boolean).join(" · ")}));
-  return [...observations,...lore].filter(entry=>filter==="all"||entry.kind===filter).sort((a,b)=>String(b.date).localeCompare(String(a.date))||a.title.localeCompare(b.title,"fr"));
+  return [...observations,...personal,...lore].filter(entry=>filter==="all"||entry.kind===filter).sort((a,b)=>String(b.date).localeCompare(String(a.date))||a.title.localeCompare(b.title,"fr"));
 }
 function renderFieldworkLedger(){
   if(!els.fieldworkLedgerList)return;
   const all=fieldworkRecords("all"),entries=fieldworkRecords();
-  if(els.fieldworkLedgerSummary)els.fieldworkLedgerSummary.textContent=all.length?`${all.length} repère${all.length>1?"s":""} personnel${all.length>1?"s":""} dans ce carnet · ${all.filter(item=>item.kind==="observation").length} observation${all.filter(item=>item.kind==="observation").length>1?"s":""} · ${all.filter(item=>item.kind==="lore").length} mémoire${all.filter(item=>item.kind==="lore").length>1?"s":""}.`:"Aucun repère personnel dans ce carnet.";
+  if(els.fieldworkLedgerSummary)els.fieldworkLedgerSummary.textContent=all.length?`${all.length} repère${all.length>1?"s":""} personnel${all.length>1?"s":""} dans ce carnet · ${all.filter(item=>item.kind==="observation").length} observation${all.filter(item=>item.kind==="observation").length>1?"s":""} · ${all.filter(item=>item.kind==="personal").length} carte personnelle · ${all.filter(item=>item.kind==="lore").length} mémoire${all.filter(item=>item.kind==="lore").length>1?"s":""}.`:"Aucun repère personnel dans ce carnet.";
   els.fieldworkLedgerList.replaceChildren();
   if(!entries.length){const empty=document.createElement("div");empty.className="fieldwork-ledger-empty";empty.textContent=all.length?"Aucun repère dans cette catégorie.":"Sélectionne une case, puis consigne une première observation ou un souvenir local.";els.fieldworkLedgerList.append(empty);return}
   for(const entry of entries){
     const article=document.createElement("article");article.className="fieldwork-ledger-entry";
     const head=document.createElement("div");head.className="fieldwork-ledger-entry-head";
     const title=document.createElement("h4");title.textContent=entry.title;
-    const kind=document.createElement("span");kind.className="fieldwork-ledger-kind";kind.textContent=entry.kind==="observation"?"observation":"mémoire";head.append(title,kind);
+    const kind=document.createElement("span");kind.className="fieldwork-ledger-kind";kind.textContent=entry.kind==="observation"?"observation":entry.kind==="personal"?"carte":"mémoire";head.append(title,kind);
     const meta=document.createElement("div");meta.className="fieldwork-ledger-meta";meta.textContent=[entry.meta,entry.date&&fieldworkEntryDate(entry.date)].filter(Boolean).join(" · ");article.append(head,meta);
     if(entry.note){const note=document.createElement("div");note.className="fieldwork-ledger-note";note.textContent=entry.note;article.append(note)}
     const actions=document.createElement("div");actions.className="fieldwork-ledger-actions";
@@ -8281,9 +8306,10 @@ function renderFieldworkLedger(){
     article.append(actions);els.fieldworkLedgerList.append(article);
   }
 }
-function fieldworkRecord(kind,id){return (kind==="observation"?state.observations:state.loreItems||[]).find(item=>String(item.id)===String(id))||null}
+function fieldworkRecord(kind,id){const records=kind==="observation"?state.observations:kind==="personal"?state.personalMarkers:state.loreItems;return (records||[]).find(item=>String(item.id)===String(id))||null}
 function clearFieldworkEditing(kind=""){
   if(kind!=="lore"){fieldworkRuntime.editing=null;if(els.addLocalMarker)els.addLocalMarker.textContent="＋ enregistrer l’observation"}
+  if(kind!=="personal"){fieldworkRuntime.editing=null;if(els.addPersonalMarker)els.addPersonalMarker.textContent="＋ enregistrer sur la carte"}
   if(kind!=="observation"){fieldworkRuntime.editing=null;if(els.addLoreItem)els.addLoreItem.textContent="＋ enregistrer le repère"}
 }
 function startFieldworkEditing(kind,id){
@@ -8291,6 +8317,8 @@ function startFieldworkEditing(kind,id){
   fieldworkRuntime.ledgerActions++;fieldworkRuntime.editing={kind,id:String(id)};
   if(kind==="observation"){
     els.observationMode.value=record.mode||"point";els.observationConfidence.value=record.confidence||"med";els.localType.value=record.glyph||"?o";els.observationRadius.value=String(record.radius||80);els.observationSeason.value=record.season||"";els.localName.value=record.name||"";els.localNote.value=record.note||"";els.addLocalMarker.textContent="✓ mettre à jour l’observation";els.localHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
+  }else if(kind==="personal"){
+    els.personalCategory.value=record.category||"question";els.personalGeometry.value=record.geometry||"point";els.personalConfidence.value=record.confidence||"med";els.personalRadius.value=String(record.radius||80);els.personalDate.value=record.date||"";els.personalName.value=record.name||"";els.personalNote.value=record.note||"";els.addPersonalMarker.textContent="✓ mettre à jour le repère";els.personalHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
   }else{
     els.loreCategory.value=record.category||"anecdote";els.lorePeriod.value=record.period||"";els.loreName.value=record.name||"";els.loreSource.value=record.source||"";els.loreNote.value=record.note||"";els.addLoreItem.textContent="✓ mettre à jour le repère";els.loreHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
   }
@@ -8303,6 +8331,7 @@ function focusFieldworkRecord(kind,id){
 }
 function deleteFieldworkRecord(kind,id){
   if(kind==="observation"){state.observations=state.observations.filter(item=>String(item.id)!==String(id));fieldworkRuntime.observationsRemoved++;saveLocalCavities();refreshCavities()}
+  else if(kind==="personal"){state.personalMarkers=state.personalMarkers.filter(item=>String(item.id)!==String(id));fieldworkRuntime.personalRemoved++;savePersonalMarkers()}
   else{state.loreItems=state.loreItems.filter(item=>String(item.id)!==String(id));fieldworkRuntime.loreRemoved++;saveLoreItems()}
   fieldworkRuntime.ledgerActions++;clearFieldworkEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();renderFieldworkLedger();autosaveActiveTerritory();render("fieldwork-ledger-delete");
 }
@@ -8356,6 +8385,22 @@ function bindFieldworkController(){
     if(!id){const nearby=state.observations.map(o=>({o,d:distanceMeters(o,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.o.id}
     if(!id){els.localHelp.textContent="Aucune observation locale suffisamment proche de la sélection.";return}
     deleteFieldworkRecord("observation",id);els.localHelp.textContent="Observation locale supprimée.";
+  });
+  els.addPersonalMarker.addEventListener("click",()=>{
+    if(!state.selectedCell){els.personalHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}
+    const category=els.personalCategory.value,definition=personalMarkerDefinition(category),editing=fieldworkRuntime.editing?.kind==="personal"?fieldworkRecord("personal",fieldworkRuntime.editing.id):null,target=state.selectedCell.coord;
+    const item={...(editing||{}),id:editing?.id||fieldworkId("PER"),category,geometry:els.personalGeometry.value==="zone"?"zone":"point",confidence:els.personalConfidence.value||"med",radius:clamp(Number(els.personalRadius.value)||80,10,1000),date:els.personalDate.value.trim().slice(0,120),name:els.personalName.value.trim().slice(0,160)||definition.label,note:els.personalNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,source:"Repère personnel enregistré dans ce carnet",createdAt:editing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    if(editing){state.personalMarkers=state.personalMarkers.map(record=>record.id===item.id?item:record);fieldworkRuntime.personalEdited++}else{state.personalMarkers.push(item);fieldworkRuntime.personalAdded++}
+    clearFieldworkEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();savePersonalMarkers();renderFieldworkLedger();autosaveActiveTerritory();render();
+    els.personalHelp.innerHTML=editing?`Repère <strong>${esc(item.name)}</strong> mis à jour.`:`Repère <strong>${esc(item.name)}</strong> enregistré comme <strong>${esc(definition.label)}</strong>.`;
+    els.personalName.value="";els.personalNote.value="";els.personalDate.value="";
+  });
+  els.removePersonalMarker.addEventListener("click",()=>{
+    if(!state.selectedCell){els.personalHelp.textContent="Sélectionne d’abord un repère à supprimer.";return}
+    const feature=state.selectedCell.feature;let id=feature?.personal?feature.record?.id:null;
+    if(!id){const nearby=state.personalMarkers.map(item=>({item,d:distanceMeters(item,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.item.id}
+    if(!id){els.personalHelp.textContent="Aucun repère personnel suffisamment proche de la sélection.";return}
+    deleteFieldworkRecord("personal",id);els.personalHelp.textContent="Repère personnel supprimé.";
   });
   els.addLoreItem.addEventListener("click",()=>{
     if(!state.selectedCell){els.loreHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}
@@ -8427,7 +8472,7 @@ function bindExperienceController(){
   els.guidedTourStop.addEventListener("click",()=>{experienceControllerRuntime.tourStops++;accountExperienceAction("fin du parcours");stopGuidedTour()});
 }
 
-const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const VIEW_LAYER_FILTER_KEY="atlas-karst-layer-filter-v1";
 const viewControllerRuntime={ready:true,bound:false,modeChanges:0,scenarioChanges:0,layerChanges:0,cavitySelections:0,recenters:0,debugActions:0,lastAction:"initialisation"};
 
@@ -8843,6 +8888,18 @@ function drawObservations(g){
       }
       put(g,p.x,p.y,"◎","c-observation",19,info,o.confidence);
     }
+  }
+}
+
+function drawPersonalMarkers(g){
+  if(!state.layerPersonal||currentDepth()!==0)return;
+  const detailedGeometry=semanticZoom().observationGeometry;
+  for(const poi of queryNormalizedPois(g.extent,"personal")){
+    const item=poi.raw,definition=personalMarkerDefinition(item.category),p=coordToGrid(poi.lat,poi.lon,g.extent);
+    const info=poiFeatureInfo(poi,{kind:item.geometry==="zone"?`${definition.label} · zone approximative`:definition.label,personal:true,category:item.category,categoryLabel:definition.label,note:item.note||"",period:item.date||"",confidenceLabel:confidenceLabel(item.confidence||"med")});
+    if(item.geometry==="zone"&&detailedGeometry){const z=currentZoom(),rx=Math.max(1,Math.round((item.radius||80)/(z.widthKm*1000/CONFIG.gridW))),ry=Math.max(1,Math.round((item.radius||80)/(z.heightKm*1000/CONFIG.gridH)));for(let i=0;i<72;i++){const a=i/72*Math.PI*2;put(g,p.x+Math.round(Math.cos(a)*rx),p.y+Math.round(Math.sin(a)*ry),"·","c-zone c-personal-zone",18,info,item.confidence)}}
+    putText(g,p.x,p.y,definition.glyph,definition.cls, item.category==="hazard"?23:20,info);
+    if(state.layerLabels&&semanticZoom().poiLabel>0&&item.name)tryMapLabel(g,p,item.name,"c-label",15,info,"poi",semanticZoom().poiLabel,false);
   }
 }
 
@@ -9423,6 +9480,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawHydrometry(grid);
     drawBiodiversity(grid);
     drawObservations(grid);
+    drawPersonalMarkers(grid);
     drawHeritage(grid);
     drawLore(grid);
     drawCavities(grid);
@@ -9622,7 +9680,7 @@ function poiSelectionKind(cell){
   if(f.biodiversity||cls.includes("c-biodiversity"))return "biodiversity";
   if(f.heritage||cls.includes("c-heritage"))return "heritage";
   if(f.cartofriches||cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
-  if(f.observation||f.lore||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
+  if(f.observation||f.lore||f.personal||cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
   if(cls.includes("c-user-position"))return "location";
   if(["spring","sinkhole","cave_entrance"].includes(tags.natural)||cls.includes("c-doc")||cls.includes("c-demo")||cls.includes("c-explorer-hint"))return "natural";
   return "";
@@ -10173,7 +10231,7 @@ function poiEffectKind(cell){
   if(cls.includes("c-bss")||cls.includes("c-piezo"))return "bss";
   if(cls.includes("c-heritage"))return "heritage";
   if(cls.includes("c-carto")||cls.includes("c-lore-friche")||cls.includes("c-lore-abandoned"))return "industrial";
-  if(cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
+  if(cls.includes("c-observation")||cls.includes("c-lore")||cls.includes("c-personal")||cls.includes("c-sight")||cls.includes("c-zone"))return "memory";
   if((cls.includes("c-doc")||cls.includes("c-pillar"))&&selectableFeature(cell))return f.cavity?"cavity":"natural";
   if(cls.includes("c-demo")||cls.includes("c-explorer-hint"))return "natural";
   return "";
@@ -10807,7 +10865,7 @@ function carnetArray(value){return Array.isArray(value)?carnetJsonClone(value):[
 function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
-    observations:content.observations?.length||0,
+    observations:content.observations?.length||0,personalMarkers:content.personalMarkers?.length||0,
     notes:content.notes?.length||0,annotations:Object.keys(content.annotations||{}).length,
     embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.biodiversity?.length||0)+(extracts.address?1:0),
     sourceReferences:document.sources?.references?.length||0
@@ -10822,7 +10880,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     territory,
     content:{
       startPoint:carnetJsonClone(snapshot.house||territory.center),
-      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
+      observations:carnetArray(d.observations),personalMarkers:carnetArray(d.personalMarkers),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
       experiences:{collection:carnetJsonClone(d.encounterCollection||{}),enabled:!!d.encounterEnabled}
     },
     presentation:{
@@ -10867,14 +10925,14 @@ async function atlasCarnetToSnapshot(document){
     data:{
       osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
       address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),
-      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
+      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),personalMarkers:carnetArray(content.personalMarkers),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
     }
   };
 }
 
 const SNAPSHOT_SCHEMA_VERSION=3;
 const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
-const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const snapshotRuntime={
   ready:true,bound:false,built:0,applied:0,imports:0,exports:0,standaloneExports:0,
   dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
@@ -10914,20 +10972,20 @@ function buildAtlasSnapshot(){
       osm:state.osm||[],osmMeta:state.osmMeta||null,osmBaseCoverage:state.osmBaseCoverage||[],osmDetailCoverage:state.osmDetailCoverage||[],
       officialCavities:state.officialCavities||[],cartofriches:state.cartofriches||[],heritageItems:state.heritageItems||[],heritageEnabled:state.heritageEnabled||{},
       cadastreBuildings:state.cadastreBuildings||[],cadastreParcels:state.cadastreParcels||[],address:state.address||null,
-      bss:state.bss||[],hydrometry:state.hydrometry||[],biodiversity:state.biodiversity||[],biodiversityEnabled:state.biodiversityEnabled||{},poiAnnotations:state.poiAnnotations||{},elevation:state.elevation||null,observations:state.observations||[],loreItems:state.loreItems||[],encounterCollection:state.encounterCollection||{},encounterEnabled:!!state.encounterEnabled
+      bss:state.bss||[],hydrometry:state.hydrometry||[],biodiversity:state.biodiversity||[],biodiversityEnabled:state.biodiversityEnabled||{},poiAnnotations:state.poiAnnotations||{},elevation:state.elevation||null,observations:state.observations||[],personalMarkers:state.personalMarkers||[],loreItems:state.loreItems||[],encounterCollection:state.encounterCollection||{},encounterEnabled:!!state.encounterEnabled
     }
   };
 }
 
 function snapshotCounts(s=buildAtlasSnapshot()){
   const d=s.data||{};
-  return {osm:d.osm?.length||0,buildings:d.cadastreBuildings?.length||0,parcels:d.cadastreParcels?.length||0,cavities:d.officialCavities?.length||0,carto:d.cartofriches?.length||0,bss:d.bss?.length||0,hydrometry:d.hydrometry?.length||0,biodiversity:d.biodiversity?.length||0,biodiversitySpecies:biodiversityUniqueSpecies(d.biodiversity||[]),annotations:Object.keys(d.poiAnnotations||{}).length,observations:d.observations?.length||0,lore:d.loreItems?.length||0,heritage:d.heritageItems?.length||0,codex:Object.values(d.encounterCollection||{}).filter(v=>encounterStatusRank(v?.status)>=2).length,elevation:d.elevation?"oui":"non"};
+  return {osm:d.osm?.length||0,buildings:d.cadastreBuildings?.length||0,parcels:d.cadastreParcels?.length||0,cavities:d.officialCavities?.length||0,carto:d.cartofriches?.length||0,bss:d.bss?.length||0,hydrometry:d.hydrometry?.length||0,biodiversity:d.biodiversity?.length||0,biodiversitySpecies:biodiversityUniqueSpecies(d.biodiversity||[]),annotations:Object.keys(d.poiAnnotations||{}).length,observations:d.observations?.length||0,personal:d.personalMarkers?.length||0,lore:d.loreItems?.length||0,heritage:d.heritageItems?.length||0,codex:Object.values(d.encounterCollection||{}).filter(v=>encounterStatusRank(v?.status)>=2).length,elevation:d.elevation?"oui":"non"};
 }
 
 function updateSnapshotUI(source=state.snapshotSource){
   if(!els.snapshotStatus)return;
   const c=snapshotCounts();
-  els.snapshotStatus.innerHTML=`<span><strong>État actif :</strong> ${esc(source||"session courante")}</span><span>Territoire ${esc(CONFIG.territory.label)} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km</span><span>OSM ${c.osm.toLocaleString("fr-FR")} · bâti ${c.buildings.toLocaleString("fr-FR")} · parcelles ${c.parcels.toLocaleString("fr-FR")}</span><span>Cavités ${c.cavities} · Cartofriches ${c.carto} · patrimoine ${c.heritage} · BSS ${c.bss.toLocaleString("fr-FR")} · hydro ${c.hydrometry}</span><span>Biodiversité ${c.biodiversitySpecies} espèces/${c.biodiversity} mailles · annotations ${c.annotations} · observations ${c.observations} · mémoire locale ${c.lore} · relief ${c.elevation}</span>`;
+  els.snapshotStatus.innerHTML=`<span><strong>État actif :</strong> ${esc(source||"session courante")}</span><span>Territoire ${esc(CONFIG.territory.label)} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km</span><span>OSM ${c.osm.toLocaleString("fr-FR")} · bâti ${c.buildings.toLocaleString("fr-FR")} · parcelles ${c.parcels.toLocaleString("fr-FR")}</span><span>Cavités ${c.cavities} · Cartofriches ${c.carto} · patrimoine ${c.heritage} · BSS ${c.bss.toLocaleString("fr-FR")} · hydro ${c.hydrometry}</span><span>Biodiversité ${c.biodiversitySpecies} espèces/${c.biodiversity} mailles · annotations ${c.annotations} · observations ${c.observations} · repères ${c.personal} · mémoire locale ${c.lore} · relief ${c.elevation}</span>`;
 }
 
 function openSnapshotDb(){
@@ -11075,7 +11133,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   state.cadastreBuildings=Array.isArray(d.cadastreBuildings)?d.cadastreBuildings:[];state.cadastreParcels=Array.isArray(d.cadastreParcels)?d.cadastreParcels:[];
   state.address=d.address||null;state.bss=Array.isArray(d.bss)&&d.bss.length?d.bss:mergeBssItems(territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[]);state.hydrometry=Array.isArray(d.hydrometry)?d.hydrometry:[];state.biodiversity=Array.isArray(d.biodiversity)?d.biodiversity:[];state.biodiversityEnabled={...state.biodiversityEnabled,...(d.biodiversityEnabled||{})};state.elevation=d.elevation||null;
   if(d.poiAnnotations&&typeof d.poiAnnotations==="object"&&!Array.isArray(d.poiAnnotations)){state.poiAnnotations=normalizePoiAnnotations(d.poiAnnotations);persistPoiAnnotations()}else loadPoiAnnotations();
-  state.observations=Array.isArray(d.observations)?d.observations:[];state.loreItems=Array.isArray(d.loreItems)?d.loreItems:[];state.encounterCollection=d.encounterCollection&&typeof d.encounterCollection==="object"&&!Array.isArray(d.encounterCollection)?d.encounterCollection:state.encounterCollection;state.encounterEnabled=d.encounterEnabled!==undefined?!!d.encounterEnabled:state.encounterEnabled;saveEncounterCollection();
+  state.observations=Array.isArray(d.observations)?d.observations:[];state.personalMarkers=Array.isArray(d.personalMarkers)?d.personalMarkers:[];state.loreItems=Array.isArray(d.loreItems)?d.loreItems:[];savePersonalMarkers();state.encounterCollection=d.encounterCollection&&typeof d.encounterCollection==="object"&&!Array.isArray(d.encounterCollection)?d.encounterCollection:state.encounterCollection;state.encounterEnabled=d.encounterEnabled!==undefined?!!d.encounterEnabled:state.encounterEnabled;saveEncounterCollection();
   state.zoomIndex=clamp(Number(v.zoomIndex??state.zoomIndex),0,CONFIG.zooms.length-1);state.depthIndex=clamp(Number(v.depthIndex??state.depthIndex),0,CONFIG.depths.length-1);
   state.center=v.center&&Number.isFinite(+v.center.lat)&&Number.isFinite(+v.center.lon)?clampCenter({lat:+v.center.lat,lon:+v.center.lon},CONFIG.zooms[state.zoomIndex]):{...CONFIG.house};
   state.scenario=v.scenario||state.scenario;els.scenario.value=state.scenario;
@@ -11404,6 +11462,7 @@ async function bootAtlas(){
     }
     loadLocalCavities();
     loadLoreItems();
+    loadPersonalMarkers();
     loadHeritage();
     loadCartofriches();
     loadBssLocal();

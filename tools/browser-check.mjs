@@ -810,6 +810,13 @@ try {
     assert.match(result.obs.note,/note longue/);assert.match(result.lore.note,/depuis longtemps/);assert.match(result.snapshot.observations[0].note,/note longue/);assert.match(result.content.notes[0].note,/depuis longtemps/);assert.match(result.summary,/2 repères/);assert.match(result.list,/Trouvé au bord du chemin/);assert.match(result.list,/Le vieux pommier/);
   });
 
+  await withPage("carte personnelle portable", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);await page.locator("#sidebar-tab-noter").click();await page.evaluate(()=>{render("test-carte-personnelle");selectGridCell(Math.floor(CONFIG.gridW/2),Math.floor(CONFIG.gridH/2),{note:"Test carte personnelle"})});
+    await page.locator('details[data-ui-subsection="personal-map"] summary').click();await page.selectOption("#personalCategory","water");await page.selectOption("#personalGeometry","zone");await page.locator("#personalName").fill("Suintement du chemin");await page.locator("#personalDate").fill("août 2026");await page.locator("#personalNote").fill("Eau visible après plusieurs jours de pluie.");await page.locator("#addPersonalMarker").click();
+    const result=await page.evaluate(async()=>{ensureSpatialIndexes();const marker=state.personalMarkers[0],poi=spatialRuntime.normalizedPois.find(item=>item.sourceType==="personal"),snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(snapshot),portable=await atlasCarnetToSnapshot(carnet);return {marker,poi,feature:symbolicPoiFeatureInfo(poi),snapshot:snapshot.data.personalMarkers[0],carnet:carnet.content.personalMarkers[0],portable:portable.data.personalMarkers[0],visible:state.layerPersonal,ledger:els.fieldworkLedgerList.textContent}});
+    for(const copy of [result.marker,result.snapshot,result.carnet,result.portable]){assert.equal(copy.category,"water");assert.equal(copy.geometry,"zone");assert.equal(copy.name,"Suintement du chemin");assert.match(copy.note,/Eau visible/)}assert.equal(result.poi.category,"memory");assert.equal(result.feature.personal,true);assert.equal(result.visible,true);assert.match(result.ledger,/Suintement du chemin/);
+  });
+
   await withPage("filtres groupés des couches", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const terrainBefore=await page.evaluate(()=>state.layerSurface);
@@ -884,7 +891,7 @@ try {
     });
     assert.deepEqual(initial.tabs.map(tab=>tab.label),["Carnets","Explorer","Noter","Sources"]);
     assert.equal(initial.active,"explorer");assert.deepEqual(initial.visible,["explorer"]);assert.equal(initial.tabs[1].selected,"true");
-    assert.equal(initial.nativeSubsections,5);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
+    assert.equal(initial.nativeSubsections,6);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
     assert.equal(initial.audioLocation,"sources");assert.equal(initial.debugLocation,"sources");assert.deepEqual(initial.orphanCards,[]);assert.equal(initial.poolActiveCards,0);assert.deepEqual(initial.nativePlacement,{carnets:"carnets",location:"explorer",notes:"noter",status:"sources"});assert.equal(initial.tabLinks,true);
     for(const font of [initial.typography.sidebar,initial.typography.statusbar,initial.typography.readout])assert.match(font,/Arial|Helvetica/);assert.match(initial.typography.canvas,/mono/i);
     for(const style of [initial.shellStyle,initial.cardStyle,initial.buttonStyle]){assert.equal(style.radius,"0px");assert.equal(style.shadow,"none");assert.equal(style.image,"none");assert.equal(style.animation,"none")}

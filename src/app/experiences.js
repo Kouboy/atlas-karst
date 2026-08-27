@@ -326,7 +326,7 @@ function ensurePoiLayerVisible(poi){
   }else if(poi.category==="industrial"){
     if(poi.sourceType==="cartofriches"){state.layerCartofriches=true;if(els.layerCartofriches)els.layerCartofriches.checked=true}else{state.layerLore=true;if(els.layerLore)els.layerLore.checked=true}
   }else if(poi.category==="memory"){
-    if(poi.sourceType==="observation"){state.layerObservations=true;if(els.layerObservations)els.layerObservations.checked=true}else{state.layerLore=true;if(els.layerLore)els.layerLore.checked=true}
+    if(poi.sourceType==="observation"){state.layerObservations=true;if(els.layerObservations)els.layerObservations.checked=true}else if(poi.sourceType==="personal"){state.layerPersonal=true;if(els.layerPersonal)els.layerPersonal.checked=true}else{state.layerLore=true;if(els.layerLore)els.layerLore.checked=true}
   }else if(poi.category==="home"){state.layerHouse=true;if(els.layerHouse)els.layerHouse.checked=true}
 }
 function focusNormalizedPoi(uid){
