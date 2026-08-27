@@ -1,5 +1,17 @@
 # Journal des versions
 
+## 0.18n — Territoire dans le temps
+
+- Accès contextuel à Remonter le Temps : la comparaison IGN s’ouvre au repère de départ ou à la case sélectionnée.
+- Carnet de transformations personnelles, géolocalisé et inclus dans les sauvegardes, instantanés et carnets partageables.
+- CASIAS ajouté au catalogue comme source historique consultable, avec une formulation explicite : une activité recensée ne prouve pas une pollution effective.
+
+## 0.18n — Territoire dans le temps
+
+- Accès contextuel à Remonter le Temps : la comparaison IGN s’ouvre au repère de départ ou à la case sélectionnée.
+- Carnet de transformations personnelles, géolocalisé et inclus dans les sauvegardes, instantanés et carnets partageables.
+- CASIAS ajouté au catalogue comme source historique consultable, avec une formulation explicite : une activité recensée ne prouve pas une pollution effective.
+
 ## 0.18m — Enrichissement raisonné des sources
 
 - Ajout de l’API Carto Nature de l’IGN : Natura 2000, réserves naturelles, ZNIEFF et parcs sont interrogés sur l’emprise exacte d’un Territoire.

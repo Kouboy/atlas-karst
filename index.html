@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18m · sources naturelles raisonnées</title>
+  <title>Atlas Karst ASCII v0.18n · territoire dans le temps</title>
 <style>
 :root{
   color-scheme:dark;
@@ -1609,6 +1609,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <label class="switch" data-layer-category="documents"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
       <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
       <label class="switch" data-layer-category="documents"><input id="layerNatureAreas" type="checkbox" checked> Espaces naturels remarquables</label>
+      <label class="switch" data-layer-category="documents"><input id="layerIndustrialHistory" type="checkbox" checked> Traces industrielles et activités anciennes</label>
       <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
       <label class="switch" data-layer-category="documents"><input id="layerPersonal" type="checkbox" checked> Repères personnels de carnet</label>
       <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
@@ -1658,7 +1659,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <button id="geocodeHouse">⌖ chercher l’adresse</button>
       <button id="snapHouseBuilding">▣ bâtiment cadastral</button>
     </div>
-    <button id="openHistory" style="width:100%;margin-top:7px">◫ comparer les photos aériennes anciennes</button>
+    <button id="openHistory" style="width:100%;margin-top:7px">◫ comparer les archives IGN ici</button>
     <div class="small" id="houseHelp" style="margin-top:8px">Clique n’importe quelle case pour faire apparaître le cadre jaune, puis utilise <strong>⌖ maison sur la sélection</strong>. Les champs numériques restent disponibles si la souris boude.</div>
     <div class="small" style="margin-top:8px"><strong>Navigation :</strong> immobiliser brièvement le pointeur sur un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
   </section>
@@ -1844,6 +1845,28 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
     <div class="small" id="natureAreasHelp" style="margin-top:8px">L’Atlas interroge l’API Carto Nature de l’IGN sur l’emprise exacte du Territoire : Natura 2000, réserves, ZNIEFF et parcs. Un statut ou inventaire donne du contexte écologique ; il ne prouve pas une présence actuelle, ni une règle applicable sans consulter la source officielle.</div>
   </section>
 
+  <section class="card" data-ui-card="time">
+    <h2>Territoire dans le temps</h2>
+    <div class="grid2"><div><div class="carto-count" id="landscapeChangesCount">0</div><div class="small">transformations consignées</div></div><div class="small" id="landscapeChangesSummary">Aucune transformation personnelle consignée.</div></div>
+    <button id="openSelectedHistory" style="width:100%;margin-top:9px">◫ ouvrir Remonter le Temps à la sélection</button>
+    <details class="technical-details" style="margin-top:8px" open><summary>Consigner une transformation</summary>
+      <label class="field-label">Période ou date<input id="landscapeChangeDate" type="text" maxlength="120" placeholder="ex. vers 1995 / été 2024"></label>
+      <label class="field-label">Titre<input id="landscapeChangeName" type="text" maxlength="160" placeholder="ancienne prairie devenue lotissement"></label>
+      <label class="field-label">Avant / trace observée<textarea id="landscapeChangeBefore" maxlength="1200" placeholder="archive, témoignage, carte…"></textarea></label>
+      <label class="field-label">Aujourd’hui / observation<textarea id="landscapeChangeAfter" maxlength="1200" placeholder="ce qui est visible ou connu aujourd’hui"></textarea></label>
+      <label class="field-label">Note libre<textarea id="landscapeChangeNote" maxlength="2400"></textarea></label>
+      <div class="grid2"><button id="addLandscapeChange" type="button">＋ enregistrer à la sélection</button><button id="removeLandscapeChange" type="button">× supprimer la transformation</button></div>
+      <div class="small" id="landscapeChangeHelp" style="margin-top:8px">Sélectionne une case puis rapproche les observations personnelles des archives, sans transformer une hypothèse en fait.</div>
+    </details>
+  </section>
+
+  <section class="card" data-ui-card="industrial-history">
+    <h2>Mémoire industrielle</h2>
+    <div class="small">CASIAS conserve la mémoire d’anciennes activités industrielles et de services. Ce repérage historique n’établit pas, à lui seul, une pollution effective des sols.</div>
+    <button id="openCasias" style="width:100%;margin-top:9px">↗ consulter CASIAS / Géorisques</button>
+    <div class="small" id="casiasHelp" style="margin-top:8px">Le portail Géorisques offre la source nationale et ses fiches. Aucun point n’est inventé ou déduit automatiquement par l’Atlas.</div>
+  </section>
+
   <section class="card" data-ui-card="source-status">
     <h2>État des sources</h2>
     <div class="data-status">
@@ -1857,6 +1880,7 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
       <div class="status-line"><span>Hydrométrie</span><strong id="hydrometryStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Biodiversité</span><strong id="biodiversityStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Espaces naturels</span><strong id="natureStatus" class="pending">à synchroniser</strong></div>
+      <div class="status-line"><span>Mémoire industrielle CASIAS</span><strong id="casiasStatus" class="pending">consultation externe</strong></div>
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>
@@ -2064,7 +2088,7 @@ const URL_FLAGS = new URLSearchParams(location.search);
 const LOCAL_FILE_MODE = location.protocol==="file:";
 const FORCE_ONLINE = URL_FLAGS.has("online");
 const OFFLINE_TEST = URL_FLAGS.has("offline");
-const APP_VERSION = "0.18m";
+const APP_VERSION = "0.18n";
 const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
@@ -2299,7 +2323,7 @@ function runAtlasSelfCheck(){
   checks.push(debugCheckResult("Architecture du carnet",sidebarSections.length===4&&visibleSidebarSections.length===1&&uiShellRuntime.nativeSubsections===7,`${sidebarSections.length} sections · ${uiShellRuntime.nativeSubsections} sous-sections natives · section ${uiShellRuntime.activeSection}`));
   checks.push(debugCheckResult("Gestionnaire d’instantanés",snapshotRuntime.ready&&snapshotRuntime.bound&&!snapshotRuntime.lastError,`schéma ${snapshotRuntime.lastSchema}/${SNAPSHOT_SCHEMA_VERSION} · ${snapshotRuntime.applied} restaurations · ${snapshotRuntime.dbSaves}/${snapshotRuntime.dbLoads} écritures/lectures · ${snapshotRuntime.migrations} migrations`));
   checks.push(debugCheckResult("Format portable du carnet",carnetRuntime.ready&&!carnetRuntime.lastError,`schéma ${ATLAS_CARNET_SCHEMA_VERSION} · ${carnetRuntime.built}/${carnetRuntime.validated} constructions/validations · ${carnetRuntime.lastBytes?debugFormatBytes(carnetRuntime.lastBytes):"aucun export"} · ${carnetRuntime.lastAlgorithm}`));
-  checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===12&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
+  checks.push(debugCheckResult("Registre des sources",sourceRegistryRuntime.ready&&SOURCE_REGISTRY.length===13&&!sourceRegistryRuntime.lastError,`schéma ${SOURCE_REGISTRY_SCHEMA_VERSION} · ${SOURCE_REGISTRY.length} sources · ${sourceRegistryRuntime.catalogRenders} catalogue · ${sourceRegistryRuntime.statusUpdates} statuts`));
   checks.push(debugCheckResult("Hydrométrie bornée",hydrometryRuntime.ready&&state.hydrometry.length<=HYDROMETRY_STATION_CAP,`${state.hydrometry.length}/${HYDROMETRY_STATION_CAP} stations · ${hydrometryRuntime.measured} mesurées · ${hydrometryRuntime.observationRequests} requêtes de mesure`));
   checks.push(debugCheckResult("Biodiversité agrégée",biodiversityRuntime.ready&&state.biodiversity.length<=Math.ceil(CONFIG.dataWidthKm)*Math.ceil(CONFIG.dataHeightKm),`${biodiversityUniqueSpecies()} espèces · ${state.biodiversity.length} mailles · ${biodiversityRuntime.rawReceived} occurrences échantillonnées`));
   checks.push(debugCheckResult("Espaces naturels bornés",natureAreasRuntime.ready&&state.natureAreas.length<=NATURE_ENDPOINTS.length*NATURE_AREA_CAP,`${state.natureAreas.length}/${NATURE_ENDPOINTS.length*NATURE_AREA_CAP} zones · ${natureAreasRuntime.requests} requêtes`));
@@ -2651,6 +2675,7 @@ const state = {
   layerHydrometry:true,
   layerBiodiversity:true,
   layerNatureAreas:true,
+  layerIndustrialHistory:true,
   layerObservations:true,
   layerPersonal:true,
   layerHeritage:true,
@@ -2694,6 +2719,7 @@ const state = {
   hydrometry:[],
   biodiversity:[],
   natureAreas:[],
+  landscapeChanges:[],
   biodiversityEnabled:{animals:true,plants:true,fungi:true},
   poiAnnotations:{},
   cavityInventoryOnly:true,
@@ -2706,7 +2732,7 @@ const state = {
   selectionAssistVisible:false,
   allowNetwork:FORCE_ONLINE||!EMBEDDED_SNAPSHOT,
   snapshotSource:EMBEDDED_SNAPSHOT?"embarqué":"session",
-  load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",biodiversity:"pending",nature:"pending",elevation:"pending"}
+  load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",biodiversity:"pending",nature:"pending",casias:"pending",elevation:"pending"}
 };
 
 els = Object.fromEntries([
@@ -2715,11 +2741,12 @@ els = Object.fromEntries([
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
-  "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
+  "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","natureAreasCount","natureAreasSummary","syncNatureAreas","clearNatureAreas","natureAreasHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","personalCategory","personalGeometry","personalConfidence","personalRadius","personalDate","personalName","personalNote","addPersonalMarker","removePersonalMarker","personalHelp","undergroundKind","undergroundDepth","undergroundGeometry","undergroundConfidence","undergroundRadius","undergroundName","undergroundNote","addUndergroundHypothesis","removeUndergroundHypothesis","undergroundHelp","undergroundHypothesisList","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","natureStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
+Object.assign(els,Object.fromEntries(["openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","casiasStatus","layerIndustrialHistory"].map(id=>[id,document.getElementById(id)])));
 
 const SOURCE_REGISTRY_SCHEMA_VERSION=1;
 const SOURCE_REGISTRY=Object.freeze([
@@ -2734,6 +2761,7 @@ const SOURCE_REGISTRY=Object.freeze([
   {id:"hydrometry",statusKey:"hydrometry",statusElementId:"hydrometryStatus",label:"Stations hydrométriques",provider:"Hub’Eau / PHyC / Vigicrues",category:"hydrologie de surface",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"hydrometry",license:"Licence Ouverte 2.0",url:"https://hubeau.eaufrance.fr/page/api-hydrometrie"},
   {id:"biodiversity",statusKey:"biodiversity",statusElementId:"biodiversityStatus",label:"Occurrences de biodiversité",provider:"GBIF",category:"biodiversité documentée",coverage:"mondiale",refresh:"manuelle",storage:"extrait agrégé local",portable:"embedded",metric:"biodiversity",license:"Selon chaque jeu source GBIF",url:"https://www.gbif.org/"},
   {id:"nature",statusKey:"nature",statusElementId:"natureStatus",label:"Espaces naturels remarquables",provider:"API Carto Nature · IGN / INPN",category:"protection et inventaire écologique",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"nature",license:"Licence Ouverte 2.0",url:"https://apicarto.ign.fr/api/doc/nature"},
+  {id:"casias",statusKey:"casias",statusElementId:"casiasStatus",label:"Mémoire industrielle CASIAS",provider:"Géorisques / BRGM",category:"histoire industrielle et services",coverage:"France",refresh:"consultation manuelle",storage:"aucune donnée inférée",portable:"referenced",metric:"casias",license:"Selon le portail source",url:"https://www.georisques.gouv.fr/donnees/bases-de-donnees/inventaire-historique-de-sites-industriels-et-activites-de-service"},
   {id:"relief",statusKey:"elevation",statusElementId:"elevationStatus",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",category:"altimétrie",coverage:"mondiale avec priorité France",refresh:"à la création",storage:"cache local",portable:"referenced",metric:"elevation",license:"Selon le fournisseur",url:"https://geoservices.ign.fr/rgealti"}
 ]);
 const sourceRegistryRuntime={ready:true,schema:SOURCE_REGISTRY_SCHEMA_VERSION,catalogRenders:0,attributionRenders:0,statusUpdates:0,lastStatusKey:"—",lastError:""};
@@ -3328,6 +3356,7 @@ function symbolicPoiLayerEnabled(poi){
   if(poi.sourceType==="hydrometry")return !!state.layerHydrometry&&currentDepth()===0;
   if(poi.sourceType==="biodiversity")return !!state.layerBiodiversity&&currentDepth()===0&&biodiversityVisibleSpecies(poi.raw).length>0;
   if(poi.sourceType==="nature")return !!state.layerNatureAreas&&currentDepth()===0;
+  if(poi.sourceType==="landscape-change")return !!state.layerIndustrialHistory&&currentDepth()===0;
   if(poi.sourceType==="cavity"||poi.sourceType==="osm-natural")return !!state.layerCavities;
   if(poi.sourceType==="heritage")return !!state.layerHeritage&&state.heritageEnabled[poi.raw?.category]!==false;
   if(poi.sourceType==="observation")return !!state.layerObservations;
@@ -3455,6 +3484,7 @@ function symbolicPoiFeatureInfo(poi){
   if(poi.sourceType==="bss")return poiFeatureInfo(poi,{kind:r.piezo?"station piézométrique":"forage ou ouvrage BSS",depth:r.depth,nature:r.nature,altitude:r.altitude,commune:r.commune,indice:r.indice,place:r.place,bss:true,piezo:!!r.piezo});
   if(poi.sourceType==="hydrometry")return poiFeatureInfo(poi,{kind:"station hydrométrique",hydrometry:true,river:r.river,commune:r.commune,code:r.code,heightM:r.heightM,flowM3s:r.flowM3s,observedAt:r.observedAt,url:r.url,license:r.license});
   if(poi.sourceType==="biodiversity")return biodiversityFeatureInfo(poi);
+  if(poi.sourceType==="landscape-change")return poiFeatureInfo(poi,{memory:true,landscapeChange:true,period:poi.raw?.period||"",before:poi.raw?.before||"",after:poi.raw?.after||"",note:poi.raw?.note||""});
   if(poi.sourceType==="cartofriches")return poiFeatureInfo(poi,{kind:poi.kind,cartofriches:true,siteType:r.type,siteStatus:r.status,address:r.address,surface:r.surface,occupation:r.occupation,activity:r.activity,activityEnd:r.activityEnd,commune:r.commune,url:r.url});
   return poiFeatureInfo(poi,{kind:poi.kind,note:r.note||poi.description||"",description:r.description||poi.description||"",period:r.period||r.date||"",observation:poi.sourceType==="observation",lore:poi.sourceType==="lore",personal:poi.sourceType==="personal",nature:poi.sourceType==="nature",reference:poi.sourceType==="nature"?r.reference:"",areaHa:poi.sourceType==="nature"?r.areaHa:null,url:r.url||"",userHypothesis:poi.sourceType==="underground",hypothesis:poi.sourceType==="underground",depth:poi.sourceType==="underground"?r.depth:undefined,confidenceLabel:r.confidence?confidenceLabel(r.confidence):"",heritage:poi.sourceType==="heritage"});
 }
@@ -4523,7 +4553,7 @@ function normalizedPoiCategory(sourceType,raw){
   if(sourceType==="biodiversity")return "biodiversity";
   if(sourceType==="cavity")return "cavity";
   if(sourceType==="heritage")return "heritage";
-  if(sourceType==="observation"||sourceType==="lore"||sourceType==="personal")return "memory";
+  if(sourceType==="observation"||sourceType==="lore"||sourceType==="personal"||sourceType==="landscape-change")return "memory";
   if(sourceType==="cartofriches")return "industrial";
   if(sourceType==="house")return "home";
   if(sourceType==="location")return "location";
@@ -4565,7 +4595,7 @@ function ensureSpatialIndexes(){
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
     bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,nature:state.natureAreas,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
-    lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,cartofriches:state.cartofriches,userLocation:state.userLocation
+    lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,landscapeChanges:state.landscapeChanges,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
   const houseStamp=`${CONFIG.house.lat}:${CONFIG.house.lon}`;
@@ -4601,6 +4631,7 @@ function ensureSpatialIndexes(){
   for(const item of state.undergroundHypotheses||[]){const definition=undergroundHypothesisDefinition(item.kind);addPoi("underground",item,{kind:`${definition.label} · ${depthSliceLabel(item.depth)}`,title:item.name||definition.label,priority:22})}
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
   for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});
+  for(const item of state.landscapeChanges||[])addPoi("landscape-change",item,{kind:"transformation du territoire consignée",title:item.name||"Transformation personnelle",priority:20});
   for(const f of state.cartofriches||[])addPoi("cartofriches",f,{kind:f.type||"site Cartofriches",title:f.name||"Site recensé",priority:22});
   if(OFFLINE_TEST&&territoryUsesEmbeddedData("offlineDemo",CONFIG.territory)&&!state.cartofriches?.length&&!state.loreItems?.length&&!state.localCavities?.length){
     for(const d of OFFLINE_DEMO_POINTS)addPoi("demo",d,{kind:d.kind,title:d.name,priority:21});
@@ -8106,9 +8137,9 @@ function resetTerritoryRuntimeData(){
   state.officialCavities=[];state.cartofriches=[];state.heritageItems=[];state.cadastreBuildings=[];state.cadastreParcels=[];
   state.address=null;state.bss=[];state.hydrometry=[];state.biodiversity=[];state.elevation=null;state.selectedCavity=null;state.selectedCell=null;state.houseBuilding=null;
   state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;state.osmLastError="";
-  loadLocalCavities();loadLoreItems();loadPersonalMarkers();loadUndergroundHypotheses();loadNatureAreas();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
+  loadLocalCavities();loadLoreItems();loadPersonalMarkers();loadUndergroundHypotheses();loadLandscapeChanges();loadNatureAreas();loadCartofriches();loadHeritage();loadBssLocal();loadHydrometry();loadBiodiversity();loadPoiAnnotations();loadEncounterCollection();updateEncounterUI();
   refreshCavities();populateCavitySelect();markSpatialIndexesDirty();hypothesisModelCache.clear();descriptionRuntime.cache.clear();
-  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();if(typeof renderUndergroundHypothesisList==="function")renderUndergroundHypothesisList();
+  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();if(typeof renderUndergroundHypothesisList==="function")renderUndergroundHypothesisList();if(typeof updateLandscapeChangesUI==="function")updateLandscapeChangesUI();
   for(const kind of ["osm","address","cadastre","cavities","elevation"])setStatus(kind,"pending","à synchroniser");
   setStatus("cartofriches",state.cartofriches.length?"ok":"pending",state.cartofriches.length?`${state.cartofriches.length} sites locaux`:"à charger");
   setStatus("heritage",state.heritageItems.length?"ok":"pending",state.heritageItems.length?`${state.heritageItems.length} notices locales`:"à synchroniser");
@@ -8379,6 +8410,11 @@ function fieldworkEntryDate(value){
   const date=new Date(value);return Number.isNaN(date.getTime())?"date non renseignée":date.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
 }
 function fieldworkId(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
+const LANDSCAPE_CHANGES_KEY="atlas-karst-landscape-changes-v1";
+function saveLandscapeChanges(){try{localStorage.setItem(territoryStorageKey(LANDSCAPE_CHANGES_KEY),JSON.stringify(state.landscapeChanges||[]))}catch{}}
+function loadLandscapeChanges(){try{const saved=JSON.parse(localStorage.getItem(territoryStorageKey(LANDSCAPE_CHANGES_KEY))||"[]");state.landscapeChanges=Array.isArray(saved)?saved.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)):[]}catch{state.landscapeChanges=[]}updateLandscapeChangesUI()}
+function updateLandscapeChangesUI(){const items=state.landscapeChanges||[];if(els.landscapeChangesCount)els.landscapeChangesCount.textContent=String(items.length);if(els.landscapeChangesSummary)els.landscapeChangesSummary.textContent=items.length?`${items.length} transformation${items.length>1?"s":""} personnelle${items.length>1?"s":""} · partagée${items.length>1?"s":""} avec les exports du carnet.`:"Aucune transformation personnelle consignée."}
+function remonterLeTempsUrl(coord=CONFIG.house){return `https://remonterletemps.ign.fr/comparer/?lat=${encodeURIComponent(Number(coord.lat).toFixed(6))}&lon=${encodeURIComponent(Number(coord.lon).toFixed(6))}&z=16&mode=split-h`}
 function fieldworkRecords(filter=els.fieldworkLedgerFilter?.value||"all"){
   const observations=(state.observations||[]).map(record=>({kind:"observation",record,id:String(record.id||""),title:record.name||"Observation sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.season||"",meta:[record.mode==="sight"?"visée":record.mode==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.season].filter(Boolean).join(" · ")}));
   const personal=(state.personalMarkers||[]).map(record=>({kind:"personal",record,id:String(record.id||""),title:record.name||personalMarkerDefinition(record.category).label,note:record.note||"",date:record.updatedAt||record.createdAt||record.date||"",meta:[personalMarkerDefinition(record.category).label,record.geometry==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.date].filter(Boolean).join(" · ")}));
@@ -8471,7 +8507,19 @@ function bindFieldworkController(){
     state.center=clampCenter({...CONFIG.house},currentZoom());render();
   });
   els.snapHouseBuilding.addEventListener("click",()=>{if(snapHouseToBuilding(true)){state.center=clampCenter({...CONFIG.house},currentZoom());render()}});
-  els.openHistory.addEventListener("click",()=>window.open(`https://remonterletemps.ign.fr/comparer/?lat=${CONFIG.house.lat}&lon=${CONFIG.house.lon}&z=16&mode=split-h`,"_blank","noopener"));
+  els.openHistory.addEventListener("click",()=>window.open(remonterLeTempsUrl(CONFIG.house),"_blank","noopener"));
+  els.openSelectedHistory?.addEventListener("click",()=>{const coord=state.selectedCell?.coord||CONFIG.house;window.open(remonterLeTempsUrl(coord),"_blank","noopener");if(els.landscapeChangeHelp)els.landscapeChangeHelp.textContent=state.selectedCell?"Archives IGN ouvertes au centre de la case sélectionnée.":"Aucune case sélectionnée : les archives IGN sont ouvertes au repère de départ."});
+  els.openCasias?.addEventListener("click",()=>{window.open("https://www.georisques.gouv.fr/donnees/bases-de-donnees/inventaire-historique-de-sites-industriels-et-activites-de-service","_blank","noopener");setStatus("casias","ok","portail ouvert");});
+  els.addLandscapeChange?.addEventListener("click",()=>{
+    if(!state.selectedCell){els.landscapeChangeHelp.textContent="Sélectionne d’abord une case sur la carte.";return}
+    const target=state.selectedCell.coord,item={id:fieldworkId("TMP"),name:els.landscapeChangeName.value.trim().slice(0,160)||"Transformation sans titre",period:els.landscapeChangeDate.value.trim().slice(0,120),before:els.landscapeChangeBefore.value.trim().slice(0,1200),after:els.landscapeChangeAfter.value.trim().slice(0,1200),note:els.landscapeChangeNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,source:"Transformation personnelle consignée dans ce carnet",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    state.landscapeChanges.push(item);saveLandscapeChanges();updateLandscapeChangesUI();markSpatialIndexesDirty();autosaveActiveTerritory();render("landscape-change-add");els.landscapeChangeHelp.innerHTML=`Transformation <strong>${esc(item.name)}</strong> enregistrée dans le carnet.`;for(const field of [els.landscapeChangeDate,els.landscapeChangeName,els.landscapeChangeBefore,els.landscapeChangeAfter,els.landscapeChangeNote])if(field)field.value="";
+  });
+  els.removeLandscapeChange?.addEventListener("click",()=>{
+    if(!state.selectedCell){els.landscapeChangeHelp.textContent="Sélectionne d’abord la transformation à supprimer.";return}
+    const nearest=(state.landscapeChanges||[]).map(item=>({item,d:distanceMeters(item,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(!nearest||nearest.d>120){els.landscapeChangeHelp.textContent="Aucune transformation personnelle suffisamment proche de la sélection.";return}
+    state.landscapeChanges=state.landscapeChanges.filter(item=>item.id!==nearest.item.id);saveLandscapeChanges();updateLandscapeChangesUI();markSpatialIndexesDirty();autosaveActiveTerritory();render("landscape-change-delete");els.landscapeChangeHelp.textContent="Transformation personnelle supprimée.";
+  });
   els.applyHouseCoords.addEventListener("click",()=>{
     const lat=Number(els.houseLat.value),lon=Number(els.houseLon.value);
     if(!Number.isFinite(lat)||!Number.isFinite(lon)){els.houseHelp.innerHTML='<span class="house-placement-note">Coordonnées invalides.</span>';return}
@@ -8597,7 +8645,7 @@ function bindExperienceController(){
   els.guidedTourStop.addEventListener("click",()=>{experienceControllerRuntime.tourStops++;accountExperienceAction("fin du parcours");stopGuidedTour()});
 }
 
-const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const VIEW_LAYER_CONTROL_IDS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerIndustrialHistory","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const VIEW_LAYER_FILTER_KEY="atlas-karst-layer-filter-v1";
 const viewControllerRuntime={ready:true,bound:false,modeChanges:0,scenarioChanges:0,layerChanges:0,cavitySelections:0,recenters:0,debugActions:0,lastAction:"initialisation"};
 
@@ -8998,6 +9046,13 @@ function drawNatureAreas(g){
     const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),info=poiFeatureInfo(poi,{kind:item.kind,nature:true,reference:item.reference||"",areaHa:item.areaHa,url:item.url||"",source:item.source||"API Carto Nature · IGN / INPN"});
     putText(g,p.x,p.y,compact?"N":"NAT","c-nature-area",17,info);
     if(state.layerLabels&&state.zoomIndex>=3&&item.name)tryMapLabel(g,p,item.name,"c-label",13,info,"nature",1,false);
+  }
+}
+function drawLandscapeChanges(g){
+  if(!state.layerIndustrialHistory||currentDepth()!==0||!state.landscapeChanges.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"landscape-change")){
+    const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),info=poiFeatureInfo(poi,{kind:"transformation du territoire consignée",memory:true,landscapeChange:true,period:item.period||"",before:item.before||"",after:item.after||"",note:item.note||"",source:item.source||"Carnet personnel"});
+    putText(g,p.x,p.y,"T","c-memory",20,info);if(state.layerLabels&&state.zoomIndex>=3&&item.name)tryMapLabel(g,p,item.name,"c-label",13,info,"memory",1,false);
   }
 }
 function drawObservations(g){
@@ -9627,6 +9682,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawHydrometry(grid);
     drawBiodiversity(grid);
     drawNatureAreas(grid);
+    drawLandscapeChanges(grid);
     drawObservations(grid);
     drawPersonalMarkers(grid);
     drawUndergroundHypotheses(grid);
@@ -10473,7 +10529,7 @@ function openSidebarPanel(section,title=""){
 function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
   const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
-    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","nature","diagnostic"]
+    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes","time"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","nature","industrial-history","diagnostic"]
   };
   for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
     const section=tab.dataset.sectionTarget;
@@ -11017,7 +11073,7 @@ function carnetArray(value){return Array.isArray(value)?carnetJsonClone(value):[
 function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
-    observations:content.observations?.length||0,personalMarkers:content.personalMarkers?.length||0,undergroundHypotheses:content.undergroundHypotheses?.length||0,
+    observations:content.observations?.length||0,personalMarkers:content.personalMarkers?.length||0,undergroundHypotheses:content.undergroundHypotheses?.length||0,landscapeChanges:content.landscapeChanges?.length||0,
     notes:content.notes?.length||0,annotations:Object.keys(content.annotations||{}).length,
     embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.biodiversity?.length||0)+(extracts.address?1:0),
     sourceReferences:document.sources?.references?.length||0
@@ -11032,7 +11088,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     territory,
     content:{
       startPoint:carnetJsonClone(snapshot.house||territory.center),
-      observations:carnetArray(d.observations),personalMarkers:carnetArray(d.personalMarkers),undergroundHypotheses:carnetArray(d.undergroundHypotheses),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
+      observations:carnetArray(d.observations),personalMarkers:carnetArray(d.personalMarkers),undergroundHypotheses:carnetArray(d.undergroundHypotheses),landscapeChanges:carnetArray(d.landscapeChanges),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
       experiences:{collection:carnetJsonClone(d.encounterCollection||{}),enabled:!!d.encounterEnabled}
     },
     presentation:{
@@ -11077,14 +11133,14 @@ async function atlasCarnetToSnapshot(document){
     data:{
       osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
       address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),natureAreas:carnetArray(extracts.natureAreas),
-      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),personalMarkers:carnetArray(content.personalMarkers),undergroundHypotheses:carnetArray(content.undergroundHypotheses),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
+      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),personalMarkers:carnetArray(content.personalMarkers),undergroundHypotheses:carnetArray(content.undergroundHypotheses),landscapeChanges:carnetArray(content.landscapeChanges),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
     }
   };
 }
 
 const SNAPSHOT_SCHEMA_VERSION=3;
 const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
-const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion"];
+const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerIndustrialHistory","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const snapshotRuntime={
   ready:true,bound:false,built:0,applied:0,imports:0,exports:0,standaloneExports:0,
   dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
@@ -11124,7 +11180,7 @@ function buildAtlasSnapshot(){
       osm:state.osm||[],osmMeta:state.osmMeta||null,osmBaseCoverage:state.osmBaseCoverage||[],osmDetailCoverage:state.osmDetailCoverage||[],
       officialCavities:state.officialCavities||[],cartofriches:state.cartofriches||[],heritageItems:state.heritageItems||[],heritageEnabled:state.heritageEnabled||{},
       cadastreBuildings:state.cadastreBuildings||[],cadastreParcels:state.cadastreParcels||[],address:state.address||null,
-      bss:state.bss||[],hydrometry:state.hydrometry||[],biodiversity:state.biodiversity||[],biodiversityEnabled:state.biodiversityEnabled||{},natureAreas:state.natureAreas||[],poiAnnotations:state.poiAnnotations||{},elevation:state.elevation||null,observations:state.observations||[],personalMarkers:state.personalMarkers||[],undergroundHypotheses:state.undergroundHypotheses||[],loreItems:state.loreItems||[],encounterCollection:state.encounterCollection||{},encounterEnabled:!!state.encounterEnabled
+      bss:state.bss||[],hydrometry:state.hydrometry||[],biodiversity:state.biodiversity||[],biodiversityEnabled:state.biodiversityEnabled||{},natureAreas:state.natureAreas||[],poiAnnotations:state.poiAnnotations||{},elevation:state.elevation||null,observations:state.observations||[],personalMarkers:state.personalMarkers||[],undergroundHypotheses:state.undergroundHypotheses||[],landscapeChanges:state.landscapeChanges||[],loreItems:state.loreItems||[],encounterCollection:state.encounterCollection||{},encounterEnabled:!!state.encounterEnabled
     }
   };
 }
@@ -11285,7 +11341,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   state.cadastreBuildings=Array.isArray(d.cadastreBuildings)?d.cadastreBuildings:[];state.cadastreParcels=Array.isArray(d.cadastreParcels)?d.cadastreParcels:[];
   state.address=d.address||null;state.bss=Array.isArray(d.bss)&&d.bss.length?d.bss:mergeBssItems(territoryUsesEmbeddedData("bss",CONFIG.territory)?BSS_EMBEDDED_LOCAL:[]);state.hydrometry=Array.isArray(d.hydrometry)?d.hydrometry:[];state.biodiversity=Array.isArray(d.biodiversity)?d.biodiversity:[];state.biodiversityEnabled={...state.biodiversityEnabled,...(d.biodiversityEnabled||{})};state.natureAreas=Array.isArray(d.natureAreas)?d.natureAreas:[];saveNatureAreas();state.elevation=d.elevation||null;
   if(d.poiAnnotations&&typeof d.poiAnnotations==="object"&&!Array.isArray(d.poiAnnotations)){state.poiAnnotations=normalizePoiAnnotations(d.poiAnnotations);persistPoiAnnotations()}else loadPoiAnnotations();
-  state.observations=Array.isArray(d.observations)?d.observations:[];state.personalMarkers=Array.isArray(d.personalMarkers)?d.personalMarkers:[];state.undergroundHypotheses=Array.isArray(d.undergroundHypotheses)?d.undergroundHypotheses:[];state.loreItems=Array.isArray(d.loreItems)?d.loreItems:[];savePersonalMarkers();saveUndergroundHypotheses();state.encounterCollection=d.encounterCollection&&typeof d.encounterCollection==="object"&&!Array.isArray(d.encounterCollection)?d.encounterCollection:state.encounterCollection;state.encounterEnabled=d.encounterEnabled!==undefined?!!d.encounterEnabled:state.encounterEnabled;saveEncounterCollection();
+  state.observations=Array.isArray(d.observations)?d.observations:[];state.personalMarkers=Array.isArray(d.personalMarkers)?d.personalMarkers:[];state.undergroundHypotheses=Array.isArray(d.undergroundHypotheses)?d.undergroundHypotheses:[];state.landscapeChanges=Array.isArray(d.landscapeChanges)?d.landscapeChanges:[];state.loreItems=Array.isArray(d.loreItems)?d.loreItems:[];savePersonalMarkers();saveUndergroundHypotheses();saveLandscapeChanges();state.encounterCollection=d.encounterCollection&&typeof d.encounterCollection==="object"&&!Array.isArray(d.encounterCollection)?d.encounterCollection:state.encounterCollection;state.encounterEnabled=d.encounterEnabled!==undefined?!!d.encounterEnabled:state.encounterEnabled;saveEncounterCollection();
   state.zoomIndex=clamp(Number(v.zoomIndex??state.zoomIndex),0,CONFIG.zooms.length-1);state.depthIndex=clamp(Number(v.depthIndex??state.depthIndex),0,CONFIG.depths.length-1);
   state.center=v.center&&Number.isFinite(+v.center.lat)&&Number.isFinite(+v.center.lon)?clampCenter({lat:+v.center.lat,lon:+v.center.lon},CONFIG.zooms[state.zoomIndex]):{...CONFIG.house};
   state.scenario=v.scenario||state.scenario;els.scenario.value=state.scenario;
@@ -11293,7 +11349,7 @@ function applyAtlasSnapshot(snapshot,{source="instantané",renderNow=true}={}){
   if(v.layers&&typeof v.layers==="object")for(const [k,value] of Object.entries(v.layers)){if(SNAPSHOT_LAYER_KEYS.includes(k)&&k in state){state[k]=!!value;if(els[k])els[k].checked=!!value}}
   state.allowNetwork=FORCE_ONLINE;state.snapshotSource=source;state.selectedCell=null;state.selectionAssistVisible=false;state.guidedTourActive=false;state.guidedTourStep=0;
   refreshCavities();updateBssUI();updateHydrometryUI();updateBiodiversityUI();updateNatureAreasUI();updateCartofrichesUI();updateHeritageUI();populateCavitySelect();
-  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();if(typeof renderUndergroundHypothesisList==="function")renderUndergroundHypothesisList();
+  if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();if(typeof renderUndergroundHypothesisList==="function")renderUndergroundHypothesisList();if(typeof updateLandscapeChangesUI==="function")updateLandscapeChangesUI();
   setStatus("osm","ok",state.osm.length?`${state.osm.length} objets · instantané`:"instantané sans OSM");
   setStatus("address",state.address?"ok":"bad",state.address?"instantané":"non embarqué");
   const cadastreEmbedded=state.cadastreBuildings.length||state.cadastreParcels.length;
@@ -11617,12 +11673,14 @@ async function bootAtlas(){
     loadLoreItems();
     loadPersonalMarkers();
     loadUndergroundHypotheses();
+    loadLandscapeChanges();
     loadNatureAreas();
     loadHeritage();
     loadCartofriches();
     loadBssLocal();
     loadHydrometry();
     loadBiodiversity();
+    setStatus("casias","pending","consultation externe");
     loadPoiAnnotations();
     loadEncounterCollection();
     if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();

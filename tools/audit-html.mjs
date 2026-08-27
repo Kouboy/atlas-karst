@@ -41,7 +41,7 @@ check("registre des éléments détecté", () => Boolean(registeredBlock));
 check("registre sans identifiant absent", () => missingRegisteredIds.length === 0);
 check("registre central des sources", () =>
   sourceByName["source-registry.js"].includes("const SOURCE_REGISTRY_SCHEMA_VERSION=1") &&
-  (sourceByName["source-registry.js"].match(/statusElementId:/g)||[]).length===12 &&
+  (sourceByName["source-registry.js"].match(/statusElementId:/g)||[]).length===13 &&
   sourceByName["source-registry.js"].includes("function setSourceStatus") &&
   sourceByName["source-registry.js"].includes("function sourceReferencesForSnapshot") &&
   sourceByName["application-controller.js"].includes("initializeSourceRegistryUI()") &&
