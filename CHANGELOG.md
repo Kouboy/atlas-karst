@@ -2,6 +2,13 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18j — Carnet de terrain éditable
+
+- Les observations et repères de mémoire locale acceptent désormais une note longue, conservée avec le Territoire.
+- Une liste centrale dans l’onglet Noter permet de filtrer, recadrer, modifier ou supprimer chaque repère personnel.
+- Une modification peut déplacer un repère en sélectionnant une nouvelle case, sans créer de doublon.
+- Les contributions mises à jour sont sauvegardées automatiquement dans la bibliothèque locale et restent incluses dans les carnets `.atlas` partagés.
+
 ## 0.18i — Biodiversité locale
 
 - Synchronisation manuelle d’un échantillon GBIF séparé entre faune, flore et champignons, plafonné à 120 occurrences par groupe.

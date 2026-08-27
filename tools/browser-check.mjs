@@ -797,6 +797,19 @@ try {
     assert.ok(result.key);for(const copy of [result.active,result.snapshot,result.carnet,result.portable,result.stored]){assert.equal(copy.title,"Le petit guetteur");assert.equal(copy.note,"Vu près de la haie après la pluie.");assert.equal(copy.speciesNames["ANNOT-1"],"Oiseau des haies")};assert.equal(result.summary,1);
   });
 
+  await withPage("repères de carnet éditables", { width: 1280, height: 720 }, async (page) => {
+    await openOfflineAtlas(page);
+    await page.locator("#sidebar-tab-noter").click();
+    await page.evaluate(()=>{render("test-reperes");selectGridCell(Math.floor(CONFIG.gridW/2),Math.floor(CONFIG.gridH/2),{note:"Test de carnet"})});
+    await page.locator("#localName").fill("Trouvé au bord du chemin");await page.locator("#localNote").fill("Une note longue qui doit suivre le territoire et le partage.");await page.locator("#addLocalMarker").click();
+    await page.locator('details[data-ui-subsection="lore"] summary').click();
+    await page.locator("#loreName").fill("Le vieux pommier");await page.locator("#loreNote").fill("Le voisin raconte qu’il servait de repère.");await page.locator("#addLoreItem").click();
+    const entries=page.locator("#fieldworkLedgerList .fieldwork-ledger-entry");assert.equal(await entries.count(),2);
+    await entries.filter({hasText:"Le vieux pommier"}).getByRole("button",{name:/modifier/i}).click();await page.locator("#loreNote").fill("Le voisin raconte qu’il servait de repère depuis longtemps.");await page.locator("#addLoreItem").click();
+    const result=await page.evaluate(async()=>{const snapshot=buildAtlasSnapshot(),carnet=await buildAtlasCarnet(snapshot);return {obs:state.observations[0],lore:state.loreItems[0],snapshot:snapshot.data,content:carnet.content,summary:els.fieldworkLedgerSummary.textContent,list:els.fieldworkLedgerList.textContent}});
+    assert.match(result.obs.note,/note longue/);assert.match(result.lore.note,/depuis longtemps/);assert.match(result.snapshot.observations[0].note,/note longue/);assert.match(result.content.notes[0].note,/depuis longtemps/);assert.match(result.summary,/2 repères/);assert.match(result.list,/Trouvé au bord du chemin/);assert.match(result.list,/Le vieux pommier/);
+  });
+
   await withPage("filtres groupés des couches", { width: 1280, height: 720 }, async (page) => {
     await openOfflineAtlas(page);
     const terrainBefore=await page.evaluate(()=>state.layerSurface);
@@ -871,7 +884,7 @@ try {
     });
     assert.deepEqual(initial.tabs.map(tab=>tab.label),["Carnets","Explorer","Noter","Sources"]);
     assert.equal(initial.active,"explorer");assert.deepEqual(initial.visible,["explorer"]);assert.equal(initial.tabs[1].selected,"true");
-    assert.equal(initial.nativeSubsections,4);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
+    assert.equal(initial.nativeSubsections,5);assert.equal(initial.retired,true);assert.equal(initial.clearDuplicateHidden,true);assert.equal(initial.selectionOptions,"DETAILS");assert.ok(initial.technicalDetails>=4);
     assert.equal(initial.audioLocation,"sources");assert.equal(initial.debugLocation,"sources");assert.deepEqual(initial.orphanCards,[]);assert.equal(initial.poolActiveCards,0);assert.deepEqual(initial.nativePlacement,{carnets:"carnets",location:"explorer",notes:"noter",status:"sources"});assert.equal(initial.tabLinks,true);
     for(const font of [initial.typography.sidebar,initial.typography.statusbar,initial.typography.readout])assert.match(font,/Arial|Helvetica/);assert.match(initial.typography.canvas,/mono/i);
     for(const style of [initial.shellStyle,initial.cardStyle,initial.buttonStyle]){assert.equal(style.radius,"0px");assert.equal(style.shadow,"none");assert.equal(style.image,"none");assert.equal(style.animation,"none")}
