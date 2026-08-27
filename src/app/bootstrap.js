@@ -138,6 +138,7 @@ const state = {
   layerBiodiversity:true,
   layerNatureAreas:true,
   layerIndustrialHistory:true,
+  layerLandCover:true,
   layerObservations:true,
   layerPersonal:true,
   layerHeritage:true,
@@ -182,6 +183,7 @@ const state = {
   biodiversity:[],
   natureAreas:[],
   landscapeChanges:[],
+  landCover:[],
   biodiversityEnabled:{animals:true,plants:true,fungi:true},
   poiAnnotations:{},
   cavityInventoryOnly:true,
@@ -194,7 +196,7 @@ const state = {
   selectionAssistVisible:false,
   allowNetwork:FORCE_ONLINE||!EMBEDDED_SNAPSHOT,
   snapshotSource:EMBEDDED_SNAPSHOT?"embarqué":"session",
-  load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",biodiversity:"pending",nature:"pending",casias:"pending",elevation:"pending"}
+  load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",biodiversity:"pending",nature:"pending",landcover:"pending",casias:"pending",elevation:"pending"}
 };
 
 els = Object.fromEntries([
@@ -208,4 +210,4 @@ els = Object.fromEntries([
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
-Object.assign(els,Object.fromEntries(["openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","casiasStatus","layerIndustrialHistory"].map(id=>[id,document.getElementById(id)])));
+Object.assign(els,Object.fromEntries(["openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","casiasStatus","layerIndustrialHistory","layerLandCover","landCoverCount","landCoverSummary","syncLandCover","clearLandCover","landCoverHelp","landCoverStatus"].map(id=>[id,document.getElementById(id)])));

@@ -11,6 +11,7 @@ const SOURCE_REGISTRY=Object.freeze([
   {id:"hydrometry",statusKey:"hydrometry",statusElementId:"hydrometryStatus",label:"Stations hydrométriques",provider:"Hub’Eau / PHyC / Vigicrues",category:"hydrologie de surface",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"hydrometry",license:"Licence Ouverte 2.0",url:"https://hubeau.eaufrance.fr/page/api-hydrometrie"},
   {id:"biodiversity",statusKey:"biodiversity",statusElementId:"biodiversityStatus",label:"Occurrences de biodiversité",provider:"GBIF",category:"biodiversité documentée",coverage:"mondiale",refresh:"manuelle",storage:"extrait agrégé local",portable:"embedded",metric:"biodiversity",license:"Selon chaque jeu source GBIF",url:"https://www.gbif.org/"},
   {id:"nature",statusKey:"nature",statusElementId:"natureStatus",label:"Espaces naturels remarquables",provider:"API Carto Nature · IGN / INPN",category:"protection et inventaire écologique",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"nature",license:"Licence Ouverte 2.0",url:"https://apicarto.ign.fr/api/doc/nature"},
+  {id:"landcover",statusKey:"landcover",statusElementId:"landCoverStatus",label:"Occupation du sol",provider:"BD CARTO® · IGN",category:"occupation du sol",coverage:"France",refresh:"manuelle",storage:"extrait local",portable:"embedded",metric:"landcover",license:"Licence Ouverte 2.0",url:"https://geoservices.ign.fr/bdcarto"},
   {id:"casias",statusKey:"casias",statusElementId:"casiasStatus",label:"Mémoire industrielle CASIAS",provider:"Géorisques / BRGM",category:"histoire industrielle et services",coverage:"France",refresh:"consultation manuelle",storage:"aucune donnée inférée",portable:"referenced",metric:"casias",license:"Selon le portail source",url:"https://www.georisques.gouv.fr/donnees/bases-de-donnees/inventaire-historique-de-sites-industriels-et-activites-de-service"},
   {id:"relief",statusKey:"elevation",statusElementId:"elevationStatus",label:"Relief",provider:"IGN / Copernicus / Open-Meteo",category:"altimétrie",coverage:"mondiale avec priorité France",refresh:"à la création",storage:"cache local",portable:"referenced",metric:"elevation",license:"Selon le fournisseur",url:"https://geoservices.ign.fr/rgealti"}
 ]);
@@ -31,12 +32,13 @@ function sourceMetricCount(source,data={}){
   if(source.metric==="hydrometry")return data.hydrometry?.length||0;
   if(source.metric==="biodiversity")return data.biodiversity?.length||0;
   if(source.metric==="nature")return data.natureAreas?.length||0;
+  if(source.metric==="landcover")return data.landCover?.length||0;
   if(source.metric==="elevation")return data.elevation?1:0;
   return 0;
 }
 function sourceRetrievedAt(source,data={}){
   if(source.id==="openstreetmap")return String(data.osmMeta?.loadedAt||"");
-  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss,hydrometry:data.hydrometry,biodiversity:data.biodiversity,nature:data.natureAreas};
+  const collections={cavities:data.officialCavities,cartofriches:data.cartofriches,bss:data.bss,hydrometry:data.hydrometry,biodiversity:data.biodiversity,nature:data.natureAreas,landcover:data.landCover};
   let collection=source.metric==="culture"||source.metric==="wikipedia"?data.heritageItems:collections[source.metric]||data[source.metric];
   if(Array.isArray(collection)&&source.metric==="culture")collection=collection.filter(item=>item?.category!=="wikipedia");
   if(Array.isArray(collection)&&source.metric==="wikipedia")collection=collection.filter(item=>item?.category==="wikipedia");

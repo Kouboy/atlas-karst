@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas Karst ASCII v0.18n · territoire dans le temps</title>
+  <title>Atlas Karst ASCII v0.18o · lire le sol</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -226,6 +226,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
       <label class="switch" data-layer-category="documents"><input id="layerNatureAreas" type="checkbox" checked> Espaces naturels remarquables</label>
       <label class="switch" data-layer-category="documents"><input id="layerIndustrialHistory" type="checkbox" checked> Traces industrielles et activités anciennes</label>
+      <label class="switch" data-layer-category="terrain"><input id="layerLandCover" type="checkbox" checked> Occupation du sol IGN</label>
       <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
       <label class="switch" data-layer-category="documents"><input id="layerPersonal" type="checkbox" checked> Repères personnels de carnet</label>
       <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
@@ -483,6 +484,14 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" id="casiasHelp" style="margin-top:8px">Le portail Géorisques offre la source nationale et ses fiches. Aucun point n’est inventé ou déduit automatiquement par l’Atlas.</div>
   </section>
 
+  <section class="card" data-ui-card="land-cover">
+    <h2>Occupation du sol</h2>
+    <div class="grid2"><div><div class="carto-count" id="landCoverCount">0</div><div class="small">zones IGN retenues</div></div><div class="small" id="landCoverSummary">Aucun extrait d’occupation du sol synchronisé.</div></div>
+    <button id="syncLandCover" style="width:100%;margin-top:9px">Actualiser l’occupation du sol IGN</button>
+    <details class="technical-details" style="margin-top:7px"><summary>Options techniques</summary><div><button id="clearLandCover" style="width:100%">Vider cette source</button></div></details>
+    <div class="small" id="landCoverHelp" style="margin-top:8px">Cette couche simplifie les occupations cartographiées : bâti, eau, bois, cultures ou autres usages. Elle ne remplace ni une photo récente, ni une vérification sur le terrain.</div>
+  </section>
+
   <section class="card" data-ui-card="source-status">
     <h2>État des sources</h2>
     <div class="data-status">
@@ -496,6 +505,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <div class="status-line"><span>Hydrométrie</span><strong id="hydrometryStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Biodiversité</span><strong id="biodiversityStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Espaces naturels</span><strong id="natureStatus" class="pending">à synchroniser</strong></div>
+      <div class="status-line"><span>Occupation du sol IGN</span><strong id="landCoverStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Mémoire industrielle CASIAS</span><strong id="casiasStatus" class="pending">consultation externe</strong></div>
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>

@@ -260,6 +260,13 @@ function drawLandscapeChanges(g){
     putText(g,p.x,p.y,"T","c-memory",20,info);if(state.layerLabels&&state.zoomIndex>=3&&item.name)tryMapLabel(g,p,item.name,"c-label",13,info,"memory",1,false);
   }
 }
+function drawLandCover(g){
+  if(!state.layerLandCover||currentDepth()!==0||!state.landCover.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"landcover")){
+    const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),info=poiFeatureInfo(poi,{kind:"occupation du sol cartographiée",landCover:true,occupation:item.name||"",source:item.source||"BD CARTO® · IGN",url:item.url||""});
+    putText(g,p.x,p.y,"□","c-terrain",14,info);if(state.layerLabels&&state.zoomIndex>=4)tryMapLabel(g,p,item.name,"c-label",12,info,"natural",1,false);
+  }
+}
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
@@ -887,6 +894,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawHydrometry(grid);
     drawBiodiversity(grid);
     drawNatureAreas(grid);
+    drawLandCover(grid);
     drawLandscapeChanges(grid);
     drawObservations(grid);
     drawPersonalMarkers(grid);
