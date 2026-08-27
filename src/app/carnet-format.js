@@ -46,7 +46,7 @@ function carnetArray(value){return Array.isArray(value)?carnetJsonClone(value):[
 function carnetSummary(document){
   const content=document.content||{},extracts=document.sources?.extracts||{};
   return {
-    observations:content.observations?.length||0,
+    observations:content.observations?.length||0,personalMarkers:content.personalMarkers?.length||0,
     notes:content.notes?.length||0,annotations:Object.keys(content.annotations||{}).length,
     embeddedRecords:(extracts.officialCavities?.length||0)+(extracts.cartofriches?.length||0)+(extracts.heritageItems?.length||0)+(extracts.bss?.length||0)+(extracts.hydrometry?.length||0)+(extracts.biodiversity?.length||0)+(extracts.address?1:0),
     sourceReferences:document.sources?.references?.length||0
@@ -61,7 +61,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
     territory,
     content:{
       startPoint:carnetJsonClone(snapshot.house||territory.center),
-      observations:carnetArray(d.observations),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
+      observations:carnetArray(d.observations),personalMarkers:carnetArray(d.personalMarkers),notes:carnetArray(d.loreItems),annotations:carnetJsonClone(d.poiAnnotations||{}),
       experiences:{collection:carnetJsonClone(d.encounterCollection||{}),enabled:!!d.encounterEnabled}
     },
     presentation:{
@@ -106,7 +106,7 @@ async function atlasCarnetToSnapshot(document){
     data:{
       osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
       address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),
-      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
+      heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),personalMarkers:carnetArray(content.personalMarkers),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
     }
   };
 }
