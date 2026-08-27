@@ -2,6 +2,13 @@
 
 Ce journal condense les notes historiques auparavant réparties dans les fichiers `LISEZ-MOI-v*.txt`.
 
+## 0.18k — Carte personnelle
+
+- Ajout d’une couche distincte de repères personnels : eau, vivant, géologie, trace humaine, accès, danger, question ou hypothèse.
+- Chaque repère est explicitement une contribution de carnet, avec une géométrie point ou zone approximative, une date, une confiance et une note.
+- La couche s’affiche dans les deux modes de carte et peut être masquée séparément des observations de cavités et des sources publiques.
+- Les repères personnels restent éditables dans le registre de carnet et voyagent dans les instantanés et les fichiers `.atlas`.
+
 ## 0.18j — Carnet de terrain éditable
 
 - Les observations et repères de mémoire locale acceptent désormais une note longue, conservée avec le Territoire.

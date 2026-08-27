@@ -489,6 +489,11 @@ function loadLoreItems(){
 function saveLoreItems(){
   try{localStorage.setItem(territoryStorageKey(LORE_KEY),JSON.stringify(state.loreItems))}catch{}
 }
+function loadPersonalMarkers(){
+  try{const value=JSON.parse(localStorage.getItem(territoryStorageKey(PERSONAL_MARKER_KEY))||"[]");state.personalMarkers=Array.isArray(value)?value.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)).map(item=>({...item,lat:+item.lat,lon:+item.lon,category:item.category||"question",geometry:item.geometry==="zone"?"zone":"point",confidence:item.confidence||"med"})):[]}
+  catch{state.personalMarkers=[]}
+}
+function savePersonalMarkers(){try{localStorage.setItem(territoryStorageKey(PERSONAL_MARKER_KEY),JSON.stringify(state.personalMarkers||[]))}catch{}}
 
 function normalizeLooseText(v){
   if(v==null)return "";
@@ -1345,6 +1350,12 @@ function loreMarkerDefinition(category){
     view:{glyph:"VP",cls:"c-lore-view",label:"curiosité paysagère / point de vue"}
   };
   return defs[category]||defs.anecdote;
+}
+function personalMarkerDefinition(category){
+  const defs={
+    water:{glyph:"EA",cls:"c-personal-water",label:"eau / humidité"},living:{glyph:"VI",cls:"c-personal-living",label:"vivant / milieu"},geology:{glyph:"GE",cls:"c-personal-geology",label:"sol / roche"},human:{glyph:"HU",cls:"c-personal-human",label:"trace humaine"},access:{glyph:"AC",cls:"c-personal-access",label:"passage / accès"},hazard:{glyph:"!",cls:"c-personal-hazard",label:"danger / prudence"},question:{glyph:"?",cls:"c-personal-question",label:"question ouverte"},hypothesis:{glyph:"≈",cls:"c-personal-hypothesis",label:"hypothèse personnelle"}
+  };
+  return defs[category]||defs.question;
 }
 function extractOsmCavities(features){
   if(!Array.isArray(features))return [];

@@ -16,6 +16,7 @@ const EMBEDDED_SNAPSHOT = parseEmbeddedSnapshot();
 let ACTIVE_TERRITORY = normalizeTerritoryProfile(EMBEDDED_SNAPSHOT?.territory,LEGACY_TERRITORY_PROFILE);
 let HOUSE_ESTIMATE = {...ACTIVE_TERRITORY.center};
 const LORE_KEY = "atlas-karst-lore-v07";
+const PERSONAL_MARKER_KEY = "atlas-karst-personal-markers-v01";
 const CARTOFRICHES_KEY = "atlas-karst-cartofriches-v09h";
 const HERITAGE_KEY = "atlas-karst-heritage-v010b";
 const CULTURE_API_PORTALS = [
@@ -134,6 +135,7 @@ const state = {
   layerHydrometry:true,
   layerBiodiversity:true,
   layerObservations:true,
+  layerPersonal:true,
   layerHeritage:true,
   layerLore:true,
   layerCartofriches:true,
@@ -160,6 +162,7 @@ const state = {
   osmCavities:[],
   localCavities:[],
   observations:[],
+  personalMarkers:[],
   loreItems:[],
   heritageItems:[],
   heritageEnabled:{monument:true,garden:true,house:true,museum:true,wikipedia:true},
@@ -193,7 +196,7 @@ els = Object.fromEntries([
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","hoverTip","hoverCellIndicator",
-  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
-  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
+  "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","personalCategory","personalGeometry","personalConfidence","personalRadius","personalDate","personalName","personalNote","addPersonalMarker","removePersonalMarker","personalHelp","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
+  "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerHydrology","layerLabels","layerHouse","ambientMotion",
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));

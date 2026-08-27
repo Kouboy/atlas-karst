@@ -1,4 +1,4 @@
-const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,ledgerActions:0,editing:null};
+const fieldworkRuntime={ready:true,bound:false,locationRequests:0,locationSuccesses:0,locationErrors:0,houseChanges:0,observationsAdded:0,observationsRemoved:0,observationsEdited:0,personalAdded:0,personalRemoved:0,personalEdited:0,loreAdded:0,loreRemoved:0,loreEdited:0,ledgerActions:0,editing:null};
 
 function geolocationErrorLabel(err,context={}){
   const localFile=location.protocol==="file:";
@@ -91,20 +91,21 @@ function fieldworkEntryDate(value){
 function fieldworkId(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
 function fieldworkRecords(filter=els.fieldworkLedgerFilter?.value||"all"){
   const observations=(state.observations||[]).map(record=>({kind:"observation",record,id:String(record.id||""),title:record.name||"Observation sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.season||"",meta:[record.mode==="sight"?"visée":record.mode==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.season].filter(Boolean).join(" · ")}));
+  const personal=(state.personalMarkers||[]).map(record=>({kind:"personal",record,id:String(record.id||""),title:record.name||personalMarkerDefinition(record.category).label,note:record.note||"",date:record.updatedAt||record.createdAt||record.date||"",meta:[personalMarkerDefinition(record.category).label,record.geometry==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.date].filter(Boolean).join(" · ")}));
   const lore=(state.loreItems||[]).map(record=>({kind:"lore",record,id:String(record.id||""),title:record.name||"Repère sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.period||"",meta:[record.category||"mémoire locale",record.period,record.source].filter(Boolean).join(" · ")}));
-  return [...observations,...lore].filter(entry=>filter==="all"||entry.kind===filter).sort((a,b)=>String(b.date).localeCompare(String(a.date))||a.title.localeCompare(b.title,"fr"));
+  return [...observations,...personal,...lore].filter(entry=>filter==="all"||entry.kind===filter).sort((a,b)=>String(b.date).localeCompare(String(a.date))||a.title.localeCompare(b.title,"fr"));
 }
 function renderFieldworkLedger(){
   if(!els.fieldworkLedgerList)return;
   const all=fieldworkRecords("all"),entries=fieldworkRecords();
-  if(els.fieldworkLedgerSummary)els.fieldworkLedgerSummary.textContent=all.length?`${all.length} repère${all.length>1?"s":""} personnel${all.length>1?"s":""} dans ce carnet · ${all.filter(item=>item.kind==="observation").length} observation${all.filter(item=>item.kind==="observation").length>1?"s":""} · ${all.filter(item=>item.kind==="lore").length} mémoire${all.filter(item=>item.kind==="lore").length>1?"s":""}.`:"Aucun repère personnel dans ce carnet.";
+  if(els.fieldworkLedgerSummary)els.fieldworkLedgerSummary.textContent=all.length?`${all.length} repère${all.length>1?"s":""} personnel${all.length>1?"s":""} dans ce carnet · ${all.filter(item=>item.kind==="observation").length} observation${all.filter(item=>item.kind==="observation").length>1?"s":""} · ${all.filter(item=>item.kind==="personal").length} carte personnelle · ${all.filter(item=>item.kind==="lore").length} mémoire${all.filter(item=>item.kind==="lore").length>1?"s":""}.`:"Aucun repère personnel dans ce carnet.";
   els.fieldworkLedgerList.replaceChildren();
   if(!entries.length){const empty=document.createElement("div");empty.className="fieldwork-ledger-empty";empty.textContent=all.length?"Aucun repère dans cette catégorie.":"Sélectionne une case, puis consigne une première observation ou un souvenir local.";els.fieldworkLedgerList.append(empty);return}
   for(const entry of entries){
     const article=document.createElement("article");article.className="fieldwork-ledger-entry";
     const head=document.createElement("div");head.className="fieldwork-ledger-entry-head";
     const title=document.createElement("h4");title.textContent=entry.title;
-    const kind=document.createElement("span");kind.className="fieldwork-ledger-kind";kind.textContent=entry.kind==="observation"?"observation":"mémoire";head.append(title,kind);
+    const kind=document.createElement("span");kind.className="fieldwork-ledger-kind";kind.textContent=entry.kind==="observation"?"observation":entry.kind==="personal"?"carte":"mémoire";head.append(title,kind);
     const meta=document.createElement("div");meta.className="fieldwork-ledger-meta";meta.textContent=[entry.meta,entry.date&&fieldworkEntryDate(entry.date)].filter(Boolean).join(" · ");article.append(head,meta);
     if(entry.note){const note=document.createElement("div");note.className="fieldwork-ledger-note";note.textContent=entry.note;article.append(note)}
     const actions=document.createElement("div");actions.className="fieldwork-ledger-actions";
@@ -112,9 +113,10 @@ function renderFieldworkLedger(){
     article.append(actions);els.fieldworkLedgerList.append(article);
   }
 }
-function fieldworkRecord(kind,id){return (kind==="observation"?state.observations:state.loreItems||[]).find(item=>String(item.id)===String(id))||null}
+function fieldworkRecord(kind,id){const records=kind==="observation"?state.observations:kind==="personal"?state.personalMarkers:state.loreItems;return (records||[]).find(item=>String(item.id)===String(id))||null}
 function clearFieldworkEditing(kind=""){
   if(kind!=="lore"){fieldworkRuntime.editing=null;if(els.addLocalMarker)els.addLocalMarker.textContent="＋ enregistrer l’observation"}
+  if(kind!=="personal"){fieldworkRuntime.editing=null;if(els.addPersonalMarker)els.addPersonalMarker.textContent="＋ enregistrer sur la carte"}
   if(kind!=="observation"){fieldworkRuntime.editing=null;if(els.addLoreItem)els.addLoreItem.textContent="＋ enregistrer le repère"}
 }
 function startFieldworkEditing(kind,id){
@@ -122,6 +124,8 @@ function startFieldworkEditing(kind,id){
   fieldworkRuntime.ledgerActions++;fieldworkRuntime.editing={kind,id:String(id)};
   if(kind==="observation"){
     els.observationMode.value=record.mode||"point";els.observationConfidence.value=record.confidence||"med";els.localType.value=record.glyph||"?o";els.observationRadius.value=String(record.radius||80);els.observationSeason.value=record.season||"";els.localName.value=record.name||"";els.localNote.value=record.note||"";els.addLocalMarker.textContent="✓ mettre à jour l’observation";els.localHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
+  }else if(kind==="personal"){
+    els.personalCategory.value=record.category||"question";els.personalGeometry.value=record.geometry||"point";els.personalConfidence.value=record.confidence||"med";els.personalRadius.value=String(record.radius||80);els.personalDate.value=record.date||"";els.personalName.value=record.name||"";els.personalNote.value=record.note||"";els.addPersonalMarker.textContent="✓ mettre à jour le repère";els.personalHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
   }else{
     els.loreCategory.value=record.category||"anecdote";els.lorePeriod.value=record.period||"";els.loreName.value=record.name||"";els.loreSource.value=record.source||"";els.loreNote.value=record.note||"";els.addLoreItem.textContent="✓ mettre à jour le repère";els.loreHelp.textContent="Modification active : choisis une autre case si tu veux déplacer le repère, puis enregistre.";
   }
@@ -134,6 +138,7 @@ function focusFieldworkRecord(kind,id){
 }
 function deleteFieldworkRecord(kind,id){
   if(kind==="observation"){state.observations=state.observations.filter(item=>String(item.id)!==String(id));fieldworkRuntime.observationsRemoved++;saveLocalCavities();refreshCavities()}
+  else if(kind==="personal"){state.personalMarkers=state.personalMarkers.filter(item=>String(item.id)!==String(id));fieldworkRuntime.personalRemoved++;savePersonalMarkers()}
   else{state.loreItems=state.loreItems.filter(item=>String(item.id)!==String(id));fieldworkRuntime.loreRemoved++;saveLoreItems()}
   fieldworkRuntime.ledgerActions++;clearFieldworkEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();renderFieldworkLedger();autosaveActiveTerritory();render("fieldwork-ledger-delete");
 }
@@ -187,6 +192,22 @@ function bindFieldworkController(){
     if(!id){const nearby=state.observations.map(o=>({o,d:distanceMeters(o,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.o.id}
     if(!id){els.localHelp.textContent="Aucune observation locale suffisamment proche de la sélection.";return}
     deleteFieldworkRecord("observation",id);els.localHelp.textContent="Observation locale supprimée.";
+  });
+  els.addPersonalMarker.addEventListener("click",()=>{
+    if(!state.selectedCell){els.personalHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}
+    const category=els.personalCategory.value,definition=personalMarkerDefinition(category),editing=fieldworkRuntime.editing?.kind==="personal"?fieldworkRecord("personal",fieldworkRuntime.editing.id):null,target=state.selectedCell.coord;
+    const item={...(editing||{}),id:editing?.id||fieldworkId("PER"),category,geometry:els.personalGeometry.value==="zone"?"zone":"point",confidence:els.personalConfidence.value||"med",radius:clamp(Number(els.personalRadius.value)||80,10,1000),date:els.personalDate.value.trim().slice(0,120),name:els.personalName.value.trim().slice(0,160)||definition.label,note:els.personalNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,source:"Repère personnel enregistré dans ce carnet",createdAt:editing?.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    if(editing){state.personalMarkers=state.personalMarkers.map(record=>record.id===item.id?item:record);fieldworkRuntime.personalEdited++}else{state.personalMarkers.push(item);fieldworkRuntime.personalAdded++}
+    clearFieldworkEditing();markSpatialIndexesDirty();descriptionRuntime.cache.clear();savePersonalMarkers();renderFieldworkLedger();autosaveActiveTerritory();render();
+    els.personalHelp.innerHTML=editing?`Repère <strong>${esc(item.name)}</strong> mis à jour.`:`Repère <strong>${esc(item.name)}</strong> enregistré comme <strong>${esc(definition.label)}</strong>.`;
+    els.personalName.value="";els.personalNote.value="";els.personalDate.value="";
+  });
+  els.removePersonalMarker.addEventListener("click",()=>{
+    if(!state.selectedCell){els.personalHelp.textContent="Sélectionne d’abord un repère à supprimer.";return}
+    const feature=state.selectedCell.feature;let id=feature?.personal?feature.record?.id:null;
+    if(!id){const nearby=state.personalMarkers.map(item=>({item,d:distanceMeters(item,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(nearby&&nearby.d<120)id=nearby.item.id}
+    if(!id){els.personalHelp.textContent="Aucun repère personnel suffisamment proche de la sélection.";return}
+    deleteFieldworkRecord("personal",id);els.personalHelp.textContent="Repère personnel supprimé.";
   });
   els.addLoreItem.addEventListener("click",()=>{
     if(!state.selectedCell){els.loreHelp.innerHTML='<span class="house-placement-note">Sélectionne d’abord une case sur la carte.</span>';return}

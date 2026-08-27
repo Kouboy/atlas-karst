@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18j · carnet de terrain</title>
+<title>Atlas Karst ASCII v0.18k · carte personnelle</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -225,6 +225,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <label class="switch" data-layer-category="documents"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
       <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
       <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
+      <label class="switch" data-layer-category="documents"><input id="layerPersonal" type="checkbox" checked> Repères personnels de carnet</label>
       <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
       <label class="switch" data-layer-category="documents"><input id="layerLore" type="checkbox" checked> Patrimoine local, friches, ruines et anecdotes</label>
       <label class="switch" data-layer-category="documents"><input id="layerCartofriches" type="checkbox" checked> Friches officielles Cartofriches</label>
@@ -314,6 +315,13 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <button id="removeLocalMarker">✕ supprimer l’observation</button>
     </div>
     <div class="small" id="localHelp" style="margin-top:8px">Sélectionne une case. Une visée dessine une direction depuis la maison ; une zone exprime une localisation imprécise sans inventer un point exact.</div>
+    <details class="interface-subsection" data-ui-subsection="personal-map"><summary>Carte personnelle</summary><div class="interface-subsection-body">
+      <div class="grid2"><label class="field-label">Catégorie<select id="personalCategory"><option value="water">EA eau / humidité</option><option value="living">VI vivant / milieu</option><option value="geology">GE sol / roche</option><option value="human">HU trace humaine</option><option value="access">AC passage / accès</option><option value="hazard">! danger / prudence</option><option value="question">? question ouverte</option><option value="hypothesis">≈ hypothèse personnelle</option></select></label><label class="field-label">Forme<select id="personalGeometry"><option value="point">point repéré</option><option value="zone">zone approximative</option></select></label></div>
+      <div class="grid2" style="margin-top:7px"><label class="field-label">Confiance<select id="personalConfidence"><option value="low">faible</option><option value="med" selected>moyenne</option><option value="high">forte</option></select></label><label class="field-label">Rayon (m)<input id="personalRadius" type="number" value="80" min="10" max="1000" step="10"></label></div>
+      <label class="field-label" style="margin-top:7px">Date / période<input id="personalDate" type="text" placeholder="août 2026"></label><label class="field-label" style="margin-top:7px">Titre<input id="personalName" type="text" placeholder="ex. suintement après la pluie"></label><label class="field-label" style="margin-top:7px">Note<textarea id="personalNote" maxlength="2400" placeholder="Fait observé, incertitude ou piste de terrain…"></textarea></label>
+      <div class="grid2" style="margin-top:7px"><button id="addPersonalMarker">＋ enregistrer sur la carte</button><button id="removePersonalMarker">✕ supprimer le repère</button></div>
+      <div class="small" id="personalHelp" style="margin-top:8px">Un repère personnel ne devient pas une donnée publiée : l’Atlas le signale comme contribution de carnet, avec son niveau de confiance.</div>
+    </div></details>
     <details class="interface-subsection" data-ui-subsection="lore"><summary>Repères, récits et mémoire locale</summary><div class="interface-subsection-body">
       <div class="grid2">
         <label class="field-label">Catégorie
@@ -330,7 +338,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <div class="small" id="loreHelp" style="margin-top:8px">Sélectionne une case, puis ajoute un repère d’ambiance. L’idée n’est pas de certifier quoi que ce soit, mais de semer des balises documentées ou intuitives dans le paysage quotidien.</div>
     </div></details>
     <details class="interface-subsection" data-ui-subsection="fieldwork-ledger" open><summary>Mes repères de carnet</summary><div class="interface-subsection-body">
-      <div class="fieldwork-ledger-toolbar"><label class="field-label">Afficher<select id="fieldworkLedgerFilter"><option value="all">tous les repères</option><option value="observation">observations</option><option value="lore">mémoire locale</option></select></label><button id="fieldworkLedgerRefresh" type="button">↻ liste</button></div>
+      <div class="fieldwork-ledger-toolbar"><label class="field-label">Afficher<select id="fieldworkLedgerFilter"><option value="all">tous les repères</option><option value="observation">observations</option><option value="personal">carte personnelle</option><option value="lore">mémoire locale</option></select></label><button id="fieldworkLedgerRefresh" type="button">↻ liste</button></div>
       <div class="small" id="fieldworkLedgerSummary">Aucun repère personnel dans ce carnet.</div>
       <div id="fieldworkLedgerList" class="fieldwork-ledger-list" aria-live="polite"></div>
       <div class="small">Ces repères, leurs précisions et leurs notes font partie du Territoire et du carnet .atlas partagé.</div>
