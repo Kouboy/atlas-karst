@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Karst ASCII v0.18m · sources naturelles raisonnées</title>
+  <title>Atlas Karst ASCII v0.18n · territoire dans le temps</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -225,6 +225,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <label class="switch" data-layer-category="documents"><input id="layerHydrometry" type="checkbox" checked> Stations hydrométriques</label>
       <label class="switch" data-layer-category="documents"><input id="layerBiodiversity" type="checkbox" checked> Mailles de biodiversité documentée</label>
       <label class="switch" data-layer-category="documents"><input id="layerNatureAreas" type="checkbox" checked> Espaces naturels remarquables</label>
+      <label class="switch" data-layer-category="documents"><input id="layerIndustrialHistory" type="checkbox" checked> Traces industrielles et activités anciennes</label>
       <label class="switch" data-layer-category="documents"><input id="layerObservations" type="checkbox" checked> Observations de terrain</label>
       <label class="switch" data-layer-category="documents"><input id="layerPersonal" type="checkbox" checked> Repères personnels de carnet</label>
       <label class="switch" data-layer-category="documents"><input id="layerHeritage" type="checkbox" checked> Patrimoine officiel et curiosités synchronisées</label>
@@ -274,7 +275,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <button id="geocodeHouse">⌖ chercher l’adresse</button>
       <button id="snapHouseBuilding">▣ bâtiment cadastral</button>
     </div>
-    <button id="openHistory" style="width:100%;margin-top:7px">◫ comparer les photos aériennes anciennes</button>
+    <button id="openHistory" style="width:100%;margin-top:7px">◫ comparer les archives IGN ici</button>
     <div class="small" id="houseHelp" style="margin-top:8px">Clique n’importe quelle case pour faire apparaître le cadre jaune, puis utilise <strong>⌖ maison sur la sélection</strong>. Les champs numériques restent disponibles si la souris boude.</div>
     <div class="small" style="margin-top:8px"><strong>Navigation :</strong> immobiliser brièvement le pointeur sur un symbole pour sa fiche courte · cliquer ou toucher une case pour la sélectionner · glisser pour déplacer avec aperçu fluide · molette sur ordinateur ou pincement à deux doigts sur mobile pour zoomer autour du geste · double-clic pour centrer et approcher. <span class="key">ZQSD</span> ou flèches restent disponibles.</div>
   </section>
@@ -460,6 +461,28 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" id="natureAreasHelp" style="margin-top:8px">L’Atlas interroge l’API Carto Nature de l’IGN sur l’emprise exacte du Territoire : Natura 2000, réserves, ZNIEFF et parcs. Un statut ou inventaire donne du contexte écologique ; il ne prouve pas une présence actuelle, ni une règle applicable sans consulter la source officielle.</div>
   </section>
 
+  <section class="card" data-ui-card="time">
+    <h2>Territoire dans le temps</h2>
+    <div class="grid2"><div><div class="carto-count" id="landscapeChangesCount">0</div><div class="small">transformations consignées</div></div><div class="small" id="landscapeChangesSummary">Aucune transformation personnelle consignée.</div></div>
+    <button id="openSelectedHistory" style="width:100%;margin-top:9px">◫ ouvrir Remonter le Temps à la sélection</button>
+    <details class="technical-details" style="margin-top:8px" open><summary>Consigner une transformation</summary>
+      <label class="field-label">Période ou date<input id="landscapeChangeDate" type="text" maxlength="120" placeholder="ex. vers 1995 / été 2024"></label>
+      <label class="field-label">Titre<input id="landscapeChangeName" type="text" maxlength="160" placeholder="ancienne prairie devenue lotissement"></label>
+      <label class="field-label">Avant / trace observée<textarea id="landscapeChangeBefore" maxlength="1200" placeholder="archive, témoignage, carte…"></textarea></label>
+      <label class="field-label">Aujourd’hui / observation<textarea id="landscapeChangeAfter" maxlength="1200" placeholder="ce qui est visible ou connu aujourd’hui"></textarea></label>
+      <label class="field-label">Note libre<textarea id="landscapeChangeNote" maxlength="2400"></textarea></label>
+      <div class="grid2"><button id="addLandscapeChange" type="button">＋ enregistrer à la sélection</button><button id="removeLandscapeChange" type="button">× supprimer la transformation</button></div>
+      <div class="small" id="landscapeChangeHelp" style="margin-top:8px">Sélectionne une case puis rapproche les observations personnelles des archives, sans transformer une hypothèse en fait.</div>
+    </details>
+  </section>
+
+  <section class="card" data-ui-card="industrial-history">
+    <h2>Mémoire industrielle</h2>
+    <div class="small">CASIAS conserve la mémoire d’anciennes activités industrielles et de services. Ce repérage historique n’établit pas, à lui seul, une pollution effective des sols.</div>
+    <button id="openCasias" style="width:100%;margin-top:9px">↗ consulter CASIAS / Géorisques</button>
+    <div class="small" id="casiasHelp" style="margin-top:8px">Le portail Géorisques offre la source nationale et ses fiches. Aucun point n’est inventé ou déduit automatiquement par l’Atlas.</div>
+  </section>
+
   <section class="card" data-ui-card="source-status">
     <h2>État des sources</h2>
     <div class="data-status">
@@ -473,6 +496,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
       <div class="status-line"><span>Hydrométrie</span><strong id="hydrometryStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Biodiversité</span><strong id="biodiversityStatus" class="pending">à synchroniser</strong></div>
       <div class="status-line"><span>Espaces naturels</span><strong id="natureStatus" class="pending">à synchroniser</strong></div>
+      <div class="status-line"><span>Mémoire industrielle CASIAS</span><strong id="casiasStatus" class="pending">consultation externe</strong></div>
       <div class="status-line"><span>Relief</span><strong id="elevationStatus" class="pending">chargement</strong></div>
     </div>
     <div class="progress"><span id="loadProgress"></span></div>

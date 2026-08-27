@@ -253,6 +253,13 @@ function drawNatureAreas(g){
     if(state.layerLabels&&state.zoomIndex>=3&&item.name)tryMapLabel(g,p,item.name,"c-label",13,info,"nature",1,false);
   }
 }
+function drawLandscapeChanges(g){
+  if(!state.layerIndustrialHistory||currentDepth()!==0||!state.landscapeChanges.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"landscape-change")){
+    const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),info=poiFeatureInfo(poi,{kind:"transformation du territoire consignée",memory:true,landscapeChange:true,period:item.period||"",before:item.before||"",after:item.after||"",note:item.note||"",source:item.source||"Carnet personnel"});
+    putText(g,p.x,p.y,"T","c-memory",20,info);if(state.layerLabels&&state.zoomIndex>=3&&item.name)tryMapLabel(g,p,item.name,"c-label",13,info,"memory",1,false);
+  }
+}
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
@@ -880,6 +887,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawHydrometry(grid);
     drawBiodiversity(grid);
     drawNatureAreas(grid);
+    drawLandscapeChanges(grid);
     drawObservations(grid);
     drawPersonalMarkers(grid);
     drawUndergroundHypotheses(grid);

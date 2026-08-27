@@ -255,7 +255,7 @@ function normalizedPoiCategory(sourceType,raw){
   if(sourceType==="biodiversity")return "biodiversity";
   if(sourceType==="cavity")return "cavity";
   if(sourceType==="heritage")return "heritage";
-  if(sourceType==="observation"||sourceType==="lore"||sourceType==="personal")return "memory";
+  if(sourceType==="observation"||sourceType==="lore"||sourceType==="personal"||sourceType==="landscape-change")return "memory";
   if(sourceType==="cartofriches")return "industrial";
   if(sourceType==="house")return "home";
   if(sourceType==="location")return "location";
@@ -297,7 +297,7 @@ function ensureSpatialIndexes(){
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
     bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,nature:state.natureAreas,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
-    lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,cartofriches:state.cartofriches,userLocation:state.userLocation
+    lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,landscapeChanges:state.landscapeChanges,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
   const houseStamp=`${CONFIG.house.lat}:${CONFIG.house.lon}`;
@@ -333,6 +333,7 @@ function ensureSpatialIndexes(){
   for(const item of state.undergroundHypotheses||[]){const definition=undergroundHypothesisDefinition(item.kind);addPoi("underground",item,{kind:`${definition.label} · ${depthSliceLabel(item.depth)}`,title:item.name||definition.label,priority:22})}
   for(const h of state.heritageItems||[])addPoi("heritage",h,{kind:h.category||"patrimoine",title:h.name||"Lieu patrimonial",priority:21});
   for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});
+  for(const item of state.landscapeChanges||[])addPoi("landscape-change",item,{kind:"transformation du territoire consignée",title:item.name||"Transformation personnelle",priority:20});
   for(const f of state.cartofriches||[])addPoi("cartofriches",f,{kind:f.type||"site Cartofriches",title:f.name||"Site recensé",priority:22});
   if(OFFLINE_TEST&&territoryUsesEmbeddedData("offlineDemo",CONFIG.territory)&&!state.cartofriches?.length&&!state.loreItems?.length&&!state.localCavities?.length){
     for(const d of OFFLINE_DEMO_POINTS)addPoi("demo",d,{kind:d.kind,title:d.name,priority:21});

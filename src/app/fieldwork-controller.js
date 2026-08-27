@@ -89,6 +89,11 @@ function fieldworkEntryDate(value){
   const date=new Date(value);return Number.isNaN(date.getTime())?"date non renseignée":date.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"});
 }
 function fieldworkId(prefix){return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2,7)}`}
+const LANDSCAPE_CHANGES_KEY="atlas-karst-landscape-changes-v1";
+function saveLandscapeChanges(){try{localStorage.setItem(territoryStorageKey(LANDSCAPE_CHANGES_KEY),JSON.stringify(state.landscapeChanges||[]))}catch{}}
+function loadLandscapeChanges(){try{const saved=JSON.parse(localStorage.getItem(territoryStorageKey(LANDSCAPE_CHANGES_KEY))||"[]");state.landscapeChanges=Array.isArray(saved)?saved.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)):[]}catch{state.landscapeChanges=[]}updateLandscapeChangesUI()}
+function updateLandscapeChangesUI(){const items=state.landscapeChanges||[];if(els.landscapeChangesCount)els.landscapeChangesCount.textContent=String(items.length);if(els.landscapeChangesSummary)els.landscapeChangesSummary.textContent=items.length?`${items.length} transformation${items.length>1?"s":""} personnelle${items.length>1?"s":""} · partagée${items.length>1?"s":""} avec les exports du carnet.`:"Aucune transformation personnelle consignée."}
+function remonterLeTempsUrl(coord=CONFIG.house){return `https://remonterletemps.ign.fr/comparer/?lat=${encodeURIComponent(Number(coord.lat).toFixed(6))}&lon=${encodeURIComponent(Number(coord.lon).toFixed(6))}&z=16&mode=split-h`}
 function fieldworkRecords(filter=els.fieldworkLedgerFilter?.value||"all"){
   const observations=(state.observations||[]).map(record=>({kind:"observation",record,id:String(record.id||""),title:record.name||"Observation sans titre",note:record.note||"",date:record.updatedAt||record.createdAt||record.season||"",meta:[record.mode==="sight"?"visée":record.mode==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.season].filter(Boolean).join(" · ")}));
   const personal=(state.personalMarkers||[]).map(record=>({kind:"personal",record,id:String(record.id||""),title:record.name||personalMarkerDefinition(record.category).label,note:record.note||"",date:record.updatedAt||record.createdAt||record.date||"",meta:[personalMarkerDefinition(record.category).label,record.geometry==="zone"?`zone ≈ ${Math.round(record.radius||0)} m`:"point",confidenceLabel(record.confidence||"med"),record.date].filter(Boolean).join(" · ")}));
@@ -181,7 +186,19 @@ function bindFieldworkController(){
     state.center=clampCenter({...CONFIG.house},currentZoom());render();
   });
   els.snapHouseBuilding.addEventListener("click",()=>{if(snapHouseToBuilding(true)){state.center=clampCenter({...CONFIG.house},currentZoom());render()}});
-  els.openHistory.addEventListener("click",()=>window.open(`https://remonterletemps.ign.fr/comparer/?lat=${CONFIG.house.lat}&lon=${CONFIG.house.lon}&z=16&mode=split-h`,"_blank","noopener"));
+  els.openHistory.addEventListener("click",()=>window.open(remonterLeTempsUrl(CONFIG.house),"_blank","noopener"));
+  els.openSelectedHistory?.addEventListener("click",()=>{const coord=state.selectedCell?.coord||CONFIG.house;window.open(remonterLeTempsUrl(coord),"_blank","noopener");if(els.landscapeChangeHelp)els.landscapeChangeHelp.textContent=state.selectedCell?"Archives IGN ouvertes au centre de la case sélectionnée.":"Aucune case sélectionnée : les archives IGN sont ouvertes au repère de départ."});
+  els.openCasias?.addEventListener("click",()=>{window.open("https://www.georisques.gouv.fr/donnees/bases-de-donnees/inventaire-historique-de-sites-industriels-et-activites-de-service","_blank","noopener");setStatus("casias","ok","portail ouvert");});
+  els.addLandscapeChange?.addEventListener("click",()=>{
+    if(!state.selectedCell){els.landscapeChangeHelp.textContent="Sélectionne d’abord une case sur la carte.";return}
+    const target=state.selectedCell.coord,item={id:fieldworkId("TMP"),name:els.landscapeChangeName.value.trim().slice(0,160)||"Transformation sans titre",period:els.landscapeChangeDate.value.trim().slice(0,120),before:els.landscapeChangeBefore.value.trim().slice(0,1200),after:els.landscapeChangeAfter.value.trim().slice(0,1200),note:els.landscapeChangeNote.value.trim().slice(0,2400),lat:target.lat,lon:target.lon,source:"Transformation personnelle consignée dans ce carnet",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    state.landscapeChanges.push(item);saveLandscapeChanges();updateLandscapeChangesUI();markSpatialIndexesDirty();autosaveActiveTerritory();render("landscape-change-add");els.landscapeChangeHelp.innerHTML=`Transformation <strong>${esc(item.name)}</strong> enregistrée dans le carnet.`;for(const field of [els.landscapeChangeDate,els.landscapeChangeName,els.landscapeChangeBefore,els.landscapeChangeAfter,els.landscapeChangeNote])if(field)field.value="";
+  });
+  els.removeLandscapeChange?.addEventListener("click",()=>{
+    if(!state.selectedCell){els.landscapeChangeHelp.textContent="Sélectionne d’abord la transformation à supprimer.";return}
+    const nearest=(state.landscapeChanges||[]).map(item=>({item,d:distanceMeters(item,state.selectedCell.coord)})).sort((a,b)=>a.d-b.d)[0];if(!nearest||nearest.d>120){els.landscapeChangeHelp.textContent="Aucune transformation personnelle suffisamment proche de la sélection.";return}
+    state.landscapeChanges=state.landscapeChanges.filter(item=>item.id!==nearest.item.id);saveLandscapeChanges();updateLandscapeChangesUI();markSpatialIndexesDirty();autosaveActiveTerritory();render("landscape-change-delete");els.landscapeChangeHelp.textContent="Transformation personnelle supprimée.";
+  });
   els.applyHouseCoords.addEventListener("click",()=>{
     const lat=Number(els.houseLat.value),lon=Number(els.houseLon.value);
     if(!Number.isFinite(lat)||!Number.isFinite(lon)){els.houseHelp.innerHTML='<span class="house-placement-note">Coordonnées invalides.</span>';return}

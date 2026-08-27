@@ -61,12 +61,14 @@ async function bootAtlas(){
     loadLoreItems();
     loadPersonalMarkers();
     loadUndergroundHypotheses();
+    loadLandscapeChanges();
     loadNatureAreas();
     loadHeritage();
     loadCartofriches();
     loadBssLocal();
     loadHydrometry();
     loadBiodiversity();
+    setStatus("casias","pending","consultation externe");
     loadPoiAnnotations();
     loadEncounterCollection();
     if(typeof renderFieldworkLedger==="function")renderFieldworkLedger();
