@@ -267,6 +267,10 @@ function drawLandCover(g){
     putText(g,p.x,p.y,"□","c-terrain",14,info);if(state.layerLabels&&state.zoomIndex>=4)tryMapLabel(g,p,item.name,"c-label",12,info,"natural",1,false);
   }
 }
+function drawGeology(g){
+  if(!state.layerGeology||currentDepth()!==0||!state.geology.length)return;
+  for(const poi of queryNormalizedPois(g.extent,"geology")){const item=poi.raw,p=coordToGrid(poi.lat,poi.lon,g.extent),info=poiFeatureInfo(poi,{kind:item.kind||"formation géologique",geology:true,code:item.code||"",source:item.source||"BRGM",url:item.url||""});putText(g,p.x,p.y,"G","c-terrain",13,info);if(state.layerLabels&&state.zoomIndex>=3)tryMapLabel(g,p,item.name,"c-label",12,info,"natural",1,false)}
+}
 function drawObservations(g){
   if(!state.layerObservations||currentDepth()!==0)return;
   const detailedGeometry=semanticZoom().observationGeometry;
@@ -895,6 +899,7 @@ function composeMapGrid(extent,depth=currentDepth()){
     drawBiodiversity(grid);
     drawNatureAreas(grid);
     drawLandCover(grid);
+    drawGeology(grid);
     drawLandscapeChanges(grid);
     drawObservations(grid);
     drawPersonalMarkers(grid);

@@ -71,6 +71,8 @@ function bindSourceController(){
   els.clearNatureAreas.addEventListener("click",()=>{accountSourceAction("effacement espaces naturels");sourceControllerRuntime.clears++;clearNatureAreas()});
   bindSourceAction(els.syncLandCover,"click","synchronisation occupation du sol",syncLandCover);
   els.clearLandCover.addEventListener("click",()=>{accountSourceAction("effacement occupation du sol");sourceControllerRuntime.clears++;clearLandCover()});
+  bindSourceAction(els.syncGeology,"click","lecture géologie BRGM",syncGeology);
+  els.clearGeology.addEventListener("click",()=>{accountSourceAction("effacement géologie BRGM");sourceControllerRuntime.clears++;clearGeology()});
   for(const group of BIODIVERSITY_GROUPS){
     const id=`biodiversity${group.id[0].toUpperCase()}${group.id.slice(1)}`;
     els[id].addEventListener("change",event=>{accountSourceAction(`filtre biodiversité ${group.id}`);sourceControllerRuntime.filterChanges++;state.biodiversityEnabled[group.id]=event.target.checked;saveBiodiversity();updateBiodiversityUI();markSpatialIndexesDirty();render("biodiversity-filter")});

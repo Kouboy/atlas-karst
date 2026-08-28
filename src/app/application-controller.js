@@ -64,6 +64,7 @@ async function bootAtlas(){
     loadLandscapeChanges();
     loadNatureAreas();
     loadLandCover();
+    loadGeology();
     loadHeritage();
     loadCartofriches();
     loadBssLocal();

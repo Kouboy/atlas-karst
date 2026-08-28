@@ -297,7 +297,7 @@ function ensureSpatialIndexes(){
   const sources={
     osm:state.osm,cadastreBuildings:state.cadastreBuildings,cadastreParcels:state.cadastreParcels,
     bss:state.bss,hydrometry:state.hydrometry,biodiversity:state.biodiversity,nature:state.natureAreas,cavities:state.cavities,observations:state.observations,heritage:state.heritageItems,
-    lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,landscapeChanges:state.landscapeChanges,landCover:state.landCover,cartofriches:state.cartofriches,userLocation:state.userLocation
+    lore:state.loreItems,personal:state.personalMarkers,underground:state.undergroundHypotheses,landscapeChanges:state.landscapeChanges,landCover:state.landCover,geology:state.geology,cartofriches:state.cartofriches,userLocation:state.userLocation
   };
   for(const [name,value] of Object.entries(sources))if(spatialSourceChanged(name,value))changed=true;
   const houseStamp=`${CONFIG.house.lat}:${CONFIG.house.lon}`;
@@ -335,6 +335,7 @@ function ensureSpatialIndexes(){
   for(const l of state.loreItems||[])addPoi("lore",l,{kind:l.category||"mémoire locale",title:l.name||"Repère local",priority:20});
   for(const item of state.landscapeChanges||[])addPoi("landscape-change",item,{kind:"transformation du territoire consignée",title:item.name||"Transformation personnelle",priority:20});
   for(const item of state.landCover||[])addPoi("landcover",item,{kind:"occupation du sol cartographiée",title:item.name||"Occupation du sol",priority:14});
+  for(const item of state.geology||[])addPoi("geology",item,{kind:item.kind||"formation géologique",title:item.name||"Formation géologique",priority:13});
   for(const f of state.cartofriches||[])addPoi("cartofriches",f,{kind:f.type||"site Cartofriches",title:f.name||"Site recensé",priority:22});
   if(OFFLINE_TEST&&territoryUsesEmbeddedData("offlineDemo",CONFIG.territory)&&!state.cartofriches?.length&&!state.loreItems?.length&&!state.localCavities?.length){
     for(const d of OFFLINE_DEMO_POINTS)addPoi("demo",d,{kind:d.kind,title:d.name,priority:21});

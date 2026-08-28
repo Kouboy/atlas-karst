@@ -6,7 +6,7 @@ const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const packageMetadata = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
 const atlasVersion = packageMetadata.atlasVersion;
 const atlasCss = readFileSync(new URL("../src/styles/atlas.css", import.meta.url), "utf8");
-const sourceScripts = ["runtime.js", "performance.js", "debug.js", "territory-model.js", "bootstrap.js", "source-registry.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "hydrometry-service.js", "biodiversity-service.js", "nature-service.js", "land-service.js", "poi-annotations.js", "startup-loader.js", "source-controller.js", "territory-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "carnet-format.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
+const sourceScripts = ["runtime.js", "performance.js", "debug.js", "territory-model.js", "bootstrap.js", "source-registry.js", "canvas-renderer.js", "audio.js", "exploration-model.js", "experiences.js", "data-services.js", "hydrometry-service.js", "biodiversity-service.js", "nature-service.js", "land-service.js", "geology-service.js", "poi-annotations.js", "startup-loader.js", "source-controller.js", "territory-controller.js", "fieldwork-controller.js", "experience-controller.js", "view-controller.js", "lifecycle-controller.js", "map-engine.js", "cell-inspector.js", "ui-shell.js", "input-controller.js", "carnet-format.js", "snapshot-manager.js", "main.js", "session-health.js", "application-controller.js"].map((name) => ({
   name,
   source: readFileSync(new URL(`../src/app/${name}`, import.meta.url), "utf8")
 }));
@@ -41,7 +41,7 @@ check("registre des éléments détecté", () => Boolean(registeredBlock));
 check("registre sans identifiant absent", () => missingRegisteredIds.length === 0);
 check("registre central des sources", () =>
   sourceByName["source-registry.js"].includes("const SOURCE_REGISTRY_SCHEMA_VERSION=1") &&
-  (sourceByName["source-registry.js"].match(/statusElementId:/g)||[]).length===14 &&
+  (sourceByName["source-registry.js"].match(/statusElementId:/g)||[]).length===15 &&
   sourceByName["source-registry.js"].includes("function setSourceStatus") &&
   sourceByName["source-registry.js"].includes("function sourceReferencesForSnapshot") &&
   sourceByName["application-controller.js"].includes("initializeSourceRegistryUI()") &&
