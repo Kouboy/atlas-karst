@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.19 — Carnet comme objet partageable
+
+- Chaque Territoire peut désormais porter une présentation : auteur ou collectif, texte d’ouverture et fil conducteur.
+- Cette présentation accompagne les exports `.atlas`, sans compte, serveur ni publication automatique.
+
 ## 0.18r — Portabilité consolidée
 
 - La géologie BRGM rejoint l’occupation du sol dans les carnets `.atlas` exportés et réimportés.
