@@ -704,7 +704,7 @@ try {
       const checks=runAtlasSelfCheck(),functionalChecks=checks.filter(check=>!/^(Premier rendu|Rendu stabilisé) sous \d+ ms$/.test(check.name));
       return {schema:SOURCE_REGISTRY_SCHEMA_VERSION,ids,catalog,references,attribution,runtime:{...sourceRegistryRuntime},badChecks:functionalChecks.filter(check=>check.ok===false).map(check=>check.name)};
     });
-    assert.equal(result.schema,1);assert.equal(result.ids.length,14);assert.equal(new Set(result.ids).size,14);assert.equal(result.catalog.length,14);
+    assert.equal(result.schema,1);assert.equal(result.ids.length,15);assert.equal(new Set(result.ids).size,15);assert.equal(result.catalog.length,15);
     assert.equal(result.catalog.find(source=>source.id==="culture")?.status,"2 notices");assert.equal(result.catalog.find(source=>source.id==="wikipedia")?.status,"2 notices");
     assert.equal(result.references.find(source=>source.id==="culture")?.count,1);assert.equal(result.references.find(source=>source.id==="wikipedia")?.count,1);
     assert.equal(result.references.find(source=>source.id==="hydrometry")?.count,1);assert.equal(result.references.find(source=>source.id==="hydrometry")?.disposition,"embedded");
