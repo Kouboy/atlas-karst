@@ -1,5 +1,10 @@
 # Journal des versions
 
+## 0.18r — Portabilité consolidée
+
+- La géologie BRGM rejoint l’occupation du sol dans les carnets `.atlas` exportés et réimportés.
+- Un test navigateur vérifie désormais que ces deux couches traversent un partage de carnet sans perte.
+
 ## 0.18p — Fiches de lieu utiles
 
 - Ajout d’un portrait de lieu dans les fiches de sélection : occupation du sol, nature, eau, biodiversité et traces historiques sont rapprochées avec leurs sources explicites.
