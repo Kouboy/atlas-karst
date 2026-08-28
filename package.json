@@ -1,7 +1,7 @@
 {
   "name": "atlas-karst",
-  "version": "0.18.0-r.0",
-  "atlasVersion": "0.18r",
+  "version": "0.19.0",
+  "atlasVersion": "0.19",
   "private": true,
   "description": "Atlas cartographique autonome à rendu Canvas symbolique et ASCII",
   "scripts": {

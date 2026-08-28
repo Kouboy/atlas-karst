@@ -300,6 +300,7 @@ try {
       fetchCavities=async()=>{window.__sourceRetryCalls.push("cavités")};
       fetchElevation=async()=>{window.__sourceRetryCalls.push("relief")};
       syncNatureAreas=async()=>{window.__sourceRetryCalls.push("nature")};
+      syncGeology=async()=>{window.__sourceRetryCalls.push("géologie")};
       document.getElementById("retryData").click();
       await new Promise(resolve=>setTimeout(resolve,30));
       const checks=runAtlasSelfCheck();
@@ -312,7 +313,7 @@ try {
     });
     assert.equal(result.runtime.ready,true);assert.equal(result.runtime.bound,true);
     assert.equal(result.runtime.operations,8);assert.equal(result.runtime.imports,3);assert.equal(result.runtime.clears,3);assert.equal(result.runtime.filterChanges,1);assert.equal(result.runtime.retries,1);
-    assert.deepEqual(result.calls,["osm","adresse","cadastre","cavités","relief","nature"]);
+    assert.deepEqual(result.calls,["osm","adresse","cadastre","cavités","relief","nature","géologie"]);
     assert.deepEqual(result.state,{bssTest:false,cartofriches:0,heritageMonuments:false});
     assert.deepEqual(result.storage,{bss:null,cartofriches:null});
     assert.deepEqual(result.badChecks,[],`diagnostic en échec après gestion des sources : ${result.badChecks.join(", ")}`);

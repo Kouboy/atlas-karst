@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Atlas Karst ASCII v0.18r · portabilité consolidée</title>
+  <title>Atlas Karst ASCII v0.19 · carnet partageable</title>
 <!-- @atlas-source-guard:start -->
 <script>
 if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
@@ -124,6 +124,13 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <details class="interface-subsection" data-ui-subsection="memory"><summary>Importer et exporter</summary><div class="interface-subsection-body">
       <div class="snapshot-summary" id="snapshotStatus"><span>Préparation de l’inventaire embarqué…</span></div>
       <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button><button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button></div>
+      <details class="technical-details" style="margin-top:7px"><summary>Préparer le partage</summary><div>
+        <label class="field-label">Par ou avec<input id="carnetAuthor" maxlength="120" placeholder="nom, collectif ou pseudonyme"></label>
+        <label class="field-label">Ouverture du carnet<textarea id="carnetIntro" maxlength="900" placeholder="ce petit territoire, pourquoi maintenant, comment le lire…"></textarea></label>
+        <label class="field-label">Fil conducteur<textarea id="carnetFocus" maxlength="450" placeholder="ce que ce carnet invite à observer"></textarea></label>
+        <button id="saveCarnetProfile" type="button" style="width:100%;margin-top:7px">✓ enregistrer la présentation</button>
+        <div class="small" id="carnetSharePreview" style="margin-top:8px">Le fichier .atlas reste un objet local et partageable : aucune publication en ligne ni compte n’est créé.</div>
+      </div></details>
       <input id="snapshotFile" class="file-input-hidden" type="file" accept=".atlas,.json,.atlas.json,application/json,application/vnd.atlas+carnet+json">
       <button id="exportStandaloneHtml" type="button" style="width:100%;margin-top:7px">▣ exporter un HTML autonome</button>
       <button id="clearSavedSnapshot" type="button" hidden aria-hidden="true">✕ supprimer le territoire actif de la bibliothèque</button>

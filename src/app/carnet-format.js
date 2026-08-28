@@ -5,6 +5,11 @@ const ATLAS_CARNET_RECOMMENDED_BYTES=4*1024*1024;
 const carnetRuntime={
   ready:true,built:0,validated:0,migrations:0,imports:0,exports:0,lastBytes:0,lastAlgorithm:"—",lastError:""
 };
+const CARNET_PROFILE_KEY="atlas-karst-carnet-profile-v1";
+function normalizeCarnetProfile(value){const p=value&&typeof value==="object"?value:{};return {author:String(p.author||"").trim().slice(0,120),intro:String(p.intro||"").trim().slice(0,900),focus:String(p.focus||"").trim().slice(0,450),updatedAt:String(p.updatedAt||"")}}
+function updateCarnetProfileUI(message=""){const p=state.carnetProfile||normalizeCarnetProfile();if(els.carnetAuthor)els.carnetAuthor.value=p.author;if(els.carnetIntro)els.carnetIntro.value=p.intro;if(els.carnetFocus)els.carnetFocus.value=p.focus;if(els.carnetSharePreview)els.carnetSharePreview.textContent=message||(p.intro||p.focus?`Présentation prête${p.author?` · ${p.author}`:""}. Elle accompagnera le prochain export .atlas.`:"Le fichier .atlas reste un objet local et partageable : aucune publication en ligne ni compte n’est créé.")}
+function loadCarnetProfile(){try{state.carnetProfile=normalizeCarnetProfile(JSON.parse(localStorage.getItem(territoryStorageKey(CARNET_PROFILE_KEY))||"null"))}catch{state.carnetProfile=normalizeCarnetProfile(null)}updateCarnetProfileUI()}
+function saveCarnetProfile(){state.carnetProfile=normalizeCarnetProfile({author:els.carnetAuthor?.value,intro:els.carnetIntro?.value,focus:els.carnetFocus?.value,updatedAt:new Date().toISOString()});try{localStorage.setItem(territoryStorageKey(CARNET_PROFILE_KEY),JSON.stringify(state.carnetProfile))}catch{}updateCarnetProfileUI("Présentation enregistrée pour ce Territoire et incluse dans les exports .atlas.");autosaveActiveTerritory?.()}
 
 function carnetRecordError(error){
   carnetRuntime.lastError=String(error?.message||error||"Erreur de carnet");
@@ -57,7 +62,7 @@ async function buildAtlasCarnet(snapshot=buildAtlasSnapshot()){
   const d=snapshot.data||{},v=snapshot.view||{},now=new Date().toISOString(),territory=territorySnapshot(normalizeTerritoryProfile(snapshot.territory,CONFIG.territory));
   const document={
     format:ATLAS_CARNET_FORMAT,schema:ATLAS_CARNET_SCHEMA_VERSION,
-    metadata:{id:territory.id,title:territory.label,language:"fr",createdAt:String(snapshot.createdAt||now),updatedAt:now,generator:{name:"Atlas Karst",version:APP_VERSION}},
+    metadata:{id:territory.id,title:territory.label,language:"fr",createdAt:String(snapshot.createdAt||now),updatedAt:now,generator:{name:"Atlas Karst",version:APP_VERSION},presentation:normalizeCarnetProfile(d.carnetProfile||state.carnetProfile)},
     territory,
     content:{
       startPoint:carnetJsonClone(snapshot.house||territory.center),
@@ -105,7 +110,7 @@ async function atlasCarnetToSnapshot(document){
     view:{mode:"classic",renderMode:presentation.renderMode==="ascii"?"ascii":"symbolic",zoomIndex:Number(presentation.zoomIndex)||0,depthIndex:Number(presentation.depthIndex)||0,center:carnetJsonClone(presentation.center||carnet.territory.center),scenario:String(presentation.scenario||"default"),layers:carnetJsonClone(presentation.layers||{})},
     data:{
       osm:[],osmMeta:null,osmBaseCoverage:[],osmDetailCoverage:[],cadastreBuildings:[],cadastreParcels:[],elevation:null,
-      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),natureAreas:carnetArray(extracts.natureAreas),landCover:carnetArray(extracts.landCover),geology:carnetArray(extracts.geology),
+      address:carnetJsonClone(extracts.address||null),officialCavities:carnetArray(extracts.officialCavities),cartofriches:carnetArray(extracts.cartofriches),heritageItems:carnetArray(extracts.heritageItems),bss:carnetArray(extracts.bss),hydrometry:carnetArray(extracts.hydrometry),biodiversity:carnetArray(extracts.biodiversity),biodiversityEnabled:carnetJsonClone(extracts.biodiversityEnabled||{}),natureAreas:carnetArray(extracts.natureAreas),landCover:carnetArray(extracts.landCover),geology:carnetArray(extracts.geology),carnetProfile:normalizeCarnetProfile(carnet.metadata?.presentation),
       heritageEnabled:carnetJsonClone(presentation.filters?.heritage||{}),poiAnnotations:normalizePoiAnnotations(content.annotations||{}),observations:carnetArray(content.observations),personalMarkers:carnetArray(content.personalMarkers),undergroundHypotheses:carnetArray(content.undergroundHypotheses),landscapeChanges:carnetArray(content.landscapeChanges),loreItems:carnetArray(content.notes),encounterCollection:carnetJsonClone(experiences.collection||{}),encounterEnabled:!!experiences.enabled
     }
   };

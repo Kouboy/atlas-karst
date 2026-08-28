@@ -198,6 +198,7 @@ const state = {
   selectionAssistVisible:false,
   allowNetwork:FORCE_ONLINE||!EMBEDDED_SNAPSHOT,
   snapshotSource:EMBEDDED_SNAPSHOT?"embarqué":"session",
+  carnetProfile:{author:"",intro:"",focus:"",updatedAt:""},
   load:{osm:"pending",address:"pending",cadastre:"pending",cavities:"pending",cartofriches:"pending",heritage:"pending",bss:"pending",hydrometry:"pending",biodiversity:"pending",nature:"pending",landcover:"pending",geology:"pending",casias:"pending",elevation:"pending"}
 };
 
@@ -213,3 +214,4 @@ els = Object.fromEntries([
   "debugPanel","debugToggle","debugRenderTime","debugRenderAverage","debugDataRenders","debugRenderPhases","debugGrid","debugPoiCount","debugStorage","debugPointer","debugErrors","debugChecks","runSelfCheck","exportDebugReport"
 ].map(id=>[id,document.getElementById(id)]));
 Object.assign(els,Object.fromEntries(["openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","casiasStatus","layerIndustrialHistory","layerLandCover","landCoverCount","landCoverSummary","syncLandCover","clearLandCover","landCoverHelp","landCoverStatus","layerGeology","geologyCount","geologySummary","syncGeology","clearGeology","geologyHelp","geologyStatus"].map(id=>[id,document.getElementById(id)])));
+Object.assign(els,Object.fromEntries(["carnetAuthor","carnetIntro","carnetFocus","saveCarnetProfile","carnetSharePreview"].map(id=>[id,document.getElementById(id)])));
