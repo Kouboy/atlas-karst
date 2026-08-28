@@ -40,7 +40,7 @@ async function retryAllDataSources(){
       .forEach(key=>localStorage.removeItem(territoryStorageKey(key)));
   }catch{}
   await syncOsmNow();
-  Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation(),syncNatureAreas(),syncLandCover()]);
+  Promise.allSettled([fetchAddress(true),fetchCadastre(),fetchCavities(),fetchElevation(),syncNatureAreas(),syncLandCover(),syncGeology()]);
 }
 function bindSourceAction(element,eventName,action,handler){
   element.addEventListener(eventName,event=>{
