@@ -5,6 +5,8 @@
 - Ajout d’un projet Capacitor Android qui embarque le même `index.html` autonome que l’édition web et desktop.
 - Ajout des commandes de synchronisation et de compilation d’un APK de débogage, sans changer le livrable GitHub Pages.
 - Déclaration des autorisations réseau et de géolocalisation Android ; la localisation reste déclenchée uniquement par l’action existante de l’utilisateur.
+- La coque utilise désormais le plein écran immersif : les barres système restent accessibles par un balayage Android, puis se masquent à nouveau au retour dans l’Atlas.
+- La lecture d’une cellule rassemble maintenant le relief, le repère sélectionné et les couches synchronisées alentour (sol, géologie, eau, vivant, nature, histoire et carnet), avec une formulation factuelle et non métaphorique.
 
 ## 0.19 — Carnet comme objet partageable
 

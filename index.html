@@ -10108,43 +10108,50 @@ function localSlopeProfile(x,y){
 }
 function localSlopeDegrees(x,y){return localSlopeProfile(x,y)?.angle??null}
 function terrainPhrase(cell,slope,x,y){
-  const seed=x*37+y*71,profile=localSlopeProfile(x,y),direction=profile?.direction;
-  if(currentDepth()<0)return storyChoice(seed,[
-    `Sous la surface, cette case appartient à la coupe interprétative ${depthSliceLabel()}. Le dessin est une section d’un même volume hypothétique, pas une galerie levée sur le terrain.`,
-    `À ${depthSliceLabel()}, l’Atlas montre une possibilité spatiale cohérente entre les niveaux. La profondeur locale et la forme exacte restent inconnues.`,
-    `Cette tranche souterraine prolonge un modèle de lecture. Elle aide à comparer les couches, mais ne peut servir ni d’itinéraire ni de plan topographique.`
-  ]);
+  const profile=localSlopeProfile(x,y),direction=profile?.direction;
+  if(currentDepth()<0)return `La carte affiche ici la coupe interprétative ${depthSliceLabel()}. Elle représente un modèle de continuité entre les niveaux, et non le relevé d’une galerie ou d’un vide réellement reconnu.`;
   const cls=cell.cls||"";
-  if(cls.includes("water"))return storyChoice(seed,[
-    "L’eau donne ici sa direction au paysage. Le cours visible relie naturellement cette case aux points situés en amont et en aval.",
-    "Le réseau hydrographique traverse la cellule et constitue le repère le plus net de sa lecture.",
-    "Cette case appartient au corridor humide du territoire ; relief, végétation et chemins tendent à s’organiser autour de lui."
-  ]);
-  if(cls.includes("road"))return storyChoice(seed,[
-    "Une voie traverse la cellule et impose une lecture linéaire du lieu, davantage tournée vers le passage que vers l’épaisseur du terrain.",
-    "La circulation structure ici la carte : le tracé relie les espaces voisins et coupe les motifs naturels de la surface."
-  ]);
-  if(cls.includes("building")||cls.includes("cad-building"))return storyChoice(seed,[
-    "Le bâti occupe la cellule. La trame devient plus précise, mais ce contour cadastral ne raconte ni l’usage actuel ni l’état du bâtiment.",
-    "Ici, le paysage se resserre autour d’une construction documentée par son emprise, sans que l’Atlas prétende connaître ce qui se passe derrière les murs."
-  ]);
-  if(cls.includes("forest"))return storyChoice(seed,[
-    "La couverture boisée domine la cellule. Elle donne une continuité au paysage tout en rendant les détails du sol plus difficiles à lire.",
-    "Cette case se fond dans une masse forestière : les ruptures de pente et les anciens tracés y deviennent plus discrets."
-  ]);
+  if(cls.includes("water"))return "Un cours d’eau ou une surface en eau est cartographié dans cette cellule. C’est le repère de surface le plus structurant de la sélection.";
+  if(cls.includes("road"))return "Une voie traverse cette cellule. La carte décrit son tracé, sans en déduire les usages, le trafic ou les conditions de circulation.";
+  if(cls.includes("building")||cls.includes("cad-building"))return "Une emprise bâtie est cartographiée ici. Son contour renseigne la présence d’une construction, pas son usage ni son état actuel.";
+  if(cls.includes("forest"))return "La couverture boisée domine cette cellule. Elle constitue un contexte d’occupation du sol, sans renseigner à elle seule la végétation présente au sol.";
   if(cls.includes("quarry"))return "La surface porte la marque d’une extraction ou d’un terrain remanié. Ce signal décrit l’usage du sol ; il ne suffit pas à prouver une exploitation souterraine.";
-  if(cls.includes("field")||cls.includes("meadow"))return storyChoice(seed,[
-    "La cellule s’ouvre sur un espace cultivé ou herbacé. Les limites, chemins et inflexions du relief y deviennent plus faciles à suivre.",
-    "Le terrain est ici peu masqué : la géométrie des parcelles et la pente prennent davantage de présence dans la lecture."
-  ]);
+  if(cls.includes("field")||cls.includes("meadow"))return "La cellule correspond à un espace ouvert, cultivé ou herbacé selon les données cartographiques disponibles.";
   if(Number.isFinite(slope)){
     const tail=direction?` La pente semble s’abaisser vers le ${direction}.`:"";
-    if(slope<1.5)return storyChoice(seed,["Le relief paraît presque immobile ici.","La surface est remarquablement calme à l’échelle de la grille."])+tail;
-    if(slope<5)return storyChoice(seed,["Le terrain s’incline doucement, sans rupture marquée.","Une pente légère donne une direction au lieu sans le brusquer."])+tail;
-    if(slope<11)return storyChoice(seed,["La pente devient lisible et commence à gouverner la forme du lieu.","Le relief prend ici une présence nette, suffisante pour orienter écoulements et parcours."])+tail;
-    return storyChoice(seed,["La déclivité est franche : cette case appartient à une rupture de relief notable.","Le terrain se cabre ici ; toute interprétation du sous-sol doit d’abord tenir compte de cette rupture."])+tail;
+    if(slope<1.5)return `Le modèle de relief indique une pente locale très faible (≈ ${slope.toFixed(1)}°).${tail}`;
+    if(slope<5)return `Le modèle de relief indique une pente douce (≈ ${slope.toFixed(1)}°).${tail}`;
+    if(slope<11)return `Le modèle de relief indique une pente marquée (≈ ${slope.toFixed(1)}°).${tail}`;
+    return `Le modèle de relief indique une pente forte (≈ ${slope.toFixed(1)}°).${tail}`;
   }
-  return "Aucun objet nommé ne domine cette case. Elle demeure néanmoins une pièce du relief, utile pour comprendre les continuités entre les lieux voisins.";
+  return "Aucun objet ponctuel ne domine cette cellule. La lecture repose donc sur les couches de relief et d’occupation du sol disponibles.";
+}
+
+function localContextItems(x,y,radius=1600){
+  const coord=gridToCoord(x,y,state.lastGrid.extent),nearby=(items=[])=>items.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)&&distanceMeters(coord,item)<=radius);
+  return {
+    covers:nearby(state.landCover),geology:nearby(state.geology),nature:nearby(state.natureAreas),hydro:nearby(state.hydrometry),bio:nearby(state.biodiversity),
+    heritage:nearby(state.heritageItems),industrial:nearby(state.cartofriches),observations:nearby(state.observations),personal:nearby(state.personalMarkers),changes:nearby(state.landscapeChanges)
+  };
+}
+function localContextNarrative(x,y){
+  if(currentDepth()<0)return "Les couches de surface et les documents voisins restent consultables ci-dessous : ils apportent du contexte, sans valider la forme souterraine affichée.";
+  const context=localContextItems(x,y),sentences=[];
+  const coverNames=[...new Set(context.covers.map(item=>item.name).filter(Boolean))].slice(0,2);
+  if(coverNames.length)sentences.push(`À proximité immédiate, l’occupation du sol cartographiée est ${coverNames.join(" et ")}.`);
+  const formations=[...new Set(context.geology.map(item=>item.name).filter(Boolean))].slice(0,2);
+  if(formations.length)sentences.push(`À l’échelle régionale, la carte géologique du BRGM mentionne ${formations.join(" et ")}.`);
+  const natural=[];
+  if(context.nature.length)natural.push(`${context.nature.length} espace${context.nature.length>1?"s":""} naturel${context.nature.length>1?"s":""} inventorié${context.nature.length>1?"s":""}`);
+  if(context.hydro.length)natural.push(`${context.hydro.length} station${context.hydro.length>1?"s":""} hydrométrique${context.hydro.length>1?"s":""}`);
+  if(context.bio.length){const species=new Set(context.bio.flatMap(item=>(item.species||[]).map(species=>species.speciesKey))).size;if(species)natural.push(`${species} espèce${species>1?"s":""} citée${species>1?"s":""}`)}
+  if(natural.length)sentences.push(`Les données de voisinage signalent ${natural.join(", ")}.`);
+  const human=[];
+  if(context.heritage.length)human.push(`${context.heritage.length} repère${context.heritage.length>1?"s":""} patrimonial${context.heritage.length>1?"ux":""}`);
+  if(context.industrial.length)human.push(`${context.industrial.length} site${context.industrial.length>1?"s":""} d’activité recensé${context.industrial.length>1?"s":""}`);
+  if(context.observations.length||context.personal.length||context.changes.length)human.push(`${context.observations.length+context.personal.length+context.changes.length} note${context.observations.length+context.personal.length+context.changes.length>1?"s":""} de carnet`);
+  if(human.length)sentences.push(`Pour l’histoire et les usages du lieu, le carnet rassemble ${human.join(", ")}.`);
+  return sentences.join(" ");
 }
 function featureNarrative(f){
   if(!f)return "";
@@ -10363,24 +10370,25 @@ function trimDescriptionCache(){
   }
 }
 function territoryPortraitHtml(cell,x,y){
-  const coord=gridToCoord(x,y,state.lastGrid.extent),radius=1600,nearby=(items=[])=>items.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)&&distanceMeters(coord,item)<=radius),lines=[];
-  const covers=nearby(state.landCover);if(covers.length)lines.push(`<li><span class="cell-fact-kind">sol</span>${esc(covers.slice(0,3).map(item=>item.name).filter(Boolean).join(" · "))} <small>BD CARTO® · IGN</small></li>`);
-  const nature=nearby(state.natureAreas);if(nature.length)lines.push(`<li><span class="cell-fact-kind">nature</span>${nature.length} espace${nature.length>1?"s":""} naturel${nature.length>1?"s":""} remarquable${nature.length>1?"s":""} à proximité <small>IGN / INPN</small></li>`);
-  const hydro=nearby(state.hydrometry);if(hydro.length)lines.push(`<li><span class="cell-fact-kind">eau</span>${esc(hydro.slice(0,2).map(item=>item.river||item.name||"station hydrométrique").join(" · "))} <small>Hub’Eau</small></li>`);
-  const bio=nearby(state.biodiversity);if(bio.length){const count=new Set(bio.flatMap(item=>(item.species||[]).map(species=>species.speciesKey))).size;lines.push(`<li><span class="cell-fact-kind">vivant</span>${count} espèce${count>1?"s":""} publiée${count>1?"s":""} dans les mailles voisines <small>GBIF</small></li>`)}
-  const historical=[...nearby(state.heritageItems),...nearby(state.cartofriches),...nearby(state.landscapeChanges)];if(historical.length)lines.push(`<li><span class="cell-fact-kind">temps</span>${historical.length} repère${historical.length>1?"s":""} historique${historical.length>1?"s":""}, patrimonial${historical.length>1?"ux":""} ou personnel${historical.length>1?"s":""} <small>sources mixtes</small></li>`);
+  const {covers,geology,nature,hydro,bio,heritage,industrial,observations,personal,changes}=localContextItems(x,y),lines=[];
+  if(covers.length)lines.push(`<li><span class="cell-fact-kind">sol</span>${esc(covers.slice(0,3).map(item=>item.name).filter(Boolean).join(" · "))} <small>BD CARTO® · IGN</small></li>`);
+  if(geology.length)lines.push(`<li><span class="cell-fact-kind">géologie</span>${esc(geology.slice(0,2).map(item=>item.name).filter(Boolean).join(" · "))} <small>BRGM · contexte régional</small></li>`);
+  if(nature.length)lines.push(`<li><span class="cell-fact-kind">nature</span>${nature.length} espace${nature.length>1?"s":""} naturel${nature.length>1?"s":""} remarquable${nature.length>1?"s":""} à proximité <small>IGN / INPN</small></li>`);
+  if(hydro.length)lines.push(`<li><span class="cell-fact-kind">eau</span>${esc(hydro.slice(0,2).map(item=>item.river||item.name||"station hydrométrique").join(" · "))} <small>Hub’Eau</small></li>`);
+  if(bio.length){const count=new Set(bio.flatMap(item=>(item.species||[]).map(species=>species.speciesKey))).size;lines.push(`<li><span class="cell-fact-kind">vivant</span>${count} espèce${count>1?"s":""} publiée${count>1?"s":""} dans les mailles voisines <small>GBIF</small></li>`)}
+  const historical=[...heritage,...industrial,...changes,...observations,...personal];if(historical.length)lines.push(`<li><span class="cell-fact-kind">carnet</span>${historical.length} repère${historical.length>1?"s":""} historique${historical.length>1?"s":""}, patrimonial${historical.length>1?"ux":""} ou personnel${historical.length>1?"s":""} <small>sources mixtes</small></li>`);
   if(!lines.length)return "";
   return `<section class="cell-section cell-section-portrait"><h3>Portrait du lieu</h3><ul class="cell-facts">${lines.join("")}</ul><p class="cell-source-line">Rayon de lecture ≈ 1,6 km. Cette synthèse rapproche des couches ; elle ne les fusionne pas en une nouvelle donnée.</p></section>`;
 }
 function buildCellDescriptionBundle(cell,x,y){
   const slope=localSlopeDegrees(x,y),f=cell.feature;
   const title=poiAnnotationDisplayTitle(f,f?.name||f?.kind||"Case sans nom");
-  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f),primary=primaryDocumentarySection(f);
+  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f),context=localContextNarrative(x,y),primary=primaryDocumentarySection(f);
   const meta=[Number.isFinite(cell.elev)?`altitude ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",currentDepth()<0?`niveau ${depthSliceLabel()}`:"surface"].filter(Boolean).join(" · ");
   const [category,symbol]=cellPresentationCategory(cell);
   const immediate=`<article class="cell-sheet-card">
     <header class="cell-sheet-head"><div class="cell-sheet-symbol">${esc(symbol)}</div><div><div class="cell-sheet-kicker">${esc(category)}</div><div class="cell-sheet-title">${esc(title)}</div><div class="cell-sheet-meta">${esc(meta)}</div>${documentarySignalHtml(cell)}${readingLedgerHtml(cell)}</div></header>
-    ${primary}<section class="cell-section cell-section-reading"><h3>${primary?"Contexte de la maille":"Lecture du lieu"}</h3><p>${terrain}${!primary&&feature?` ${feature}`:""}</p></section>`;
+    ${primary}<section class="cell-section cell-section-reading"><h3>${primary?"Contexte de la maille":"Lecture du lieu"}</h3><p>${terrain}${!primary&&feature?` ${feature}`:""}${context?` ${context}`:""}</p></section>`;
   return {key:cellDescriptionCacheKey(cell,x,y),immediate,cell,x,y,title,details:null};
 }
 function buildCellDescriptionDetails(bundle){
