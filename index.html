@@ -2119,6 +2119,10 @@ const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
 if(!CANVAS_RENDERER)document.body.classList.add("canvas-unsupported");
+function isNativeAndroidApp(){
+  try{return window.Capacitor?.getPlatform?.()==="android"&&window.Capacitor?.isNativePlatform?.()===true}catch{return false}
+}
+if(isNativeAndroidApp())document.body.classList.add("native-android");
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
@@ -10745,8 +10749,8 @@ function effectiveMapViewportRect(){
 }
 
 function responsiveGridProfile(main){
-  const desktop=matchMedia("(min-width:941px)").matches,compact=matchMedia("(max-width:520px)").matches;
-  const fontSize=compact?11:12,padding=compact?12:17,available=effectiveMapViewportRect();
+  const desktop=matchMedia("(min-width:941px)").matches,compact=matchMedia("(max-width:520px)").matches,nativeAndroid=isNativeAndroidApp();
+  const fontSize=compact?(nativeAndroid?12:11):(nativeAndroid?13:12),padding=compact?12:17,available=effectiveMapViewportRect();
   const roomW=Math.max(desktop?620:260,available?.width||main.clientWidth||window.innerWidth);
   const roomH=Math.max(desktop?320:190,available?.height||els.viewport?.clientHeight||window.innerHeight*.58);
   const probe=measureCanvasLayout(fontSize,padding);
@@ -10781,8 +10785,10 @@ function fitMapFrame(){
   uiShellRuntime.fitRuns++;
   if(!CANVAS_RENDERER)return;
   const main=uiShellMain||document.querySelector("main"),surface=activeMapSurface();if(!main||!surface||!els.viewport)return;
-  const compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches;
-  const baseFont=compact?11:12,basePadding=compact?12:17;
+  const compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches,nativeAndroid=isNativeAndroidApp();
+  // L’APK libère davantage de surface que le navigateur. On en consacre une
+  // petite part à la lisibilité des glyphes et des cartouches de carte.
+  const baseFont=compact?(nativeAndroid?12:11):(nativeAndroid?13:12),basePadding=compact?12:17;
   setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);
   const availableWidth=Math.max(280,main.clientWidth);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
   if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}

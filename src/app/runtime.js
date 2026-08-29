@@ -8,6 +8,10 @@ const NETWORK_RENDERER_REVISION = "cartographic-backbone-r1";
 const CANVAS_RENDERER = !!document.createElement("canvas").getContext;
 document.body.classList.add("renderer-canvas");
 if(!CANVAS_RENDERER)document.body.classList.add("canvas-unsupported");
+function isNativeAndroidApp(){
+  try{return window.Capacitor?.getPlatform?.()==="android"&&window.Capacitor?.isNativePlatform?.()===true}catch{return false}
+}
+if(isNativeAndroidApp())document.body.classList.add("native-android");
 let els={};
 const DEBUG_REQUESTED = URL_FLAGS.has("debug");
 const debugState={
