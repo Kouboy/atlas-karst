@@ -46,6 +46,22 @@ npm run build
 
 Le dépôt conserve le fichier généré afin qu’il puisse toujours être ouvert directement, sans installation ni serveur. Il faut ouvrir [`index.html`](index.html), jamais le gabarit `src/index.template.html` ; celui-ci redirige désormais vers le bon fichier s’il est ouvert par erreur. Les responsabilités des fichiers sources sont détaillées dans [`src/README.md`](src/README.md).
 
+### Coque Android de test
+
+Le même Atlas peut être emballé dans une application Android Capacitor, sans changer le livrable web ni GitHub Pages. La copie mobile générée dans `www/` est intentionnellement ignorée par Git : elle est reconstruite depuis `index.html` à chaque synchronisation.
+
+```text
+npm run android:sync
+```
+
+Pour produire un APK de débogage sur une machine équipée du JDK et du SDK Android (Android Studio les installe), utiliser :
+
+```text
+npm run android:apk:debug
+```
+
+L’APK apparaît alors dans `android/app/build/outputs/apk/debug/app-debug.apk`. Cette première coque conserve volontairement l’interface complète : elle sert à observer les usages réels du terrain avant de concevoir l’application compagnon. Elle demande seulement l’accès réseau et, à l’action de l’utilisateur, la position approximative ou précise.
+
 ```text
 npm test
 ```

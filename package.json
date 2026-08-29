@@ -12,9 +12,17 @@
     "test:static": "npm run build:check && node tools/audit-html.mjs",
     "test:browser": "node tools/browser-check.mjs",
     "test:all": "npm run test:static && npm run test:browser",
-    "benchmark:render": "node tools/benchmark-render.mjs"
+    "benchmark:render": "node tools/benchmark-render.mjs",
+    "android:sync": "npm run build && npx cap sync android",
+    "android:open": "npm run android:sync && npx cap open android",
+    "android:apk:debug": "npm run android:sync && cd android && gradlew.bat assembleDebug"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.5.0",
     "playwright": "^1.62.1"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0"
   }
 }

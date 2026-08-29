@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Atlas Karst</string>
+    <string name="title_activity_main">Atlas Karst</string>
+    <string name="package_name">fr.kouboy.atlaskarst</string>
+    <string name="custom_url_scheme">fr.kouboy.atlaskarst</string>
+</resources>

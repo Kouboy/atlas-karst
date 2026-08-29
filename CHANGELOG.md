@@ -1,5 +1,11 @@
 # Journal des versions
 
+## En préparation — coque Android de test
+
+- Ajout d’un projet Capacitor Android qui embarque le même `index.html` autonome que l’édition web et desktop.
+- Ajout des commandes de synchronisation et de compilation d’un APK de débogage, sans changer le livrable GitHub Pages.
+- Déclaration des autorisations réseau et de géolocalisation Android ; la localisation reste déclenchée uniquement par l’action existante de l’utilisateur.
+
 ## 0.19 — Carnet comme objet partageable
 
 - Chaque Territoire peut désormais porter une présentation : auteur ou collectif, texte d’ouverture et fil conducteur.

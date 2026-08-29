@@ -1,10 +1,13 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = new URL("../", import.meta.url);
 const templateUrl = new URL("src/index.template.html", root);
 const outputUrl = new URL("index.html", root);
+// Capacitor consumes this small, generated web root. The main index.html stays
+// committed at the repository root for the standalone and GitHub Pages builds.
+const mobileOutputUrl = new URL("www/index.html", root);
 const styleUrl = new URL("src/styles/atlas.css", root);
 const scriptUrls = [
   new URL("src/app/runtime.js", root),
@@ -86,7 +89,10 @@ function main() {
     return;
   }
   writeFileSync(outputUrl, generated);
+  mkdirSync(new URL("www/", root), { recursive: true });
+  writeFileSync(mobileOutputUrl, generated);
   console.log("✓ index.html autonome reconstruit");
+  console.log("✓ copie mobile Capacitor reconstruite");
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {
