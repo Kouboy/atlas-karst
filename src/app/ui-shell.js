@@ -296,12 +296,25 @@ function fitMapFrame(){
   const {fontSize:baseFont,padding:basePadding}=mapReadingProfile();
   setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);
   const availableWidth=Math.max(280,main.clientWidth);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
+  // Le premier passage peut s’arrêter ici pendant que le profil de grille est
+  // recalculé : le centrage mobile ne doit pas attendre le passage suivant.
+  els.viewport.classList.toggle("map-centered",!desktop);
   if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
   const previousSignature=canvasRuntime.layoutSignature,m=syncCanvasSize();
   const finalWidth=Math.ceil(m?.displayWidth||availableWidth),frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
   // Sur mobile, .terminal-wrap occupe volontairement toute la largeur : comparer
   // au frameWidth (réduit à la largeur du Canvas) empêchait donc son centrage.
-  setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);els.viewport.classList.toggle("map-centered",finalWidth<availableWidth-4);
+  setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);
+  // Le cadre mobile conserve toute sa largeur, même lorsque le maillage est
+  // plus étroit. Le centrage doit donc rester actif sur mobile sans dépendre
+  // d'une métrique de Canvas susceptible d'être mise à jour un frame plus tard.
+  els.viewport.classList.toggle("map-centered",!desktop||finalWidth<availableWidth-4);
+  if(!desktop){
+    // Les calques absolus peuvent agrandir la zone défilable du cadre. On
+    // centre donc le Canvas sur la largeur visible, pas sur cette emprise.
+    surface.style.marginLeft=`${Math.max(0,Math.round((els.viewport.clientWidth-finalWidth)/2))}px`;
+    surface.style.marginRight="0px";
+  }else{surface.style.marginLeft="";surface.style.marginRight=""}
   if(state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
   else syncRenderFxGeometry(m);
   requestAnimationFrame(()=>{

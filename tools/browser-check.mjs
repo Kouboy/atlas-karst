@@ -28,7 +28,9 @@ function runtimeErrors(page) {
   const errors = [];
   page.on("pageerror", (error) => errors.push(`pageerror: ${error.message}`));
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(`console: ${message.text()}`);
+    // Le bac à sable local interdit toute sortie réseau. Le test utilise des
+    // données hors ligne et ne doit pas échouer sur ce bruit de navigateur.
+    if (message.type() === "error" && !message.text().includes("net::ERR_NETWORK_ACCESS_DENIED")) errors.push(`console: ${message.text()}`);
   });
   return errors;
 }
@@ -666,6 +668,8 @@ try {
     assert.ok(result.runtime.applied>=1&&result.runtime.dbSaves>=1&&result.runtime.dbLoads>=1&&result.runtime.dbDeletes>=2);
     assert.equal(result.runtime.lastError,"");
     await page.evaluate(()=>document.getElementById("exportSnapshotJson").click());
+    await page.locator("#carnetExportDialog[open]").waitFor();
+    await page.locator("#confirmCarnetExport").click();
     await page.waitForFunction(()=>snapshotRuntime.exports>=1&&!![...document.querySelectorAll("a[download]")].find(link=>link.download.endsWith(".atlas")));
     const exportedJson=await page.evaluate(async()=>{
       const link=[...document.querySelectorAll("a[download]")].find(item=>item.download.endsWith(".atlas"));
@@ -775,7 +779,7 @@ try {
       const sourceSnapshot=buildAtlasSnapshot(),sourceId=sourceSnapshot.territory.id,carnet=await buildAtlasCarnet(sourceSnapshot);
       await saveSnapshotToDb(sourceSnapshot);
       const file=new File([JSON.stringify(carnet)],"controle.atlas",{type:"application/vnd.atlas+carnet+json"});
-      await importSnapshotFile(file);
+       await importSnapshotFile(file);document.getElementById("carnetImportDialog").close();await completeSnapshotImport("copy");
       const imported={id:CONFIG.territory.id,label:CONFIG.territory.label,observations:state.observations.map(item=>item.id),notes:state.loreItems.map(item=>item.id),landCover:state.landCover.map(item=>item.id),geology:state.geology.map(item=>item.id),osm:state.osm.length,cadastre:state.cadastreBuildings.length+state.cadastreParcels.length,elevation:state.elevation,entries:(await listTerritoriesFromDb()).map(item=>item.id),help:els.snapshotHelp.textContent};
       const tampered=JSON.parse(JSON.stringify(carnet));tampered.content.notes[0].note="altération";
       await importSnapshotFile(new File([JSON.stringify(tampered)],"controle-altere.atlas",{type:"application/vnd.atlas+carnet+json"}));
@@ -784,7 +788,7 @@ try {
       return {sourceId,imported,afterTamper,runtime:{imports:carnetRuntime.imports,validated:carnetRuntime.validated}};
     });
     assert.notEqual(result.imported.id,result.sourceId);assert.match(result.imported.label,/— import$/);assert.deepEqual(result.imported.observations,["OBS-CARNET"]);assert.deepEqual(result.imported.notes,["NOTE-CARNET"]);assert.deepEqual(result.imported.landCover,["OCS-CARNET"]);assert.deepEqual(result.imported.geology,["GEO-CARNET"]);
-    assert.equal(result.imported.osm,0);assert.equal(result.imported.cadastre,0);assert.equal(result.imported.elevation,null);assert.equal(result.imported.entries.length,2);assert.match(result.imported.help,/nouvelle copie/);
+     assert.equal(result.imported.osm,0);assert.equal(result.imported.cadastre,0);assert.equal(result.imported.elevation,null);assert.equal(result.imported.entries.length,2);assert.match(result.imported.help,/copie indépendante/);
     assert.equal(result.afterTamper.id,result.imported.id);assert.deepEqual(result.afterTamper.entries,result.imported.entries);assert.match(result.afterTamper.help,/intégrité incorrect/);assert.equal(result.runtime.imports,1);assert.ok(result.runtime.validated>=1);
   });
 
@@ -1008,7 +1012,7 @@ try {
           bodyWidth: document.body.scrollWidth,
           viewportWidth: window.innerWidth,
           canvas: { left:canvas.left, right:canvas.right, width: canvas.width, height: canvas.height },
-          mapFrame: { left:mapFrame.left, right:mapFrame.right, width:mapFrame.width },
+          mapFrame: { left:mapFrame.left, right:mapFrame.right, width:mapFrame.width, clientWidth:document.getElementById("viewport").clientWidth, scrollWidth:document.getElementById("viewport").scrollWidth, centered:document.getElementById("viewport").classList.contains("map-centered") },
           shell:{bound:uiShellRuntime.bound,sidebarOpen:document.body.classList.contains("sidebar-open"),infoCollapsed:document.body.classList.contains("info-collapsed")},
           controls: [...document.querySelectorAll(".statusbar .toolbar-button,.map-actions button")]
             .filter((element) => {
@@ -1029,7 +1033,7 @@ try {
         assert.equal(layout.shell.infoCollapsed,true,"la fiche mobile occupe la carte au démarrage");
         if(layout.canvas.width<layout.mapFrame.width-4){
           const canvasCenter=layout.canvas.left+layout.canvas.width/2,mapCenter=layout.mapFrame.left+layout.mapFrame.width/2;
-          assert.ok(Math.abs(canvasCenter-mapCenter)<=3,"le Canvas mobile étroit n’est pas centré dans son cadre");
+          assert.ok(Math.abs(canvasCenter-mapCenter)<=3,`le Canvas mobile étroit n’est pas centré dans son cadre (écart ${Math.abs(canvasCenter-mapCenter).toFixed(1)} px ; cadre ${layout.mapFrame.width}/${layout.mapFrame.clientWidth}/${layout.mapFrame.scrollWidth}, centré ${layout.mapFrame.centered})`);
         }
         for (const control of layout.controls) {
           assert.ok(control.height >= 44, `${control.id} mesure moins de 44 px de haut`);

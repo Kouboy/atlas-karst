@@ -698,8 +698,9 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   .statusbar .toolbar-button{min-height:44px}
   .statusbar .badge{padding:6px 8px;font-size:10px}
   .statusbar .secondary{display:none}
-  .terminal-wrap{min-height:0;width:100%;overscroll-behavior:none}
-  #mapCanvas{max-width:none;max-height:none}
+  .terminal-wrap{min-height:0;width:100%;overscroll-behavior:none;scrollbar-width:none}
+  .terminal-wrap::-webkit-scrollbar{display:none}
+  #mapCanvas{max-width:none;max-height:none;margin-inline:auto}
   .map-actions{grid-template-columns:repeat(6,44px)}
   .map-actions button{width:44px;height:44px}
   .readout{font-size:11px}
