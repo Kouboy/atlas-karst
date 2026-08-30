@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = new URL("../", import.meta.url);
 const templateUrl = new URL("src/index.template.html", root);
 const outputUrl = new URL("index.html", root);
+const explorationsOutputUrl = new URL("explorations.html", root);
 // Capacitor consumes this small, generated web root. The main index.html stays
 // committed at the repository root for the standalone and GitHub Pages builds.
 const mobileOutputUrl = new URL("www/index.html", root);
@@ -63,7 +64,7 @@ function replaceSingle(source, marker, replacement) {
   return source.slice(0, first) + replacement + source.slice(first + marker.length);
 }
 
-export function buildAtlasHtml() {
+export function buildAtlasHtml({ edition = "instrumental" } = {}) {
   const sourceTemplate = readText(templateUrl);
   if (!SOURCE_GUARD_PATTERN.test(sourceTemplate)) {
     throw new Error("La protection d’ouverture directe du gabarit est absente.");
@@ -73,15 +74,21 @@ export function buildAtlasHtml() {
   const scripts = scriptUrls.map((url) => readText(url).trim()).join("\n\n");
   let html = replaceSingle(template, STYLE_MARKER, styles);
   html = replaceSingle(html, SCRIPT_MARKER, scripts);
+  if (edition === "explorations") {
+    html = html.replace("<title>Atlas Karst ASCII v0.19 · carnet partageable</title>", "<title>Atlas Karst — Explorations · carnet de territoire</title>");
+    html = html.replace('<body data-depth-band="surface" data-ui-version="field-notebook">', '<body data-edition="explorations" data-depth-band="surface" data-ui-version="field-notebook">');
+  }
   return html.replace(/^(<!doctype html>)/i, `$1\n${GENERATED_NOTICE}`);
 }
 
 function main() {
   const generated = buildAtlasHtml();
+  const explorations = buildAtlasHtml({ edition: "explorations" });
   if (process.argv.includes("--check")) {
     const current = readText(outputUrl);
-    if (current !== generated) {
-      console.error("× index.html n’est pas synchronisé avec les sources. Lance npm run build.");
+    const currentExplorations = readText(explorationsOutputUrl);
+    if (current !== generated || currentExplorations !== explorations) {
+      console.error("× Les pages Atlas ne sont pas synchronisées avec les sources. Lance npm run build.");
       process.exitCode = 1;
       return;
     }
@@ -89,9 +96,11 @@ function main() {
     return;
   }
   writeFileSync(outputUrl, generated);
+  writeFileSync(explorationsOutputUrl, explorations);
   mkdirSync(new URL("www/", root), { recursive: true });
   writeFileSync(mobileOutputUrl, generated);
   console.log("✓ index.html autonome reconstruit");
+  console.log("✓ explorations.html expérimental reconstruit");
   console.log("✓ copie mobile Capacitor reconstruite");
 }
 

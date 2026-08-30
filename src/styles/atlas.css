@@ -725,6 +725,42 @@ body[data-depth-band="deep"]{--map-core:#100d0b;--map-edge:#040302;--map-haze:rg
   .map-tip{left:7px;bottom:7px;max-width:calc(100% - 18px)}
 }
 
+/* Prototype grand public familial. Il ne modifie ni les données, ni le moteur
+   cartographique : cette peau rend simplement l'entrée plus accueillante. */
+body.explorations-edition{
+  --ui-bg:#10233a;--ui-panel:#173453;--ui-panel-2:#204467;--ui-line:#406988;--ui-line-strong:#70b3ca;
+  --ui-text:#f5f4e9;--ui-muted:#c3dbe0;--ui-accent:#ffd166;--ui-danger:#ff8b7c;
+  background:radial-gradient(circle at 78% 8%,#315f79 0,#10233a 47%,#091621 100%);
+  font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;
+}
+body.explorations-edition aside{background:rgba(16,35,58,.97);border-right-color:#5689a4}
+body.explorations-edition .sidebar-head{padding:12px 4px 10px}
+body.explorations-edition .sidebar-head h1{font-size:23px;letter-spacing:-.04em;color:#fff7d6}
+body.explorations-edition .eyebrow{color:#ffd166;font-size:11px;letter-spacing:.1em}
+body.explorations-edition .sub{color:#d4eced;font-size:12px;line-height:1.5}
+body.explorations-edition .sidebar-section-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;border:0;background:transparent;padding:5px 0 9px}
+body.explorations-edition .sidebar-section-tab{min-height:43px;border:1px solid #598ca8!important;border-radius:14px!important;background:#173453!important;color:#e8f4ed!important;font-size:10px!important;font-weight:800;letter-spacing:0!important;text-transform:none!important}
+body.explorations-edition .sidebar-section-tab[aria-selected="true"]{background:#ffd166!important;border-color:#ffd166!important;color:#173453!important}
+body.explorations-edition .sidebar-cluster-head{border:0;padding:7px 2px}
+body.explorations-edition .sidebar-cluster-head h2{color:#fff4cc;font-size:17px;text-transform:none;letter-spacing:0}
+body.explorations-edition aside .card{border:1px solid #598ca8!important;border-radius:17px!important;background:#173453!important;padding:12px;margin-top:9px}
+body.explorations-edition aside .card h2{color:#fff4cc;font-size:15px;text-transform:none;letter-spacing:0}
+body.explorations-edition aside button,body.explorations-edition aside select,body.explorations-edition aside input[type="text"],body.explorations-edition aside input[type="number"]{border-radius:12px!important;border-color:#5c91ad!important;background:#204467!important;color:#f5f8ed!important}
+body.explorations-edition aside .action-primary,body.explorations-edition aside button.active{background:#ffd166!important;border-color:#ffd166!important;color:#173453!important}
+body.explorations-edition aside .small,body.explorations-edition aside .field-label{color:#c7e0e2!important}
+body.explorations-edition .statusbar{border-color:#70b3ca;background:#10233a}
+body.explorations-edition .statusbar>*{background:#173453;color:#f5f4e9;border-color:#406988}
+body.explorations-edition .statusbar strong{color:#ffd166}
+body.explorations-edition .statusbar .toolbar-button{font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;text-transform:none;letter-spacing:0}
+body.explorations-edition .terminal-wrap{border-color:#70b3ca;box-shadow:inset 0 0 45px rgba(0,13,26,.56),0 8px 22px rgba(0,0,0,.2)}
+body.explorations-edition .map-actions button{border-radius:50%!important;border-color:#75b8c9!important;background:#173453!important;color:#fff4cc!important;font-family:Arial,Helvetica,sans-serif}
+body.explorations-edition #readout{border-radius:17px!important;border-color:#70b3ca;background:#173453;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif}
+body.explorations-edition .badge{border-radius:12px!important}
+@media(max-width:520px){
+  body.explorations-edition .sidebar-section-tab{min-height:39px;font-size:9px!important}
+  body.explorations-edition .sidebar-head h1{font-size:20px}
+}
+
 @media(max-width:940px){
   body[data-ui-version="field-notebook"] .sidebar-backdrop{
     background:rgba(0,7,4,.42);
