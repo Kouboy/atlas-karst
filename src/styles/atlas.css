@@ -1587,6 +1587,11 @@ body.explorations-edition #readout .plain-cell-title{color:#244453}
 body.explorations-edition #readout .plain-cell-detail{color:#355764}
 body.explorations-edition #readout .plain-cell-meta{color:#5e7680}
 body.explorations-edition #readout .cell-sheet-head::before{content:""!important;display:none!important}
+/* La fiche Explorations ne reprend pas le cadre décoratif de l'instrument : il
+   pouvait passer devant son texte lors de l'ouverture. */
+body.explorations-edition #readout::before{display:none!important}
+body.explorations-edition #readout .readout-sheet-handle{position:relative;z-index:2}
+body.explorations-edition #readout .readout-body{position:relative;z-index:1}
 
 /* Explorations : petits repères illustrés, lisibles même sans connaître les rubriques. */
 body.explorations-edition[data-ui-version="field-notebook"] aside .card>h2{display:flex;align-items:center;gap:8px}

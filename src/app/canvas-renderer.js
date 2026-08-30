@@ -585,8 +585,8 @@ function symbolicRoundRect(ctx,x,y,w,h,r){
   const rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();
 }
 function explorationsDrawPoiIcon(ctx,kind,cx,cy,size,alpha=1){
-  const color=symbolicPoiColor(kind),r=Math.max(4,size*.38);ctx.save();ctx.translate(cx,cy);ctx.globalAlpha=alpha;ctx.lineCap="round";ctx.lineJoin="round";
-  ctx.fillStyle="#fff9df";ctx.strokeStyle=color;ctx.lineWidth=Math.max(1.1,size*.085);ctx.beginPath();ctx.arc(0,0,r*1.18,0,Math.PI*2);ctx.fill();ctx.stroke();
+  const color=symbolicPoiColor(kind),r=Math.max(5,size*.44);ctx.save();ctx.translate(cx,cy);ctx.globalAlpha=alpha;ctx.lineCap="round";ctx.lineJoin="round";
+  ctx.fillStyle="#fff9df";ctx.strokeStyle=color;ctx.lineWidth=Math.max(1.25,size*.08);ctx.beginPath();ctx.arc(0,0,r*1.20,0,Math.PI*2);ctx.fill();ctx.stroke();
   if(kind==="home"){ctx.fillStyle="#e37a62";ctx.beginPath();ctx.moveTo(-r*.68,-r*.05);ctx.lineTo(0,-r*.70);ctx.lineTo(r*.68,-r*.05);ctx.lineTo(r*.52,-r*.05);ctx.lineTo(r*.52,r*.58);ctx.lineTo(-r*.52,r*.58);ctx.lineTo(-r*.52,-r*.05);ctx.closePath();ctx.fill();ctx.stroke();}
   else if(kind==="location"){ctx.fillStyle=color;ctx.beginPath();ctx.arc(0,-r*.14,r*.34,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(0,r*.74);ctx.lineTo(-r*.43,0);ctx.arc(0,-r*.02,r*.43,Math.PI,0);ctx.closePath();ctx.stroke();}
   else if(kind==="heritage"){ctx.fillStyle="#e5bb6b";ctx.fillRect(-r*.62,-r*.10,r*1.24,r*.68);ctx.beginPath();ctx.moveTo(-r*.75,-r*.12);ctx.lineTo(0,-r*.68);ctx.lineTo(r*.75,-r*.12);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle="#96643d";ctx.beginPath();ctx.moveTo(-r*.28,r*.48);ctx.lineTo(-r*.28,0);ctx.moveTo(r*.28,r*.48);ctx.lineTo(r*.28,0);ctx.stroke();}
@@ -678,7 +678,7 @@ function symbolicDrawPoisAndLabels(ctx,grid,m){
   const pois=symbolicVisiblePois(grid),scale=symbolicPoiScale(),entries=[];canvasRuntime.symbolicPoiHitRegions=[];
   for(const poi of pois){
     const p=symbolicProject(poi.lon,poi.lat,grid.extent,m);if(!p||p.x<m.padding-2||p.x>m.width-m.padding+2||p.y<m.padding-2||p.y>m.height-m.padding+2)continue;
-    const alpha=symbolicPoiDepthAlpha(poi),size=Math.max(9,m.fontSize*.92)*scale;entries.push({poi,cx:p.x,cy:p.y,size,alpha});
+    const alpha=symbolicPoiDepthAlpha(poi),baseSize=Math.max(9,m.fontSize*.92)*scale,size=explorationsMapStyle()?baseSize*1.62:baseSize;entries.push({poi,cx:p.x,cy:p.y,size,alpha});
     symbolicDrawPoiIcon(ctx,poi.category,p.x,p.y,size,alpha);
     canvasRuntime.symbolicPoiHitRegions.push({poi,cx:p.x,cy:p.y,size,alpha});
   }
