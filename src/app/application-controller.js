@@ -44,6 +44,8 @@ async function bootAtlas(){
     }
     try{state.ambientMotion=localStorage.getItem(AMBIENT_PREF_KEY)!=="off"}catch{}
     try{const savedMode=localStorage.getItem(RENDER_MODE_PREF_KEY);if(savedMode==="ascii"||savedMode==="symbolic")state.renderMode=savedMode}catch{}
+    try{const savedReadingSize=localStorage.getItem(MAP_READING_SIZE_PREF_KEY);if(["dense","standard","comfort","large"].includes(savedReadingSize))state.mapReadingSize=savedReadingSize}catch{}
+    updateMapReadingSizeUI();
     if(els.ambientMotion)els.ambientMotion.checked=state.ambientMotion;
     if(els.aroundRadius)els.aroundRadius.value=String(state.aroundRadius);
     prepareSidebarCards();

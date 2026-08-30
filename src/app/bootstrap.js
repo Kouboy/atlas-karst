@@ -109,6 +109,7 @@ const OFFLINE_DEMO_POINTS = [
 ];
 
 const RENDER_MODE_PREF_KEY = "atlas-karst-render-mode-v1";
+const MAP_READING_SIZE_PREF_KEY = "atlas-karst-map-reading-size-v1";
 const POI_ANNOTATIONS_KEY = "atlas-karst-poi-annotations-v1";
 
 const state = {
@@ -129,6 +130,7 @@ const state = {
   guidedTourActive:false,
   scenario:"median",
   renderMode:"symbolic",
+  mapReadingSize:"standard",
   layerSurface:true,
   layerRelief:true,
   layerCadastreBuildings:true,
@@ -205,7 +207,7 @@ const state = {
 els = Object.fromEntries([
   "appVersionLabel","territorySummary","territoryLibrarySelect","territoryLoad","territorySave","territoryRenameName","territoryRename","territoryDuplicate","territoryDelete","territoryLibraryStatus","territoryName","territoryLat","territoryLon","territoryUseLocation","territoryCreate","territorySetupStatus","mapCanvas","canvasUnsupported","renderFxLayer","zoomTransitionCanvas","canvasHoverMarker","canvasSelectionMarker","canvasPoiMarker","tourMarker","viewport","sidebar","sidebarBackdrop","sidebarToggle","sidebarClose","collapseCards","expandCards","mapCarnets","mapDisplay","mapNotes","infoToggle","audioToggle","mapDepthUp","mapZoomOut","mapZoomIn","mapHome","mapDepthDown","mainAttribution","readout","readoutBody","readoutSheetHandle","readoutSheetLabel","zoomButtons","depthButtons","zoomOut","zoomIn","depthUp","depthDown",
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
-  "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn",
+  "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn","mapReadingSize","mapReadingSizeHelp",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
   "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","hoverTip","hoverCellIndicator",

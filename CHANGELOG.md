@@ -9,6 +9,7 @@
 - La lecture d’une cellule rassemble maintenant le relief, le repère sélectionné et les couches synchronisées alentour (sol, géologie, eau, vivant, nature, histoire et carnet), avec une formulation factuelle et non métaphorique.
 - Dans l’APK uniquement, les glyphes, libellés et symboles de carte gagnent environ 9 % afin d’améliorer la lecture en extérieur, sans modifier l’édition web ou desktop.
 - L’APK propose désormais une édition Terrain légère : dock bas Carte / Observer / Autour / Carnet, panneau réduit aux gestes fréquents et outils détaillés ouverts seulement à la demande.
+- Une préférence de lecture permet maintenant de choisir un maillage serré, standard, confortable ou grand ; elle agrandit les caractères et repères Canvas tout en adaptant la densité de la grille à l’écran.
 
 ## 0.19 — Carnet comme objet partageable
 

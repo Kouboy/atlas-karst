@@ -203,6 +203,19 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     </div>
   </section>
 
+  <section class="card" data-ui-card="map-reading">
+    <h2>Lecture de carte</h2>
+    <label class="field-label">Taille du maillage et des repères
+      <select id="mapReadingSize">
+        <option value="dense">Serré · plus de terrain</option>
+        <option value="standard" selected>Standard</option>
+        <option value="comfort">Confort</option>
+        <option value="large">Grand · lecture facilitée</option>
+      </select>
+    </label>
+    <div class="small" id="mapReadingSizeHelp">La même emprise reste affichée ; une taille plus grande réduit le nombre de caractères visibles.</div>
+  </section>
+
   <section class="card" data-ui-card="display">
     <h2>Affichage</h2>
     <div class="render-mode-panel" role="group" aria-label="Style de rendu de la carte">

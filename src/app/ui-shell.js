@@ -91,6 +91,24 @@ function documentarySignalHtml(cell){
 function sidebarCardByKey(key){
   return els.sidebar?.querySelector(`[data-ui-card="${key}"]`)||null;
 }
+function mapReadingProfile(){
+  const compact=matchMedia("(max-width:520px)").matches,nativeAndroid=isNativeAndroidApp();
+  const base=compact?(nativeAndroid?12:11):(nativeAndroid?13:12);
+  const profiles={dense:{factor:.88,label:"serré"},standard:{factor:1,label:"standard"},comfort:{factor:1.17,label:"confort"},large:{factor:1.34,label:"grand"}};
+  const profile=profiles[state.mapReadingSize]||profiles.standard;
+  return {...profile,fontSize:Math.round(base*profile.factor*10)/10,padding:compact?12:17};
+}
+function updateMapReadingSizeUI(){
+  const profile=mapReadingProfile();
+  if(els.mapReadingSize)els.mapReadingSize.value=state.mapReadingSize;
+  if(els.mapReadingSizeHelp)els.mapReadingSizeHelp.textContent=`Réglage ${profile.label} · ${profile.fontSize}px. Une taille plus grande améliore la lecture et les cibles, mais montre moins de caractères sur la même emprise.`;
+}
+function setMapReadingSize(value){
+  if(!["dense","standard","comfort","large"].includes(value))return;
+  state.mapReadingSize=value;
+  try{localStorage.setItem(MAP_READING_SIZE_PREF_KEY,value)}catch{}
+  updateMapReadingSizeUI();scheduleFrameFit();
+}
 function sidebarSectionStorageKey(){return "atlas-karst-ui-section-v1"}
 function syncTerrainDock(section=uiShellRuntime.activeSection){
   for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]")){
@@ -122,8 +140,8 @@ function prepareTerrainLightShell(){
     if(section==="explorer"){activateSidebarSection(section);setSidebarOpen(false);return}
     openSidebarPanel(section,"");
   });
-  const locationCard=sidebarCardByKey("location"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
-  setCollapsibleState(locationCard,false,"h2");setCollapsibleState(fieldCard,false,"h2");setCollapsibleState(statusCard,false,"h2");setCollapsibleState(carnetCard,true,"h2");
+  const locationCard=sidebarCardByKey("location"),readingCard=sidebarCardByKey("map-reading"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
+  setCollapsibleState(locationCard,false,"h2");setCollapsibleState(readingCard,false,"h2");setCollapsibleState(fieldCard,false,"h2");setCollapsibleState(statusCard,false,"h2");setCollapsibleState(carnetCard,true,"h2");
 }
 function activateSidebarSection(section,{focus=false}={}){
   if(!els.sidebar?.dataset.clustered)return false;
@@ -145,7 +163,7 @@ function openSidebarPanel(section,title=""){
 function bindNativeSidebarShell(){
   if(!els.sidebar||els.sidebar.dataset.clustered==="1")return;
   const navigation=els.sidebar.querySelector(".sidebar-section-tabs"),placements={
-    carnets:["carnets"],explorer:["location","display","starting-point","legend"],noter:["field-notes","time"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","nature","land-cover","geology","industrial-history","diagnostic"]
+    carnets:["carnets"],explorer:["location","map-reading","display","starting-point","legend"],noter:["field-notes","time"],sources:["source-status","heritage","cartofriches","bss","hydrometry","biodiversity","nature","land-cover","geology","industrial-history","diagnostic"]
   };
   for(const tab of navigation?.querySelectorAll(".sidebar-section-tab")||[]){
     const section=tab.dataset.sectionTarget;
@@ -232,8 +250,8 @@ function effectiveMapViewportRect(){
 }
 
 function responsiveGridProfile(main){
-  const desktop=matchMedia("(min-width:941px)").matches,compact=matchMedia("(max-width:520px)").matches,nativeAndroid=isNativeAndroidApp();
-  const fontSize=compact?(nativeAndroid?12:11):(nativeAndroid?13:12),padding=compact?12:17,available=effectiveMapViewportRect();
+  const desktop=matchMedia("(min-width:941px)").matches;
+  const {fontSize,padding}=mapReadingProfile(),available=effectiveMapViewportRect();
   const roomW=Math.max(desktop?620:260,available?.width||main.clientWidth||window.innerWidth);
   const roomH=Math.max(desktop?320:190,available?.height||els.viewport?.clientHeight||window.innerHeight*.58);
   const probe=measureCanvasLayout(fontSize,padding);
@@ -268,10 +286,10 @@ function fitMapFrame(){
   uiShellRuntime.fitRuns++;
   if(!CANVAS_RENDERER)return;
   const main=uiShellMain||document.querySelector("main"),surface=activeMapSurface();if(!main||!surface||!els.viewport)return;
-  const compact=matchMedia("(max-width:520px)").matches,desktop=matchMedia("(min-width:941px)").matches,nativeAndroid=isNativeAndroidApp();
+  const desktop=matchMedia("(min-width:941px)").matches;
   // L’APK libère davantage de surface que le navigateur. On en consacre une
   // petite part à la lisibilité des glyphes et des cartouches de carte.
-  const baseFont=compact?(nativeAndroid?12:11):(nativeAndroid?13:12),basePadding=compact?12:17;
+  const {fontSize:baseFont,padding:basePadding}=mapReadingProfile();
   setMapCssVariable(main,"--map-font-size",`${baseFont}px`);setMapCssVariable(main,"--map-padding",`${basePadding}px`);
   const availableWidth=Math.max(280,main.clientWidth);setMapCssVariable(main,"--map-frame-width",desktop?`${availableWidth}px`:"100%");
   if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
@@ -342,6 +360,7 @@ function bindUiShell(){
   els.mapCarnets?.addEventListener("click",()=>openSidebarPanel("carnets","Carnets"));
   els.mapDisplay?.addEventListener("click",()=>openSidebarPanel("explorer","Affichage"));
   els.mapNotes?.addEventListener("click",()=>openSidebarPanel("noter","Notes de terrain"));
+  els.mapReadingSize?.addEventListener("change",event=>setMapReadingSize(event.target.value));
   window.addEventListener("resize",()=>{if(!mobileSidebarMode())document.body.classList.remove("sidebar-open");scheduleFrameFit()});
   if(typeof ResizeObserver!=="undefined"&&uiShellMain){uiShellResizeObserver=new ResizeObserver(()=>scheduleFrameFit());uiShellResizeObserver.observe(uiShellMain)}
 }
