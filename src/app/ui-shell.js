@@ -85,7 +85,8 @@ function documentarySignalProfile(cell){
 
 function documentarySignalHtml(cell){
   const signal=documentarySignalProfile(cell),bars=Array.from({length:5},(_,index)=>`<i class="${index<signal.level?"on":""}"></i>`).join("");
-  return `<div class="documentary-signal" style="--signal-color:${signal.color}"><span>assise documentaire</span><span class="documentary-signal-track" aria-label="${signal.level} niveaux sur 5">${bars}</span><strong>${esc(signal.label)}</strong></div>`;
+  const label=EXPLORATIONS_EDITION?(signal.level>=4?"bien renseigné":signal.level>=2?"quelques pistes":"à explorer"):signal.label;
+  return `<div class="documentary-signal" style="--signal-color:${signal.color}"><span>${EXPLORATIONS_EDITION?"ce que l’on sait":"assise documentaire"}</span><span class="documentary-signal-track" aria-label="${signal.level} niveaux sur 5">${bars}</span><strong>${esc(label)}</strong></div>`;
 }
 
 function sidebarCardByKey(key){

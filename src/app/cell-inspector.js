@@ -66,10 +66,11 @@ function plainCellIdentity(cell){
 }
 function plainCellSummaryHtml(cell,x,y){
   const identity=plainCellIdentity(cell),coord=gridToCoord(x,y,state.lastGrid.extent),slope=localSlopeDegrees(x,y);
-  const metrics=[Number.isFinite(cell.elev)?`alt. ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",`${coord.lat.toFixed(5)}, ${coord.lon.toFixed(5)}`].filter(Boolean).join(" · ");
+  const metrics=EXPLORATIONS_EDITION?[Number.isFinite(cell.elev)?`environ ${Math.round(cell.elev)} m d’altitude`:"",Number.isFinite(slope)?`${slope<5?"pente douce":"terrain en pente"}`:""].filter(Boolean).join(" · "):[Number.isFinite(cell.elev)?`alt. ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",`${coord.lat.toFixed(5)}, ${coord.lon.toFixed(5)}`].filter(Boolean).join(" · ");
   const detail=identity.qualifier?`<strong>${esc(identity.qualifier)}</strong> · ${esc(identity.label)}`:esc(identity.label);
-  const source=identity.source?`<span class="plain-cell-source">source : ${esc(identity.source)}</span>`:"lecture issue des couches visibles";
-  return `<div class="plain-cell-summary"><div class="plain-cell-symbol">${esc(identity.symbol)}</div><div><div class="plain-cell-kicker">${esc(identity.kind)}</div><div class="plain-cell-title">${detail}</div><div class="plain-cell-detail">${esc(terrainPhrase(cell,slope,x,y))}</div><div class="plain-cell-meta">${esc(metrics)} · ${source}</div></div></div>`;
+  const source=identity.source?`<span class="plain-cell-source">${EXPLORATIONS_EDITION?"repère partagé par":"source :"} ${esc(identity.source)}</span>`:EXPLORATIONS_EDITION?"ce que racontent les cartes visibles":"lecture issue des couches visibles";
+  const terrain=EXPLORATIONS_EDITION?explorationsTerrainPhrase(cell,slope,x,y):terrainPhrase(cell,slope,x,y);
+  return `<div class="plain-cell-summary"><div class="plain-cell-symbol">${esc(identity.symbol)}</div><div><div class="plain-cell-kicker">${esc(EXPLORATIONS_EDITION?"ce que montre la carte":identity.kind)}</div><div class="plain-cell-title">${detail}</div><div class="plain-cell-detail">${esc(terrain)}</div><div class="plain-cell-meta">${esc(metrics)}${metrics?" · ":""}${source}</div></div></div>`;
 }
 function collapseReadoutForPlainCell(cell,x,y){
   // Invalide une éventuelle hydratation documentaire encore en attente.
@@ -309,6 +310,24 @@ function terrainPhrase(cell,slope,x,y){
   }
   return "Aucun objet ponctuel ne domine cette cellule. La lecture repose donc sur les couches de relief et d’occupation du sol disponibles.";
 }
+function explorationsTerrainPhrase(cell,slope,x,y){
+  const profile=localSlopeProfile(x,y),direction=profile?.direction,cls=String(cell?.cls||"");
+  if(currentDepth()<0)return `Tu regardes une coupe du sous-sol ${depthSliceLabel()}. C’est une piste pour imaginer ce qui relie les niveaux, pas un plan de galerie.`;
+  if(cls.includes("water"))return "L’eau est le grand repère de ce coin de carte : elle dessine le paysage et les chemins qui l’entourent.";
+  if(cls.includes("road"))return "Un chemin ou une route passe par ici. C’est un bon fil pour partir explorer les alentours.";
+  if(cls.includes("building")||cls.includes("cad-building"))return "La carte dessine ici un bâtiment. Elle montre sa forme, mais pas forcément ce qui s’y passe aujourd’hui.";
+  if(cls.includes("forest"))return "Ici, les arbres prennent le dessus. La carte indique un bois, sans deviner toutes les plantes qui poussent dessous.";
+  if(cls.includes("quarry"))return "Le sol garde la trace d’un terrain remué ou d’une ancienne extraction. Voilà une piste intéressante à observer avec prudence.";
+  if(cls.includes("field")||cls.includes("meadow"))return "C’est un espace ouvert : prairie, champ ou autre parcelle cultivée selon les cartes disponibles.";
+  if(Number.isFinite(slope)){
+    const way=direction?` La descente semble aller vers le ${direction}.`:"";
+    if(slope<1.5)return `Le terrain paraît presque plat.${way}`;
+    if(slope<5)return `Le terrain descend doucement.${way}`;
+    if(slope<11)return `Le terrain est bien en pente.${way}`;
+    return `Le terrain est franchement pentu.${way}`;
+  }
+  return "La carte ne montre pas de repère particulier ici. C’est un bon endroit pour regarder ce que les grandes cartes ne racontent pas.";
+}
 
 function localContextItems(x,y,radius=1600){
   const coord=gridToCoord(x,y,state.lastGrid.extent),nearby=(items=[])=>items.filter(item=>Number.isFinite(+item.lat)&&Number.isFinite(+item.lon)&&distanceMeters(coord,item)<=radius);
@@ -378,6 +397,20 @@ function featureNarrative(f){
   if(f.tags?.place)return `La carte nomme ici${name||` ${esc(f.kind||"un lieu")}`}. Ce toponyme sert de repère spatial ; il ne constitue pas en soi une description du site.`;
   return `La carte associe cette case à${name||` ${esc(f.kind||"un objet cartographique")}`}. La fiche conserve les attributs disponibles sans leur prêter davantage de précision qu’ils n’en ont.`;
 }
+function explorationsFeatureNarrative(f){
+  if(!f)return "";
+  const name=f.name?` <strong>${esc(f.name)}</strong>`:"",descriptor=`${f.kind||""} ${f.type||""} ${f.nature||""}`.toLowerCase();
+  if(f.biodiversity){const count=f.speciesCount||f.species?.length||0,names=(f.species||[]).slice(0,4).map(item=>esc(poiSpeciesDisplayName(f,item)||item.scientificName)).join(", ");return `Des observateurs ont partagé <strong>${count} espèce${count>1?"s":""}</strong> pour ce carré de carte${names?` : ${names}${f.species?.length>4?"…":""}`:""}. C’est une mémoire des observations, pas la liste de tout ce qui vit ici aujourd’hui.`}
+  if(f.hydrometry){const values=[Number.isFinite(f.heightM)&&`niveau ${f.heightM.toFixed(3)} m`,Number.isFinite(f.flowM3s)&&`débit ${f.flowM3s.toFixed(3)} m³/s`].filter(Boolean).join(" · ");return `Un point de mesure suit ici${name||" le cours d’eau"}.${values?` La dernière valeur disponible indique ${values}.`:""} Il raconte ce moment précis de la rivière.`}
+  if(f.cavity||/cavit|grotte|carri[eè]re|souterrain/.test(descriptor))return `Un repère de sous-sol apparaît ici :${name||" une cavité ou un ouvrage"}. La carte aide à le situer ; elle ne dit ni comment y entrer, ni ce qui est praticable.`;
+  if(f.bss||f.indice||/forage|sondage|puits|pi[eé]zo/.test(descriptor))return `Un point de forage est signalé ici${name}. Il donne un aperçu vertical du terrain, comme un petit échantillon du sous-sol.`;
+  if(f.observation)return `Quelqu’un a noté une observation ici :${name}. C’est une piste à compléter, dater ou recouper au fil des balades.`;
+  if(f.heritage)return `Ce lieu a une histoire reconnue :${name||" un repère patrimonial"}.${f.period?` La fiche le relie à ${esc(f.period)}.`:""} Regarde autour de toi : les cartes ne montrent jamais tous les détails.`;
+  if(f.lore)return `Voici une trace de mémoire locale :${name}. Elle donne envie de chercher, sans prétendre avoir le dernier mot.`;
+  if(f.cartofriches||f.siteType||f.siteStatus)return `Un ancien site d’activité est recensé ici${name}. C’est une invitation à comprendre comment le paysage a changé.`;
+  if(f.tags?.natural==="spring")return `Une source est repérée ici${name}. C’est un endroit où l’eau souterraine se montre à la surface.`;
+  return `La carte a choisi de marquer ici${name||` ${esc(f.kind||"un lieu")}`}. À toi de voir ce que le terrain ajoute à cette histoire.`;
+}
 function evidenceProfile(cell){
   const f=cell?.feature||{};
   const documented=!!(f.source||f.bss||f.hydrometry||f.biodiversity||f.cavity||f.heritage||f.cartofriches||f.tags||f.id);
@@ -387,19 +420,19 @@ function evidenceProfile(cell){
 }
 function readingLedgerHtml(cell){
   const p=evidenceProfile(cell),chip=(cls,label,on)=>`<span class="reading-chip ${cls}${on?" active":""}">${label}</span>`;
-  return `<div class="cell-reading-ledger" aria-label="Nature de la lecture">${chip("documented","fait",p.documented)}${chip("observed","observation",p.observed)}${chip("interpreted","interprétation",p.interpreted)}${chip("hypothesis","hypothèse",p.hypothesis)}</div>`;
+  return `<div class="cell-reading-ledger" aria-label="Nature de la lecture">${chip("documented",EXPLORATIONS_EDITION?"confirmé":"fait",p.documented)}${chip("observed",EXPLORATIONS_EDITION?"noté":"observation",p.observed)}${chip("interpreted",EXPLORATIONS_EDITION?"à comprendre":"interprétation",p.interpreted)}${chip("hypothesis",EXPLORATIONS_EDITION?"à vérifier":"hypothèse",p.hypothesis)}</div>`;
 }
 function documentaryDateLabel(value){const date=new Date(value);return value&&!Number.isNaN(date.getTime())?date.toLocaleString("fr-FR",{dateStyle:"medium",timeStyle:"short"}):"date non précisée"}
 function primaryDocumentarySection(f){
   if(!f)return "";
   if(f.hydrometry){
     const river=esc(f.river||f.name||"Cours d’eau non précisé"),height=Number.isFinite(f.heightM)?`${f.heightM.toFixed(3)} m`:"non disponible",flow=Number.isFinite(f.flowM3s)?`${f.flowM3s.toFixed(3)} m³/s`:"non disponible";
-    return `<section class="cell-section cell-section-primary"><h3>Mesure hydrométrique</h3><div class="cell-primary-title">${river}</div><div class="cell-primary-metrics"><span><small>Hauteur</small><strong>${height}</strong></span><span><small>Débit</small><strong>${flow}</strong></span></div><div class="cell-source-line">${esc(f.commune||"")}${f.commune?" · ":""}${esc(documentaryDateLabel(f.observedAt))}</div></section>`;
+    return `<section class="cell-section cell-section-primary"><h3>${EXPLORATIONS_EDITION?"La rivière aujourd’hui":"Mesure hydrométrique"}</h3><div class="cell-primary-title">${river}</div><div class="cell-primary-metrics"><span><small>${EXPLORATIONS_EDITION?"niveau":"Hauteur"}</small><strong>${height}</strong></span><span><small>débit</small><strong>${flow}</strong></span></div><div class="cell-source-line">${esc(f.commune||"")}${f.commune?" · ":""}${esc(documentaryDateLabel(f.observedAt))}</div></section>`;
   }
   if(f.biodiversity){
     const species=(f.species||[]),shown=species.slice(0,8),latest=f.latestDate?` · plus récente ${esc(new Date(f.latestDate).toLocaleDateString("fr-FR"))}`:"";
-    const groupTitle=f.biodiversityGroup==="animals"?"Faune publiée":f.biodiversityGroup==="plants"?"Flore publiée":f.biodiversityGroup==="fungi"?"Champignons publiés":"Espèces publiées";
-    return `<section class="cell-section cell-section-primary"><h3>${groupTitle} dans cette maille</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèces · maille ≈ 1 km${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),displayName=poiSpeciesDisplayName(f,item),personal=!!poiAnnotationFor(f)?.speciesNames?.[String(item.speciesKey)],details=[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(displayName||"Nom usuel non renseigné")}${personal?' <small class="personal-name-mark">personnel</small>':""}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">fiche GBIF ↗</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces dans la fiche complète</div>`:""}</section>`;
+    const groupTitle=f.biodiversityGroup==="animals"?(EXPLORATIONS_EDITION?"Animaux signalés ici":"Faune publiée"):f.biodiversityGroup==="plants"?(EXPLORATIONS_EDITION?"Plantes signalées ici":"Flore publiée"):f.biodiversityGroup==="fungi"?(EXPLORATIONS_EDITION?"Champignons signalés ici":"Champignons publiés"):(EXPLORATIONS_EDITION?"Le vivant observé ici":"Espèces publiées");
+    return `<section class="cell-section cell-section-primary"><h3>${groupTitle}${EXPLORATIONS_EDITION?"":" dans cette maille"}</h3><div class="cell-primary-title">${f.speciesCount||species.length} espèce${(f.speciesCount||species.length)>1?"s":""}${EXPLORATIONS_EDITION?" partagée(s) par des observateurs":" · maille ≈ 1 km"}${latest}</div><ul class="cell-primary-species">${shown.map(item=>{const observations=Number(item.sampledRecords||0),displayName=poiSpeciesDisplayName(f,item),personal=!!poiAnnotationFor(f)?.speciesNames?.[String(item.speciesKey)],details=EXPLORATIONS_EDITION?[item.family&&`famille ${item.family}`,observations&&`${observations} observation${observations>1?"s":""}`,item.latestDate&&`vue la dernière fois le ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · "):[biodiversityTaxonGroupLabel(item),item.family&&`famille ${item.family}`,`${observations} occurrence${observations>1?"s":""}`,biodiversityObservationLabel(item.basisOfRecord),item.latestDate&&`dernière mention ${new Date(item.latestDate).toLocaleDateString("fr-FR")}`].filter(Boolean).map(esc).join(" · ");return `<li><strong>${esc(displayName||"Nom usuel non renseigné")}${personal?' <small class="personal-name-mark">nom ajouté au carnet</small>':""}</strong><em>${esc(item.scientificName)}</em><span>${details}</span><a class="cell-species-link" href="https://www.gbif.org/species/${encodeURIComponent(item.speciesKey)}" target="_blank" rel="noopener">${EXPLORATIONS_EDITION?"en savoir plus ↗":"fiche GBIF ↗"}</a></li>`}).join("")}</ul>${species.length>shown.length?`<div class="cell-source-line">+ ${species.length-shown.length} autres espèces à découvrir</div>`:""}</section>`;
   }
   return "";
 }
@@ -566,23 +599,24 @@ function territoryPortraitHtml(cell,x,y){
 function buildCellDescriptionBundle(cell,x,y){
   const slope=localSlopeDegrees(x,y),f=cell.feature;
   const title=poiAnnotationDisplayTitle(f,f?.name||f?.kind||"Case sans nom");
-  const terrain=terrainPhrase(cell,slope,x,y),feature=featureNarrative(f),context=localContextNarrative(x,y),primary=primaryDocumentarySection(f);
+  const terrain=EXPLORATIONS_EDITION?explorationsTerrainPhrase(cell,slope,x,y):terrainPhrase(cell,slope,x,y),feature=EXPLORATIONS_EDITION?explorationsFeatureNarrative(f):featureNarrative(f),context=localContextNarrative(x,y),primary=primaryDocumentarySection(f);
   const meta=[Number.isFinite(cell.elev)?`altitude ≈ ${Math.round(cell.elev)} m`:"",Number.isFinite(slope)?`pente ≈ ${slope.toFixed(1)}°`:"",currentDepth()<0?`niveau ${depthSliceLabel()}`:"surface"].filter(Boolean).join(" · ");
   const [category,symbol]=cellPresentationCategory(cell);
   const immediate=`<article class="cell-sheet-card">
     <header class="cell-sheet-head"><div class="cell-sheet-symbol">${esc(symbol)}</div><div><div class="cell-sheet-kicker">${esc(category)}</div><div class="cell-sheet-title">${esc(title)}</div><div class="cell-sheet-meta">${esc(meta)}</div>${documentarySignalHtml(cell)}${readingLedgerHtml(cell)}</div></header>
-    ${primary}<section class="cell-section cell-section-reading"><h3>${primary?"Contexte de la maille":"Lecture du lieu"}</h3><p>${terrain}${!primary&&feature?` ${feature}`:""}${context?` ${context}`:""}</p></section>`;
+    ${primary}<section class="cell-section cell-section-reading"><h3>${EXPLORATIONS_EDITION?"À regarder ici":primary?"Contexte de la maille":"Lecture du lieu"}</h3><p>${terrain}${!primary&&feature?` ${feature}`:""}${context?` ${context}`:""}</p></section>`;
   return {key:cellDescriptionCacheKey(cell,x,y),immediate,cell,x,y,title,details:null};
 }
 function buildCellDescriptionDetails(bundle){
   if(bundle.details)return bundle.details;
   const {cell,x,y}=bundle,facts=documentedCellFacts(cell),nearby=nearbyNarrative(x,y),relations=relationsNarrative(cell,x,y),critical=criticalReading(cell),portrait=territoryPortraitHtml(cell,x,y);
-  bundle.details=`${portrait}<section class="cell-section"><h3>Ce qui est documenté</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
-    ${nearby?`<section class="cell-section cell-section-nearby"><h3>À proximité</h3>${nearby}</section>`:""}
+  const labels=EXPLORATIONS_EDITION?{known:"Ce que racontent les cartes",nearby:"À deux pas",critical:"À garder en tête",technical:"Pour aller plus loin"}:{known:"Ce qui est documenté",nearby:"À proximité",critical:"Ce que l’on peut en déduire",technical:"Données techniques et sources"};
+  bundle.details=`${portrait}<section class="cell-section"><h3>${labels.known}</h3><ul class="cell-facts">${facts.map(v=>`<li>${v}</li>`).join("")}</ul></section>
+    ${nearby?`<section class="cell-section cell-section-nearby"><h3>${labels.nearby}</h3>${nearby}</section>`:""}
     ${relations}
     ${poiAnnotationSection(cell.feature)}
-    <section class="cell-section cell-section-critical"><h3>Ce que l’on peut en déduire</h3><p><strong>Lecture prudente.</strong> ${critical}</p></section>
-    <details class="technical-details"><summary>Données techniques et sources</summary><div>${technicalCellLines(cell,x,y).join("<br>")}</div></details>`;
+    <section class="cell-section cell-section-critical"><h3>${labels.critical}</h3><p><strong>${EXPLORATIONS_EDITION?"Une piste, pas une certitude.":"Lecture prudente."}</strong> ${critical}</p></section>
+    <details class="technical-details"><summary>${labels.technical}</summary><div>${technicalCellLines(cell,x,y).join("<br>")}</div></details>`;
   return bundle.details;
 }
 function getCellDescriptionBundle(cell,x,y){
@@ -595,8 +629,8 @@ function presentCellDescription(cell,x,y,{note="",assistHint="",title="Case sél
   const bundle=getCellDescriptionBundle(cell,x,y),token=++descriptionRuntime.selectionToken;
   descriptionRuntime.lastKey=bundle.key;
   const footer=`<div class="readout-note"><span>▹</span><span>${esc(note||"Sélection mémorisée")}.${assistHint}</span></div>`;
-  const placeholder=`<div class="cell-deferred is-loading" data-cell-details-token="${token}">Lecture documentaire en cours…</div>`;
-  setReadoutContent(`${bundle.immediate}${placeholder}</article>${footer}`,{title,sheet,kind:"poi"});
+  const placeholder=`<div class="cell-deferred is-loading" data-cell-details-token="${token}">${EXPLORATIONS_EDITION?"Le carnet rassemble les indices autour de ce lieu…":"Lecture documentaire en cours…"}</div>`;
+  setReadoutContent(`${bundle.immediate}${placeholder}</article>${footer}`,{title:EXPLORATIONS_EDITION?bundle.title:title,sheet,kind:"poi"});
   const hydrate=()=>{
     if(token!==descriptionRuntime.selectionToken)return;
     const target=els.readoutBody?.querySelector(`[data-cell-details-token="${token}"]`);if(!target)return;
