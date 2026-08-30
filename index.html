@@ -148,10 +148,12 @@ select{width:100%}
 .world-boundary-side.edge-east span{right:-22px;top:50%;transform:translateY(-50%);writing-mode:vertical-rl}
 @media(max-width:700px){
   .world-boundary-side span{font-size:7px;letter-spacing:.08em;padding:2px 4px}
-  .world-boundary-side.edge-north span{top:-18px}
-  .world-boundary-side.edge-south span{bottom:-18px}
-  .world-boundary-side.edge-west span{left:-18px}
-  .world-boundary-side.edge-east span{right:-18px}
+  /* Sur téléphone, les cartouches restent dans le cadre : hors de la carte,
+     ils sont rognés par le viewport et par le dock Terrain. */
+  .world-boundary-side.edge-north span{top:8px}
+  .world-boundary-side.edge-south span{bottom:8px}
+  .world-boundary-side.edge-west span{left:8px}
+  .world-boundary-side.edge-east span{right:8px}
 }
 #viewport.selection-active{box-shadow:inset 0 0 45px rgba(0,0,0,.5),inset 0 0 110px var(--map-haze),0 0 0 1px rgba(255,223,125,.16)}
 .selection-assist{
