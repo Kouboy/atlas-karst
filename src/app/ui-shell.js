@@ -283,7 +283,10 @@ function alignRenderedCenterToVisibleViewport(){
   const targetX=visible.centerX-viewportRect.left,targetY=visible.centerY-viewportRect.top;
   const surfaceCenterX=surface.offsetLeft+surface.offsetWidth/2,surfaceCenterY=surface.offsetTop+surface.offsetHeight/2;
   const maxX=Math.max(0,els.viewport.scrollWidth-els.viewport.clientWidth),maxY=Math.max(0,els.viewport.scrollHeight-els.viewport.clientHeight);
-  els.viewport.scrollLeft=clamp(surfaceCenterX-targetX,0,maxX);els.viewport.scrollTop=clamp(surfaceCenterY-targetY,0,maxY);
+  // Les marqueurs et FX peuvent élargir scrollWidth. S'ils sont seuls à le
+  // faire, une carte qui tient dans le cadre ne doit pas être décalée.
+  els.viewport.scrollLeft=surface.offsetWidth<=els.viewport.clientWidth?0:clamp(surfaceCenterX-targetX,0,maxX);
+  els.viewport.scrollTop=clamp(surfaceCenterY-targetY,0,maxY);
 }
 
 function fitMapFrame(){
