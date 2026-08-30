@@ -3,6 +3,7 @@
 ## En préparation — coque Android de test
 
 - Ajout d’`explorations.html`, prototype parallèle grand public familial : mêmes Territoires, données et carnets, avec une palette plus accueillante, des contrôles arrondis et des textes de guidage simplifiés.
+- La carte de cette édition reçoit une première grammaire illustrée : terrains dessinés, arbres, cultures, eau, bâti, routes et points d’intérêt figuratifs, sans changer les géométries ni les données sources.
 - Ajout d’un projet Capacitor Android qui embarque le même `index.html` autonome que l’édition web et desktop.
 - Ajout des commandes de synchronisation et de compilation d’un APK de débogage, sans changer le livrable GitHub Pages.
 - Déclaration des autorisations réseau et de géolocalisation Android ; la localisation reste déclenchée uniquement par l’action existante de l’utilisateur.
