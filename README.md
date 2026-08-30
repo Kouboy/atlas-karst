@@ -48,7 +48,7 @@ Le dépôt conserve le fichier généré afin qu’il puisse toujours être ouve
 
 ### Coque Android de test
 
-Le même Atlas peut être emballé dans une application Android Capacitor, sans changer le livrable web ni GitHub Pages. La copie mobile générée dans `www/` est intentionnellement ignorée par Git : elle est reconstruite depuis `index.html` à chaque synchronisation.
+Le même Atlas peut être emballé dans une application Android Capacitor, sans changer le livrable web ni GitHub Pages. La copie mobile générée dans `www/` est intentionnellement ignorée par Git : elle est reconstruite depuis l’édition instrumentale par défaut à chaque synchronisation. Le workflow de l’APK de test embarque actuellement l’édition familiale **Explorations**, afin d’en éprouver la carte illustrée et ses interactions sur téléphone.
 
 ```text
 npm run android:sync

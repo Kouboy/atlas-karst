@@ -8,7 +8,10 @@ const outputUrl = new URL("index.html", root);
 const explorationsOutputUrl = new URL("explorations.html", root);
 // Capacitor consumes this small, generated web root. The main index.html stays
 // committed at the repository root for the standalone and GitHub Pages builds.
+// The Android test workflow can deliberately embed the Explorations skin without
+// changing the default desktop/mobile build used by contributors.
 const mobileOutputUrl = new URL("www/index.html", root);
+const mobileEdition = process.env.ATLAS_MOBILE_EDITION === "explorations" ? "explorations" : "instrumental";
 const styleUrl = new URL("src/styles/atlas.css", root);
 const scriptUrls = [
   new URL("src/app/runtime.js", root),
@@ -98,10 +101,10 @@ function main() {
   writeFileSync(outputUrl, generated);
   writeFileSync(explorationsOutputUrl, explorations);
   mkdirSync(new URL("www/", root), { recursive: true });
-  writeFileSync(mobileOutputUrl, generated);
+  writeFileSync(mobileOutputUrl, mobileEdition === "explorations" ? explorations : generated);
   console.log("✓ index.html autonome reconstruit");
   console.log("✓ explorations.html expérimental reconstruit");
-  console.log("✓ copie mobile Capacitor reconstruite");
+  console.log(`✓ copie mobile Capacitor reconstruite (${mobileEdition})`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) {

@@ -10,6 +10,9 @@ jobs:
   debug-apk:
     name: Construire l’APK de débogage
     runs-on: ubuntu-latest
+    env:
+      # L’APK de test sert actuellement à éprouver l’édition familiale Explorations.
+      ATLAS_MOBILE_EDITION: explorations
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
