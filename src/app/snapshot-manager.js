@@ -54,10 +54,20 @@ function snapshotCounts(s=buildAtlasSnapshot()){
   return {osm:d.osm?.length||0,buildings:d.cadastreBuildings?.length||0,parcels:d.cadastreParcels?.length||0,cavities:d.officialCavities?.length||0,carto:d.cartofriches?.length||0,bss:d.bss?.length||0,hydrometry:d.hydrometry?.length||0,biodiversity:d.biodiversity?.length||0,biodiversitySpecies:biodiversityUniqueSpecies(d.biodiversity||[]),nature:d.natureAreas?.length||0,annotations:Object.keys(d.poiAnnotations||{}).length,observations:d.observations?.length||0,personal:d.personalMarkers?.length||0,underground:d.undergroundHypotheses?.length||0,lore:d.loreItems?.length||0,heritage:d.heritageItems?.length||0,codex:Object.values(d.encounterCollection||{}).filter(v=>encounterStatusRank(v?.status)>=2).length,elevation:d.elevation?"oui":"non"};
 }
 
+function updateCarnetExportSummary(){
+  if(!els.carnetExportSummary)return;
+  const c=snapshotCounts(),profile=state.carnetProfile||normalizeCarnetProfile();
+  const personal=c.observations+c.personal+c.underground+c.lore+c.annotations;
+  const sources=c.cavities+c.carto+c.heritage+c.bss+c.hydrometry+c.biodiversity+c.nature;
+  const introduction=profile.intro||profile.focus?"présentation incluse":"sans texte d’ouverture";
+  els.carnetExportSummary.textContent=`Prêt à partager : ${CONFIG.territory.label} · ${profile.author||"auteur non indiqué"} · ${introduction}. Le .atlas contiendra ${personal} contribution${personal>1?"s":""} de carnet et ${sources} repère${sources>1?"s":""} documentaire${sources>1?"s":""}. OSM, cadastre et relief restent hors du fichier.`;
+}
+
 function updateSnapshotUI(source=state.snapshotSource){
   if(!els.snapshotStatus)return;
   const c=snapshotCounts();
   els.snapshotStatus.innerHTML=`<span><strong>État actif :</strong> ${esc(source||"session courante")}</span><span>Territoire ${esc(CONFIG.territory.label)} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km</span><span>OSM ${c.osm.toLocaleString("fr-FR")} · bâti ${c.buildings.toLocaleString("fr-FR")} · parcelles ${c.parcels.toLocaleString("fr-FR")}</span><span>Cavités ${c.cavities} · Cartofriches ${c.carto} · patrimoine ${c.heritage} · BSS ${c.bss.toLocaleString("fr-FR")} · hydro ${c.hydrometry}</span><span>Biodiversité ${c.biodiversitySpecies} espèces/${c.biodiversity} mailles · espaces naturels ${c.nature} · annotations ${c.annotations} · observations ${c.observations} · repères ${c.personal} · hypothèses ${c.underground} · mémoire locale ${c.lore} · relief ${c.elevation}</span>`;
+  updateCarnetExportSummary();
 }
 
 function openSnapshotDb(){

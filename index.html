@@ -191,6 +191,7 @@ select{width:100%}
 .readout-body{min-height:0}
 .snapshot-summary{display:grid;gap:5px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0b1510;font-size:10px;line-height:1.4}
 .snapshot-summary strong{color:var(--accent)}
+.carnet-export-summary{margin-top:7px;padding:8px 9px;border-left:3px solid var(--accent);background:rgba(121,226,171,.08);color:var(--text);font-size:10px;line-height:1.45}
 .snapshot-note{margin-top:7px;color:var(--muted);font-size:10px;line-height:1.42}
 @media (max-width:700px){
   .selection-assist{right:7px;bottom:34px;width:148px;padding:6px}
@@ -1727,6 +1728,7 @@ body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-
     <details class="interface-subsection" data-ui-subsection="memory"><summary>Importer et exporter</summary><div class="interface-subsection-body">
       <div class="snapshot-summary" id="snapshotStatus"><span>Préparation de l’inventaire embarqué…</span></div>
       <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button><button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button></div>
+      <div class="carnet-export-summary" id="carnetExportSummary">Préparation du résumé de partage…</div>
       <details class="technical-details" style="margin-top:7px"><summary>Préparer le partage</summary><div>
         <label class="field-label">Par ou avec<input id="carnetAuthor" maxlength="120" placeholder="nom, collectif ou pseudonyme"></label>
         <label class="field-label">Ouverture du carnet<textarea id="carnetIntro" maxlength="900" placeholder="ce petit territoire, pourquoi maintenant, comment le lire…"></textarea></label>
@@ -3033,7 +3035,7 @@ els = Object.fromEntries([
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn","mapReadingSize","mapReadingSizeHelp",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
-  "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot",
+  "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot","carnetExportSummary",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","natureAreasCount","natureAreasSummary","syncNatureAreas","clearNatureAreas","natureAreasHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","personalCategory","personalGeometry","personalConfidence","personalRadius","personalDate","personalName","personalNote","addPersonalMarker","removePersonalMarker","personalHelp","undergroundKind","undergroundDepth","undergroundGeometry","undergroundConfidence","undergroundRadius","undergroundName","undergroundNote","addUndergroundHypothesis","removeUndergroundHypothesis","undergroundHelp","undergroundHypothesisList","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","natureStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion",
@@ -11611,7 +11613,7 @@ const carnetRuntime={
 };
 const CARNET_PROFILE_KEY="atlas-karst-carnet-profile-v1";
 function normalizeCarnetProfile(value){const p=value&&typeof value==="object"?value:{};return {author:String(p.author||"").trim().slice(0,120),intro:String(p.intro||"").trim().slice(0,900),focus:String(p.focus||"").trim().slice(0,450),updatedAt:String(p.updatedAt||"")}}
-function updateCarnetProfileUI(message=""){const p=state.carnetProfile||normalizeCarnetProfile();if(els.carnetAuthor)els.carnetAuthor.value=p.author;if(els.carnetIntro)els.carnetIntro.value=p.intro;if(els.carnetFocus)els.carnetFocus.value=p.focus;if(els.carnetSharePreview)els.carnetSharePreview.textContent=message||(p.intro||p.focus?`Présentation prête${p.author?` · ${p.author}`:""}. Elle accompagnera le prochain export .atlas.`:"Le fichier .atlas reste un objet local et partageable : aucune publication en ligne ni compte n’est créé.")}
+function updateCarnetProfileUI(message=""){const p=state.carnetProfile||normalizeCarnetProfile();if(els.carnetAuthor)els.carnetAuthor.value=p.author;if(els.carnetIntro)els.carnetIntro.value=p.intro;if(els.carnetFocus)els.carnetFocus.value=p.focus;if(els.carnetSharePreview)els.carnetSharePreview.textContent=message||(p.intro||p.focus?`Présentation prête${p.author?` · ${p.author}`:""}. Elle accompagnera le prochain export .atlas.`:"Le fichier .atlas reste un objet local et partageable : aucune publication en ligne ni compte n’est créé.");updateCarnetExportSummary?.()}
 function loadCarnetProfile(){try{state.carnetProfile=normalizeCarnetProfile(JSON.parse(localStorage.getItem(territoryStorageKey(CARNET_PROFILE_KEY))||"null"))}catch{state.carnetProfile=normalizeCarnetProfile(null)}updateCarnetProfileUI()}
 function saveCarnetProfile(){state.carnetProfile=normalizeCarnetProfile({author:els.carnetAuthor?.value,intro:els.carnetIntro?.value,focus:els.carnetFocus?.value,updatedAt:new Date().toISOString()});try{localStorage.setItem(territoryStorageKey(CARNET_PROFILE_KEY),JSON.stringify(state.carnetProfile))}catch{}updateCarnetProfileUI("Présentation enregistrée pour ce Territoire et incluse dans les exports .atlas.");autosaveActiveTerritory?.()}
 
@@ -11776,10 +11778,20 @@ function snapshotCounts(s=buildAtlasSnapshot()){
   return {osm:d.osm?.length||0,buildings:d.cadastreBuildings?.length||0,parcels:d.cadastreParcels?.length||0,cavities:d.officialCavities?.length||0,carto:d.cartofriches?.length||0,bss:d.bss?.length||0,hydrometry:d.hydrometry?.length||0,biodiversity:d.biodiversity?.length||0,biodiversitySpecies:biodiversityUniqueSpecies(d.biodiversity||[]),nature:d.natureAreas?.length||0,annotations:Object.keys(d.poiAnnotations||{}).length,observations:d.observations?.length||0,personal:d.personalMarkers?.length||0,underground:d.undergroundHypotheses?.length||0,lore:d.loreItems?.length||0,heritage:d.heritageItems?.length||0,codex:Object.values(d.encounterCollection||{}).filter(v=>encounterStatusRank(v?.status)>=2).length,elevation:d.elevation?"oui":"non"};
 }
 
+function updateCarnetExportSummary(){
+  if(!els.carnetExportSummary)return;
+  const c=snapshotCounts(),profile=state.carnetProfile||normalizeCarnetProfile();
+  const personal=c.observations+c.personal+c.underground+c.lore+c.annotations;
+  const sources=c.cavities+c.carto+c.heritage+c.bss+c.hydrometry+c.biodiversity+c.nature;
+  const introduction=profile.intro||profile.focus?"présentation incluse":"sans texte d’ouverture";
+  els.carnetExportSummary.textContent=`Prêt à partager : ${CONFIG.territory.label} · ${profile.author||"auteur non indiqué"} · ${introduction}. Le .atlas contiendra ${personal} contribution${personal>1?"s":""} de carnet et ${sources} repère${sources>1?"s":""} documentaire${sources>1?"s":""}. OSM, cadastre et relief restent hors du fichier.`;
+}
+
 function updateSnapshotUI(source=state.snapshotSource){
   if(!els.snapshotStatus)return;
   const c=snapshotCounts();
   els.snapshotStatus.innerHTML=`<span><strong>État actif :</strong> ${esc(source||"session courante")}</span><span>Territoire ${esc(CONFIG.territory.label)} · ${CONFIG.dataWidthKm} × ${CONFIG.dataHeightKm} km</span><span>OSM ${c.osm.toLocaleString("fr-FR")} · bâti ${c.buildings.toLocaleString("fr-FR")} · parcelles ${c.parcels.toLocaleString("fr-FR")}</span><span>Cavités ${c.cavities} · Cartofriches ${c.carto} · patrimoine ${c.heritage} · BSS ${c.bss.toLocaleString("fr-FR")} · hydro ${c.hydrometry}</span><span>Biodiversité ${c.biodiversitySpecies} espèces/${c.biodiversity} mailles · espaces naturels ${c.nature} · annotations ${c.annotations} · observations ${c.observations} · repères ${c.personal} · hypothèses ${c.underground} · mémoire locale ${c.lore} · relief ${c.elevation}</span>`;
+  updateCarnetExportSummary();
 }
 
 function openSnapshotDb(){

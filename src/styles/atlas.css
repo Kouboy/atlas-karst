@@ -183,6 +183,7 @@ select{width:100%}
 .readout-body{min-height:0}
 .snapshot-summary{display:grid;gap:5px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#0b1510;font-size:10px;line-height:1.4}
 .snapshot-summary strong{color:var(--accent)}
+.carnet-export-summary{margin-top:7px;padding:8px 9px;border-left:3px solid var(--accent);background:rgba(121,226,171,.08);color:var(--text);font-size:10px;line-height:1.45}
 .snapshot-note{margin-top:7px;color:var(--muted);font-size:10px;line-height:1.42}
 @media (max-width:700px){
   .selection-assist{right:7px;bottom:34px;width:148px;padding:6px}
