@@ -420,7 +420,7 @@ function evidenceProfile(cell){
 }
 function readingLedgerHtml(cell){
   const p=evidenceProfile(cell),chip=(cls,label,on)=>`<span class="reading-chip ${cls}${on?" active":""}">${label}</span>`;
-  return `<div class="cell-reading-ledger" aria-label="Nature de la lecture">${chip("documented",EXPLORATIONS_EDITION?"confirmé":"fait",p.documented)}${chip("observed",EXPLORATIONS_EDITION?"noté":"observation",p.observed)}${chip("interpreted",EXPLORATIONS_EDITION?"à comprendre":"interprétation",p.interpreted)}${chip("hypothesis",EXPLORATIONS_EDITION?"à vérifier":"hypothèse",p.hypothesis)}</div>`;
+  return `<div class="cell-reading-ledger" aria-label="Nature de la lecture">${chip("documented",EXPLORATIONS_EDITION?"✓ confirmé":"fait",p.documented)}${chip("observed",EXPLORATIONS_EDITION?"✎ noté":"observation",p.observed)}${chip("interpreted",EXPLORATIONS_EDITION?"⌕ à comprendre":"interprétation",p.interpreted)}${chip("hypothesis",EXPLORATIONS_EDITION?"? à vérifier":"hypothèse",p.hypothesis)}</div>`;
 }
 function documentaryDateLabel(value){const date=new Date(value);return value&&!Number.isNaN(date.getTime())?date.toLocaleString("fr-FR",{dateStyle:"medium",timeStyle:"short"}):"date non précisée"}
 function primaryDocumentarySection(f){
@@ -546,7 +546,10 @@ function cellPresentationCategory(cell){
     cellBss:["Donnée du sous-sol","B•"],cellHeritage:["Patrimoine documenté","MH"],cellMemory:["Mémoire locale","◎"],cellIndustrial:["Site anthropisé","F"],
     cellHome:["Repère privé","⌂"],cellUnderground:["Interprétation souterraine","▓"],cellTerrain:["Lecture du terrain",symbolForCell(cell)]
   };
-  return categories[key]||categories.cellTerrain;
+  const result=categories[key]||categories.cellTerrain;
+  if(!EXPLORATIONS_EDITION)return result;
+  const pictograms={cellWater:"≈",cellForest:"♧",cellField:"▤",cellRoad:"⌁",cellBuilding:"⌂",cellQuarry:"◆",cellCavity:"◒",cellBss:"◌",cellHeritage:"⌂",cellMemory:"✦",cellIndustrial:"⚒",cellHome:"⌂",cellUnderground:"◆",cellTerrain:"◫"};
+  return [result[0],pictograms[key]||result[1]];
 }
 function documentedCellFacts(cell){
   const f=cell.feature,facts=[];

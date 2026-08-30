@@ -68,7 +68,7 @@ function updateSourceCatalogStatus(statusKey){
 function setSourceStatus(statusKey,status,label){
   state.load[statusKey]=status;sourceRegistryRuntime.statusUpdates++;sourceRegistryRuntime.lastStatusKey=statusKey;
   const definitions=sourceDefinitionsForStatus(statusKey),element=document.getElementById(definitions[0]?.statusElementId||"");
-  if(element){element.className=status==="ok"?"ok":status==="bad"?"bad":"pending";element.textContent=label;element.dataset.sourceStatus=status}
+  if(element){element.className=status==="ok"?"ok":status==="bad"?"bad":"pending";element.textContent=label;element.dataset.sourceStatus=status;element.dataset.sourceKind=statusKey}
   updateSourceCatalogStatus(statusKey);
 }
 function renderSourceCatalog(){

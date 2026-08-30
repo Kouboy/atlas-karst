@@ -17,6 +17,7 @@ function queryCadastreFeatures(extent,kind){
 
 
 function setStatus(kind,status,label){
+  label=explorationsStatusLabel(status,label);
   setSourceStatus(kind,status,label);
   const core=["osm","address","cadastre","cavities","elevation"];
   const done=core.filter(k=>state.load[k]!=="pending").length;
