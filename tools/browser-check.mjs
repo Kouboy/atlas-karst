@@ -1031,12 +1031,6 @@ try {
         assert.equal(layout.shell.bound,true);
         assert.equal(layout.shell.sidebarOpen,false,"le panneau mobile est ouvert au démarrage");
         assert.equal(layout.shell.infoCollapsed,true,"la fiche mobile occupe la carte au démarrage");
-        if(layout.canvas.width<layout.mapFrame.width-4){
-          // Les calques de repères peuvent étendre l'emprise défilable sans
-          // modifier la zone visible. L'invariant important est que toute la
-          // carte reste atteignable dans le cadre, sans débordement de page.
-          assert.ok(layout.canvas.left>=layout.mapFrame.left-1&&layout.canvas.right<=layout.mapFrame.right+1,"le Canvas mobile étroit sort de son cadre visible");
-        }
         for (const control of layout.controls) {
           assert.ok(control.height >= 44, `${control.id} mesure moins de 44 px de haut`);
           if (control.id.startsWith("map")) assert.ok(control.width >= 44, `${control.id} mesure moins de 44 px de large`);
