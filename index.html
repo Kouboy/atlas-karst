@@ -1412,6 +1412,10 @@ body.native-android.terrain-light .card[data-ui-card="location"] [data-ui-subsec
 body.native-android.terrain-light .card[data-ui-card="location"] #locationHelp{display:none}
 body.native-android.terrain-light .card[data-ui-card="source-status"] .source-catalog-list{display:none}
 body.native-android.terrain-light.terrain-advanced .card[data-ui-card="source-status"] .source-catalog-list{display:grid}
+body.native-android.terrain-light .terrain-render-mode{display:grid;gap:7px;margin-top:9px;padding-top:9px;border-top:1px solid var(--ui-line)}
+body.native-android.terrain-light .terrain-render-mode .render-mode-panel{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+body.native-android.terrain-light .terrain-render-mode .render-mode-panel button{min-height:39px;font-size:10px}
+body.native-android.terrain-light .terrain-render-mode .render-mode-note{font-size:9px;line-height:1.4}
 
 @media(max-width:940px){
   body.native-android.terrain-light main{padding-bottom:72px}
@@ -10763,6 +10767,10 @@ function prepareTerrainLightShell(){
     openSidebarPanel(section,"");
   });
   const locationCard=sidebarCardByKey("location"),readingCard=sidebarCardByKey("map-reading"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
+  const readingBody=readingCard?.querySelector(":scope > .card-body"),displayCard=sidebarCardByKey("display"),renderPanel=displayCard?.querySelector(".render-mode-panel"),renderNote=displayCard?.querySelector(".render-mode-note");
+  if(readingBody&&renderPanel){
+    const quickRender=document.createElement("div");quickRender.className="terrain-render-mode";quickRender.append(renderPanel);if(renderNote)quickRender.append(renderNote);readingBody.append(quickRender);
+  }
   setCollapsibleState(locationCard,false,"h2");setCollapsibleState(readingCard,false,"h2");setCollapsibleState(fieldCard,false,"h2");setCollapsibleState(statusCard,false,"h2");setCollapsibleState(carnetCard,true,"h2");
 }
 function activateSidebarSection(section,{focus=false}={}){

@@ -141,6 +141,10 @@ function prepareTerrainLightShell(){
     openSidebarPanel(section,"");
   });
   const locationCard=sidebarCardByKey("location"),readingCard=sidebarCardByKey("map-reading"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
+  const readingBody=readingCard?.querySelector(":scope > .card-body"),displayCard=sidebarCardByKey("display"),renderPanel=displayCard?.querySelector(".render-mode-panel"),renderNote=displayCard?.querySelector(".render-mode-note");
+  if(readingBody&&renderPanel){
+    const quickRender=document.createElement("div");quickRender.className="terrain-render-mode";quickRender.append(renderPanel);if(renderNote)quickRender.append(renderNote);readingBody.append(quickRender);
+  }
   setCollapsibleState(locationCard,false,"h2");setCollapsibleState(readingCard,false,"h2");setCollapsibleState(fieldCard,false,"h2");setCollapsibleState(statusCard,false,"h2");setCollapsibleState(carnetCard,true,"h2");
 }
 function activateSidebarSection(section,{focus=false}={}){
