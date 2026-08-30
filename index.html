@@ -2075,7 +2075,7 @@ body.native-android.terrain-light .terrain-render-mode .render-mode-note{font-si
 </aside>
 
 <nav class="terrain-dock" aria-label="Actions terrain">
-  <button type="button" data-terrain-section="explorer" aria-label="Revenir à la carte"><strong>▦</strong><span>Carte</span></button>
+  <button type="button" data-terrain-section="explorer" aria-label="Ouvrir les commandes de carte"><strong>▦</strong><span>Carte</span></button>
   <button type="button" data-terrain-section="noter"><strong>＋</strong><span>Observer</span></button>
   <button type="button" data-terrain-section="sources"><strong>⌖</strong><span>Autour</span></button>
   <button type="button" data-terrain-section="carnets"><strong>▣</strong><span>Carnet</span></button>
@@ -10763,7 +10763,6 @@ function prepareTerrainLightShell(){
   els.sidebar.querySelector(".sidebar-head")?.insertAdjacentElement("afterend",toggle);
   for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]"))button.addEventListener("click",()=>{
     const section=button.dataset.terrainSection;
-    if(section==="explorer"){activateSidebarSection(section);setSidebarOpen(false);return}
     openSidebarPanel(section,"");
   });
   const locationCard=sidebarCardByKey("location"),readingCard=sidebarCardByKey("map-reading"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");

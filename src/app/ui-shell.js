@@ -137,7 +137,6 @@ function prepareTerrainLightShell(){
   els.sidebar.querySelector(".sidebar-head")?.insertAdjacentElement("afterend",toggle);
   for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]"))button.addEventListener("click",()=>{
     const section=button.dataset.terrainSection;
-    if(section==="explorer"){activateSidebarSection(section);setSidebarOpen(false);return}
     openSidebarPanel(section,"");
   });
   const locationCard=sidebarCardByKey("location"),readingCard=sidebarCardByKey("map-reading"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
