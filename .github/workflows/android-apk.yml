@@ -25,7 +25,9 @@ jobs:
           java-version: '21'
           cache: gradle
       - run: npm ci
+      - run: npm run test:static
       - run: npm run android:sync
+      - run: npm run android:check
       - run: ./android/gradlew -p android assembleDebug
       - uses: actions/upload-artifact@v6
         with:

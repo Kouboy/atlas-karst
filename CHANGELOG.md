@@ -12,6 +12,7 @@
 - Le Canvas mobile est recentré dans son cadre lorsqu’il est plus étroit que l’écran ; un contrôle navigateur protège ce cadrage latéral.
 - Dans l’APK, les carnets `.atlas` passent désormais par les dialogues Android « Enregistrer » et « Ouvrir » : le dossier est choisi explicitement, et l’import ne filtre plus les fichiers selon un type MIME que le téléphone ne connaît pas.
 - Le panneau de partage résume maintenant, avant l’export, ce qui accompagnera le carnet : Territoire, auteur éventuel, contributions personnelles et extraits documentaires, en distinguant les couches lourdes laissées localement.
+- Stabilisation du compagnon Android : version installable 0.19.1 (code 2), contrôle CI des sources, de l’édition Explorations et du pont de documents avant chaque compilation d’APK.
 - Ajout d’un projet Capacitor Android qui embarque le même `index.html` autonome que l’édition web et desktop.
 - Ajout des commandes de synchronisation et de compilation d’un APK de débogage, sans changer le livrable GitHub Pages.
 - Déclaration des autorisations réseau et de géolocalisation Android ; la localisation reste déclenchée uniquement par l’action existante de l’utilisateur.

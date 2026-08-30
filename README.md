@@ -60,7 +60,13 @@ Pour produire un APK de débogage sur une machine équipée du JDK et du SDK And
 npm run android:apk:debug
 ```
 
-L’APK apparaît alors dans `android/app/build/outputs/apk/debug/app-debug.apk`. Cette première coque conserve volontairement l’interface complète : elle sert à observer les usages réels du terrain avant de concevoir l’application compagnon. Elle demande seulement l’accès réseau et, à l’action de l’utilisateur, la position approximative ou précise.
+L’APK apparaît alors dans `android/app/build/outputs/apk/debug/app-debug.apk`. Le compagnon actuellement distribué est en version **0.19.1-companion** (code Android 2) : il conserve le plein écran, le dock Terrain et l’édition Explorations, avec l’import/export `.atlas` confié au sélecteur de documents Android. Il demande seulement l’accès réseau et, à l’action de l’utilisateur, la position approximative ou précise.
+
+Le workflow vérifie les sources web, synchronise Capacitor, contrôle que la bonne édition et le pont de documents sont bien embarqués, puis compile l’APK. La vérification peut aussi être exécutée après une synchronisation locale :
+
+```text
+npm run android:check
+```
 
 ```text
 npm test

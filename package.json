@@ -15,7 +15,8 @@
     "benchmark:render": "node tools/benchmark-render.mjs",
     "android:sync": "npm run build && npx cap sync android",
     "android:open": "npm run android:sync && npx cap open android",
-    "android:apk:debug": "npm run android:sync && cd android && gradlew.bat assembleDebug"
+    "android:apk:debug": "npm run android:sync && cd android && gradlew.bat assembleDebug",
+    "android:check": "node tools/check-android-companion.mjs"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.0",
