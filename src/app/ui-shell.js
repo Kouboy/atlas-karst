@@ -92,6 +92,39 @@ function sidebarCardByKey(key){
   return els.sidebar?.querySelector(`[data-ui-card="${key}"]`)||null;
 }
 function sidebarSectionStorageKey(){return "atlas-karst-ui-section-v1"}
+function syncTerrainDock(section=uiShellRuntime.activeSection){
+  for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]")){
+    const active=button.dataset.terrainSection===section;button.classList.toggle("active",active);button.setAttribute("aria-current",active?"page":"false");
+  }
+}
+function prepareTerrainLightShell(){
+  if(!isNativeAndroidApp()||!els.sidebar||els.sidebar.dataset.terrainLight==="1")return;
+  els.sidebar.dataset.terrainLight="1";document.body.classList.add("terrain-light");
+  const labels={carnets:"Carnet",explorer:"Carte",noter:"Observer",sources:"Autour"};
+  for(const tab of els.sidebar.querySelectorAll(".sidebar-section-tab")){
+    const label=labels[tab.dataset.sectionTarget];if(label){tab.textContent=label;tab.setAttribute("aria-label",label)}
+  }
+  for(const cluster of els.sidebar.querySelectorAll(":scope > .sidebar-cluster")){
+    const label=labels[cluster.dataset.section],heading=cluster.querySelector(":scope > .sidebar-cluster-head h2");if(label&&heading)heading.textContent=label;
+  }
+  const advanced=new Set(["display","starting-point","legend","time","cartofriches","heritage","bss","hydrometry","biodiversity","nature","land-cover","geology","industrial-history","diagnostic"]);
+  for(const key of advanced){const card=sidebarCardByKey(key);if(card)card.dataset.terrainAdvanced="true"}
+  const cavitySearch=sidebarCardByKey("location")?.querySelector('[data-ui-subsection="cavity-search"]');if(cavitySearch)cavitySearch.dataset.terrainAdvanced="true";
+  const toggle=document.createElement("button");
+  toggle.type="button";toggle.className="terrain-advanced-toggle";toggle.setAttribute("aria-expanded","false");toggle.innerHTML="<span>☰</span> Outils avancés";
+  toggle.addEventListener("click",()=>{
+    const next=!document.body.classList.contains("terrain-advanced");document.body.classList.toggle("terrain-advanced",next);toggle.setAttribute("aria-expanded",String(next));toggle.innerHTML=next?"<span>×</span> Fermer les outils avancés":"<span>☰</span> Outils avancés";
+    scheduleFrameFit();
+  });
+  els.sidebar.querySelector(".sidebar-head")?.insertAdjacentElement("afterend",toggle);
+  for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]"))button.addEventListener("click",()=>{
+    const section=button.dataset.terrainSection;
+    if(section==="explorer"){activateSidebarSection(section);setSidebarOpen(false);return}
+    openSidebarPanel(section,"");
+  });
+  const locationCard=sidebarCardByKey("location"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
+  setCollapsibleState(locationCard,false,"h2");setCollapsibleState(fieldCard,false,"h2");setCollapsibleState(statusCard,false,"h2");setCollapsibleState(carnetCard,true,"h2");
+}
 function activateSidebarSection(section,{focus=false}={}){
   if(!els.sidebar?.dataset.clustered)return false;
   const target=String(section||"explorer"),clusters=[...els.sidebar.querySelectorAll(":scope > .sidebar-cluster")],buttons=[...els.sidebar.querySelectorAll(".sidebar-section-tab")];
@@ -100,6 +133,7 @@ function activateSidebarSection(section,{focus=false}={}){
   for(const button of buttons){const selected=button.dataset.sectionTarget===target;button.setAttribute("aria-selected",String(selected));button.tabIndex=selected?0:-1;if(selected&&focus)button.focus()}
   els.sidebar.dataset.activeSection=target;uiShellRuntime.activeSection=target;uiShellRuntime.sectionSwitches=(uiShellRuntime.sectionSwitches||0)+1;
   try{localStorage.setItem(sidebarSectionStorageKey(),target)}catch{}
+  syncTerrainDock(target);
   scheduleFrameFit();return true;
 }
 function openSidebarPanel(section,title=""){
@@ -130,7 +164,9 @@ function bindNativeSidebarShell(){
   }
   const notice=els.sidebar.querySelector("#offlineNotice");if(notice)els.sidebar.appendChild(notice);
   els.sidebar.dataset.clustered="1";uiShellRuntime.nativeSubsections=els.sidebar.querySelectorAll("[data-ui-subsection]").length;
+  prepareTerrainLightShell();
   let initial="explorer";try{initial=localStorage.getItem(sidebarSectionStorageKey())||initial}catch{}
+  if(isNativeAndroidApp())initial="explorer";
   activateSidebarSection(initial);
   classifyAtlasControls();
 }

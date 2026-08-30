@@ -1387,6 +1387,53 @@ body[data-ui-version="field-notebook"] .map-actions button{
 }
 body[data-ui-version="field-notebook"] .card.card-awake{box-shadow:none!important}
 body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:none!important;filter:none!important}
+
+/* Édition Terrain : l’APK conserve le même Atlas, mais ne présente d’emblée
+   que les gestes utiles dehors. Les cartes et réglages complets restent
+   accessibles explicitement, sans modifier les éditions web et desktop. */
+.terrain-dock{display:none}
+body.native-android.terrain-light .sidebar-section-tabs{display:none}
+body.native-android.terrain-light aside{padding-bottom:80px}
+body.native-android.terrain-light .sidebar-head{padding:9px 0 8px}
+body.native-android.terrain-light .sidebar-head h1{font-size:19px;letter-spacing:-.04em}
+body.native-android.terrain-light .sidebar-head .sub{display:none}
+body.native-android.terrain-light #territorySummary{margin-top:4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.native-android.terrain-light .sidebar-cluster-head{padding:11px 0 7px}
+body.native-android.terrain-light .sidebar-cluster-head h2{font-size:14px;letter-spacing:.02em}
+body.native-android.terrain-light [data-terrain-advanced="true"]{display:none!important}
+body.native-android.terrain-light.terrain-advanced [data-terrain-advanced="true"]{display:block!important}
+body.native-android.terrain-light .terrain-advanced-toggle{
+  display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:36px;margin:0 0 7px;
+  border:1px dashed var(--ui-line-strong);background:#08110c;color:var(--ui-muted);font-size:9px;font-weight:800;letter-spacing:.075em;text-transform:uppercase
+}
+body.native-android.terrain-light .terrain-advanced-toggle span{color:var(--ui-accent);font-size:13px}
+body.native-android.terrain-light.terrain-advanced .terrain-advanced-toggle{border-style:solid;border-color:var(--ui-accent);color:var(--ui-text)}
+body.native-android.terrain-light .card[data-ui-card="location"] [data-ui-subsection="nearby"]{margin-top:7px}
+body.native-android.terrain-light .card[data-ui-card="location"] #locationHelp{display:none}
+body.native-android.terrain-light .card[data-ui-card="source-status"] .source-catalog-list{display:none}
+body.native-android.terrain-light.terrain-advanced .card[data-ui-card="source-status"] .source-catalog-list{display:grid}
+
+@media(max-width:940px){
+  body.native-android.terrain-light main{padding-bottom:72px}
+  body.native-android.terrain-light .statusbar .sidebar-toggle,
+  body.native-android.terrain-light .statusbar #mapCarnets,
+  body.native-android.terrain-light .statusbar #mapDisplay,
+  body.native-android.terrain-light .statusbar #mapNotes,
+  body.native-android.terrain-light .statusbar #audioToggle,
+  body.native-android.terrain-light .statusbar #debugToggle{display:none}
+  body.native-android.terrain-light #readout{bottom:62px}
+  body.native-android.terrain-light .terrain-dock{
+    position:fixed;z-index:75;left:7px;right:7px;bottom:max(7px,env(safe-area-inset-bottom));height:51px;
+    display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid #466252;background:#07110b;font-family:Arial,Helvetica,sans-serif
+  }
+  body.native-android.terrain-light .terrain-dock button{
+    display:grid;place-items:center;align-content:center;gap:1px;min-width:0;border:0;border-right:1px solid #294238;background:#0b1711;color:#9ab0a1;font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase
+  }
+  body.native-android.terrain-light .terrain-dock button:last-child{border-right:0}
+  body.native-android.terrain-light .terrain-dock button strong{font-size:16px;line-height:1;color:#dbe8df}
+  body.native-android.terrain-light .terrain-dock button.active{background:#79e2ab;color:#04100a}
+  body.native-android.terrain-light .terrain-dock button.active strong{color:#04100a}
+}
 .layer-filter-panel{display:grid;gap:7px;margin:0 0 9px;padding:8px;border:1px solid var(--ui-line);background:#08110c}
 .layer-filter-panel select{width:100%;margin-top:4px}.layer-filter-actions{gap:5px}.layer-filter-actions button{min-height:30px!important;padding:5px!important;font-size:8px!important}
 .layer-switch-list{display:grid}.layer-switch-list .switch[hidden]{display:none!important}
@@ -2009,6 +2056,13 @@ body[data-ui-version="field-notebook"] button:active:not(:disabled){transform:no
   <section class="card warning"><strong>Lecture prudente :</strong> le cadastre améliore le placement du bâti mais ne fournit ni propriétaire ni diagnostic de stabilité. Le relief reste un modèle global densifié, pas encore du LiDAR HD. Les forages BSS sont des points documentaires, pas des preuves de galerie. Les profondeurs souterraines précédées de ≈ sont des tranches de visualisation ; les volumes affichés sont des projections cohérentes entre niveaux, pas des plans levés ni des profondeurs attestées.</section>
   </div>
 </aside>
+
+<nav class="terrain-dock" aria-label="Actions terrain">
+  <button type="button" data-terrain-section="explorer" aria-label="Revenir à la carte"><strong>▦</strong><span>Carte</span></button>
+  <button type="button" data-terrain-section="noter"><strong>＋</strong><span>Observer</span></button>
+  <button type="button" data-terrain-section="sources"><strong>⌖</strong><span>Autour</span></button>
+  <button type="button" data-terrain-section="carnets"><strong>▣</strong><span>Carnet</span></button>
+</nav>
 
 <main>
   <div class="statusbar map-bound">
@@ -10645,6 +10699,39 @@ function sidebarCardByKey(key){
   return els.sidebar?.querySelector(`[data-ui-card="${key}"]`)||null;
 }
 function sidebarSectionStorageKey(){return "atlas-karst-ui-section-v1"}
+function syncTerrainDock(section=uiShellRuntime.activeSection){
+  for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]")){
+    const active=button.dataset.terrainSection===section;button.classList.toggle("active",active);button.setAttribute("aria-current",active?"page":"false");
+  }
+}
+function prepareTerrainLightShell(){
+  if(!isNativeAndroidApp()||!els.sidebar||els.sidebar.dataset.terrainLight==="1")return;
+  els.sidebar.dataset.terrainLight="1";document.body.classList.add("terrain-light");
+  const labels={carnets:"Carnet",explorer:"Carte",noter:"Observer",sources:"Autour"};
+  for(const tab of els.sidebar.querySelectorAll(".sidebar-section-tab")){
+    const label=labels[tab.dataset.sectionTarget];if(label){tab.textContent=label;tab.setAttribute("aria-label",label)}
+  }
+  for(const cluster of els.sidebar.querySelectorAll(":scope > .sidebar-cluster")){
+    const label=labels[cluster.dataset.section],heading=cluster.querySelector(":scope > .sidebar-cluster-head h2");if(label&&heading)heading.textContent=label;
+  }
+  const advanced=new Set(["display","starting-point","legend","time","cartofriches","heritage","bss","hydrometry","biodiversity","nature","land-cover","geology","industrial-history","diagnostic"]);
+  for(const key of advanced){const card=sidebarCardByKey(key);if(card)card.dataset.terrainAdvanced="true"}
+  const cavitySearch=sidebarCardByKey("location")?.querySelector('[data-ui-subsection="cavity-search"]');if(cavitySearch)cavitySearch.dataset.terrainAdvanced="true";
+  const toggle=document.createElement("button");
+  toggle.type="button";toggle.className="terrain-advanced-toggle";toggle.setAttribute("aria-expanded","false");toggle.innerHTML="<span>☰</span> Outils avancés";
+  toggle.addEventListener("click",()=>{
+    const next=!document.body.classList.contains("terrain-advanced");document.body.classList.toggle("terrain-advanced",next);toggle.setAttribute("aria-expanded",String(next));toggle.innerHTML=next?"<span>×</span> Fermer les outils avancés":"<span>☰</span> Outils avancés";
+    scheduleFrameFit();
+  });
+  els.sidebar.querySelector(".sidebar-head")?.insertAdjacentElement("afterend",toggle);
+  for(const button of document.querySelectorAll(".terrain-dock [data-terrain-section]"))button.addEventListener("click",()=>{
+    const section=button.dataset.terrainSection;
+    if(section==="explorer"){activateSidebarSection(section);setSidebarOpen(false);return}
+    openSidebarPanel(section,"");
+  });
+  const locationCard=sidebarCardByKey("location"),fieldCard=sidebarCardByKey("field-notes"),statusCard=sidebarCardByKey("source-status"),carnetCard=sidebarCardByKey("carnets");
+  setCollapsibleState(locationCard,false,"h2");setCollapsibleState(fieldCard,false,"h2");setCollapsibleState(statusCard,false,"h2");setCollapsibleState(carnetCard,true,"h2");
+}
 function activateSidebarSection(section,{focus=false}={}){
   if(!els.sidebar?.dataset.clustered)return false;
   const target=String(section||"explorer"),clusters=[...els.sidebar.querySelectorAll(":scope > .sidebar-cluster")],buttons=[...els.sidebar.querySelectorAll(".sidebar-section-tab")];
@@ -10653,6 +10740,7 @@ function activateSidebarSection(section,{focus=false}={}){
   for(const button of buttons){const selected=button.dataset.sectionTarget===target;button.setAttribute("aria-selected",String(selected));button.tabIndex=selected?0:-1;if(selected&&focus)button.focus()}
   els.sidebar.dataset.activeSection=target;uiShellRuntime.activeSection=target;uiShellRuntime.sectionSwitches=(uiShellRuntime.sectionSwitches||0)+1;
   try{localStorage.setItem(sidebarSectionStorageKey(),target)}catch{}
+  syncTerrainDock(target);
   scheduleFrameFit();return true;
 }
 function openSidebarPanel(section,title=""){
@@ -10683,7 +10771,9 @@ function bindNativeSidebarShell(){
   }
   const notice=els.sidebar.querySelector("#offlineNotice");if(notice)els.sidebar.appendChild(notice);
   els.sidebar.dataset.clustered="1";uiShellRuntime.nativeSubsections=els.sidebar.querySelectorAll("[data-ui-subsection]").length;
+  prepareTerrainLightShell();
   let initial="explorer";try{initial=localStorage.getItem(sidebarSectionStorageKey())||initial}catch{}
+  if(isNativeAndroidApp())initial="explorer";
   activateSidebarSection(initial);
   classifyAtlasControls();
 }
