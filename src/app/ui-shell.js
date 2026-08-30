@@ -321,7 +321,7 @@ function scheduleFrameFit(){
 
 function setInfoVisible(visible){
   const before=!document.body.classList.contains("info-collapsed");
-  document.body.classList.toggle("info-collapsed",!visible);els.infoToggle.textContent=visible?"Masquer la fiche":"Fiche";
+  document.body.classList.toggle("info-collapsed",!visible);els.infoToggle.textContent=EXPLORATIONS_EDITION?(visible?"Fermer la fiche":"Ce lieu"):(visible?"Masquer la fiche":"Fiche");
   if(before!==visible)uiShellRuntime.infoChanges++;
   if(visible&&mobileReadoutMode()&&!els.readout.dataset.sheetState)setReadoutSheetState("peek");
   setTimeout(scheduleFrameFit,30);

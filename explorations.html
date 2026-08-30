@@ -1490,6 +1490,58 @@ body.native-android.terrain-light .terrain-render-mode .render-mode-note{font-si
   body[data-ui-version="field-notebook"] .statusbar .toolbar-button{flex:1 1 auto;padding-inline:5px;font-size:9px}
   body[data-ui-version="field-notebook"] .sidebar-section-tab{font-size:9px;letter-spacing:0}
 }
+
+/* Explorations prolonge la carte dessinée dans les commandes et les fiches. */
+body.explorations-edition[data-ui-version="field-notebook"]{background:#10233a}
+body.explorations-edition[data-ui-version="field-notebook"] aside{padding:14px;background:#10233a;border-right:1px solid #70b3ca;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-collapse-bar{top:-14px;width:calc(100% + 28px);min-height:42px;margin:-14px -14px 0;padding:10px 14px;border:0!important;border-bottom:1px solid #70b3ca!important;border-radius:0!important;background:#173453!important;color:#fff1ba!important;font-size:11px!important;letter-spacing:0!important;text-transform:none!important}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-collapse-bar:hover,body.explorations-edition[data-ui-version="field-notebook"] .sidebar-collapse-bar:focus-visible{background:#ffd166!important;color:#173453!important}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-head{padding:15px 3px 12px;border-bottom:0;background:transparent}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-section-tabs{position:relative;top:auto;margin:0;padding:0 0 10px;border:0;background:transparent}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-section-tab{min-height:43px;padding:7px 3px;border:1px solid #598ca8!important;border-radius:14px!important;background:#173453!important;color:#e5f0e9!important;font-size:10px!important;font-weight:800;text-transform:none!important;letter-spacing:0!important}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-section-tab:last-child{border-right:1px solid #598ca8!important}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-section-tab[aria-selected="true"]{background:#ffd166!important;border-color:#ffd166!important;color:#173453!important}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-cluster-head{padding:9px 4px;border:0}
+body.explorations-edition[data-ui-version="field-notebook"] .sidebar-cluster-head h2{color:#fff4cc;font-size:18px;letter-spacing:-.025em;text-transform:none}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card{margin:0 0 10px;padding:11px 12px!important;border:1px solid #598ca8!important;border-radius:17px!important;background:#173453!important;overflow:hidden}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card>h2{padding:2px 20px 10px 0;color:#fff4cc;font-size:14px;letter-spacing:0;text-transform:none}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card>h2::after{right:2px;color:#ffd166}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card>.card-body{padding:0}
+body.explorations-edition[data-ui-version="field-notebook"] aside button,body.explorations-edition[data-ui-version="field-notebook"] aside select,body.explorations-edition[data-ui-version="field-notebook"] aside input[type="text"],body.explorations-edition[data-ui-version="field-notebook"] aside input[type="number"],body.explorations-edition[data-ui-version="field-notebook"] aside textarea{min-height:39px;border:1px solid #6398b3!important;border-radius:12px!important;background:#204467!important;color:#f8f6e8!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;font-size:12px}
+body.explorations-edition[data-ui-version="field-notebook"] aside button{font-weight:800;letter-spacing:0;text-transform:none}
+body.explorations-edition[data-ui-version="field-notebook"] aside .action-primary,body.explorations-edition[data-ui-version="field-notebook"] aside button.active{background:#ffd166!important;border-color:#ffd166!important;color:#173453!important}
+body.explorations-edition[data-ui-version="field-notebook"] aside .action-sync{background:#2d6281!important;border-color:#82c5da!important}
+body.explorations-edition[data-ui-version="field-notebook"] aside .action-danger{background:#60384a!important;border-color:#ed8b9d!important;color:#fff5ed!important}
+body.explorations-edition[data-ui-version="field-notebook"] aside .small,body.explorations-edition[data-ui-version="field-notebook"] aside .field-label,body.explorations-edition[data-ui-version="field-notebook"] aside .source-note,body.explorations-edition[data-ui-version="field-notebook"] aside .snapshot-note{color:#d2e8e7!important;font-size:11px}
+body.explorations-edition[data-ui-version="field-notebook"] aside .interface-subsection,body.explorations-edition[data-ui-version="field-notebook"] aside .technical-details,body.explorations-edition[data-ui-version="field-notebook"] aside .snapshot-summary{border:1px solid #4d83a0;background:#14304c}
+body.explorations-edition[data-ui-version="field-notebook"] aside .interface-subsection>summary,body.explorations-edition[data-ui-version="field-notebook"] aside .technical-details>summary{padding:9px;color:#fff4cc;font-size:11px;letter-spacing:0;text-transform:none}
+body.explorations-edition[data-ui-version="field-notebook"] aside .interface-subsection-body,body.explorations-edition[data-ui-version="field-notebook"] aside .technical-details>div{color:#d2e8e7}
+body.explorations-edition[data-ui-version="field-notebook"] .render-mode-panel{gap:8px}
+body.explorations-edition[data-ui-version="field-notebook"] .render-mode-panel button{min-height:42px;border-radius:13px!important}
+body.explorations-edition[data-ui-version="field-notebook"] .render-mode-note{margin:2px 0 7px;padding:8px 9px;border-left:3px solid #ffd166;border-radius:8px;background:#14304c;color:#d2e8e7;font-size:10px;line-height:1.45}
+body.explorations-edition[data-ui-version="field-notebook"] .statusbar{gap:6px!important;border:0!important;border-radius:18px!important;background:transparent!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif}
+body.explorations-edition[data-ui-version="field-notebook"] .statusbar>*{min-height:38px;margin:0!important;border:1px solid #6398b3!important;border-radius:12px!important;background:#173453!important;color:#f8f6e8!important}
+body.explorations-edition[data-ui-version="field-notebook"] .statusbar .toolbar-button{padding:7px 10px;font-size:11px;font-weight:800;letter-spacing:0;text-transform:none}
+body.explorations-edition[data-ui-version="field-notebook"] .statusbar .toolbar-button:first-child{background:#ffd166!important;border-color:#ffd166!important;color:#173453!important}
+body.explorations-edition[data-ui-version="field-notebook"] .statusbar strong{color:#ffd166}
+body.explorations-edition[data-effective-render="symbolic"] #viewport{border:2px solid #70b3ca!important;border-radius:22px!important;background:#315f79!important;box-shadow:0 12px 30px rgba(0,0,0,.28),inset 0 0 0 1px rgba(255,250,223,.22)!important}
+body.explorations-edition[data-effective-render="symbolic"] #mapCanvas{filter:none!important}
+body.explorations-edition[data-effective-render="symbolic"] .map-top-overlay::before{content:"CARTE D’EXPLORATION";left:54px;top:11px;border:0!important;border-radius:12px!important;background:rgba(255,249,223,.92)!important;color:#23495b!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;font-size:9px;letter-spacing:.04em;text-transform:none;box-shadow:none!important}
+body.explorations-edition[data-effective-render="symbolic"] .map-top-overlay::after{content:"regarde · touche · découvre";right:15px;top:14px;color:#fff4cc!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;font-size:9px;letter-spacing:0;text-transform:none;text-shadow:none!important}
+body.explorations-edition[data-effective-render="symbolic"] .map-actions{gap:6px}
+body.explorations-edition[data-effective-render="symbolic"] .map-actions button{width:36px;height:36px;border-radius:50%!important;border:2px solid #fff4cc!important;background:#173453!important;color:#fff4cc!important;box-shadow:0 3px 8px rgba(0,0,0,.19)!important;text-shadow:none!important;font-family:Arial,Helvetica,sans-serif;font-size:18px}
+body.explorations-edition[data-effective-render="symbolic"] .north{border:0!important;border-radius:50%!important;background:#fff4cc!important;color:#23495b!important;box-shadow:0 2px 7px rgba(0,0,0,.20)!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;letter-spacing:0!important}
+body.explorations-edition[data-effective-render="symbolic"] .map-tip{border:0!important;border-left:0!important;border-radius:11px!important;background:rgba(255,249,223,.93)!important;color:#23495b!important;box-shadow:0 3px 10px rgba(0,0,0,.18)!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;font-size:10px;letter-spacing:0!important}
+body.explorations-edition[data-ui-version="field-notebook"] #readout{border:1px solid #70b3ca!important;border-radius:18px!important;background:#fff9df!important;color:#244453!important;box-shadow:0 8px 22px rgba(0,0,0,.24)!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif}
+body.explorations-edition[data-ui-version="field-notebook"] #readout .readout-sheet-handle{min-height:50px;border:0!important;border-bottom:1px solid #c1d9cf!important;border-radius:18px 18px 0 0!important;background:#fff3bd!important;color:#244453!important}
+body.explorations-edition[data-ui-version="field-notebook"] #readout .readout-sheet-label{color:#244453!important;letter-spacing:0!important;text-transform:none}
+body.explorations-edition[data-ui-version="field-notebook"] #readout .readout-sheet-grip{background:#5895a9!important}
+body.explorations-edition[data-ui-version="field-notebook"] #readout .readout-body{background:#fff9df!important;color:#244453!important}
+body.explorations-edition[data-ui-version="field-notebook"] #readout::after{content:"CARNET DE DÉCOUVERTE"!important;color:#5b8c99!important;font-family:"Trebuchet MS",Arial,Helvetica,sans-serif;letter-spacing:.05em!important}
+body.explorations-edition[data-ui-version="field-notebook"] #readout[data-sheet-state="full"]::before{display:none}
+body.explorations-edition[data-ui-version="field-notebook"] .cell-sheet-head,body.explorations-edition[data-ui-version="field-notebook"] .cell-section{border-color:#c1d9cf!important;border-radius:0!important;color:#244453!important}
+body.explorations-edition[data-ui-version="field-notebook"] .hover-tip{border:1px solid #70b3ca!important;border-radius:14px!important;background:#fff9df!important;color:#244453!important;box-shadow:0 8px 20px rgba(0,0,0,.24)!important}
+@media(max-width:940px){body.explorations-edition[data-ui-version="field-notebook"] aside{padding:12px}body.explorations-edition[data-ui-version="field-notebook"] .sidebar-collapse-bar{top:-12px;width:calc(100% + 24px);margin:-12px -12px 0}body.explorations-edition[data-ui-version="field-notebook"] .statusbar{gap:4px!important}body.explorations-edition[data-effective-render="symbolic"] #viewport{border-radius:17px!important}}
 </style>
 </head>
 <body data-edition="explorations" data-depth-band="surface" data-ui-version="field-notebook">
@@ -2239,6 +2291,10 @@ if(EXPLORATIONS_EDITION){
   document.querySelector("#mapNotes").textContent="Observer";
   document.querySelector("#infoToggle").textContent="Ce lieu";
   document.querySelector("#mapTip").textContent="touche une case pour en savoir plus · glisse pour parcourir la carte · ⌖ = ma position";
+  document.querySelector("#sidebarClose").textContent="← revenir à la carte";
+  const editionLabels={carnets:"Carnet",explorer:"Explorer",noter:"Observer",sources:"À découvrir"};
+  for(const tab of document.querySelectorAll(".sidebar-section-tab")){const label=editionLabels[tab.dataset.sectionTarget];if(label){tab.textContent=label;tab.setAttribute("aria-label",label)}}
+  for(const cluster of document.querySelectorAll(".sidebar-cluster")){const label=editionLabels[cluster.dataset.section];if(label)cluster.querySelector("h2").textContent=label}
 }
 if(!CANVAS_RENDERER)document.body.classList.add("canvas-unsupported");
 function isNativeAndroidApp(){
@@ -4165,7 +4221,7 @@ function updateRenderModeControls(){
   els.renderModeSymbolic?.classList.toggle("active",symbolic);els.renderModeAscii?.classList.toggle("active",!symbolic);
   els.renderModeSymbolic?.setAttribute("aria-pressed",String(symbolic));els.renderModeAscii?.setAttribute("aria-pressed",String(!symbolic));
   els.renderModeSymbolic?.setAttribute("aria-disabled","false");
-  if(els.renderModeHelp)els.renderModeHelp.textContent=symbolic?(underground?"Coupe symbolique active : volumes, conduits, murs, piliers et eau supposée suivent le même contrat de profondeur et de confiance que l’ASCII.":"Surface symbolique active : les repères utilisent des balises géographiques stables, une seule icône par lieu et des cartouches documentaires séparés. Routes et cours d’eau utilisent une hiérarchie nettoyée : doublons, aires routières et branchements utilitaires parasites sont filtrés au rendu."):(underground?"Coupe ASCII active : fond minéral calme, surface fantôme simplifiée et mêmes niveaux de confiance que le mode symbolique.":"Rendu ASCII historique actif en surface.");
+  if(els.renderModeHelp)els.renderModeHelp.textContent=EXPLORATIONS_EDITION?(symbolic?(underground?"Coupe du sous-sol : les tracés clairs sont documentés ou supposés selon leur couleur et leur niveau de confiance.":"Carte illustrée : les couleurs et pictogrammes aident à repérer les lieux, l’eau, le vivant et les traces humaines."):(underground?"Mode repères : une lecture plus sobre de la coupe, avec les mêmes informations.":"Mode repères : la carte s’écrit avec des signes compacts, utiles pour observer les détails.")):(symbolic?(underground?"Coupe symbolique active : volumes, conduits, murs, piliers et eau supposée suivent le même contrat de profondeur et de confiance que l’ASCII.":"Surface symbolique active : les repères utilisent des balises géographiques stables, une seule icône par lieu et des cartouches documentaires séparés. Routes et cours d’eau utilisent une hiérarchie nettoyée : doublons, aires routières et branchements utilitaires parasites sont filtrés au rendu."):(underground?"Coupe ASCII active : fond minéral calme, surface fantôme simplifiée et mêmes niveaux de confiance que le mode symbolique.":"Rendu ASCII historique actif en surface."));
 }
 function setRenderMode(mode){
   state.renderMode=mode==="ascii"?"ascii":"symbolic";try{localStorage.setItem(RENDER_MODE_PREF_KEY,state.renderMode)}catch{};canvasRuntime.styleCache.clear();render("render-mode");
@@ -11075,7 +11131,7 @@ function scheduleFrameFit(){
 
 function setInfoVisible(visible){
   const before=!document.body.classList.contains("info-collapsed");
-  document.body.classList.toggle("info-collapsed",!visible);els.infoToggle.textContent=visible?"Masquer la fiche":"Fiche";
+  document.body.classList.toggle("info-collapsed",!visible);els.infoToggle.textContent=EXPLORATIONS_EDITION?(visible?"Fermer la fiche":"Ce lieu"):(visible?"Masquer la fiche":"Fiche");
   if(before!==visible)uiShellRuntime.infoChanges++;
   if(visible&&mobileReadoutMode()&&!els.readout.dataset.sheetState)setReadoutSheetState("peek");
   setTimeout(scheduleFrameFit,30);

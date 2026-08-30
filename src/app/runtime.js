@@ -19,6 +19,10 @@ if(EXPLORATIONS_EDITION){
   document.querySelector("#mapNotes").textContent="Observer";
   document.querySelector("#infoToggle").textContent="Ce lieu";
   document.querySelector("#mapTip").textContent="touche une case pour en savoir plus · glisse pour parcourir la carte · ⌖ = ma position";
+  document.querySelector("#sidebarClose").textContent="← revenir à la carte";
+  const editionLabels={carnets:"Carnet",explorer:"Explorer",noter:"Observer",sources:"À découvrir"};
+  for(const tab of document.querySelectorAll(".sidebar-section-tab")){const label=editionLabels[tab.dataset.sectionTarget];if(label){tab.textContent=label;tab.setAttribute("aria-label",label)}}
+  for(const cluster of document.querySelectorAll(".sidebar-cluster")){const label=editionLabels[cluster.dataset.section];if(label)cluster.querySelector("h2").textContent=label}
 }
 if(!CANVAS_RENDERER)document.body.classList.add("canvas-unsupported");
 function isNativeAndroidApp(){
