@@ -193,6 +193,10 @@ select{width:100%}
 .snapshot-summary strong{color:var(--accent)}
 .carnet-export-summary{margin-top:7px;padding:8px 9px;border-left:3px solid var(--accent);background:rgba(121,226,171,.08);color:var(--text);font-size:10px;line-height:1.45}
 .snapshot-note{margin-top:7px;color:var(--muted);font-size:10px;line-height:1.42}
+.carnet-dialog{width:min(530px,calc(100vw - 24px));max-height:min(84vh,720px);padding:0;border:1px solid var(--line);background:var(--panel);color:var(--text);box-shadow:0 22px 70px rgba(0,0,0,.65)}
+.carnet-dialog::backdrop{background:rgba(3,10,8,.72);backdrop-filter:blur(3px)}.carnet-dialog-card{display:grid;gap:10px;padding:18px}.carnet-dialog-card h2{margin:0;color:var(--accent);font-size:19px}.carnet-dialog-card p{margin:0;font-size:11px;line-height:1.5}.carnet-dialog-kicker{color:var(--muted);font-size:9px;letter-spacing:.12em;text-transform:uppercase}
+.carnet-review-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.carnet-review-grid>div{padding:8px;border:1px solid var(--line);background:#0b1510}.carnet-review-grid dt{color:var(--muted);font-size:9px}.carnet-review-grid dd{margin:3px 0 0;color:var(--text);font-size:12px;font-weight:800;overflow-wrap:anywhere}.carnet-dialog-note{padding:8px;border-left:3px solid var(--warn);background:rgba(240,200,108,.08);color:var(--muted)}
+.carnet-dialog-actions{display:flex;justify-content:flex-end;gap:7px;flex-wrap:wrap}.carnet-import-actions{justify-content:stretch}.carnet-import-actions .action-primary{margin-right:auto}@media(max-width:520px){.carnet-dialog-card{padding:14px}.carnet-review-grid{grid-template-columns:1fr}.carnet-dialog-actions>*{flex:1}.carnet-import-actions .action-primary{margin-right:0}}
 @media (max-width:700px){
   .selection-assist{right:7px;bottom:34px;width:148px;padding:6px}
   .selection-loupe{font-size:11px}
@@ -1765,7 +1769,7 @@ body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-
     <div class="small" id="territorySetupStatus" style="margin-top:8px">Les données locales sont séparées par territoire. La création interroge les services cartographiques autour du point choisi ; certaines sources restent limitées à la France.</div>
     <details class="interface-subsection" data-ui-subsection="memory"><summary>Importer et exporter</summary><div class="interface-subsection-body">
       <div class="snapshot-summary" id="snapshotStatus"><span>Préparation de l’inventaire embarqué…</span></div>
-      <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button><button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button></div>
+      <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ préparer l’export .atlas</button><button id="importSnapshotJson" type="button">＋ importer un carnet</button></div>
       <div class="carnet-export-summary" id="carnetExportSummary">Préparation du résumé de partage…</div>
       <details class="technical-details" style="margin-top:7px"><summary>Préparer le partage</summary><div>
         <label class="field-label">Par ou avec<input id="carnetAuthor" maxlength="120" placeholder="nom, collectif ou pseudonyme"></label>
@@ -2281,6 +2285,22 @@ body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-
   <section class="card warning"><strong>Lecture prudente :</strong> le cadastre améliore le placement du bâti mais ne fournit ni propriétaire ni diagnostic de stabilité. Le relief reste un modèle global densifié, pas encore du LiDAR HD. Les forages BSS sont des points documentaires, pas des preuves de galerie. Les profondeurs souterraines précédées de ≈ sont des tranches de visualisation ; les volumes affichés sont des projections cohérentes entre niveaux, pas des plans levés ni des profondeurs attestées.</section>
   </div>
 </aside>
+
+<dialog id="carnetExportDialog" class="carnet-dialog" aria-labelledby="carnetExportDialogTitle">
+  <form method="dialog" class="carnet-dialog-card">
+    <div class="carnet-dialog-kicker">Carnet partageable</div><h2 id="carnetExportDialogTitle">Vérifier avant l’export</h2>
+    <p>Voici ce qui sera enregistré dans le fichier <code>.atlas</code>.</p><div id="carnetExportReview" class="carnet-review-grid"></div>
+    <p class="carnet-dialog-note">Les caches OSM, le cadastre et le relief détaillé ne sont pas exportés. Tes repères, notes et hypothèses font bien partie du carnet.</p>
+    <div class="carnet-dialog-actions"><button value="cancel" type="submit">Retour</button><button id="confirmCarnetExport" class="action-primary" value="confirm" type="button">⇩ exporter ce carnet</button></div>
+  </form>
+</dialog>
+<dialog id="carnetImportDialog" class="carnet-dialog" aria-labelledby="carnetImportDialogTitle">
+  <form method="dialog" class="carnet-dialog-card">
+    <div class="carnet-dialog-kicker">Carnet reçu</div><h2 id="carnetImportDialogTitle">Comment l’ajouter ?</h2><div id="carnetImportReview" class="carnet-review-grid"></div>
+    <p id="carnetImportMergeNote" class="carnet-dialog-note"></p>
+    <div class="carnet-dialog-actions carnet-import-actions"><button id="confirmCarnetImportCopy" class="action-primary" value="copy" type="button">▣ ouvrir comme copie</button><button id="confirmCarnetImportMerge" value="merge" type="button">⇄ fusionner mes notes</button><button value="cancel" type="submit">Annuler</button></div>
+  </form>
+</dialog>
 
 <nav class="terrain-dock" aria-label="Actions terrain">
   <button type="button" data-terrain-section="explorer" aria-label="Ouvrir les commandes de carte"><strong>▦</strong><span>Carte</span></button>
@@ -3106,7 +3126,7 @@ els = Object.fromEntries([
   "locationBadge","mapTip","offlineNotice","locateMe","clearLocation","centerOnLocation","locationHelp","mapLocate","aroundRadius","refreshAround","aroundSummary","aroundList","encounterEnabled","observeSurroundings","testEncounter","openCodex","encounterStatus","encounterProgressBar","encounterOverlay","encounterWindow","encounterDialogTitle","encounterClose","encounterBody","guidedTourSelect","guidedTourStart","guidedTourIntro","guidedTourPanel","guidedTourProgressText","guidedTourDistance","guidedTourProgressBar","guidedTourStep","guidedTourPrev","guidedTourRecenter","guidedTourNext","guidedTourStop",
   "zoomLabel","depthLabel","cellSizeLabel","centerLabel","truthBadge","zoomHelp","homeBtn","recenterSelected","exportBtn","mapReadingSize","mapReadingSizeHelp",
   "selectionAssist","selectionAssistClose","selectionLoupe","selectionUp","selectionLeft","selectionCenter","selectionRight","selectionDown","selectionAssistText","depthTransition","poiSelectionFx","worldBoundaryFrame","relationOverlay","relationLine","relationStart","relationEnd","relationLabel",
-  "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot","carnetExportSummary",
+  "snapshotStatus","snapshotHelp","exportSnapshotJson","importSnapshotJson","snapshotFile","exportStandaloneHtml","clearSavedSnapshot","carnetExportSummary","carnetExportDialog","carnetExportReview","confirmCarnetExport","carnetImportDialog","carnetImportReview","carnetImportMergeNote","confirmCarnetImportCopy","confirmCarnetImportMerge",
   "placeHouse","resetHouse","houseHelp","houseLat","houseLon","applyHouseCoords","geocodeHouse","snapHouseBuilding","openHistory","openSelectedHistory","openCasias","casiasHelp","landscapeChangesCount","landscapeChangesSummary","landscapeChangeDate","landscapeChangeName","landscapeChangeBefore","landscapeChangeAfter","landscapeChangeNote","addLandscapeChange","removeLandscapeChange","landscapeChangeHelp","hoverTip","hoverCellIndicator",
   "cavitySelect","cavityHelp","syncOsm","testOsm","openOsmQuery","importOsmJson","osmFile","osmHelp","cartofrichesCount","cartofrichesSummary","syncCartofriches","downloadCartofriches","importCartofriches","clearCartofriches","cartofrichesFile","cartofrichesReconverted","cartofrichesHelp","heritageCount","heritageSummary","heritageMonuments","heritageGardens","heritageHomes","heritageMuseums","heritageWikipedia","syncCultureHeritage","syncWikipediaHeritage","clearHeritage","heritageHelp","bssCount","bssSummary","syncPiezo","openBssDownload","importBss","clearBss","bssFile","bssHelp","hydrometryCount","hydrometrySummary","syncHydrometry","clearHydrometry","hydrometryHelp","biodiversityCount","biodiversitySummary","biodiversityAnimals","biodiversityPlants","biodiversityFungi","syncBiodiversity","clearBiodiversity","biodiversityHelp","natureAreasCount","natureAreasSummary","syncNatureAreas","clearNatureAreas","natureAreasHelp","observationMode","observationConfidence","observationRadius","observationSeason","localType","localName","localNote","addLocalMarker","removeLocalMarker","localHelp","personalCategory","personalGeometry","personalConfidence","personalRadius","personalDate","personalName","personalNote","addPersonalMarker","removePersonalMarker","personalHelp","undergroundKind","undergroundDepth","undergroundGeometry","undergroundConfidence","undergroundRadius","undergroundName","undergroundNote","addUndergroundHypothesis","removeUndergroundHypothesis","undergroundHelp","undergroundHypothesisList","loreCategory","lorePeriod","loreName","loreSource","loreNote","addLoreItem","removeLoreItem","loreHelp","fieldworkLedgerFilter","fieldworkLedgerRefresh","fieldworkLedgerSummary","fieldworkLedgerList","retryData","osmStatus","addressStatus","cadastreStatus","cavityStatus","cartofrichesStatus","heritageStatus","bssStatus","hydrometryStatus","biodiversityStatus","natureStatus","elevationStatus","loadProgress","sourceCatalogList","sourceNote",
   "scenario","renderModeSymbolic","renderModeAscii","renderModeHelp","layerCategoryFilter","layersShowCategory","layersHideCategory","layersSelectAll","layersClearAll","layerSwitchList","layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion",
@@ -11802,7 +11822,7 @@ const SNAPSHOT_IMPORT_LIMIT_BYTES=64*1024*1024;
 const SNAPSHOT_LAYER_KEYS=["layerSurface","layerRelief","layerCadastreBuildings","layerParcels","layerBss","layerHydrometry","layerBiodiversity","layerNatureAreas","layerIndustrialHistory","layerLandCover","layerGeology","layerObservations","layerPersonal","layerHeritage","layerLore","layerCartofriches","layerCavities","layerHypothesis","layerUserHypotheses","layerHydrology","layerLabels","layerHouse","ambientMotion"];
 const snapshotRuntime={
   ready:true,bound:false,built:0,applied:0,imports:0,exports:0,standaloneExports:0,
-  dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:""
+  dbSaves:0,dbLoads:0,dbDeletes:0,dbLists:0,migrations:0,lastSchema:SNAPSHOT_SCHEMA_VERSION,lastSource:"—",lastError:"",pendingExport:null,pendingImport:null
 };
 
 function recordSnapshotError(error){
@@ -12043,26 +12063,51 @@ function carnetFilename(){
   const slug=territorySafeId(CONFIG.territory?.label||CONFIG.territory?.id||"carnet");
   return `${slug}-${new Date().toISOString().slice(0,10)}.atlas`;
 }
-async function exportSnapshotJson(){
+function carnetReviewHtml(snapshot,{name="Carnet actuel",mode="export"}={}){
+  const c=snapshotCounts(snapshot),profile=normalizeCarnetProfile(snapshot.data?.carnetProfile||state.carnetProfile),territory=normalizeTerritoryProfile(snapshot.territory,CONFIG.territory),notes=c.annotations+c.personal+c.lore;
+  const rows=mode==="export"?[["Territoire",`${territory.label} · ${territory.widthKm||CONFIG.dataWidthKm} × ${territory.heightKm||CONFIG.dataHeightKm} km`],["Auteur",profile.author||"non renseigné"],["Notes et repères",String(notes)],["Observations",String(c.observations)],["Hypothèses de sous-sol",String(c.underground)]]:[["Fichier",name],["Territoire",territory.label],["Auteur",profile.author||"non renseigné"],["Contributions",`${notes} note${notes>1?"s":""} · ${c.observations} observation${c.observations>1?"s":""} · ${c.underground} hypothèse${c.underground>1?"s":""}`]];
+  return rows.map(([label,value])=>`<div><dt>${esc(label)}</dt><dd>${esc(value)}</dd></div>`).join("");
+}
+function openCarnetDialog(dialog){try{dialog?.showModal();return !!dialog}catch{return false}}
+async function exportSnapshotJson({confirmed=false}={}){
   try{
     const carnet=await buildAtlasCarnet(),json=JSON.stringify(carnet,null,2),bytes=new Blob([json]).size;
     if(bytes>ATLAS_CARNET_IMPORT_LIMIT_BYTES)throw new Error("Ce carnet dépasse 16 Mo. Retire des extraits documentaires avant de l’exporter.");
-    const filename=carnetFilename(),nativeFiles=nativeCarnetFiles();
-    if(nativeFiles?.save)await nativeFiles.save({content:json,filename});
-    else downloadBlob(json,"application/vnd.atlas+carnet+json;charset=utf-8",filename);
-    snapshotRuntime.exports++;carnetRuntime.exports++;carnetRuntime.lastBytes=bytes;snapshotRuntime.lastSource="export .atlas";
-    els.snapshotHelp.textContent=bytes>ATLAS_CARNET_RECOMMENDED_BYTES
-      ? `Carnet exporté (${debugFormatBytes(bytes)}). Il dépasse le budget conseillé de 4 Mo, mais reste valide.`
-      : `Carnet portable exporté (${debugFormatBytes(bytes)}). Les caches cartographiques lourds ont été laissés de côté.`;
+    if(!confirmed){snapshotRuntime.pendingExport={json,bytes,filename:carnetFilename(),snapshot:buildAtlasSnapshot()};if(els.carnetExportReview)els.carnetExportReview.innerHTML=carnetReviewHtml(snapshotRuntime.pendingExport.snapshot);if(openCarnetDialog(els.carnetExportDialog))return}
+    const pending=snapshotRuntime.pendingExport,exportJson=pending?.json||json,exportBytes=pending?.bytes||bytes,filename=pending?.filename||carnetFilename(),nativeFiles=nativeCarnetFiles();
+    if(nativeFiles?.save)await nativeFiles.save({content:exportJson,filename});else downloadBlob(exportJson,"application/vnd.atlas+carnet+json;charset=utf-8",filename);
+    snapshotRuntime.pendingExport=null;snapshotRuntime.exports++;carnetRuntime.exports++;carnetRuntime.lastBytes=exportBytes;snapshotRuntime.lastSource="export .atlas";
+    els.snapshotHelp.textContent=exportBytes>ATLAS_CARNET_RECOMMENDED_BYTES
+      ? `Carnet exporté (${debugFormatBytes(exportBytes)}). Il dépasse le budget conseillé de 4 Mo, mais reste valide.`
+      : `Carnet portable exporté (${debugFormatBytes(exportBytes)}). Les caches cartographiques lourds ont été laissés de côté.`;
   }catch(error){recordSnapshotError(error);carnetRecordError(error);els.snapshotHelp.textContent=`Export impossible : ${error?.message||"erreur inconnue"}`}
 }
-function importedTerritoryCopy(snapshot,entries,fileName){
+function importedTerritoryCopy(snapshot,entries,fileName,{forceCopy=false}={}){
   const profile=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE);
-  if(!entries.some(entry=>entry.id===profile.id))return {snapshot,copied:false};
+  if(!forceCopy&&!entries.some(entry=>entry.id===profile.id))return {snapshot,copied:false};
   const ids=new Set(entries.map(entry=>entry.id)),base=`${territorySafeId(profile.id)}-import`,stamp=Date.now().toString(36);let id=`${base}-${stamp}`,suffix=1;
   while(ids.has(id))id=`${base}-${stamp}-${suffix++}`;
   const copy=carnetJsonClone(snapshot);copy.createdAt=new Date().toISOString();copy.territory=territorySnapshot({...profile,id,label:`${profile.label} — import`,provenance:`import de ${fileName||profile.label}`});
   return {snapshot:copy,copied:true};
+}
+
+function contributionKey(item,index){return item&&typeof item==="object"?String(item.id||item.uid||item.poiId||item.key||`${item.name||item.title||"entrée"}:${item.lat??item.latitude??""}:${item.lon??item.longitude??""}`):`${String(item)}:${index}`}
+function mergeContributionList(current,incoming){const base=Array.isArray(current)?current:[],seen=new Set(base.map(contributionKey));return [...base,...(Array.isArray(incoming)?incoming:[]).filter((item,index)=>{const key=contributionKey(item,index);if(seen.has(key))return false;seen.add(key);return true})]}
+function mergeImportedCarnet(snapshot){const current=buildAtlasSnapshot(),incoming=snapshot.data||{},data=current.data;for(const key of ["observations","personalMarkers","undergroundHypotheses","landscapeChanges","loreItems"])data[key]=mergeContributionList(data[key],incoming[key]);data.poiAnnotations={...(incoming.poiAnnotations||{}),...(data.poiAnnotations||{})};current.createdAt=new Date().toISOString();return current}
+function presentSnapshotImport(snapshot,{name,isCarnet}={}){
+  const sameTerritory=normalizeTerritoryProfile(snapshot.territory,LEGACY_TERRITORY_PROFILE).id===CONFIG.territory?.id;snapshotRuntime.pendingImport={snapshot,name,isCarnet,sameTerritory};
+  if(els.carnetImportReview)els.carnetImportReview.innerHTML=carnetReviewHtml(snapshot,{name,mode:"import"});
+  if(els.carnetImportMergeNote)els.carnetImportMergeNote.textContent=sameTerritory?"Fusion contrôlée : seules les notes, observations, repères, annotations et hypothèses du fichier seront ajoutés. Les données cartographiques du carnet courant restent en place.":"La fusion est réservée au même territoire. Ouvre ce carnet comme une copie indépendante pour préserver ses repères et ses données.";
+  if(els.confirmCarnetImportMerge){els.confirmCarnetImportMerge.disabled=!sameTerritory;els.confirmCarnetImportMerge.hidden=!sameTerritory}openCarnetDialog(els.carnetImportDialog);
+}
+async function completeSnapshotImport(mode="copy"){
+  const pending=snapshotRuntime.pendingImport;if(!pending)return;
+  try{
+    let snapshot=pending.snapshot,merged=false;if(mode==="merge"){if(!pending.sameTerritory)throw new Error("La fusion est possible uniquement avec le territoire actif.");snapshot=mergeImportedCarnet(snapshot);merged=true}else snapshot=importedTerritoryCopy(snapshot,await listTerritoriesFromDb(),pending.name,{forceCopy:true}).snapshot;
+    if(typeof persistActiveTerritory==="function"&&territoryControllerRuntime?.managerReady&&!territorySessionDetached){const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’import")}
+    applyAtlasSnapshot(snapshot,{source:`${pending.isCarnet?"carnet":"sauvegarde historique"} ${merged?"fusionné":"importé"} · ${pending.name}`});await saveSnapshotToDb(snapshot);if(typeof refreshTerritoryLibraryUI==="function")await refreshTerritoryLibraryUI(snapshot.territory?.id);
+    snapshotRuntime.pendingImport=null;snapshotRuntime.imports++;if(pending.isCarnet)carnetRuntime.imports++;snapshotRuntime.lastSource=pending.name;els.snapshotHelp.textContent=merged?"Contributions fusionnées dans le carnet courant ; ses couches cartographiques n’ont pas été remplacées.":"Carnet ouvert comme une copie indépendante dans la bibliothèque locale.";
+  }catch(error){recordSnapshotError(error);els.snapshotHelp.textContent=`Import impossible : ${error?.message||"fichier invalide"}`}
 }
 
 async function importSnapshotPayload({name="carnet.atlas",size=0,text}={}){
@@ -12073,17 +12118,7 @@ async function importSnapshotPayload({name="carnet.atlas",size=0,text}={}){
     if(isCarnet&&bytes>ATLAS_CARNET_IMPORT_LIMIT_BYTES)throw new Error("Ce carnet dépasse la limite portable de 16 Mo.");
     let snapshot=isCarnet?await atlasCarnetToSnapshot(document):validateAtlasSnapshot(document);
     if(!isCarnet)carnetRuntime.migrations++;
-    if(typeof persistActiveTerritory==="function"&&territoryControllerRuntime?.managerReady&&!territorySessionDetached){
-      const saved=await persistActiveTerritory({automatic:true,refresh:false});if(!saved)throw new Error("Le territoire actif n’a pas pu être sauvegardé avant l’import");
-    }
-    const collision=importedTerritoryCopy(snapshot,await listTerritoriesFromDb(),name);snapshot=collision.snapshot;
-    applyAtlasSnapshot(snapshot,{source:`${isCarnet?"carnet":"sauvegarde historique"} importé · ${name}`});
-    await saveSnapshotToDb(snapshot);
-    if(typeof refreshTerritoryLibraryUI==="function")await refreshTerritoryLibraryUI(snapshot.territory?.id);
-    snapshotRuntime.imports++;if(isCarnet)carnetRuntime.imports++;snapshotRuntime.lastSource=name;
-    els.snapshotHelp.textContent=collision.copied
-      ? "Carnet chargé comme une nouvelle copie afin de ne pas remplacer l’original déjà présent."
-      : `${isCarnet?"Carnet":"Ancienne sauvegarde"} chargé et ajouté à la bibliothèque locale.`;
+    presentSnapshotImport(snapshot,{name,isCarnet});
   }catch(error){
     recordSnapshotError(error);if(error?.message?.includes("carnet")||error?.message?.includes("intégrité"))carnetRecordError(error);
     els.snapshotHelp.textContent=`Import impossible : ${error?.message||"fichier invalide"}`;
@@ -12140,8 +12175,11 @@ function bindSnapshotManager(){
   if(snapshotRuntime.bound)return;
   snapshotRuntime.bound=true;
   els.exportSnapshotJson.addEventListener("click",exportSnapshotJson);
+  els.confirmCarnetExport?.addEventListener("click",()=>{els.carnetExportDialog?.close();exportSnapshotJson({confirmed:true})});
   els.saveCarnetProfile?.addEventListener("click",saveCarnetProfile);
   els.importSnapshotJson.addEventListener("click",importSnapshotFromNative);
+  els.confirmCarnetImportCopy?.addEventListener("click",()=>{els.carnetImportDialog?.close();completeSnapshotImport("copy")});
+  els.confirmCarnetImportMerge?.addEventListener("click",()=>{els.carnetImportDialog?.close();completeSnapshotImport("merge")});
   els.snapshotFile.addEventListener("change",event=>importSnapshotFile(event.target.files?.[0]));
   els.exportStandaloneHtml.addEventListener("click",exportStandaloneHtml);
   els.clearSavedSnapshot.addEventListener("click",async()=>{

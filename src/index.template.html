@@ -123,7 +123,7 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
     <div class="small" id="territorySetupStatus" style="margin-top:8px">Les données locales sont séparées par territoire. La création interroge les services cartographiques autour du point choisi ; certaines sources restent limitées à la France.</div>
     <details class="interface-subsection" data-ui-subsection="memory"><summary>Importer et exporter</summary><div class="interface-subsection-body">
       <div class="snapshot-summary" id="snapshotStatus"><span>Préparation de l’inventaire embarqué…</span></div>
-      <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ exporter le carnet .atlas</button><button id="importSnapshotJson" type="button">＋ ouvrir un carnet</button></div>
+      <div class="grid2" style="margin-top:7px"><button id="exportSnapshotJson" type="button">⇩ préparer l’export .atlas</button><button id="importSnapshotJson" type="button">＋ importer un carnet</button></div>
       <div class="carnet-export-summary" id="carnetExportSummary">Préparation du résumé de partage…</div>
       <details class="technical-details" style="margin-top:7px"><summary>Préparer le partage</summary><div>
         <label class="field-label">Par ou avec<input id="carnetAuthor" maxlength="120" placeholder="nom, collectif ou pseudonyme"></label>
@@ -639,6 +639,22 @@ if (/\/src\/index\.template\.html$/i.test(location.pathname)) {
   <section class="card warning"><strong>Lecture prudente :</strong> le cadastre améliore le placement du bâti mais ne fournit ni propriétaire ni diagnostic de stabilité. Le relief reste un modèle global densifié, pas encore du LiDAR HD. Les forages BSS sont des points documentaires, pas des preuves de galerie. Les profondeurs souterraines précédées de ≈ sont des tranches de visualisation ; les volumes affichés sont des projections cohérentes entre niveaux, pas des plans levés ni des profondeurs attestées.</section>
   </div>
 </aside>
+
+<dialog id="carnetExportDialog" class="carnet-dialog" aria-labelledby="carnetExportDialogTitle">
+  <form method="dialog" class="carnet-dialog-card">
+    <div class="carnet-dialog-kicker">Carnet partageable</div><h2 id="carnetExportDialogTitle">Vérifier avant l’export</h2>
+    <p>Voici ce qui sera enregistré dans le fichier <code>.atlas</code>.</p><div id="carnetExportReview" class="carnet-review-grid"></div>
+    <p class="carnet-dialog-note">Les caches OSM, le cadastre et le relief détaillé ne sont pas exportés. Tes repères, notes et hypothèses font bien partie du carnet.</p>
+    <div class="carnet-dialog-actions"><button value="cancel" type="submit">Retour</button><button id="confirmCarnetExport" class="action-primary" value="confirm" type="button">⇩ exporter ce carnet</button></div>
+  </form>
+</dialog>
+<dialog id="carnetImportDialog" class="carnet-dialog" aria-labelledby="carnetImportDialogTitle">
+  <form method="dialog" class="carnet-dialog-card">
+    <div class="carnet-dialog-kicker">Carnet reçu</div><h2 id="carnetImportDialogTitle">Comment l’ajouter ?</h2><div id="carnetImportReview" class="carnet-review-grid"></div>
+    <p id="carnetImportMergeNote" class="carnet-dialog-note"></p>
+    <div class="carnet-dialog-actions carnet-import-actions"><button id="confirmCarnetImportCopy" class="action-primary" value="copy" type="button">▣ ouvrir comme copie</button><button id="confirmCarnetImportMerge" value="merge" type="button">⇄ fusionner mes notes</button><button value="cancel" type="submit">Annuler</button></div>
+  </form>
+</dialog>
 
 <nav class="terrain-dock" aria-label="Actions terrain">
   <button type="button" data-terrain-section="explorer" aria-label="Ouvrir les commandes de carte"><strong>▦</strong><span>Carte</span></button>

@@ -273,7 +273,9 @@ check("format canonique du carnet", () =>
   sourceByName["carnet-format.js"].includes("async function atlasCarnetToSnapshot") &&
   sourceByName["carnet-format.js"].includes('excluded:["osm","cadastreBuildings","cadastreParcels","elevation","coverage"]') &&
   sourceByName["snapshot-manager.js"].includes("function importedTerritoryCopy") &&
-  html.includes("exporter le carnet .atlas") &&
+  html.includes("préparer l’export .atlas") &&
+  sourceByName["snapshot-manager.js"].includes("function completeSnapshotImport") &&
+  html.includes('id="carnetExportDialog"') && html.includes('id="carnetImportDialog"') &&
   html.includes("application/vnd.atlas+carnet+json")
 );
 check("coque d’interface isolée", () =>

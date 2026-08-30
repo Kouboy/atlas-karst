@@ -17,7 +17,7 @@ for (const [relative, expected, label] of required) {
 }
 
 const gradle = readFileSync(resolve(root, "android/app/build.gradle"), "utf8");
-if (!/versionCode\s+2\b/.test(gradle) || !/versionName\s+"0\.19\.1-companion"/.test(gradle)) {
+if (!/versionCode\s+3\b/.test(gradle) || !/versionName\s+"0\.19\.2-companion"/.test(gradle)) {
   throw new Error("version compagnon Android invalide");
 }
-console.log("✓ version compagnon 0.19.1 (code 2)");
+console.log("✓ version compagnon 0.19.2 (code 3)");
