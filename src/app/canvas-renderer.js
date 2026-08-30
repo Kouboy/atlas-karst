@@ -1116,7 +1116,17 @@ function symbolicDrawInstrumentFrame(ctx,m){
 function symbolicDrawCartographicFinish(ctx,m){
   ctx.save();
   if(explorationsMapStyle()){
-    const paper=ctx.createLinearGradient(0,0,m.width,m.height);paper.addColorStop(0,"rgba(255,248,217,.09)");paper.addColorStop(.55,"rgba(255,255,255,.015)");paper.addColorStop(1,"rgba(65,126,150,.075)");ctx.fillStyle=paper;ctx.fillRect(0,0,m.width,m.height);const vignette=ctx.createRadialGradient(m.width*.5,m.height*.46,Math.min(m.width,m.height)*.28,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.74);vignette.addColorStop(.7,"rgba(0,0,0,0)");vignette.addColorStop(1,"rgba(29,75,86,.18)");ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);ctx.restore();return;
+    const paper=ctx.createLinearGradient(0,0,m.width,m.height);paper.addColorStop(0,"rgba(255,248,217,.09)");paper.addColorStop(.55,"rgba(255,255,255,.015)");paper.addColorStop(1,"rgba(65,126,150,.075)");ctx.fillStyle=paper;ctx.fillRect(0,0,m.width,m.height);
+    // Grain fixe : il donne un peu de matière au carnet sans animation, image ou
+    // recalcul coûteux. La graine dépend uniquement de la maille et du niveau.
+    let seed=((CONFIG.gridW*73856093)^(CONFIG.gridH*19349663)^(state.zoomIndex*83492791))>>>0;
+    const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+    const specks=Math.min(260,Math.max(70,Math.round((m.width*m.height)/1800)));
+    ctx.fillStyle="rgba(83,111,91,.055)";
+    for(let i=0;i<specks;i++){const x=random()*m.width,y=random()*m.height,r=random()<.82?.42:.8;ctx.fillRect(x,y,r,r)}
+    ctx.strokeStyle="rgba(112,83,49,.035)";ctx.lineWidth=.5;
+    for(let i=0;i<18;i++){const x=random()*m.width,y=random()*m.height,len=3+random()*9;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+len,y+(random()-.5)*1.8);ctx.stroke()}
+    const vignette=ctx.createRadialGradient(m.width*.5,m.height*.46,Math.min(m.width,m.height)*.28,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.74);vignette.addColorStop(.7,"rgba(0,0,0,0)");vignette.addColorStop(1,"rgba(29,75,86,.18)");ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);ctx.restore();return;
   }
   const vignette=ctx.createRadialGradient(m.width*.48,m.height*.44,Math.min(m.width,m.height)*.14,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.72);
   vignette.addColorStop(0,"rgba(92,255,184,.022)");vignette.addColorStop(.66,"rgba(0,0,0,.03)");vignette.addColorStop(1,"rgba(0,5,3,.25)");

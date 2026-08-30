@@ -1595,6 +1595,26 @@ body.explorations-edition #readout .plain-cell-title{color:#244453}
 body.explorations-edition #readout .plain-cell-detail{color:#355764}
 body.explorations-edition #readout .plain-cell-meta{color:#5e7680}
 body.explorations-edition #readout .cell-sheet-head::before{content:""!important;display:none!important}
+
+/* Explorations : petits repères illustrés, lisibles même sans connaître les rubriques. */
+body.explorations-edition[data-ui-version="field-notebook"] aside .card>h2{display:flex;align-items:center;gap:8px}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card>h2::before{display:grid!important;place-items:center;flex:0 0 23px;width:23px;height:23px;margin:0!important;border:1px solid #7eb1bf;border-radius:50%;background:#e7f4df;color:#245a70;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;line-height:1;text-align:center}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="location"]>h2::before{content:"⌖";background:#d8f0f2;color:#22758c}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="carnets"]>h2::before,body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="field-notes"]>h2::before{content:"✎";background:#fff0b9;color:#8a6520}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="map-reading"]>h2::before{content:"▤";background:#dcecf5;color:#2c6884}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="display"]>h2::before{content:"◐";background:#e9e2f4;color:#684f8b}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="starting-point"]>h2::before{content:"⌂";background:#ffe5bd;color:#98602e}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="cartofriches"]>h2::before,body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="industrial-history"]>h2::before{content:"▦";background:#f4ddd2;color:#925943}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="heritage"]>h2::before{content:"⌂";background:#f9e5af;color:#8a6520}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="bss"]>h2::before{content:"◉";background:#e5ddf0;color:#624e85}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="hydrometry"]>h2::before{content:"≈";background:#d8eff7;color:#287d98;font-size:18px}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="biodiversity"]>h2::before,body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="nature"]>h2::before{content:"♧";background:#e2f0c8;color:#4d7f43}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="time"]>h2::before{content:"◷";background:#f6e3bd;color:#95682d}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="land-cover"]>h2::before{content:"▧";background:#e5f0cf;color:#597c3b}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="geology"]>h2::before{content:"◆";background:#ede1d2;color:#846244}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="source-status"]>h2::before{content:"✓";background:#d8f0e5;color:#317765}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="diagnostic"]>h2::before{content:"i";background:#dcecf5;color:#2c6884}
+body.explorations-edition[data-ui-version="field-notebook"] aside .card[data-ui-card="legend"]>h2::before{content:"?";background:#fff0b9;color:#8a6520}
 </style>
 </head>
 <body data-edition="explorations" data-depth-band="surface" data-ui-version="field-notebook">
@@ -4240,7 +4260,17 @@ function symbolicDrawInstrumentFrame(ctx,m){
 function symbolicDrawCartographicFinish(ctx,m){
   ctx.save();
   if(explorationsMapStyle()){
-    const paper=ctx.createLinearGradient(0,0,m.width,m.height);paper.addColorStop(0,"rgba(255,248,217,.09)");paper.addColorStop(.55,"rgba(255,255,255,.015)");paper.addColorStop(1,"rgba(65,126,150,.075)");ctx.fillStyle=paper;ctx.fillRect(0,0,m.width,m.height);const vignette=ctx.createRadialGradient(m.width*.5,m.height*.46,Math.min(m.width,m.height)*.28,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.74);vignette.addColorStop(.7,"rgba(0,0,0,0)");vignette.addColorStop(1,"rgba(29,75,86,.18)");ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);ctx.restore();return;
+    const paper=ctx.createLinearGradient(0,0,m.width,m.height);paper.addColorStop(0,"rgba(255,248,217,.09)");paper.addColorStop(.55,"rgba(255,255,255,.015)");paper.addColorStop(1,"rgba(65,126,150,.075)");ctx.fillStyle=paper;ctx.fillRect(0,0,m.width,m.height);
+    // Grain fixe : il donne un peu de matière au carnet sans animation, image ou
+    // recalcul coûteux. La graine dépend uniquement de la maille et du niveau.
+    let seed=((CONFIG.gridW*73856093)^(CONFIG.gridH*19349663)^(state.zoomIndex*83492791))>>>0;
+    const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};
+    const specks=Math.min(260,Math.max(70,Math.round((m.width*m.height)/1800)));
+    ctx.fillStyle="rgba(83,111,91,.055)";
+    for(let i=0;i<specks;i++){const x=random()*m.width,y=random()*m.height,r=random()<.82?.42:.8;ctx.fillRect(x,y,r,r)}
+    ctx.strokeStyle="rgba(112,83,49,.035)";ctx.lineWidth=.5;
+    for(let i=0;i<18;i++){const x=random()*m.width,y=random()*m.height,len=3+random()*9;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+len,y+(random()-.5)*1.8);ctx.stroke()}
+    const vignette=ctx.createRadialGradient(m.width*.5,m.height*.46,Math.min(m.width,m.height)*.28,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.74);vignette.addColorStop(.7,"rgba(0,0,0,0)");vignette.addColorStop(1,"rgba(29,75,86,.18)");ctx.fillStyle=vignette;ctx.fillRect(0,0,m.width,m.height);ctx.restore();return;
   }
   const vignette=ctx.createRadialGradient(m.width*.48,m.height*.44,Math.min(m.width,m.height)*.14,m.width*.5,m.height*.5,Math.max(m.width,m.height)*.72);
   vignette.addColorStop(0,"rgba(92,255,184,.022)");vignette.addColorStop(.66,"rgba(0,0,0,.03)");vignette.addColorStop(1,"rgba(0,5,3,.25)");

@@ -6,6 +6,7 @@
 - La carte de cette édition reçoit une première grammaire illustrée : terrains dessinés, arbres, cultures, eau, bâti, routes et points d’intérêt figuratifs, sans changer les géométries ni les données sources.
 - L’interface Explorations adopte ce même langage : panneau, onglets, boutons, fiche de lieu et commandes cartographiques gagnent des couleurs de catégories, des formes douces et une rédaction plus directe.
 - Les fiches Explorations présentent désormais une lecture ludique par paliers : ce qu’il y a à regarder, les pistes proches, ce que racontent les cartes, puis les détails avancés. Les descriptions de terrain et de repères y utilisent un vocabulaire plus simple.
+- Explorations gagne un grain de papier discret, tracé directement dans le Canvas, ainsi que des pictogrammes de rubriques : davantage de matière et de repères, sans image à charger ni animation supplémentaire.
 - Ajout d’un projet Capacitor Android qui embarque le même `index.html` autonome que l’édition web et desktop.
 - Ajout des commandes de synchronisation et de compilation d’un APK de débogage, sans changer le livrable GitHub Pages.
 - Déclaration des autorisations réseau et de géolocalisation Android ; la localisation reste déclenchée uniquement par l’action existante de l’utilisateur.
