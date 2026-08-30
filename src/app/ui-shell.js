@@ -299,7 +299,9 @@ function fitMapFrame(){
   if(applyResponsiveGridProfile(main)){scheduleRender("responsive-grid");return}
   const previousSignature=canvasRuntime.layoutSignature,m=syncCanvasSize();
   const finalWidth=Math.ceil(m?.displayWidth||availableWidth),frameWidth=desktop?availableWidth:Math.min(availableWidth,finalWidth);
-  setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);els.viewport.classList.toggle("map-centered",finalWidth<frameWidth-4);
+  // Sur mobile, .terminal-wrap occupe volontairement toute la largeur : comparer
+  // au frameWidth (réduit à la largeur du Canvas) empêchait donc son centrage.
+  setMapCssVariable(main,"--map-frame-width",`${frameWidth}px`);els.viewport.classList.toggle("map-centered",finalWidth<availableWidth-4);
   if(state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
   else syncRenderFxGeometry(m);
   requestAnimationFrame(()=>{

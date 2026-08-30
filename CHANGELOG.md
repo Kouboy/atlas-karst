@@ -9,6 +9,7 @@
 - Explorations gagne un grain de papier discret, tracé directement dans le Canvas, ainsi que des pictogrammes de rubriques : davantage de matière et de repères, sans image à charger ni animation supplémentaire.
 - Les points d’intérêt illustrés d’Explorations sont agrandis et deviennent des médaillons plus faciles à reconnaître ; la fiche de lecture abandonne le cadre décoratif qui pouvait recouvrir son texte.
 - L’APK de débogage embarque maintenant l’édition Explorations pour tester sur téléphone la carte illustrée, ses textures et ses repères agrandis ; le build local standard reste sur l’Atlas instrumental.
+- Le Canvas mobile est recentré dans son cadre lorsqu’il est plus étroit que l’écran ; un contrôle navigateur protège ce cadrage latéral.
 - Ajout d’un projet Capacitor Android qui embarque le même `index.html` autonome que l’édition web et desktop.
 - Ajout des commandes de synchronisation et de compilation d’un APK de débogage, sans changer le livrable GitHub Pages.
 - Déclaration des autorisations réseau et de géolocalisation Android ; la localisation reste déclenchée uniquement par l’action existante de l’utilisateur.

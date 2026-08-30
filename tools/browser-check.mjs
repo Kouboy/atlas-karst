@@ -1003,10 +1003,12 @@ try {
       await openOfflineAtlas(page, "?offline");
       const layout = await page.evaluate(() => {
         const canvas = document.getElementById("mapCanvas").getBoundingClientRect();
+        const mapFrame = document.getElementById("viewport").getBoundingClientRect();
         return {
           bodyWidth: document.body.scrollWidth,
           viewportWidth: window.innerWidth,
-          canvas: { width: canvas.width, height: canvas.height },
+          canvas: { left:canvas.left, right:canvas.right, width: canvas.width, height: canvas.height },
+          mapFrame: { left:mapFrame.left, right:mapFrame.right, width:mapFrame.width },
           shell:{bound:uiShellRuntime.bound,sidebarOpen:document.body.classList.contains("sidebar-open"),infoCollapsed:document.body.classList.contains("info-collapsed")},
           controls: [...document.querySelectorAll(".statusbar .toolbar-button,.map-actions button")]
             .filter((element) => {
@@ -1025,6 +1027,10 @@ try {
         assert.equal(layout.shell.bound,true);
         assert.equal(layout.shell.sidebarOpen,false,"le panneau mobile est ouvert au démarrage");
         assert.equal(layout.shell.infoCollapsed,true,"la fiche mobile occupe la carte au démarrage");
+        if(layout.canvas.width<layout.mapFrame.width-4){
+          const canvasCenter=layout.canvas.left+layout.canvas.width/2,mapCenter=layout.mapFrame.left+layout.mapFrame.width/2;
+          assert.ok(Math.abs(canvasCenter-mapCenter)<=3,"le Canvas mobile étroit n’est pas centré dans son cadre");
+        }
         for (const control of layout.controls) {
           assert.ok(control.height >= 44, `${control.id} mesure moins de 44 px de haut`);
           if (control.id.startsWith("map")) assert.ok(control.width >= 44, `${control.id} mesure moins de 44 px de large`);
