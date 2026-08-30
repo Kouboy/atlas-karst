@@ -318,6 +318,10 @@ function fitMapFrame(){
   if(state.lastGrid&&previousSignature!==canvasRuntime.layoutSignature)drawCanvasMap(state.lastGrid,"layout-fit");
   else syncRenderFxGeometry(m);
   requestAnimationFrame(()=>{
+    if(!desktop){
+      const renderedWidth=surface.offsetWidth||finalWidth;
+      surface.style.marginLeft=`${Math.max(0,Math.round((els.viewport.clientWidth-renderedWidth)/2))}px`;
+    }
     syncRenderFxGeometry(canvasRuntime.metrics);alignRenderedCenterToVisibleViewport();syncSelectionDom();
     if(pendingPoiFeedback)applyPendingPoiSelectionFeedback();
     updateWorldBoundaryFrame();updateRelationOverlay();updateGuidedTourMarker();
